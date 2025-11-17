@@ -1,0 +1,566 @@
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { cookies } from 'next/headers'
+import jwt from 'jsonwebtoken'
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
+
+export async function POST(request) {
+  try {
+    console.log('🔐 Verifying authentication...')
+    
+    // Verify authentication
+    const cookieStore = await cookies()
+    const token = cookieStore.get('token')
+
+    if (!token) {
+      console.error('❌ No token found')
+      return NextResponse.json(
+        { error: 'Unauthorized - No token' },
+        { status: 401 }
+      )
+    }
+
+    let decoded
+    try {
+      decoded = jwt.verify(token.value, JWT_SECRET)
+      console.log('✅ Token verified, userId:', decoded.userId)
+    } catch (jwtError) {
+      console.error('❌ JWT verification failed:', jwtError)
+      return NextResponse.json(
+        { error: 'Invalid token' },
+        { status: 401 }
+      )
+    }
+
+    const userId = decoded.userId
+
+    // Get request body
+    const body = await request.json()
+    console.log('📦 Received data for userId:', userId)
+
+    const {
+      // Personal Info
+      photo,
+      firstName,
+      lastName,
+      dateOfBirth,
+      gender,
+      religion,
+      maritalStatus,
+      nationality,
+      idNumber,
+      
+      // Contact Info
+      phone,
+      email,
+      address,
+      city,
+      province,
+      postalCode,
+      
+      // Professional Info
+      currentTitle,
+      summary,
+      linkedinUrl,
+      githubUrl,
+      portfolioUrl,
+      websiteUrl,
+      cvUrl,
+      
+      // Education
+      educations,
+      
+      // Work Experience
+      experiences,
+      
+      // Skills
+      skills,
+      
+      // Certifications
+      certifications,
+      
+      // Job Preferences
+      desiredJobTitle,
+      desiredSalaryMin,
+      desiredSalaryMax,
+      preferredLocation,
+      preferredJobType,
+      willingToRelocate,
+      availableFrom
+    } = body
+
+    console.log('🔍 Checking user exists...')
+    
+    // Check if user exists and is jobseeker
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { jobseeker: true }
+    })
+
+    if (!user) {
+      console.error('❌ User not found:', userId)
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      )
+    }
+
+    if (user.role !== 'JOBSEEKER') {
+      console.error('❌ User is not a jobseeker, role:', user.role)
+      return NextResponse.json(
+        { error: 'User is not a jobseeker' },
+        { status: 403 }
+      )
+    }
+
+    if (!user.jobseeker) {
+      console.error('❌ Jobseeker profile not found for user:', userId)
+      return NextResponse.json(
+        { error: 'Jobseeker profile not found' },
+        { status: 404 }
+      )
+    }
+
+    console.log('✅ User found, jobseekerId:', user.jobseeker.id)
+
+    // Calculate profile completeness
+    const totalFields = 15
+    let filledFields = 0
+    
+    if (photo) filledFields++
+    if (firstName && lastName) filledFields++
+    if (dateOfBirth) filledFields++
+    if (gender) filledFields++
+    if (religion) filledFields++
+    if (phone) filledFields++
+    if (address && city && province) filledFields++
+    if (summary) filledFields++
+    if (cvUrl) filledFields++
+    if (educations && educations.length > 0) filledFields++
+    if (experiences && experiences.length > 0) filledFields++
+    if (skills && skills.length > 0) filledFields++
+    if (desiredJobTitle) filledFields++
+    if (desiredSalaryMin && desiredSalaryMax) filledFields++
+    if (preferredJobType) filledFields++
+    
+    const completeness = Math.round((filledFields / totalFields) * 100)
+    console.log('📊 Profile completeness:', completeness + '%')
+
+    console.log('💾 Updating jobseeker profile...')
+
+    // Update jobseeker profile
+    const jobseeker = await prisma.jobseeker.update({
+      where: { userId: userId },
+      data: {
+        // Personal Info
+        photo,
+        firstName,
+        lastName,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+        gender,
+        religion,
+        maritalStatus,
+        nationality,
+        idNumber,
+        
+        // Contact Info
+        phone,
+        email,
+        address,
+        city,
+        province,
+        postalCode,
+        
+        // Professional Info
+        currentTitle,
+        summary,
+        linkedinUrl,
+        githubUrl,
+        portfolioUrl,
+        websiteUrl,
+        cvUrl,
+        
+        // Job Preferences
+        desiredJobTitle,
+        desiredSalaryMin: desiredSalaryMin ? parseInt(desiredSalaryMin) : null,
+        desiredSalaryMax: desiredSalaryMax ? parseInt(desiredSalaryMax) : null,
+        preferredLocation,
+        preferredJobType,
+        willingToRelocate: willingToRelocate || false,
+        availableFrom: availableFrom ? new Date(availableFrom) : null,
+        
+        // Profile status
+        profileCompleted: completeness >= 70,
+        profileCompleteness: completeness
+      }
+    })
+
+    console.log('✅ Profile updated')
+
+    // Handle educations
+    if (educations && educations.length > 0) {
+      console.log('🎓 Processing educations...')
+      await prisma.education.deleteMany({
+        where: { jobseekerId: jobseeker.id }
+      })
+
+      await prisma.education.createMany({
+        data: educations.map(edu => ({
+          jobseekerId: jobseeker.id,
+          institution: edu.institution,
+          degree: edu.degree,
+          fieldOfStudy: edu.fieldOfStudy,
+          level: edu.level,
+          startDate: edu.startDate ? new Date(edu.startDate + '-01') : null,
+          endDate: edu.endDate ? new Date(edu.endDate + '-01') : null,
+          gpa: edu.gpa ? parseFloat(edu.gpa) : null,
+          isCurrent: edu.isCurrent || false,
+          diplomaUrl: edu.diplomaUrl || null
+        }))
+      })
+      console.log('✅ Educations saved')
+    }
+
+    // Handle work experiences
+    if (experiences && experiences.length > 0 && experiences[0].company) {
+      console.log('💼 Processing work experiences...')
+      await prisma.workExperience.deleteMany({
+        where: { jobseekerId: jobseeker.id }
+      })
+
+      for (const exp of experiences) {
+        if (exp.company) {
+          await prisma.workExperience.create({
+            data: {
+              jobseekerId: jobseeker.id,
+              company: exp.company,
+              position: exp.position,
+              location: exp.location,
+              startDate: exp.startDate ? new Date(exp.startDate + '-01') : null,
+              endDate: exp.endDate ? new Date(exp.endDate + '-01') : null,
+              isCurrent: exp.isCurrent || false,
+              description: exp.description,
+              achievements: exp.achievements || []
+            }
+          })
+        }
+      }
+      console.log('✅ Work experiences saved')
+    }
+
+    // Handle skills - UPDATED FOR NEW SCHEMA
+    if (skills && skills.length > 0 && skills[0]) {
+      console.log('🎯 Processing skills...')
+      
+      // Delete existing jobseeker skills
+      await prisma.jobseekerSkill.deleteMany({
+        where: { jobseekerId: jobseeker.id }
+      })
+
+      // Create new skills
+      for (const skillName of skills.filter(s => s)) {
+        // Find or create skill
+        let skill = await prisma.skill.findUnique({
+          where: { name: skillName }
+        })
+        
+        if (!skill) {
+          console.log(`📝 Creating new skill: ${skillName}`)
+          skill = await prisma.skill.create({
+            data: { 
+              name: skillName,
+              category: 'General' // You can customize this
+            }
+          })
+        }
+        
+        // Create jobseeker skill relation
+        await prisma.jobseekerSkill.create({
+          data: {
+            jobseekerId: jobseeker.id,
+            skillId: skill.id,
+            proficiencyLevel: 'INTERMEDIATE',
+            yearsOfExperience: 1
+          }
+        })
+      }
+      console.log('✅ Skills saved')
+    }
+
+    // Handle certifications
+    if (certifications && certifications.length > 0 && certifications[0].name) {
+      console.log('🏆 Processing certifications...')
+      await prisma.certification.deleteMany({
+        where: { jobseekerId: jobseeker.id }
+      })
+
+      await prisma.certification.createMany({
+        data: certifications
+          .filter(cert => cert.name)
+          .map(cert => ({
+            jobseekerId: jobseeker.id,
+            name: cert.name,
+            issuingOrganization: cert.issuingOrganization,
+            issueDate: cert.issueDate ? new Date(cert.issueDate + '-01') : null,
+            expiryDate: cert.expiryDate ? new Date(cert.expiryDate + '-01') : null,
+            credentialId: cert.credentialId,
+            credentialUrl: cert.credentialUrl,
+            certificateUrl: cert.certificateUrl || null
+          }))
+      })
+      console.log('✅ Certifications saved')
+    }
+
+    // Fetch complete profile - UPDATED INCLUDES
+    console.log('📋 Fetching complete profile...')
+    const completeProfile = await prisma.jobseeker.findUnique({
+      where: { id: jobseeker.id },
+      include: {
+        educations: true,
+        workExperiences: true,
+        jobseekerSkills: {
+          include: {
+            skill: true
+          }
+        },
+        certifications: true
+      }
+    })
+
+    console.log('✅ Profile saved successfully!')
+
+    return NextResponse.json({
+      success: true,
+      message: 'Profile saved successfully',
+      profile: completeProfile,
+      completeness: completeness
+    })
+  } catch (error) {
+    console.error('💥 Save profile error:', error)
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    })
+    
+    return NextResponse.json(
+      { 
+        error: 'Failed to save profile', 
+        details: error.message,
+        type: error.name
+      },
+      { status: 500 }
+    )
+  }
+}
+
+export async function GET(request) {
+  try {
+    console.log('🔍 Getting jobseeker profile...')
+    
+    // Verify authentication - AWAIT cookies()
+    const cookieStore = await cookies()
+    const token = cookieStore.get('token')
+
+    if (!token) {
+      console.error('❌ No token found')
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    let decoded
+    try {
+      decoded = jwt.verify(token.value, JWT_SECRET)
+      console.log('✅ Token verified, userId:', decoded.userId)
+    } catch (jwtError) {
+      console.error('❌ JWT verification failed:', jwtError)
+      return NextResponse.json(
+        { error: 'Invalid token' },
+        { status: 401 }
+      )
+    }
+
+    const userId = decoded.userId
+
+    // Fetch profile with all relations - UPDATED INCLUDES
+    const profile = await prisma.jobseeker.findUnique({
+      where: { userId: userId },
+      include: {
+        educations: {
+          orderBy: {
+            startDate: 'desc'
+          }
+        },
+        workExperiences: {
+          orderBy: {
+            startDate: 'desc'
+          }
+        },
+        jobseekerSkills: {
+          include: {
+            skill: true
+          }
+        },
+        certifications: {
+          orderBy: {
+            issueDate: 'desc'
+          }
+        }
+      }
+    })
+
+    if (!profile) {
+      console.error('❌ Profile not found for userId:', userId)
+      return NextResponse.json(
+        { error: 'Profile not found' },
+        { status: 404 }
+      )
+    }
+
+    // Transform jobseekerSkills to simple skills array for frontend
+    const transformedProfile = {
+      ...profile,
+      skills: profile.jobseekerSkills.map(js => ({
+        id: js.id,
+        name: js.skill.name,
+        proficiencyLevel: js.proficiencyLevel,
+        yearsOfExperience: js.yearsOfExperience
+      }))
+    }
+
+    console.log('✅ Profile fetched successfully')
+
+    return NextResponse.json({ 
+      success: true,
+      profile: transformedProfile 
+    })
+  } catch (error) {
+    console.error('💥 Get profile error:', error)
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack
+    })
+    
+    return NextResponse.json(
+      { 
+        error: 'Failed to get profile',
+        details: error.message
+      },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PATCH(request) {
+  try {
+    console.log('🔄 Partially updating profile...')
+    
+    // Verify authentication
+    const cookieStore = await cookies()
+    const token = cookieStore.get('token')
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    const decoded = jwt.verify(token.value, JWT_SECRET)
+    const userId = decoded.userId
+
+    // Get only the fields to update
+    const body = await request.json()
+    
+    // Update only provided fields
+    const jobseeker = await prisma.jobseeker.update({
+      where: { userId: userId },
+      data: body
+    })
+
+    console.log('✅ Profile partially updated')
+
+    return NextResponse.json({
+      success: true,
+      message: 'Profile updated successfully',
+      profile: jobseeker
+    })
+  } catch (error) {
+    console.error('💥 Patch profile error:', error)
+    return NextResponse.json(
+      { 
+        error: 'Failed to update profile',
+        details: error.message
+      },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(request) {
+  try {
+    console.log('🗑️ Deleting profile data...')
+    
+    // Verify authentication
+    const cookieStore = await cookies()
+    const token = cookieStore.get('token')
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    const decoded = jwt.verify(token.value, JWT_SECRET)
+    const userId = decoded.userId
+
+    // Get jobseeker
+    const jobseeker = await prisma.jobseeker.findUnique({
+      where: { userId: userId }
+    })
+
+    if (!jobseeker) {
+      return NextResponse.json(
+        { error: 'Profile not found' },
+        { status: 404 }
+      )
+    }
+
+    // Delete all related data (cascade should handle this, but explicit is better)
+    await prisma.education.deleteMany({
+      where: { jobseekerId: jobseeker.id }
+    })
+    
+    await prisma.workExperience.deleteMany({
+      where: { jobseekerId: jobseeker.id }
+    })
+    
+    await prisma.jobseekerSkill.deleteMany({
+      where: { jobseekerId: jobseeker.id }
+    })
+    
+    await prisma.certification.deleteMany({
+      where: { jobseekerId: jobseeker.id }
+    })
+
+    console.log('✅ Profile data deleted successfully')
+
+    return NextResponse.json({
+      success: true,
+      message: 'Profile data deleted successfully'
+    })
+  } catch (error) {
+    console.error('💥 Delete profile error:', error)
+    return NextResponse.json(
+      { 
+        error: 'Failed to delete profile',
+        details: error.message
+      },
+      { status: 500 }
+    )
+  }
+}
