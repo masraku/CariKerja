@@ -12,8 +12,6 @@ export default function RecruiterSignup() {
     phone: '',
     password: '',
     confirmPassword: '',
-    companyAddress: '',
-    companyWebsite: '',
     agreeTerms: false
   })
   const [isLoading, setIsLoading] = useState(false)
@@ -50,10 +48,6 @@ export default function RecruiterSignup() {
       newErrors.confirmPassword = 'Password tidak cocok'
     }
 
-    if (!form.companyAddress.trim()) {
-      newErrors.companyAddress = 'Alamat perusahaan wajib diisi'
-    }
-
     if (!form.agreeTerms) {
       newErrors.agreeTerms = 'Anda harus menyetujui syarat dan ketentuan'
     }
@@ -83,9 +77,7 @@ export default function RecruiterSignup() {
           companyEmail: form.companyEmail,
           contactPerson: form.contactPerson,
           phone: form.phone,
-          password: form.password,
-          companyAddress: form.companyAddress,
-          companyWebsite: form.companyWebsite || null
+          password: form.password
         }),
       })
 
@@ -194,7 +186,7 @@ export default function RecruiterSignup() {
               </label>
               <input
                 type="tel"
-                placeholder="021xxxxxxxx"
+                placeholder="08123456789"
                 className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent transition ${
                   errors.phone ? 'border-red-500' : 'border-gray-300'
                 }`}
@@ -203,37 +195,6 @@ export default function RecruiterSignup() {
               />
               {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
             </div>
-          </div>
-
-          {/* Alamat Perusahaan */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Alamat Perusahaan <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              placeholder="Alamat lengkap perusahaan"
-              rows="3"
-              className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent transition ${
-                errors.companyAddress ? 'border-red-500' : 'border-gray-300'
-              }`}
-              value={form.companyAddress}
-              onChange={(e) => setForm({ ...form, companyAddress: e.target.value })}
-            />
-            {errors.companyAddress && <p className="text-red-500 text-xs mt-1">{errors.companyAddress}</p>}
-          </div>
-
-          {/* Website Perusahaan (Optional) */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Website Perusahaan (Opsional)
-            </label>
-            <input
-              type="url"
-              placeholder="https://www.perusahaan.com"
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-              value={form.companyWebsite}
-              onChange={(e) => setForm({ ...form, companyWebsite: e.target.value })}
-            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -269,6 +230,19 @@ export default function RecruiterSignup() {
                 onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
               />
               {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
+            </div>
+          </div>
+
+          {/* Info Box */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+              <div className="text-sm text-blue-800">
+                <p className="font-medium mb-1">Setelah registrasi:</p>
+                <p>Anda akan diminta melengkapi detail perusahaan seperti alamat, deskripsi, industri, dan informasi lainnya.</p>
+              </div>
             </div>
           </div>
 

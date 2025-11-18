@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
 import Swal from 'sweetalert2'
 
@@ -12,6 +13,7 @@ export default function LoginPage() {
 
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { login, refreshUser, isAuthenticated } = useAuth() // Import dari AuthContext
 
   // Handle query alerts
   useEffect(() => {
@@ -51,6 +53,13 @@ export default function LoginPage() {
     }
   }, [searchParams])
 
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/dashboard/jobseeker') // or based on role
+    }
+  }, [isAuthenticated])
+
   // Handle Login
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -80,7 +89,7 @@ export default function LoginPage() {
       }
 
       // Success Alert
-      await Swal.fire({
+      Swal.fire({
         icon: 'success',
         title: 'Berhasil Masuk',
         text: 'Selamat datang kembali!',
@@ -88,9 +97,11 @@ export default function LoginPage() {
         showConfirmButton: false
       })
 
-      // Save Session
-      localStorage.setItem('user', JSON.stringify(data.user))
-      localStorage.setItem('token', data.token)
+      // ✅ IMPORTANT: Login to AuthContext
+      await login(data.token, data.user)
+      
+      // ✅ CRITICAL: Refresh user data to get complete profile with photo
+      await refreshUser()
 
       const action = searchParams.get('action')
 
@@ -105,11 +116,14 @@ export default function LoginPage() {
         const completed = data.user.jobseeker?.profileCompleted
         router.push(!completed ? '/profile/jobseeker' : '/dashboard/jobseeker')
       } else if (data.user.role === 'RECRUITER') {
-        const verified = data.user.company?.verified
+        const verified = data.user.recruiter?.isVerified
         router.push(!verified ? '/profile/recruiter' : '/dashboard/recruiter')
       } else {
         router.push('/dashboard/admin')
       }
+
+      // Force page refresh for header update
+      router.refresh()
 
     } catch (error) {
       Swal.fire({

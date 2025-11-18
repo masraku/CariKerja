@@ -59,6 +59,21 @@ const Header = () => {
     return roleMap[user.role] || user.role
   }
 
+  // Get user photo
+  const getUserPhoto = () => {
+    if (!user) return null
+    
+    if (user.role === 'JOBSEEKER' && user.jobseeker?.photo) {
+      return user.jobseeker.photo
+    }
+    
+    if (user.role === 'RECRUITER' && user.recruiter?.company?.logo) {
+      return user.recruiter.company.logo
+    }
+    
+    return null
+  }
+
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
       <div className="container mx-auto px-4">
@@ -169,9 +184,20 @@ const Header = () => {
                       <span className="text-gray-600 text-sm">Hi,</span>
                       <span className="font-semibold text-gray-900">{getUserName()}</span>
                     </div>
-                    <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold shadow-md">
-                      {getUserName().charAt(0).toUpperCase()}
+                    
+                    {/* Avatar with Photo */}
+                    <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold shadow-md overflow-hidden">
+                      {getUserPhoto() ? (
+                        <img 
+                          src={getUserPhoto()} 
+                          alt={getUserName()}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        getUserName().charAt(0).toUpperCase()
+                      )}
                     </div>
+
                     <svg 
                       className={`w-4 h-4 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} 
                       fill="none" 
@@ -193,9 +219,25 @@ const Header = () => {
                       <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl py-2 border border-gray-100 z-20">
                         {/* User Info Header */}
                         <div className="px-4 py-3 border-b border-gray-100">
-                          <p className="font-semibold text-gray-900">{getUserFullName()}</p>
-                          <p className="text-sm text-gray-500">{user.email}</p>
-                          <div className="mt-2">
+                          <div className="flex items-center gap-3 mb-2">
+                            {/* Avatar in dropdown */}
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md overflow-hidden flex-shrink-0">
+                              {getUserPhoto() ? (
+                                <img 
+                                  src={getUserPhoto()} 
+                                  alt={getUserName()}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                getUserName().charAt(0).toUpperCase()
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-semibold text-gray-900">{getUserFullName()}</p>
+                              <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                            </div>
+                          </div>
+                          <div>
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                               {getUserRoleDisplay()}
                             </span>
@@ -204,8 +246,15 @@ const Header = () => {
 
                         {/* Menu Items */}
                         <div className="py-1">
+                          {/* Dashboard */}
                           <Link
-                            href={`/dashboard/${user.role.toLowerCase()}`}
+                            href={
+                              user.role === 'JOBSEEKER' 
+                                ? '/dashboard/jobseeker' 
+                                : user.role === 'RECRUITER'
+                                ? '/dashboard/recruiter'
+                                : '/dashboard'
+                            }
                             onClick={() => setIsDropdownOpen(false)}
                             className="flex items-center px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                           >
@@ -215,6 +264,21 @@ const Header = () => {
                             Dashboard
                           </Link>
 
+                          {/* Jobseeker: Riwayat Lamaran */}
+                          {user.role === 'JOBSEEKER' && (
+                            <Link
+                              href="/jobseeker/applications"
+                              onClick={() => setIsDropdownOpen(false)}
+                              className="flex items-center px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                            >
+                              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              Riwayat Lamaran
+                            </Link>
+                          )}
+
+                          {/* Recruiter: Pasang Lowongan */}
                           {user.role === 'RECRUITER' && (
                             <Link
                               href="/post-job"
@@ -228,17 +292,21 @@ const Header = () => {
                             </Link>
                           )}
 
-                          <Link
-                            href={`/profile/${user.role.toLowerCase()}`}
-                            onClick={() => setIsDropdownOpen(false)}
-                            className="flex items-center px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                          >
-                            <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            Profil Saya
-                          </Link>
+                          {/* Recruiter: Applicants */}
+                          {user.role === 'RECRUITER' && (
+                            <Link
+                              href="/recruiter/applications"
+                              onClick={() => setIsDropdownOpen(false)}
+                              className="flex items-center px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                            >
+                              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                              </svg>
+                              Pelamar
+                            </Link>
+                          )}
 
+                          {/* Settings */}
                           <Link
                             href="/settings"
                             onClick={() => setIsDropdownOpen(false)}
@@ -337,8 +405,17 @@ const Header = () => {
                   {/* Mobile User Info */}
                   <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
                     <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
-                        {getUserName().charAt(0).toUpperCase()}
+                      {/* Avatar with Photo - Mobile */}
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md overflow-hidden flex-shrink-0">
+                        {getUserPhoto() ? (
+                          <img 
+                            src={getUserPhoto()} 
+                            alt={getUserName()}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          getUserName().charAt(0).toUpperCase()
+                        )}
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900">Hi, {getUserName()}!</p>
@@ -347,8 +424,15 @@ const Header = () => {
                     </div>
                   </div>
 
+                  {/* Dashboard */}
                   <Link 
-                    href={`/dashboard/${user.role.toLowerCase()}`}
+                    href={
+                      user.role === 'JOBSEEKER' 
+                        ? '/jobseeker/dashboard' 
+                        : user.role === 'RECRUITER'
+                        ? '/recruiter/dashboard'
+                        : '/dashboard'
+                    }
                     className="text-gray-700 font-medium hover:text-blue-600 flex items-center"
                   >
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -357,6 +441,20 @@ const Header = () => {
                     Dashboard
                   </Link>
 
+                  {/* Jobseeker: Riwayat Lamaran */}
+                  {user.role === 'JOBSEEKER' && (
+                    <Link 
+                      href="/jobseeker/applications" 
+                      className="text-gray-700 font-medium hover:text-blue-600 flex items-center"
+                    >
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Riwayat Lamaran
+                    </Link>
+                  )}
+
+                  {/* Recruiter: Pasang Lowongan */}
                   {user.role === 'RECRUITER' && (
                     <Link 
                       href="/post-job" 
@@ -369,16 +467,20 @@ const Header = () => {
                     </Link>
                   )}
 
-                  <Link 
-                    href={`/profile/${user.role.toLowerCase()}`}
-                    className="text-gray-700 hover:text-blue-600 flex items-center"
-                  >
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    Profil Saya
-                  </Link>
+                  {/* Recruiter: Pelamar */}
+                  {user.role === 'RECRUITER' && (
+                    <Link 
+                      href="/recruiter/applications" 
+                      className="text-gray-700 font-medium hover:text-blue-600 flex items-center"
+                    >
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      Pelamar
+                    </Link>
+                  )}
 
+                  {/* Settings */}
                   <Link 
                     href="/settings" 
                     className="text-gray-700 hover:text-blue-600 flex items-center"
@@ -390,6 +492,7 @@ const Header = () => {
                     Pengaturan
                   </Link>
 
+                  {/* Logout */}
                   <button
                     onClick={handleLogout}
                     className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors font-medium text-center flex items-center justify-center"
