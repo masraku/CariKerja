@@ -250,10 +250,10 @@ const Header = () => {
                           <Link
                             href={
                               user.role === 'JOBSEEKER' 
-                                ? '/dashboard/jobseeker' 
+                                ? '/profile/jobseeker/dashboard' 
                                 : user.role === 'RECRUITER'
-                                ? '/dashboard/recruiter'
-                                : '/dashboard'
+                                ? '/profile/recruiter/dashboard'
+                                : '/'
                             }
                             onClick={() => setIsDropdownOpen(false)}
                             className="flex items-center px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
@@ -267,7 +267,7 @@ const Header = () => {
                           {/* Jobseeker: Riwayat Lamaran */}
                           {user.role === 'JOBSEEKER' && (
                             <Link
-                              href="/jobseeker/applications"
+                              href="profile/jobseeker/applications"
                               onClick={() => setIsDropdownOpen(false)}
                               className="flex items-center px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                             >
@@ -281,7 +281,7 @@ const Header = () => {
                           {/* Recruiter: Pasang Lowongan */}
                           {user.role === 'RECRUITER' && (
                             <Link
-                              href="/post-job"
+                              href="/profile/recruiter/post-job"
                               onClick={() => setIsDropdownOpen(false)}
                               className="flex items-center px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                             >
@@ -428,9 +428,9 @@ const Header = () => {
                   <Link 
                     href={
                       user.role === 'JOBSEEKER' 
-                        ? '/jobseeker/dashboard' 
+                        ? '/profile/jobseeker/dashboard' 
                         : user.role === 'RECRUITER'
-                        ? '/recruiter/dashboard'
+                        ? '/profile/recruiter/dashboard'
                         : '/dashboard'
                     }
                     className="text-gray-700 font-medium hover:text-blue-600 flex items-center"
@@ -444,7 +444,7 @@ const Header = () => {
                   {/* Jobseeker: Riwayat Lamaran */}
                   {user.role === 'JOBSEEKER' && (
                     <Link 
-                      href="/jobseeker/applications" 
+                      href="/profile/jobseeker/applications" 
                       className="text-gray-700 font-medium hover:text-blue-600 flex items-center"
                     >
                       <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -457,7 +457,7 @@ const Header = () => {
                   {/* Recruiter: Pasang Lowongan */}
                   {user.role === 'RECRUITER' && (
                     <Link 
-                      href="/post-job" 
+                      href="/profile/recruiter/post-job" 
                       className="text-gray-700 font-medium hover:text-blue-600 flex items-center"
                     >
                       <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -470,7 +470,7 @@ const Header = () => {
                   {/* Recruiter: Pelamar */}
                   {user.role === 'RECRUITER' && (
                     <Link 
-                      href="/recruiter/applications" 
+                      href="/profile/recruiter/applications" 
                       className="text-gray-700 font-medium hover:text-blue-600 flex items-center"
                     >
                       <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

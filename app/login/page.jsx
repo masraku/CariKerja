@@ -56,7 +56,7 @@ export default function LoginPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/dashboard/jobseeker') // or based on role
+      router.push('/profile/jobseeker/dashboard') // or based on role
     }
   }, [isAuthenticated])
 
@@ -107,17 +107,17 @@ export default function LoginPage() {
 
       // Special flow posting lowongan
       if (action === 'post-job' && role === 'recruiter') {
-        router.push('/post-job')
+        router.push('/profile/recruiter/post-job')
         return
       }
 
       // Redirect based on role
       if (data.user.role === 'JOBSEEKER') {
         const completed = data.user.jobseeker?.profileCompleted
-        router.push(!completed ? '/profile/jobseeker' : '/dashboard/jobseeker')
+        router.push(!completed ? '/profile/jobseeker' : '/profile/jobseeker/dashboard')
       } else if (data.user.role === 'RECRUITER') {
         const verified = data.user.recruiter?.isVerified
-        router.push(!verified ? '/profile/recruiter' : '/dashboard/recruiter')
+        router.push(!verified ? '/profile/recruiter' : '/profile/recruiter/dashboard')
       } else {
         router.push('/dashboard/admin')
       }
@@ -172,11 +172,11 @@ export default function LoginPage() {
         <form onSubmit={handleLogin} className="space-y-5">
           {/* Email */}
           <div>
-            <label className="block text-sm font-semibold mb-2">Email</label>
+            <label className="text-gray-900 block text-sm font-semibold mb-2">Email</label>
             <input
               type="email"
               required
-              className="w-full px-4 py-3 border rounded-lg focus:ring-blue-500"
+              className="w-full text-gray-900 px-4 py-3 border rounded-lg focus:ring-blue-500"
               placeholder="nama@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -185,11 +185,11 @@ export default function LoginPage() {
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-semibold mb-2">Password</label>
+            <label className="text-gray-900 block text-sm font-semibold mb-2">Password</label>
             <input
               type="password"
               required
-              className="w-full px-4 py-3 border rounded-lg focus:ring-blue-500"
+              className="w-full text-gray-900 px-4 py-3 border rounded-lg focus:ring-blue-500"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -198,7 +198,7 @@ export default function LoginPage() {
 
           {/* Role Selection */}
           <div>
-            <label className="block text-sm font-semibold mb-3">Login Sebagai</label>
+            <label className="text-gray-900 block text-sm font-semibold mb-3">Login Sebagai</label>
             <div className="grid grid-cols-3 gap-3">
               {['jobseeker', 'recruiter', 'admin'].map((r) => (
                 <label
@@ -215,7 +215,7 @@ export default function LoginPage() {
                     className="sr-only"
                   />
                   <div className="text-2xl">{getRoleIcon(r)}</div>
-                  <div className="text-xs font-medium mt-1">
+                  <div className="text-xs text-gray-900 font-medium mt-1">
                     {getRoleLabel(r)}
                   </div>
                 </label>
@@ -239,7 +239,7 @@ export default function LoginPage() {
 
         {/* Register Link */}
         <div className="text-center mt-6">
-          <p className="text-sm">
+          <p className="text-sm text-gray-600">
             Belum punya akun?{' '}
             <Link href={getRegisterLink()} className="text-blue-600 font-semibold">
               Daftar sebagai {getRoleLabel(role)}

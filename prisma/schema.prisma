@@ -215,8 +215,10 @@ model Recruiter {
   updatedAt  DateTime @updatedAt
 
   // Relations
-  jobs    Job[]
-  reviews Review[] @relation("RecruiterReviews")
+  jobs       Job[]
+  reviews    Review[]    @relation("RecruiterReviews")
+  // ✅ ADD THIS LINE
+  interviews Interview[]
 
   @@index([userId])
   @@index([companyId])
@@ -537,6 +539,9 @@ model Application {
   viewed   Boolean   @default(false)
   viewedAt DateTime?
 
+  // ✅ ADD THIS LINE
+  interviews Interview[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -563,6 +568,34 @@ model SavedJob {
   @@index([jobId])
   @@index([jobseekerId])
   @@map("saved_jobs")
+}
+
+model Interview {
+  id            String      @id @default(cuid())
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  applicationId String
+  recruiter     Recruiter   @relation(fields: [recruiterId], references: [id])
+  recruiterId   String
+
+  title       String
+  scheduledAt DateTime
+  duration    Int      @default(60) // in minutes
+  meetingType String // GOOGLE_MEET, ZOOM, IN_PERSON
+  meetingUrl  String?
+  location    String?
+  description String?  @db.Text
+  notes       String?  @db.Text // Private notes for recruiter
+
+  status   String  @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED, NO_SHOW
+  feedback String? @db.Text
+  rating   Int? // 1-5 rating
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([applicationId])
+  @@index([recruiterId])
+  @@index([scheduledAt])
 }
 
 // ==================== REVIEW MODELS ====================

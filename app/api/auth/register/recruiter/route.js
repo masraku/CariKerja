@@ -8,24 +8,67 @@ export async function POST(request) {
     const {
       companyName,
       companyEmail,
-      contactPerson,
-      phone,
-      password,
-      companyAddress,
-      companyWebsite
+      contactPersonName,
+      contactPersonPhone,   
+      password
     } = body
 
-    // Validasi input
-    if (!companyName || !companyEmail || !contactPerson || !phone || !password || !companyAddress) {
+    console.log('📥 Received data:', {
+      companyName,
+      companyEmail,
+      contactPersonName,
+      contactPersonPhone,
+      hasPassword: !!password
+    })
+
+    // ✅ Validasi input dengan field yang benar
+    if (!companyName?.trim()) {
       return NextResponse.json(
-        { error: 'Semua field wajib diisi' },
+        { error: 'Nama perusahaan wajib diisi' },
+        { status: 400 }
+      )
+    }
+
+    if (!companyEmail?.trim()) {
+      return NextResponse.json(
+        { error: 'Email perusahaan wajib diisi' },
+        { status: 400 }
+      )
+    }
+
+    if (!contactPersonName?.trim()) {
+      return NextResponse.json(
+        { error: 'Nama contact person wajib diisi' },
+        { status: 400 }
+      )
+    }
+
+    if (!contactPersonPhone?.trim()) {
+      return NextResponse.json(
+        { error: 'Nomor telepon wajib diisi' },
+        { status: 400 }
+      )
+    }
+
+    if (!password || password.length < 6) {
+      return NextResponse.json(
+        { error: 'Password minimal 6 karakter' },
+        { status: 400 }
+      )
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(companyEmail)) {
+      return NextResponse.json(
+        { error: 'Format email tidak valid' },
         { status: 400 }
       )
     }
 
     // Cek apakah email sudah terdaftar
     const existingUser = await prisma.user.findUnique({
-      where: { email: companyEmail }
+      where: { email: companyEmail.toLowerCase() }
     })
 
     if (existingUser) {
@@ -37,7 +80,12 @@ export async function POST(request) {
 
     // Cek apakah nama perusahaan sudah ada
     const existingCompany = await prisma.company.findFirst({
-      where: { name: companyName }
+      where: { 
+        name: {
+          equals: companyName,
+          mode: 'insensitive' // Case insensitive
+        }
+      }
     })
 
     if (existingCompany) {
@@ -47,44 +95,65 @@ export async function POST(request) {
       )
     }
 
+    console.log('✅ Validation passed, creating records...')
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10)
 
     // Generate slug dari nama perusahaan
-    const slug = companyName
+    let slug = companyName
       .toLowerCase()
       .replace(/[^\w\s-]/g, '')
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
       .trim()
 
+    // Ensure unique slug
+    const existingSlug = await prisma.company.findUnique({
+      where: { slug }
+    })
+
+    if (existingSlug) {
+      slug = `${slug}-${Date.now()}`
+    }
+
     // Split nama contact person
-    const nameParts = contactPerson.trim().split(' ')
+    const nameParts = contactPersonName.trim().split(' ')
     const firstName = nameParts[0]
     const lastName = nameParts.slice(1).join(' ') || ''
 
-    // Buat company terlebih dahulu
+    console.log('📝 Creating company:', {
+      name: companyName,
+      slug,
+      email: companyEmail
+    })
+
+    // ✅ Buat company dengan field yang required saja
     const company = await prisma.company.create({
       data: {
         name: companyName,
         slug: slug,
-        email: companyEmail,
-        phone: phone,
-        address: companyAddress,
-        city: '', // Akan diisi saat profile completion
-        province: '', // Akan diisi saat profile completion
-        website: companyWebsite || null,
-        industry: '', // Akan diisi saat profile completion
-        companySize: '', // Akan diisi saat profile completion
+        email: companyEmail.toLowerCase(),
+        phone: contactPersonPhone,
+        address: 'Belum dilengkapi', // Temporary, akan diisi saat profile completion
+        city: 'Belum dilengkapi',
+        province: 'Belum dilengkapi',
+        website: null,
+        industry: 'Belum dilengkapi',
+        companySize: 'Belum dilengkapi',
         status: 'PENDING_VERIFICATION',
         verified: false
       }
     })
 
+    console.log('✅ Company created:', company.id)
+
     // Buat user dan recruiter profile
+    console.log('📝 Creating user and recruiter...')
+
     const user = await prisma.user.create({
       data: {
-        email: companyEmail,
+        email: companyEmail.toLowerCase(),
         password: hashedPassword,
         role: 'RECRUITER',
         emailVerified: false,
@@ -93,7 +162,7 @@ export async function POST(request) {
             firstName,
             lastName,
             position: 'HR Manager', // Default, bisa diupdate saat profile completion
-            phone,
+            phone: contactPersonPhone,
             companyId: company.id,
             isVerified: false
           }
@@ -108,20 +177,36 @@ export async function POST(request) {
       }
     })
 
+    console.log('✅ User and recruiter created successfully')
+
     // Hapus password dari response
     const { password: _, ...userWithoutPassword } = user
 
     return NextResponse.json(
       {
-        message: 'Registrasi berhasil. Akun Anda akan diverifikasi dalam 2-5 hari kerja.',
+        success: true,
+        message: 'Registrasi berhasil! Silakan login dan lengkapi profile perusahaan Anda.',
         user: userWithoutPassword
       },
       { status: 201 }
     )
+
   } catch (error) {
-    console.error('Registration error:', error)
+    console.error('❌ Registration error:', error)
+    
+    // Handle specific Prisma errors
+    if (error.code === 'P2002') {
+      return NextResponse.json(
+        { error: 'Email atau nama perusahaan sudah terdaftar' },
+        { status: 400 }
+      )
+    }
+
     return NextResponse.json(
-      { error: 'Terjadi kesalahan saat registrasi' },
+      { 
+        error: 'Terjadi kesalahan saat registrasi',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      },
       { status: 500 }
     )
   }

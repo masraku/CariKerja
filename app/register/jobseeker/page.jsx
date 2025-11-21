@@ -2,8 +2,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Swal from 'sweetalert2'
 
 export default function JobseekerSignup() {
+  const Swal = require('sweetalert2')
   const router = useRouter()
   const [form, setForm] = useState({
     name: '',
@@ -20,31 +22,66 @@ export default function JobseekerSignup() {
     const newErrors = {}
 
     if (!form.name.trim()) {
-      newErrors.name = 'Nama lengkap wajib diisi'
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Nama lengkap wajib diisi',
+        confirmButtonColor: '#2563EB' 
+      })
     }
-
     if (!form.email.trim()) {
-      newErrors.email = 'Email wajib diisi'
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Email wajib diisi',
+        confirmButtonColor: '#2563EB' 
+      })
     } else if (!/\S+@\S+\.\S+/.test(form.email)) {
-      newErrors.email = 'Format email tidak valid'
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Format email tidak valid',
+        confirmButtonColor: '#2563EB' 
+      })
     }
-
     if (!form.password) {
-      newErrors.password = 'Password wajib diisi'
-    } else if (form.password.length < 6) {
-      newErrors.password = 'Password minimal 6 karakter'
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Password wajib diisi',
+        confirmButtonColor: '#2563EB'
+      })
+    } else if (form.password.length < 8) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Password minimal 8 karakter',
+        confirmButtonColor: '#2563EB' 
+      })
     }
-
     if (form.password !== form.confirmPassword) {
-      newErrors.confirmPassword = 'Password tidak cocok'
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Password dan konfirmasi password tidak cocok',
+        confirmButtonColor: '#2563EB' 
+      })
     }
-
     if (!form.phone.trim()) {
-      newErrors.phone = 'Nomor telepon wajib diisi'
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Nomor telepon wajib diisi',
+        confirmButtonColor: '#2563EB' 
+      })
     }
-
     if (!form.agreeTerms) {
-      newErrors.agreeTerms = 'Anda harus menyetujui syarat dan ketentuan'
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Anda harus menyetujui Syarat dan Ketentuan serta Kebijakan Privasi',
+        confirmButtonColor: '#2563EB' 
+      })
     }
 
     setErrors(newErrors)
@@ -85,9 +122,12 @@ export default function JobseekerSignup() {
       router.push('/login?role=jobseeker&registered=success')
     } catch (error) {
       console.error('Registration error:', error)
-      setErrors({
-        submit: error.message || 'Terjadi kesalahan saat registrasi. Silakan coba lagi.'
-      })
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error.message || 'Terjadi kesalahan saat registrasi. Silakan coba lagi.',
+          confirmButtonColor: '#2563EB' 
+        })
     } finally {
       setIsLoading(false)
     }
@@ -121,13 +161,13 @@ export default function JobseekerSignup() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Nama Lengkap */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className=" text-gray-900 block text-sm font-semibold text-gray-700 mb-2">
               Nama Lengkap <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               placeholder="Contoh: Ahmad Rizki"
-              className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+              className={`w-full text-gray-900 border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
                 errors.name ? 'border-red-500' : 'border-gray-300'
               }`}
               value={form.name}
@@ -144,7 +184,7 @@ export default function JobseekerSignup() {
             <input
               type="email"
               placeholder="nama@email.com"
-              className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+              className={`w-full text-gray-900 border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
                 errors.email ? 'border-red-500' : 'border-gray-300'
               }`}
               value={form.email}
@@ -161,7 +201,7 @@ export default function JobseekerSignup() {
             <input
               type="tel"
               placeholder="08xxxxxxxxxx"
-              className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+              className={`w-full text-gray-900 border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
                 errors.phone ? 'border-red-500' : 'border-gray-300'
               }`}
               value={form.phone}
@@ -178,7 +218,7 @@ export default function JobseekerSignup() {
             <input
               type="password"
               placeholder="Minimal 6 karakter"
-              className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+              className={`w-full text-gray-900 border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
                 errors.password ? 'border-red-500' : 'border-gray-300'
               }`}
               value={form.password}
@@ -195,7 +235,7 @@ export default function JobseekerSignup() {
             <input
               type="password"
               placeholder="Masukkan password yang sama"
-              className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+              className={`w-full text-gray-900 border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
                 errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
               }`}
               value={form.confirmPassword}

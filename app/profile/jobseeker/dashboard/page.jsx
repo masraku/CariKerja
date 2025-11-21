@@ -147,7 +147,7 @@ const JobseekerDashboard = () => {
             <div className="flex flex-col gap-2">
               <button
                 onClick={() => router.push('/profile/jobseeker')}
-                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                className="flex text-gray-900 items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
               >
                 <Edit className="w-4 h-4" />
                 Edit Profile
@@ -155,7 +155,7 @@ const JobseekerDashboard = () => {
 
               <button
                 onClick={() => router.push('/profile/jobseeker/view')}
-                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                className="flex text-gray-900 items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
               >
                 <View className="w-4 h-4" />
                 Lihat Profile

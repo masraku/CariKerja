@@ -1,168 +1,72 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Search, MapPin, Briefcase, Users, Globe, CheckCircle, Heart, HeartOff, Filter, TrendingUp, Building2 } from 'lucide-react'
+import { Search, MapPin, Briefcase, Users, CheckCircle, Heart, HeartOff, Filter, Building2 } from 'lucide-react'
 
 const CompaniesPage = () => {
+  const [companies, setCompanies] = useState([])
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [followedCompanies, setFollowedCompanies] = useState([])
   const [selectedIndustry, setSelectedIndustry] = useState('all')
   const [selectedSize, setSelectedSize] = useState('all')
 
-  // Data dummy perusahaan
-  const companies = [
-    {
-      id: 1,
-      name: 'Tech Innovate Indonesia',
-      slug: 'tech-innovate-indonesia',
-      logo: '🚀',
-      tagline: 'Building the Future of Technology',
-      industry: 'Teknologi',
-      size: '200-500',
-      location: 'Jakarta Selatan, DKI Jakarta',
-      employees: '350+',
-      activeJobs: 12,
-      rating: 4.8,
-      reviews: 234,
-      verified: true
-    },
-    {
-      id: 2,
-      name: 'Creative Studio Co',
-      slug: 'creative-studio-co',
-      logo: '🎨',
-      tagline: 'Design Excellence, Creative Solutions',
-      industry: 'Desain',
-      size: '50-200',
-      location: 'Bandung, Jawa Barat',
-      employees: '120+',
-      activeJobs: 8,
-      rating: 4.7,
-      reviews: 156,
-      verified: true
-    },
-    {
-      id: 3,
-      name: 'DataCore Solutions',
-      slug: 'datacore-solutions',
-      logo: '💻',
-      tagline: 'Data-Driven Innovation',
-      industry: 'Teknologi',
-      size: '100-200',
-      location: 'Jakarta Pusat, DKI Jakarta',
-      employees: '180+',
-      activeJobs: 10,
-      rating: 4.6,
-      reviews: 189,
-      verified: true
-    },
-    {
-      id: 4,
-      name: 'Marketing Pro Agency',
-      slug: 'marketing-pro-agency',
-      logo: '📈',
-      tagline: 'Growth Through Strategic Marketing',
-      industry: 'Marketing',
-      size: '50-100',
-      location: 'Jakarta Selatan, DKI Jakarta',
-      employees: '85+',
-      activeJobs: 6,
-      rating: 4.5,
-      reviews: 123,
-      verified: true
-    },
-    {
-      id: 5,
-      name: 'FinTech Solutions',
-      slug: 'fintech-solutions',
-      logo: '💰',
-      tagline: 'Innovating Financial Technology',
-      industry: 'Fintech',
-      size: '200-500',
-      location: 'Jakarta Pusat, DKI Jakarta',
-      employees: '400+',
-      activeJobs: 15,
-      rating: 4.9,
-      reviews: 312,
-      verified: true
-    },
-    {
-      id: 6,
-      name: 'EduTech Platform',
-      slug: 'edutech-platform',
-      logo: '📚',
-      tagline: 'Transforming Education Through Technology',
-      industry: 'Edtech',
-      size: '100-200',
-      location: 'Tangerang, Banten',
-      employees: '150+',
-      activeJobs: 9,
-      rating: 4.7,
-      reviews: 167,
-      verified: true
-    },
-    {
-      id: 7,
-      name: 'Cloud Systems Inc',
-      slug: 'cloud-systems-inc',
-      logo: '☁️',
-      tagline: 'Cloud Infrastructure Excellence',
-      industry: 'Teknologi',
-      size: '100-200',
-      location: 'Yogyakarta, DIY',
-      employees: '130+',
-      activeJobs: 7,
-      rating: 4.6,
-      reviews: 145,
-      verified: true
-    },
-    {
-      id: 8,
-      name: 'HealthTech Innovations',
-      slug: 'healthtech-innovations',
-      logo: '🏥',
-      tagline: 'Healthcare Technology Solutions',
-      industry: 'Healthtech',
-      size: '50-100',
-      location: 'Surabaya, Jawa Timur',
-      employees: '75+',
-      activeJobs: 5,
-      rating: 4.8,
-      reviews: 98,
-      verified: true
-    },
-    {
-      id: 9,
-      name: 'E-Commerce Giants',
-      slug: 'e-commerce-giants',
-      logo: '🛒',
-      tagline: 'Leading Online Marketplace',
-      industry: 'E-commerce',
-      size: '500+',
-      location: 'Jakarta Barat, DKI Jakarta',
-      employees: '800+',
-      activeJobs: 25,
-      rating: 4.7,
-      reviews: 456,
-      verified: true
-    }
+  // Available filters - will be populated from data
+  const [industries, setIndustries] = useState(['all'])
+  const companySizes = [
+    'all',
+    '1-10',
+    '11-50',
+    '51-200',
+    '201-500',
+    '501-1000',
+    '1000+'
   ]
 
-  const industries = ['all', 'Teknologi', 'Desain', 'Marketing', 'Fintech', 'Edtech', 'Healthtech', 'E-commerce']
-  const companySizes = ['all', '1-50', '50-100', '100-200', '200-500', '500+']
+  useEffect(() => {
+    loadCompanies()
+  }, [selectedIndustry, selectedSize])
 
-  // Filter companies
-  const filteredCompanies = companies.filter(company => {
-    const matchesSearch = searchQuery === '' || 
-      company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      company.tagline.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      company.industry.toLowerCase().includes(searchQuery.toLowerCase())
-    
-    const matchesIndustry = selectedIndustry === 'all' || company.industry === selectedIndustry
-    const matchesSize = selectedSize === 'all' || company.size === selectedSize
+  useEffect(() => {
+    // Debounce search
+    const timer = setTimeout(() => {
+      if (searchQuery || searchQuery === '') {
+        loadCompanies()
+      }
+    }, 500)
 
-    return matchesSearch && matchesIndustry && matchesSize
-  })
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  const loadCompanies = async () => {
+    try {
+      setLoading(true)
+      
+      const params = new URLSearchParams()
+      if (searchQuery) params.append('search', searchQuery)
+      if (selectedIndustry !== 'all') params.append('industry', selectedIndustry)
+      if (selectedSize !== 'all') params.append('size', selectedSize)
+
+      const response = await fetch(`/api/companies?${params.toString()}`)
+      const data = await response.json()
+
+      if (response.ok) {
+        setCompanies(data.companies)
+        
+        // Extract unique industries
+        const uniqueIndustries = ['all', ...new Set(
+          data.companies
+            .map(c => c.industry)
+            .filter(i => i && i !== 'Belum dilengkapi')
+        )]
+        setIndustries(uniqueIndustries)
+      }
+    } catch (error) {
+      console.error('Load companies error:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const toggleFollow = (companyId) => {
     if (followedCompanies.includes(companyId)) {
@@ -170,6 +74,31 @@ const CompaniesPage = () => {
     } else {
       setFollowedCompanies([...followedCompanies, companyId])
     }
+  }
+
+  const totalActiveJobs = companies.reduce((sum, c) => sum + c.activeJobs, 0)
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white py-16">
+          <div className="container mx-auto px-4">
+            <div className="text-center">
+              <h1 className="text-4xl md:text-5xl font-bold mb-4">Jelajahi Perusahaan Terbaik</h1>
+              <p className="text-xl text-indigo-100">Loading...</p>
+            </div>
+          </div>
+        </div>
+        <div className="container mx-auto px-4 py-12">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-indigo-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Memuat data perusahaan...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -201,11 +130,11 @@ const CompaniesPage = () => {
           {/* Stats */}
           <div className="flex justify-center gap-12 mt-12">
             <div className="text-center">
-              <div className="text-3xl font-bold">{companies.length}+</div>
+              <div className="text-3xl font-bold">{companies.length}</div>
               <div className="text-indigo-200">Perusahaan</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold">{companies.reduce((sum, c) => sum + c.activeJobs, 0)}+</div>
+              <div className="text-3xl font-bold">{totalActiveJobs}</div>
               <div className="text-indigo-200">Lowongan Aktif</div>
             </div>
             <div className="text-center">
@@ -229,7 +158,7 @@ const CompaniesPage = () => {
             <select
               value={selectedIndustry}
               onChange={(e) => setSelectedIndustry(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
             >
               <option value="all">Semua Industri</option>
               {industries.filter(i => i !== 'all').map((industry) => (
@@ -240,7 +169,7 @@ const CompaniesPage = () => {
             <select
               value={selectedSize}
               onChange={(e) => setSelectedSize(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
             >
               <option value="all">Semua Ukuran</option>
               {companySizes.filter(s => s !== 'all').map((size) => (
@@ -263,15 +192,31 @@ const CompaniesPage = () => {
         </div>
 
         {/* Companies Grid */}
-        {filteredCompanies.length === 0 ? (
+        {companies.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
             <div className="text-6xl mb-4">🏢</div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Tidak ada perusahaan ditemukan</h3>
-            <p className="text-gray-600">Coba ubah filter atau kata kunci pencarian Anda</p>
+            <p className="text-gray-600 mb-4">
+              {searchQuery || selectedIndustry !== 'all' || selectedSize !== 'all'
+                ? 'Coba ubah filter atau kata kunci pencarian Anda'
+                : 'Belum ada perusahaan yang terdaftar'}
+            </p>
+            {(searchQuery || selectedIndustry !== 'all' || selectedSize !== 'all') && (
+              <button
+                onClick={() => {
+                  setSearchQuery('')
+                  setSelectedIndustry('all')
+                  setSelectedSize('all')
+                }}
+                className="text-indigo-600 hover:text-indigo-700 font-semibold"
+              >
+                Reset Semua Filter
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredCompanies.map((company) => (
+            {companies.map((company) => (
               <div
                 key={company.id}
                 className="group bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-indigo-200"
@@ -279,8 +224,16 @@ const CompaniesPage = () => {
                 {/* Card Header */}
                 <div className="relative bg-gradient-to-r from-indigo-500 to-purple-600 h-32">
                   <div className="absolute -bottom-12 left-6">
-                    <div className="w-24 h-24 bg-white rounded-2xl shadow-xl flex items-center justify-center text-5xl border-4 border-white group-hover:scale-110 transition-transform">
-                      {company.logo}
+                    <div className="w-24 h-24 bg-white rounded-2xl shadow-xl flex items-center justify-center border-4 border-white group-hover:scale-110 transition-transform overflow-hidden">
+                      {company.logo ? (
+                        <img
+                          src={company.logo}
+                          alt={company.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Building2 className="w-12 h-12 text-indigo-600" />
+                      )}
                     </div>
                   </div>
                   {company.verified && (
@@ -296,7 +249,9 @@ const CompaniesPage = () => {
                   <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-indigo-600 transition">
                     {company.name}
                   </h3>
-                  <p className="text-gray-600 text-sm mb-4">{company.tagline}</p>
+                  {company.tagline && (
+                    <p className="text-gray-600 text-sm mb-4">{company.tagline}</p>
+                  )}
 
                   {/* Company Info */}
                   <div className="space-y-2 mb-4">
@@ -306,7 +261,7 @@ const CompaniesPage = () => {
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Users className="w-4 h-4 text-gray-400" />
-                      <span>{company.employees} karyawan</span>
+                      <span>{company.companySize} karyawan</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Briefcase className="w-4 h-4 text-gray-400" />
@@ -316,32 +271,38 @@ const CompaniesPage = () => {
 
                   {/* Tags */}
                   <div className="flex flex-wrap gap-2 mb-4">
-                    <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">
-                      {company.industry}
-                    </span>
-                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                      {company.size} employees
-                    </span>
+                    {company.industry && company.industry !== 'Belum dilengkapi' && (
+                      <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">
+                        {company.industry}
+                      </span>
+                    )}
+                    {company.companySize && (
+                      <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                        {company.companySize}
+                      </span>
+                    )}
                   </div>
 
                   {/* Rating */}
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="flex">
-                      {[...Array(5)].map((_, i) => (
-                        <svg
-                          key={i}
-                          className={`w-4 h-4 ${i < Math.floor(company.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      ))}
+                  {company.rating > 0 && (
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="flex">
+                        {[...Array(5)].map((_, i) => (
+                          <svg
+                            key={i}
+                            className={`w-4 h-4 ${i < Math.floor(company.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+                      <span className="text-sm text-gray-600">
+                        {company.rating} ({company.reviews} reviews)
+                      </span>
                     </div>
-                    <span className="text-sm text-gray-600">
-                      {company.rating} ({company.reviews} reviews)
-                    </span>
-                  </div>
+                  )}
 
                   {/* Actions */}
                   <div className="flex gap-3">
@@ -358,6 +319,7 @@ const CompaniesPage = () => {
                           ? 'bg-red-100 text-red-600 hover:bg-red-200'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
+                      title={followedCompanies.includes(company.id) ? 'Unfollow' : 'Follow'}
                     >
                       {followedCompanies.includes(company.id) ? (
                         <HeartOff className="w-5 h-5" />

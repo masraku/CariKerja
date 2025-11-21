@@ -152,7 +152,7 @@ export default function RecruiterDashboard() {
             </div>
             <button
               onClick={() => router.push('/profile/recruiter')}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              className="flex text-gray-900 items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
             >
               <Edit className="w-4 h-4" />
               Edit Profile
@@ -207,7 +207,7 @@ export default function RecruiterDashboard() {
         {/* Quick Actions */}
         <div className="grid md:grid-cols-2 gap-6 mb-6">
           <button
-            onClick={() => router.push('/post-job')}
+            onClick={() => router.push('/profile/recruiter/post-job')}
             className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition shadow-lg flex items-center justify-between group"
           >
             <div className="text-left">

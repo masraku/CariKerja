@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Swal from 'sweetalert2'
 import { User, Star, Briefcase, GraduationCap, Award, FileText, CheckCircle, Upload, X, Plus, Calendar, Phone, Mail, Globe, Linkedin, Github, ChevronRight, ChevronLeft, Save, ArrowLeft } from 'lucide-react'
+import RupiahInput from '@/components/RupiahInput'
 
 const JobseekerProfilePage = () => {
   const router = useRouter()
@@ -15,6 +16,11 @@ const JobseekerProfilePage = () => {
   const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isEditMode, setIsEditMode] = useState(false)
+  const formatRupiah = (value) => {
+    if (!value) return ''
+    const number = value.toString().replace(/[^0-9]/g, '')
+    return number.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  }
 
   const [formData, setFormData] = useState({
     // Personal Info
@@ -1869,39 +1875,44 @@ const JobseekerProfilePage = () => {
                     />
                   </div>
 
+                  {/*RupiahInput untuk Salary */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Ekspektasi Gaji (Minimum)
                     </label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">Rp</span>
-                      <input
-                        type="number"
-                        name="desiredSalaryMin"
-                        value={formData.desiredSalaryMin}
-                        onChange={handleInputChange}
-                        className="w-full text-gray-900 pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        placeholder="5000000"
-                      />
-                    </div>
+                    <RupiahInput
+                      name="desiredSalaryMin"
+                      value={formData.desiredSalaryMin}
+                      onChange={handleInputChange}
+                      placeholder="5.000.000"
+                    />
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Ekspektasi Gaji (Maximum)
                     </label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">Rp</span>
-                      <input
-                        type="number"
-                        name="desiredSalaryMax"
-                        value={formData.desiredSalaryMax}
-                        onChange={handleInputChange}
-                        className="w-full text-gray-900 pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        placeholder="10000000"
-                      />
-                    </div>
+                    <RupiahInput
+                      name="desiredSalaryMax"
+                      value={formData.desiredSalaryMax}
+                      onChange={handleInputChange}
+                      placeholder="10.000.000"
+                    />
                   </div>
+
+                  {/* Preview Salary Range */}
+                  {formData.desiredSalaryMin && formData.desiredSalaryMax && (
+                    <div className="md:col-span-2">
+                      <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
+                        <p className="text-sm text-indigo-600 font-medium mb-1">
+                          Preview Range Gaji:
+                        </p>
+                        <p className="text-lg font-bold text-gray-900">
+                          Rp {formatRupiah(formData.desiredSalaryMin)} - Rp {formatRupiah(formData.desiredSalaryMax)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -1962,23 +1973,9 @@ const JobseekerProfilePage = () => {
                       </div>
                     </label>
                   </div>
-
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Skills (pisahkan dengan koma)
-                    </label>
-                    <textarea
-                      name="skills"
-                      value={formData.skills.join(', ')}
-                      onChange={(e) => setFormData(prev => ({ ...prev, skills: e.target.value.split(',').map(s => s.trim()) }))}
-                      rows="3"
-                      className="w-full text-gray-900 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      placeholder="Contoh: JavaScript, React, Node.js, PostgreSQL, Git"
-                    ></textarea>
-                  </div>
                 </div>
 
-                {/* Summary */}
+                {/* Summary - tetap sama */}
                 <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 border-2 border-indigo-200 mt-8">
                   <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <CheckCircle className="w-6 h-6 text-indigo-600" />
@@ -2009,12 +2006,21 @@ const JobseekerProfilePage = () => {
                       <p className="text-gray-600">Pengalaman</p>
                       <p className="font-semibold text-gray-900">{formData.experiences[0].company ? 'Ada' : 'Fresh Graduate'}</p>
                     </div>
+                    {/* ✅ ADD: Show salary range in summary */}
+                    {formData.desiredSalaryMin && formData.desiredSalaryMax && (
+                      <div className="md:col-span-2">
+                        <p className="text-gray-600">Ekspektasi Gaji</p>
+                        <p className="font-semibold text-gray-900">
+                          Rp {formatRupiah(formData.desiredSalaryMin)} - Rp {formatRupiah(formData.desiredSalaryMax)}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             )}
+
             {/* Navigation Buttons */}
-            {/* Navigation Buttons - TETAP SAMA */}
             <div className="flex justify-between pt-8 border-t border-gray-200 mt-8">
               <button
                 type="button"

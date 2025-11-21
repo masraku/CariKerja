@@ -88,7 +88,7 @@ export default function RecruiterProfilePage() {
                 await refreshUser()
 
                 // Redirect to dashboard
-                router.push('/recruiter/dashboard')
+                router.push('/profile/recruiter/dashboard')
 
                 // Force refresh
                 router.refresh()
@@ -302,7 +302,7 @@ export default function RecruiterProfilePage() {
                                         name="firstName"
                                         value={formData.firstName}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="John"
                                         required
                                     />
@@ -317,7 +317,7 @@ export default function RecruiterProfilePage() {
                                         name="lastName"
                                         value={formData.lastName}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="Doe"
                                         required
                                     />
@@ -332,7 +332,7 @@ export default function RecruiterProfilePage() {
                                         name="position"
                                         value={formData.position}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="HR Manager"
                                         required
                                     />
@@ -347,7 +347,7 @@ export default function RecruiterProfilePage() {
                                         name="phone"
                                         value={formData.phone}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="08123456789"
                                     />
                                 </div>
@@ -361,7 +361,7 @@ export default function RecruiterProfilePage() {
                                         name="department"
                                         value={formData.department}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="Human Resources"
                                     />
                                 </div>
@@ -386,7 +386,7 @@ export default function RecruiterProfilePage() {
                                         name="companyName"
                                         value={formData.companyName}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="PT. Tech Innovate Indonesia"
                                         required
                                     />
@@ -401,7 +401,7 @@ export default function RecruiterProfilePage() {
                                         name="companySlug"
                                         value={formData.companySlug}
                                         readOnly
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
                                         placeholder="pt-tech-innovate-indonesia"
                                     />
                                     <p className="text-xs text-gray-500 mt-1">
@@ -418,7 +418,7 @@ export default function RecruiterProfilePage() {
                                         name="companyLogo"
                                         value={formData.companyLogo}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="https://example.com/logo.png"
                                     />
                                 </div>
@@ -432,7 +432,7 @@ export default function RecruiterProfilePage() {
                                         name="tagline"
                                         value={formData.tagline}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="Innovating the Future of Technology"
                                     />
                                 </div>
@@ -446,7 +446,7 @@ export default function RecruiterProfilePage() {
                                         value={formData.description}
                                         onChange={handleChange}
                                         rows={5}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="Ceritakan tentang perusahaan Anda..."
                                         required
                                     />
@@ -461,7 +461,7 @@ export default function RecruiterProfilePage() {
                                             name="industry"
                                             value={formData.industry}
                                             onChange={handleChange}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             required
                                         >
                                             <option value="">Pilih Industri</option>
@@ -484,7 +484,7 @@ export default function RecruiterProfilePage() {
                                             name="companySize"
                                             value={formData.companySize}
                                             onChange={handleChange}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             required
                                         >
                                             <option value="">Pilih Ukuran</option>
@@ -508,7 +508,7 @@ export default function RecruiterProfilePage() {
                                             onChange={handleChange}
                                             min="1900"
                                             max={new Date().getFullYear()}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             placeholder="2020"
                                         />
                                     </div>
@@ -537,7 +537,7 @@ export default function RecruiterProfilePage() {
                                             name="companyEmail"
                                             value={formData.companyEmail}
                                             onChange={handleChange}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             placeholder="info@company.com"
                                             required
                                         />
@@ -552,7 +552,7 @@ export default function RecruiterProfilePage() {
                                             name="companyPhone"
                                             value={formData.companyPhone}
                                             onChange={handleChange}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             placeholder="021-12345678"
                                         />
                                     </div>
@@ -566,7 +566,7 @@ export default function RecruiterProfilePage() {
                                             name="website"
                                             value={formData.website}
                                             onChange={handleChange}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             placeholder="https://www.company.com"
                                         />
                                     </div>
@@ -583,7 +583,7 @@ export default function RecruiterProfilePage() {
                                         value={formData.address}
                                         onChange={handleChange}
                                         rows={3}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="Jl. Sudirman No. 123"
                                         required
                                     />
@@ -599,7 +599,7 @@ export default function RecruiterProfilePage() {
                                             name="city"
                                             value={formData.city}
                                             onChange={handleChange}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             placeholder="Jakarta"
                                             required
                                         />
@@ -614,7 +614,7 @@ export default function RecruiterProfilePage() {
                                             name="province"
                                             value={formData.province}
                                             onChange={handleChange}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             placeholder="DKI Jakarta"
                                             required
                                         />
@@ -629,7 +629,7 @@ export default function RecruiterProfilePage() {
                                             name="postalCode"
                                             value={formData.postalCode}
                                             onChange={handleChange}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             placeholder="12345"
                                         />
                                     </div>
@@ -655,7 +655,7 @@ export default function RecruiterProfilePage() {
                                         name="linkedinUrl"
                                         value={formData.linkedinUrl}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="https://linkedin.com/company/yourcompany"
                                     />
                                 </div>
@@ -669,7 +669,7 @@ export default function RecruiterProfilePage() {
                                         name="facebookUrl"
                                         value={formData.facebookUrl}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="https://facebook.com/yourcompany"
                                     />
                                 </div>
@@ -683,7 +683,7 @@ export default function RecruiterProfilePage() {
                                         name="twitterUrl"
                                         value={formData.twitterUrl}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="https://twitter.com/yourcompany"
                                     />
                                 </div>
@@ -697,7 +697,7 @@ export default function RecruiterProfilePage() {
                                         name="instagramUrl"
                                         value={formData.instagramUrl}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="https://instagram.com/yourcompany"
                                     />
                                 </div>
@@ -722,7 +722,7 @@ export default function RecruiterProfilePage() {
                                         value={formData.culture}
                                         onChange={handleChange}
                                         rows={5}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="Ceritakan tentang budaya kerja di perusahaan Anda..."
                                     />
                                 </div>
@@ -742,13 +742,13 @@ export default function RecruiterProfilePage() {
                                                     handleAddBenefit()
                                                 }
                                             }}
-                                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="flex-1 text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             placeholder="Contoh: BPJS Kesehatan"
                                         />
                                         <button
                                             type="button"
                                             onClick={handleAddBenefit}
-                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                            className="px-4 text-gray-900 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                                         >
                                             Tambah
                                         </button>

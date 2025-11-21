@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Swal from 'sweetalert2'
 
 export default function RecruiterSignup() {
   const router = useRouter()
@@ -15,84 +16,153 @@ export default function RecruiterSignup() {
     agreeTerms: false
   })
   const [isLoading, setIsLoading] = useState(false)
-  const [errors, setErrors] = useState({})
-
-  const validateForm = () => {
-    const newErrors = {}
-
-    if (!form.companyName.trim()) {
-      newErrors.companyName = 'Nama perusahaan wajib diisi'
-    }
-
-    if (!form.companyEmail.trim()) {
-      newErrors.companyEmail = 'Email perusahaan wajib diisi'
-    } else if (!/\S+@\S+\.\S+/.test(form.companyEmail)) {
-      newErrors.companyEmail = 'Format email tidak valid'
-    }
-
-    if (!form.contactPerson.trim()) {
-      newErrors.contactPerson = 'Nama contact person wajib diisi'
-    }
-
-    if (!form.phone.trim()) {
-      newErrors.phone = 'Nomor telepon wajib diisi'
-    }
-
-    if (!form.password) {
-      newErrors.password = 'Password wajib diisi'
-    } else if (form.password.length < 6) {
-      newErrors.password = 'Password minimal 6 karakter'
-    }
-
-    if (form.password !== form.confirmPassword) {
-      newErrors.confirmPassword = 'Password tidak cocok'
-    }
-
-    if (!form.agreeTerms) {
-      newErrors.agreeTerms = 'Anda harus menyetujui syarat dan ketentuan'
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!validateForm()) {
+    // ✅ Client-side validation with detailed error messages
+    const errors = []
+
+    if (!form.companyName?.trim()) errors.push('Nama Perusahaan')
+    if (!form.companyEmail?.trim()) errors.push('Email Perusahaan')
+    if (!form.contactPerson?.trim()) errors.push('Nama Contact Person')
+    if (!form.phone?.trim()) errors.push('Nomor Telepon')
+    if (!form.password?.trim()) errors.push('Password')
+    if (!form.confirmPassword?.trim()) errors.push('Konfirmasi Password')
+
+    if (errors.length > 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Field Belum Lengkap',
+        html: `
+          <p class="text-left mb-2">Field yang masih kosong:</p>
+          <ul class="text-left list-disc list-inside">
+            ${errors.map(field => `<li>${field}</li>`).join('')}
+          </ul>
+        `,
+        confirmButtonColor: '#2563EB'
+      })
+      return
+    }
+
+    // ✅ Validate phone number format
+    const phoneRegex = /^[0-9+\-\s()]+$/
+    if (!phoneRegex.test(form.phone)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Format Nomor Telepon Salah',
+        text: 'Nomor telepon hanya boleh berisi angka, +, -, spasi, atau tanda kurung',
+        confirmButtonColor: '#2563EB'
+      })
+      return
+    }
+
+    // ✅ Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(form.companyEmail)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Format Email Salah',
+        text: 'Silakan masukkan email yang valid',
+        confirmButtonColor: '#2563EB'
+      })
+      return
+    }
+
+    // ✅ Check password match
+    if (form.password !== form.confirmPassword) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Password Tidak Cocok',
+        text: 'Password dan Konfirmasi Password harus sama',
+        confirmButtonColor: '#2563EB'
+      })
+      return
+    }
+
+    // ✅ Check password length
+    if (form.password.length < 6) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Password Terlalu Pendek',
+        text: 'Password minimal 6 karakter',
+        confirmButtonColor: '#2563EB'
+      })
+      return
+    }
+
+    // ✅ Check terms agreement
+    if (!form.agreeTerms) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Syarat dan Ketentuan',
+        text: 'Anda harus menyetujui Syarat dan Ketentuan untuk melanjutkan',
+        confirmButtonColor: '#2563EB'
+      })
       return
     }
 
     setIsLoading(true)
-    setErrors({})
 
     try {
+      console.log('📤 Sending registration data:', {
+        companyName: form.companyName,
+        companyEmail: form.companyEmail,
+        contactPerson: form.contactPerson,
+        phone: form.phone,
+        passwordLength: form.password.length
+      })
+
       const response = await fetch('/api/auth/register/recruiter', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          companyName: form.companyName,
-          companyEmail: form.companyEmail,
-          contactPerson: form.contactPerson,
-          phone: form.phone,
+          companyName: form.companyName.trim(),
+          companyEmail: form.companyEmail.trim().toLowerCase(),
+          contactPersonName: form.contactPerson.trim(),
+          contactPersonPhone: form.phone.trim(),
           password: form.password
         }),
       })
 
       const data = await response.json()
 
+      console.log('📥 Response:', {
+        status: response.status,
+        success: response.ok,
+        data
+      })
+
       if (!response.ok) {
-        throw new Error(data.error || 'Registrasi gagal')
+        throw new Error(data.error || data.details || 'Registrasi gagal')
       }
 
-      // Redirect ke login dengan success message
-      router.push('/login?role=recruiter&registered=success')
+      // Success
+      await Swal.fire({
+        icon: 'success',
+        title: 'Registrasi Berhasil!',
+        html: `
+          <p>Akun recruiter Anda telah dibuat.</p>
+          <p class="text-sm text-gray-600 mt-2">Silakan login untuk melanjutkan.</p>
+        `,
+        confirmButtonColor: '#2563EB'
+      })
+
+      router.push('/login?role=recruiter&registered=true')
+
     } catch (error) {
-      console.error('Registration error:', error)
-      setErrors({
-        submit: error.message || 'Terjadi kesalahan saat registrasi. Silakan coba lagi.'
+      console.error('❌ Registration error:', error)
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Registrasi Gagal',
+        html: `
+          <p class="text-red-600 font-semibold">${error.message}</p>
+          <p class="text-sm text-gray-600 mt-2">Silakan coba lagi atau hubungi admin jika masalah berlanjut.</p>
+        `,
+        confirmButtonColor: '#2563EB'
       })
     } finally {
       setIsLoading(false)
@@ -111,18 +181,6 @@ export default function RecruiterSignup() {
           <p className="text-gray-600 mt-2">Bergabunglah dan temukan kandidat terbaik untuk perusahaan Anda</p>
         </div>
 
-        {/* Error Alert */}
-        {errors.submit && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-red-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-              <p className="text-sm text-red-800">{errors.submit}</p>
-            </div>
-          </div>
-        )}
-
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -134,13 +192,10 @@ export default function RecruiterSignup() {
               <input
                 type="text"
                 placeholder="PT. Contoh Indonesia"
-                className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent transition ${
-                  errors.companyName ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className="w-full text-gray-900 border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
                 value={form.companyName}
                 onChange={(e) => setForm({ ...form, companyName: e.target.value })}
               />
-              {errors.companyName && <p className="text-red-500 text-xs mt-1">{errors.companyName}</p>}
             </div>
 
             {/* Email Perusahaan */}
@@ -151,13 +206,10 @@ export default function RecruiterSignup() {
               <input
                 type="email"
                 placeholder="hr@perusahaan.com"
-                className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent transition ${
-                  errors.companyEmail ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className="w-full text-gray-900 border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
                 value={form.companyEmail}
                 onChange={(e) => setForm({ ...form, companyEmail: e.target.value })}
               />
-              {errors.companyEmail && <p className="text-red-500 text-xs mt-1">{errors.companyEmail}</p>}
             </div>
           </div>
 
@@ -170,13 +222,10 @@ export default function RecruiterSignup() {
               <input
                 type="text"
                 placeholder="Nama lengkap PIC"
-                className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent transition ${
-                  errors.contactPerson ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className="w-full text-gray-900 border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
                 value={form.contactPerson}
                 onChange={(e) => setForm({ ...form, contactPerson: e.target.value })}
               />
-              {errors.contactPerson && <p className="text-red-500 text-xs mt-1">{errors.contactPerson}</p>}
             </div>
 
             {/* Nomor Telepon */}
@@ -186,14 +235,16 @@ export default function RecruiterSignup() {
               </label>
               <input
                 type="tel"
-                placeholder="08123456789"
-                className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent transition ${
-                  errors.phone ? 'border-red-500' : 'border-gray-300'
-                }`}
+                placeholder="+62 812 3456 7890"
+                className="w-full text-gray-900 border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                pattern="[0-9+\-\s()]+"
+                title="Nomor telepon hanya boleh berisi angka, +, -, spasi, atau tanda kurung"
               />
-              {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+              <p className="text-xs text-gray-500 mt-1">
+                Contoh: +62 812 3456 7890 atau 081234567890
+              </p>
             </div>
           </div>
 
@@ -206,13 +257,10 @@ export default function RecruiterSignup() {
               <input
                 type="password"
                 placeholder="Minimal 6 karakter"
-                className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent transition ${
-                  errors.password ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className="w-full text-gray-900 border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
               />
-              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
             </div>
 
             {/* Confirm Password */}
@@ -223,13 +271,10 @@ export default function RecruiterSignup() {
               <input
                 type="password"
                 placeholder="Masukkan password yang sama"
-                className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent transition ${
-                  errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className="w-full text-gray-900 border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
                 value={form.confirmPassword}
                 onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
               />
-              {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
             </div>
           </div>
 
@@ -251,9 +296,7 @@ export default function RecruiterSignup() {
             <label className="flex items-start">
               <input
                 type="checkbox"
-                className={`mt-1 rounded border-gray-300 text-green-600 focus:ring-green-500 ${
-                  errors.agreeTerms ? 'border-red-500' : ''
-                }`}
+                className="mt-1 rounded border-gray-300 text-green-600 focus:ring-green-500"
                 checked={form.agreeTerms}
                 onChange={(e) => setForm({ ...form, agreeTerms: e.target.checked })}
               />
@@ -268,7 +311,6 @@ export default function RecruiterSignup() {
                 </Link>
               </span>
             </label>
-            {errors.agreeTerms && <p className="text-red-500 text-xs mt-1">{errors.agreeTerms}</p>}
           </div>
 
           {/* Submit Button */}
