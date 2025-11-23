@@ -1,3 +1,4 @@
+//app/api/profile/recruiter/jobs/[slug]/route.js
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 

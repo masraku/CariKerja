@@ -1,3 +1,4 @@
+//app/api/profile/recruiter/jobs/[slug]/applications/my-applications/route.js
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireJobseeker } from '@/lib/authHelper'

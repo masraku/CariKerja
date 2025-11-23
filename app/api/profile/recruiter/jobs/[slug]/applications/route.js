@@ -1,0 +1,155 @@
+//app/api/profile/recruiter/jobs/[slug]/applications/route.js
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { verifyToken } from '@/lib/auth'
+
+export async function GET(request, { params }) {
+  try {
+    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const decoded = verifyToken(token)
+    const { slug } = await params
+
+    console.log('📋 Fetching applications for job slug:', slug)
+
+    // Find job by slug and verify recruiter owns it
+    const job = await prisma.job.findUnique({
+      where: { slug },
+      include: {
+        company: {
+          include: {
+            recruiters: {
+              where: { userId: decoded.userId }
+            }
+          }
+        }
+      }
+    })
+
+    if (!job || job.company.recruiters.length === 0) {
+      return NextResponse.json(
+        { error: 'Job not found or unauthorized' },
+        { status: 404 }
+      )
+    }
+
+    console.log('✅ Job found:', job.title)
+
+    // Get all applications with jobseeker details
+    const applications = await prisma.application.findMany({
+      where: { jobId: job.id },
+      include: {
+        jobseeker: {
+          include: {
+            educations: true,
+            workExperiences: true,
+            jobseekerSkills: { // ✅ Fixed: was 'skills', now 'jobseekerSkills'
+              include: {
+                skill: true // Get the actual skill name
+              }
+            },
+            certifications: true
+          }
+        }
+      },
+      orderBy: {
+        appliedAt: 'desc'
+      }
+    })
+
+    console.log(`✅ Found ${applications.length} applications`)
+
+    // Calculate profile completeness for each applicant
+    const applicationsWithCompleteness = applications.map(app => {
+      const jobseeker = app.jobseeker
+      let completeness = 0
+      let totalFields = 13
+
+      // Basic info (6 fields)
+      if (jobseeker.firstName) completeness++
+      if (jobseeker.lastName) completeness++
+      if (jobseeker.phone) completeness++
+      if (jobseeker.email) completeness++
+      if (jobseeker.currentTitle) completeness++
+      if (jobseeker.summary) completeness++
+
+      // CV
+      if (jobseeker.cvUrl) completeness++
+
+      // Education
+      if (jobseeker.educations?.length > 0) completeness++
+
+      // Work Experience
+      if (jobseeker.workExperiences?.length > 0) completeness++
+
+      // Skills - ✅ Fixed: access through jobseekerSkills
+      if (jobseeker.jobseekerSkills?.length > 0) completeness++
+
+      // Certifications
+      if (jobseeker.certifications?.length > 0) completeness++
+
+      // Photo
+      if (jobseeker.photo) completeness++
+
+      // Address
+      if (jobseeker.city && jobseeker.province) completeness++
+
+      const completenessPercentage = Math.round((completeness / totalFields) * 100)
+
+      // Extract skill names from jobseekerSkills
+      const skills = jobseeker.jobseekerSkills?.map(js => js.skill?.name).filter(Boolean) || []
+
+      return {
+        ...app,
+        jobseeker: {
+          ...jobseeker,
+          skills // Add extracted skills array for easier access
+        },
+        profileCompleteness: completenessPercentage,
+        hasCV: !!jobseeker.cvUrl,
+        hasExperience: jobseeker.workExperiences?.length > 0,
+        hasEducation: jobseeker.educations?.length > 0,
+        skillsCount: skills.length
+      }
+    })
+
+    // Group by status
+    const stats = {
+      total: applications.length,
+      pending: applications.filter(a => a.status === 'PENDING').length,
+      reviewing: applications.filter(a => a.status === 'REVIEWING').length,
+      shortlisted: applications.filter(a => a.status === 'SHORTLISTED').length,
+      interview: applications.filter(a => a.status === 'INTERVIEW_SCHEDULED').length,
+      accepted: applications.filter(a => a.status === 'ACCEPTED').length,
+      rejected: applications.filter(a => a.status === 'REJECTED').length,
+      profileComplete: applicationsWithCompleteness.filter(a => a.profileCompleteness >= 80).length
+    }
+
+    return NextResponse.json({
+      success: true,
+      job: {
+        id: job.id,
+        slug: job.slug,
+        title: job.title,
+        location: job.location,
+        jobType: job.jobType,
+        level: job.level
+      },
+      applications: applicationsWithCompleteness,
+      stats
+    })
+
+  } catch (error) {
+    console.error('❌ Get applications error:', error)
+    return NextResponse.json(
+      { 
+        error: 'Failed to fetch applications',
+        details: error.message 
+      },
+      { status: 500 }
+    )
+  }
+}

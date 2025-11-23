@@ -186,7 +186,7 @@ export default function PostJobPage() {
                     text: 'Lowongan berhasil dipublikasikan!',
                     confirmButtonColor: '#2563EB'
                 })
-                router.push('/dashboard/recruiter')
+                router.push('/profile/recruiter/dashboard')
             } else {
                 // Handle specific errors
                 if (response.status === 401) {

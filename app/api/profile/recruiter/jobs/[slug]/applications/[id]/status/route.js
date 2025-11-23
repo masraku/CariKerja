@@ -1,3 +1,5 @@
+// app/api/profile/recruiter/jobs/[slug]/applications/[id]/status/route.js
+
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/authHelper'
@@ -77,12 +79,13 @@ export async function PATCH(request, { params }) {
       )
     }
 
-    // Update application status
+    // ✅ FIXED: Use recruiterNotes instead of reviewNotes
     const updatedApplication = await prisma.application.update({
       where: { id },
       data: {
         status,
-        reviewNotes: notes || application.reviewNotes
+        recruiterNotes: notes || application.recruiterNotes, // ✅ Fixed field name
+        reviewedAt: new Date()
       },
       include: {
         jobseeker: {

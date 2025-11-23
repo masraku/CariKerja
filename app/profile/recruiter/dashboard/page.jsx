@@ -218,7 +218,7 @@ export default function RecruiterDashboard() {
           </button>
 
           <button
-            onClick={() => router.push('/recruiter/applications')}
+            onClick={() => router.push('/profile/recruiter/dashboard/applications')}
             className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 rounded-lg hover:from-purple-700 hover:to-pink-700 transition shadow-lg flex items-center justify-between group"
           >
             <div className="text-left">
@@ -287,7 +287,7 @@ export default function RecruiterDashboard() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-900">Lowongan Aktif Terbaru</h2>
             <button
-              onClick={() => router.push('/recruiter/jobs')}
+              onClick={() => router.push('/profile/recruiter/dashboard/jobs')}
               className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
             >
               Lihat Semua
@@ -318,7 +318,7 @@ export default function RecruiterDashboard() {
                 <div 
                   key={job.id}
                   className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition cursor-pointer"
-                  onClick={() => router.push(`/jobs/${job.slug}`)}
+                  onClick={() => router.push(`/profile/recruiter/dashboard/jobs/${job.slug}`)}
                 >
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900 mb-1">{job.title}</h3>
@@ -358,7 +358,7 @@ export default function RecruiterDashboard() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900">Lamaran Terbaru</h2>
               <button
-                onClick={() => router.push('/recruiter/applications')}
+                onClick={() => router.push('/profile/recruiter/dashboard/applications')}
                 className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
               >
                 Lihat Semua

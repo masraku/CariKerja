@@ -1,3 +1,4 @@
+//app/api/profile/recruiter/jobs/[slug]/applications/batch/route.js
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/authHelper'

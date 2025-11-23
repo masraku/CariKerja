@@ -1,7 +1,7 @@
+//app/api/profile/recruiter/jobs/[slug]/applications/[id]/withdraw/route.js
 import { NextResponse } from 'next/server'
 import { requireJobseeker } from '@/lib/authHelper'
 import { prisma } from '@/lib/prisma'
-
 
 
 // PATCH - Withdraw application

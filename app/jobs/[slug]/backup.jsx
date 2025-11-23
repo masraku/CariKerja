@@ -13,12 +13,13 @@ import {
     Calendar,
     Eye,
     Share2,
-    Bookmark,
     CheckCircle,
     Award,
     TrendingUp,
     Globe,
-    ArrowLeft
+    ArrowLeft,
+    UserCheck,
+    Video
 } from 'lucide-react'
 import Swal from 'sweetalert2'
 
@@ -29,13 +30,24 @@ export default function JobDetailPage() {
     const [loading, setLoading] = useState(true)
     const [job, setJob] = useState(null)
     const [relatedJobs, setRelatedJobs] = useState([])
-    const [isApplying, setIsApplying] = useState(false)
+    const [applicants, setApplicants] = useState([])
+    const [selectedApplicants, setSelectedApplicants] = useState([])
+
+    // Check if current user is the recruiter who posted this job
+    const isJobOwner = user?.role === 'RECRUITER' && job?.recruiter?.id === user?.recruiter?.id
 
     useEffect(() => {
-        if (params.slug) {
+        if (params?.slug) {
             loadJobDetails()
         }
-    }, [params.slug])
+    }, [params?.slug])
+
+    // Load applicants if user is recruiter
+    useEffect(() => {
+        if (job && isJobOwner) {
+            loadApplicants()
+        }
+    }, [job, isJobOwner])
 
     const loadJobDetails = async () => {
         try {
@@ -53,7 +65,7 @@ export default function JobDetailPage() {
                     text: 'Lowongan tidak ditemukan',
                     confirmButtonColor: '#2563EB'
                 }).then(() => {
-                    router.push('/jobs')
+                    router.push(user?.role === 'RECRUITER' ? '/recruiter/dashboard' : '/jobs')
                 })
             }
         } catch (error) {
@@ -63,19 +75,35 @@ export default function JobDetailPage() {
         }
     }
 
+    const loadApplicants = async () => {
+        try {
+            const token = localStorage.getItem('token')
+            const response = await fetch(`/api/jobs/${params.slug}/applicants`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+
+            if (response.ok) {
+                const data = await response.json()
+                setApplicants(data.applicants)
+            }
+        } catch (error) {
+            console.error('Load applicants error:', error)
+        }
+    }
+
+    // Helper functions remain the same
     const formatSalary = (min, max, type) => {
         const formatNumber = (num) => {
             return new Intl.NumberFormat('id-ID').format(num)
         }
-
         if (!min || !max) return 'Negotiable'
-
         const typeLabel = {
             monthly: '/ bulan',
             yearly: '/ tahun',
             hourly: '/ jam'
         }
-
         return `Rp ${formatNumber(min)} - Rp ${formatNumber(max)} ${typeLabel[type] || ''}`
     }
 
@@ -89,22 +117,16 @@ export default function JobDetailPage() {
 
     const getTimeAgo = (date) => {
         const seconds = Math.floor((new Date() - new Date(date)) / 1000)
-
         let interval = seconds / 31536000
         if (interval > 1) return Math.floor(interval) + ' tahun lalu'
-
         interval = seconds / 2592000
         if (interval > 1) return Math.floor(interval) + ' bulan lalu'
-
         interval = seconds / 86400
         if (interval > 1) return Math.floor(interval) + ' hari lalu'
-
         interval = seconds / 3600
         if (interval > 1) return Math.floor(interval) + ' jam lalu'
-
         interval = seconds / 60
         if (interval > 1) return Math.floor(interval) + ' menit lalu'
-
         return 'Baru saja'
     }
 
@@ -129,6 +151,18 @@ export default function JobDetailPage() {
             DIRECTOR: 'Director'
         }
         return labels[level] || level
+    }
+
+    const getStatusBadge = (status) => {
+        const config = {
+            PENDING: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
+            REVIEWING: { label: 'Reviewing', color: 'bg-blue-100 text-blue-800' },
+            SHORTLISTED: { label: 'Shortlisted', color: 'bg-purple-100 text-purple-800' },
+            INTERVIEW_SCHEDULED: { label: 'Interview', color: 'bg-indigo-100 text-indigo-800' },
+            ACCEPTED: { label: 'Accepted', color: 'bg-green-100 text-green-800' },
+            REJECTED: { label: 'Rejected', color: 'bg-red-100 text-red-800' }
+        }
+        return config[status] || config.PENDING
     }
 
     const handleApply = async () => {
@@ -163,6 +197,32 @@ export default function JobDetailPage() {
         })
     }
 
+    const handleSelectApplicant = (applicantId) => {
+        setSelectedApplicants(prev => {
+            if (prev.includes(applicantId)) {
+                return prev.filter(id => id !== applicantId)
+            } else {
+                return [...prev, applicantId]
+            }
+        })
+    }
+
+    const handleScheduleInterview = () => {
+        if (selectedApplicants.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Pilih Pelamar',
+                text: 'Silakan pilih minimal 1 pelamar untuk dijadwalkan interview',
+                confirmButtonColor: '#2563EB'
+            })
+            return
+        }
+
+        // Redirect to interview scheduling page with selected applicants
+        const applicantIds = selectedApplicants.join(',')
+        router.push(`/recruiter/interviews/schedule?job=${job.id}&applicants=${applicantIds}`)
+    }
+
     const handleShare = () => {
         if (navigator.share) {
             navigator.share({
@@ -182,6 +242,14 @@ export default function JobDetailPage() {
         }
     }
 
+    // Determine back URL based on user role
+    const getBackUrl = () => {
+        if (user?.role === 'RECRUITER') {
+            return '/profile/recruiter/dashboard'
+        }
+        return '/jobs'
+    }
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -199,8 +267,8 @@ export default function JobDetailPage() {
                 <div className="text-center">
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">Job Not Found</h2>
                     <p className="text-gray-600 mb-4">Lowongan yang Anda cari tidak ditemukan</p>
-                    <Link href="/dashboard/recruiter" className="text-blue-600 hover:text-blue-700">
-                        ← Kembali ke Daftar Lowongan
+                    <Link href={getBackUrl()} className="text-blue-600 hover:text-blue-700">
+                        ← Kembali
                     </Link>
                 </div>
             </div>
@@ -210,13 +278,13 @@ export default function JobDetailPage() {
     return (
         <div className="min-h-screen bg-gray-50 py-8">
             <div className="container mx-auto px-4 max-w-7xl">
-                {/* Back Button */}
+                {/* Back Button - Conditional based on role */}
                 <Link
-                    href="/dashboard/recruiter"
+                    href={getBackUrl()}
                     className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    Kembali ke Daftar Lowongan
+                    {user?.role === 'RECRUITER' ? 'Kembali ke Dashboard' : 'Kembali ke Daftar Lowongan'}
                 </Link>
 
                 <div className="grid lg:grid-cols-3 gap-6">
@@ -313,22 +381,145 @@ export default function JobDetailPage() {
                                 )}
                             </div>
 
-                            {/* Apply Button */}
-                            <div className="mt-6 pt-6 border-t border-gray-200">
-                                <button
-                                    onClick={handleApply}
-                                    className="w-full py-3 px-6 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2"
-                                >
-                                    <CheckCircle className="w-5 h-5" />
-                                    Lamar Sekarang
-                                </button>
-                                <p className="text-center text-sm text-gray-600 mt-2">
-                                    {job._count.applications} orang telah melamar
-                                </p>
-                            </div>
+                            {/* Apply Button - Only for Jobseekers */}
+                            {user?.role !== 'RECRUITER' && (
+                                <div className="mt-6 pt-6 border-t border-gray-200">
+                                    <button
+                                        onClick={handleApply}
+                                        className="w-full py-3 px-6 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                                    >
+                                        <CheckCircle className="w-5 h-5" />
+                                        Lamar Sekarang
+                                    </button>
+                                    <p className="text-center text-sm text-gray-600 mt-2">
+                                        {job._count.applications} orang telah melamar
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Recruiter Stats */}
+                            {isJobOwner && (
+                                <div className="mt-6 pt-6 border-t border-gray-200">
+                                    <div className="grid grid-cols-3 gap-4 text-center">
+                                        <div className="p-4 bg-blue-50 rounded-lg">
+                                            <Users className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+                                            <p className="text-2xl font-bold text-gray-900">{job._count.applications}</p>
+                                            <p className="text-sm text-gray-600">Total Pelamar</p>
+                                        </div>
+                                        <div className="p-4 bg-green-50 rounded-lg">
+                                            <UserCheck className="w-6 h-6 text-green-600 mx-auto mb-2" />
+                                            <p className="text-2xl font-bold text-gray-900">{applicants.length}</p>
+                                            <p className="text-sm text-gray-600">Profile Lengkap</p>
+                                        </div>
+                                        <div className="p-4 bg-purple-50 rounded-lg">
+                                            <CheckCircle className="w-6 h-6 text-purple-600 mx-auto mb-2" />
+                                            <p className="text-2xl font-bold text-gray-900">{selectedApplicants.length}</p>
+                                            <p className="text-sm text-gray-600">Dipilih</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
-                        {/* Job Description */}
+                        {/* Applicants List - Only for Job Owner */}
+                        {isJobOwner && applicants.length > 0 && (
+                            <div className="bg-white rounded-lg shadow-sm p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-xl font-bold text-gray-900">
+                                        Daftar Pelamar ({applicants.length})
+                                    </h2>
+                                    {selectedApplicants.length > 0 && (
+                                        <button
+                                            onClick={handleScheduleInterview}
+                                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                        >
+                                            <Video className="w-4 h-4" />
+                                            Jadwalkan Interview ({selectedApplicants.length})
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className="space-y-4">
+                                    {applicants.map((application) => (
+                                        <div
+                                            key={application.id}
+                                            className={`p-4 border-2 rounded-lg transition ${selectedApplicants.includes(application.id)
+                                                ? 'border-blue-500 bg-blue-50'
+                                                : 'border-gray-200 hover:border-gray-300'
+                                                }`}
+                                        >
+                                            <div className="flex items-start gap-4">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedApplicants.includes(application.id)}
+                                                    onChange={() => handleSelectApplicant(application.id)}
+                                                    className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                                                />
+
+                                                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold overflow-hidden flex-shrink-0">
+                                                    {application.jobseeker.photo ? (
+                                                        <img
+                                                            src={application.jobseeker.photo}
+                                                            alt={application.jobseeker.firstName}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        application.jobseeker.firstName?.charAt(0) || 'U'
+                                                    )}
+                                                </div>
+
+                                                <div className="flex-1">
+                                                    <div className="flex items-start justify-between">
+                                                        <div>
+                                                            <h3 className="font-semibold text-gray-900">
+                                                                {application.jobseeker.firstName} {application.jobseeker.lastName}
+                                                            </h3>
+                                                            <p className="text-sm text-gray-600">
+                                                                {application.jobseeker.currentTitle || 'Job Seeker'}
+                                                            </p>
+                                                            {application.jobseeker.city && (
+                                                                <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                                                                    <MapPin className="w-3 h-3" />
+                                                                    {application.jobseeker.city}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(application.status).color}`}>
+                                                            {getStatusBadge(application.status).label}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-4 mt-3 text-sm">
+                                                        {application.jobseeker.resumeUrl && (
+                                                            <a
+                                                                href={application.jobseeker.resumeUrl}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                                                            >
+                                                                <FileText className="w-4 h-4" />
+                                                                Resume
+                                                            </a>
+                                                        )}
+                                                        <span className="text-gray-500">
+                                                            Applied: {getTimeAgo(application.appliedAt)}
+                                                        </span>
+                                                        <Link
+                                                            href={`/recruiter/applicants/${application.id}`}
+                                                            className="text-blue-600 hover:text-blue-700"
+                                                        >
+                                                            Lihat Detail →
+                                                        </Link>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Rest of job details sections - same as before */}
                         <div className="bg-white rounded-lg shadow-sm p-6">
                             <h2 className="text-xl font-bold text-gray-900 mb-4">
                                 Deskripsi Pekerjaan
@@ -338,7 +529,6 @@ export default function JobDetailPage() {
                             </div>
                         </div>
 
-                        {/* Responsibilities */}
                         {job.responsibilities && (
                             <div className="bg-white rounded-lg shadow-sm p-6">
                                 <h2 className="text-xl font-bold text-gray-900 mb-4">
@@ -350,7 +540,6 @@ export default function JobDetailPage() {
                             </div>
                         )}
 
-                        {/* Requirements */}
                         {job.requirements && (
                             <div className="bg-white rounded-lg shadow-sm p-6">
                                 <h2 className="text-xl font-bold text-gray-900 mb-4">
@@ -362,7 +551,6 @@ export default function JobDetailPage() {
                             </div>
                         )}
 
-                        {/* Skills */}
                         {job.skills.length > 0 && (
                             <div className="bg-white rounded-lg shadow-sm p-6">
                                 <h2 className="text-xl font-bold text-gray-900 mb-4">
@@ -381,7 +569,6 @@ export default function JobDetailPage() {
                             </div>
                         )}
 
-                        {/* Benefits */}
                         {job.benefits.length > 0 && (
                             <div className="bg-white rounded-lg shadow-sm p-6">
                                 <h2 className="text-xl font-bold text-gray-900 mb-4">
@@ -399,9 +586,8 @@ export default function JobDetailPage() {
                         )}
                     </div>
 
-                    {/* Sidebar */}
+                    {/* Sidebar - same as before */}
                     <div className="space-y-6">
-                        {/* Company Info */}
                         <div className="bg-white rounded-lg shadow-sm p-6">
                             <h3 className="font-bold text-gray-900 mb-4">
                                 Tentang Perusahaan
@@ -448,7 +634,6 @@ export default function JobDetailPage() {
                             </div>
                         </div>
 
-                        {/* Job Details */}
                         <div className="bg-white rounded-lg shadow-sm p-6">
                             <h3 className="font-bold text-gray-900 mb-4">
                                 Detail Lowongan
@@ -469,7 +654,7 @@ export default function JobDetailPage() {
                                     <div className="flex items-center justify-between">
                                         <span className="text-gray-600">Pengalaman</span>
                                         <span className="font-medium text-gray-900">
-                                            {job.minExperience} + tahun
+                                            {job.minExperience}+ tahun
                                         </span>
                                     </div>
                                 )}
@@ -492,7 +677,6 @@ export default function JobDetailPage() {
                             </div>
                         </div>
 
-                        {/* Related Jobs */}
                         {relatedJobs.length > 0 && (
                             <div className="bg-white rounded-lg shadow-sm p-6">
                                 <h3 className="font-bold text-gray-900 mb-4">
@@ -523,7 +707,7 @@ export default function JobDetailPage() {
                         )}
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     )
 }

@@ -202,6 +202,7 @@ export async function POST(request) {
                         name: companyName,
                         slug: companySlug,
                         logo: companyLogo,
+                        slug,
                         tagline,
                         description,
                         industry,
