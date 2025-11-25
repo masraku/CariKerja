@@ -68,6 +68,18 @@ export async function GET(request) {
               }
             }
           }
+        },
+        // Include interview participants to get interview ID
+        interviewParticipants: {
+          include: {
+            interview: {
+              select: {
+                id: true,
+                scheduledAt: true,
+                status: true
+              }
+            }
+          }
         }
       },
       orderBy: {
@@ -102,12 +114,16 @@ export async function GET(request) {
       // Extract skill names
       const skills = jobseeker.jobseekerSkills?.map(js => js.skill?.name).filter(Boolean) || []
 
+      // Get interview data if exists
+      const interview = app.interviewParticipants?.[0]?.interview || null
+
       return {
         ...app,
         jobseeker: {
           ...jobseeker,
           skills
         },
+        interview, // Add interview data
         profileCompleteness: completenessPercentage,
         hasCV: !!jobseeker.cvUrl,
         hasExperience: jobseeker.workExperiences?.length > 0,

@@ -1,7 +1,7 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Search, MapPin, Briefcase, DollarSign, Clock, Building2, Filter, X, ChevronDown, Star, Bookmark, BookmarkCheck, TrendingUp, Calendar, Users } from 'lucide-react'
+import { Search, MapPin, Briefcase, DollarSign, Clock, Building2, Filter, X, ChevronDown, Star, Bookmark, BookmarkCheck, TrendingUp, Calendar, Users, Loader2, CheckCircle } from 'lucide-react'
 
 const JobsPage = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -10,6 +10,15 @@ const JobsPage = () => {
   const [selectedJob, setSelectedJob] = useState(null)
   const [savedJobs, setSavedJobs] = useState([])
   const [sortBy, setSortBy] = useState('latest')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [loading, setLoading] = useState(true)
+  const [jobs, setJobs] = useState([])
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    totalCount: 0,
+    totalPages: 0
+  })
   
   const [filters, setFilters] = useState({
     jobType: [],
@@ -18,383 +27,7 @@ const JobsPage = () => {
     category: []
   })
 
-  // Data dummy jobs (lebih lengkap)
-  const allJobs = [
-    {
-      id: 1,
-      title: 'Senior Frontend Developer',
-      company: 'Tech Innovate Indonesia',
-      logo: '🚀',
-      location: 'Jakarta',
-      type: 'Full Time',
-      salary: 'Rp 15.000.000 - 20.000.000',
-      experience: '3-5 tahun',
-      category: 'Teknologi',
-      postedDate: '2024-11-12',
-      applicants: 45,
-      urgent: true,
-      remote: true,
-      description: 'Kami mencari Senior Frontend Developer yang berpengalaman untuk bergabung dengan tim engineering kami.',
-      requirements: [
-        'Min. 3 tahun pengalaman sebagai Frontend Developer',
-        'Expert dalam React.js dan Next.js',
-        'Menguasai TypeScript dan modern JavaScript',
-        'Familiar dengan Tailwind CSS atau styled-components',
-        'Pengalaman dengan state management (Redux, Zustand)',
-        'Memahami konsep responsive design dan mobile-first'
-      ],
-      responsibilities: [
-        'Mengembangkan dan maintain aplikasi web frontend',
-        'Kolaborasi dengan tim designer dan backend',
-        'Code review dan mentoring junior developer',
-        'Optimasi performa aplikasi',
-        'Implementasi best practices dan design patterns'
-      ],
-      benefits: [
-        'Gaji kompetitif',
-        'BPJS Kesehatan & Ketenagakerjaan',
-        'Flexible working hours',
-        'Remote working option',
-        'Annual bonus',
-        'Learning & development budget'
-      ]
-    },
-    {
-      id: 2,
-      title: 'UI/UX Designer',
-      company: 'Creative Studio Co',
-      logo: '🎨',
-      location: 'Bandung',
-      type: 'Full Time',
-      salary: 'Rp 10.000.000 - 15.000.000',
-      experience: '2-4 tahun',
-      category: 'Desain',
-      postedDate: '2024-11-13',
-      applicants: 67,
-      urgent: false,
-      remote: true,
-      description: 'Join our creative team to design beautiful and intuitive user experiences.',
-      requirements: [
-        'Min. 2 tahun pengalaman UI/UX Design',
-        'Expert dalam Figma dan Adobe XD',
-        'Strong portfolio',
-        'Memahami user research dan usability testing',
-        'Familiar dengan design systems'
-      ],
-      responsibilities: [
-        'Membuat wireframes dan prototypes',
-        'Conduct user research',
-        'Design user interfaces',
-        'Collaborate dengan developers',
-        'Maintain design system'
-      ],
-      benefits: [
-        'Competitive salary',
-        'Health insurance',
-        'Creative workspace',
-        'Latest design tools',
-        'Team building activities'
-      ]
-    },
-    {
-      id: 3,
-      title: 'Backend Engineer',
-      company: 'DataCore Solutions',
-      logo: '💻',
-      location: 'Jakarta',
-      type: 'Full Time',
-      salary: 'Rp 12.000.000 - 18.000.000',
-      experience: '3-5 tahun',
-      category: 'Teknologi',
-      postedDate: '2024-11-11',
-      applicants: 52,
-      urgent: true,
-      remote: false,
-      description: 'We are looking for talented Backend Engineers to build scalable systems.',
-      requirements: [
-        'Min. 3 tahun pengalaman Backend Development',
-        'Expert dalam Node.js atau Python',
-        'Strong database skills (PostgreSQL, MongoDB)',
-        'Experience dengan microservices',
-        'Familiar dengan cloud platforms (AWS/GCP)'
-      ],
-      responsibilities: [
-        'Develop and maintain APIs',
-        'Database design and optimization',
-        'System architecture design',
-        'Code review',
-        'Performance monitoring'
-      ],
-      benefits: [
-        'Competitive package',
-        'Health & life insurance',
-        'Professional development',
-        'Modern tech stack',
-        'Career growth'
-      ]
-    },
-    {
-      id: 4,
-      title: 'Product Manager',
-      company: 'Startup Growth',
-      logo: '📊',
-      location: 'Jakarta',
-      type: 'Full Time',
-      salary: 'Rp 18.000.000 - 25.000.000',
-      experience: '4-6 tahun',
-      category: 'Management',
-      postedDate: '2024-11-10',
-      applicants: 89,
-      urgent: false,
-      remote: false,
-      description: 'Lead product development and strategy for our digital products.',
-      requirements: [
-        'Min. 4 tahun pengalaman Product Management',
-        'Strong analytical skills',
-        'Experience with agile methodologies',
-        'Excellent communication skills',
-        'Data-driven mindset'
-      ],
-      responsibilities: [
-        'Define product roadmap',
-        'Stakeholder management',
-        'Market research',
-        'Feature prioritization',
-        'Team coordination'
-      ],
-      benefits: [
-        'High salary package',
-        'Stock options',
-        'Health insurance',
-        'Flexible schedule',
-        'International exposure'
-      ]
-    },
-    {
-      id: 5,
-      title: 'Mobile Developer',
-      company: 'AppMakers Indonesia',
-      logo: '📱',
-      location: 'Surabaya',
-      type: 'Full Time',
-      salary: 'Rp 11.000.000 - 16.000.000',
-      experience: '2-4 tahun',
-      category: 'Teknologi',
-      postedDate: '2024-11-14',
-      applicants: 34,
-      urgent: true,
-      remote: true,
-      description: 'Create amazing mobile experiences for iOS and Android platforms.',
-      requirements: [
-        'Min. 2 tahun pengalaman Mobile Development',
-        'Expert dalam React Native atau Flutter',
-        'Experience dengan native modules',
-        'App store deployment experience',
-        'Understanding of mobile UI/UX'
-      ],
-      responsibilities: [
-        'Develop mobile applications',
-        'API integration',
-        'Performance optimization',
-        'Bug fixing and testing',
-        'App store management'
-      ],
-      benefits: [
-        'Competitive salary',
-        'Remote work',
-        'Latest devices',
-        'Training opportunities',
-        'Team outings'
-      ]
-    },
-    {
-      id: 6,
-      title: 'Digital Marketing Manager',
-      company: 'Marketing Pro',
-      logo: '📈',
-      location: 'Jakarta',
-      type: 'Full Time',
-      salary: 'Rp 13.000.000 - 19.000.000',
-      experience: '3-5 tahun',
-      category: 'Marketing',
-      postedDate: '2024-11-09',
-      applicants: 71,
-      urgent: false,
-      remote: false,
-      description: 'Lead digital marketing strategies and campaigns for our clients.',
-      requirements: [
-        'Min. 3 tahun pengalaman Digital Marketing',
-        'Expert dalam SEO/SEM',
-        'Social media marketing experience',
-        'Data analytics skills',
-        'Budget management experience'
-      ],
-      responsibilities: [
-        'Develop marketing strategies',
-        'Manage marketing campaigns',
-        'Analyze campaign performance',
-        'Team management',
-        'Client communication'
-      ],
-      benefits: [
-        'Attractive salary',
-        'Performance bonus',
-        'Health insurance',
-        'Creative freedom',
-        'Career advancement'
-      ]
-    },
-    {
-      id: 7,
-      title: 'DevOps Engineer',
-      company: 'Cloud Systems Inc',
-      logo: '☁️',
-      location: 'Yogyakarta',
-      type: 'Full Time',
-      salary: 'Rp 14.000.000 - 20.000.000',
-      experience: '3-5 tahun',
-      category: 'Teknologi',
-      postedDate: '2024-11-08',
-      applicants: 28,
-      urgent: true,
-      remote: true,
-      description: 'Manage and optimize our cloud infrastructure and deployment pipelines.',
-      requirements: [
-        'Min. 3 tahun pengalaman DevOps',
-        'Expert dalam AWS/GCP/Azure',
-        'Strong Docker/Kubernetes skills',
-        'CI/CD pipeline experience',
-        'Infrastructure as Code (Terraform)'
-      ],
-      responsibilities: [
-        'Infrastructure management',
-        'Deployment automation',
-        'Monitoring and logging',
-        'Security implementation',
-        'Performance optimization'
-      ],
-      benefits: [
-        'High compensation',
-        'Remote work option',
-        'Certification support',
-        'Latest tools',
-        'Work-life balance'
-      ]
-    },
-    {
-      id: 8,
-      title: 'Data Analyst',
-      company: 'Analytics Hub',
-      logo: '📊',
-      location: 'Jakarta',
-      type: 'Full Time',
-      salary: 'Rp 10.000.000 - 14.000.000',
-      experience: '2-3 tahun',
-      category: 'Data',
-      postedDate: '2024-11-13',
-      applicants: 56,
-      urgent: false,
-      remote: false,
-      description: 'Transform data into actionable insights for business decisions.',
-      requirements: [
-        'Min. 2 tahun pengalaman Data Analysis',
-        'Expert dalam SQL',
-        'Python/R for data analysis',
-        'Data visualization tools (Tableau, PowerBI)',
-        'Statistical analysis skills'
-      ],
-      responsibilities: [
-        'Data analysis and reporting',
-        'Create dashboards',
-        'Statistical modeling',
-        'Present insights to stakeholders',
-        'Data quality assurance'
-      ],
-      benefits: [
-        'Competitive salary',
-        'Learning budget',
-        'Health insurance',
-        'Flexible hours',
-        'Modern office'
-      ]
-    },
-    {
-      id: 9,
-      title: 'Content Writer',
-      company: 'Media Creative',
-      logo: '✍️',
-      location: 'Bali',
-      type: 'Contract',
-      salary: 'Rp 6.000.000 - 9.000.000',
-      experience: '1-3 tahun',
-      category: 'Marketing',
-      postedDate: '2024-11-12',
-      applicants: 43,
-      urgent: false,
-      remote: true,
-      description: 'Create engaging content for various digital platforms.',
-      requirements: [
-        'Min. 1 tahun pengalaman Content Writing',
-        'Excellent writing skills',
-        'SEO knowledge',
-        'Research skills',
-        'Portfolio of published work'
-      ],
-      responsibilities: [
-        'Write blog posts and articles',
-        'Create social media content',
-        'SEO optimization',
-        'Content planning',
-        'Proofreading and editing'
-      ],
-      benefits: [
-        'Flexible schedule',
-        'Remote work',
-        'Creative freedom',
-        'Performance bonus',
-        'Collaborative team'
-      ]
-    },
-    {
-      id: 10,
-      title: 'QA Engineer',
-      company: 'Quality First',
-      logo: '🔍',
-      location: 'Bandung',
-      type: 'Full Time',
-      salary: 'Rp 9.000.000 - 13.000.000',
-      experience: '2-4 tahun',
-      category: 'Teknologi',
-      postedDate: '2024-11-11',
-      applicants: 31,
-      urgent: true,
-      remote: false,
-      description: 'Ensure the quality of our software products through comprehensive testing.',
-      requirements: [
-        'Min. 2 tahun pengalaman QA',
-        'Manual and automated testing',
-        'Test automation tools (Selenium, Cypress)',
-        'API testing experience',
-        'Bug tracking systems'
-      ],
-      responsibilities: [
-        'Create test plans',
-        'Execute test cases',
-        'Bug reporting',
-        'Automation development',
-        'Quality documentation'
-      ],
-      benefits: [
-        'Good salary',
-        'Health benefits',
-        'Training programs',
-        'Career growth',
-        'Team activities'
-      ]
-    }
-  ]
-
-  const jobTypes = ['Full Time', 'Part Time', 'Contract', 'Freelance', 'Internship']
+  const jobTypes = ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'FREELANCE', 'INTERNSHIP']
   const experienceLevels = ['0-1 tahun', '1-3 tahun', '3-5 tahun', '5+ tahun']
   const salaryRanges = [
     { label: 'Semua', value: '' },
@@ -406,43 +39,57 @@ const JobsPage = () => {
   ]
   const categories = ['Teknologi', 'Desain', 'Marketing', 'Data', 'Management', 'Sales', 'HR']
 
-  // Filter jobs
-  const filteredJobs = allJobs.filter(job => {
-    const matchesSearch = searchQuery === '' || 
-      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.category.toLowerCase().includes(searchQuery.toLowerCase())
-    
-    const matchesLocation = location === '' || 
-      job.location.toLowerCase().includes(location.toLowerCase())
-    
-    const matchesType = filters.jobType.length === 0 || 
-      filters.jobType.includes(job.type)
-    
-    const matchesExperience = filters.experience.length === 0 || 
-      filters.experience.includes(job.experience)
-    
-    const matchesCategory = filters.category.length === 0 || 
-      filters.category.includes(job.category)
+  // Fetch jobs from API
+  const fetchJobs = async () => {
+    try {
+      setLoading(true)
+      
+      // Build query params
+      const params = new URLSearchParams()
+      if (searchQuery) params.append('search', searchQuery)
+      if (location) params.append('location', location)
+      if (filters.jobType.length > 0) params.append('jobType', filters.jobType.join(','))
+      if (filters.category.length > 0) params.append('category', filters.category.join(','))
+      if (filters.experience.length > 0) params.append('experience', filters.experience.join(','))
+      if (sortBy) params.append('sortBy', sortBy)
+      params.append('page', currentPage.toString())
+      params.append('limit', '10')
 
-    return matchesSearch && matchesLocation && matchesType && matchesExperience && matchesCategory
-  })
+      const response = await fetch(`/api/jobs?${params.toString()}`, {
+        credentials: 'include' // Important for auth check
+      })
+      const data = await response.json()
 
-  // Sort jobs
-  const sortedJobs = [...filteredJobs].sort((a, b) => {
-    if (sortBy === 'latest') {
-      return new Date(b.postedDate) - new Date(a.postedDate)
-    } else if (sortBy === 'salary') {
-      const getSalary = (salaryStr) => {
-        const match = salaryStr.match(/[\d.]+/)
-        return match ? parseFloat(match[0].replace('.', '')) : 0
+      if (data.success) {
+        setJobs(data.data)
+        setPagination(data.pagination)
+      } else {
+        console.error('Failed to fetch jobs:', data.error)
       }
-      return getSalary(b.salary) - getSalary(a.salary)
-    } else if (sortBy === 'popular') {
-      return b.applicants - a.applicants
+    } catch (error) {
+      console.error('Error fetching jobs:', error)
+    } finally {
+      setLoading(false)
     }
-    return 0
-  })
+  }
+
+  // Fetch jobs when filters change
+  useEffect(() => {
+    fetchJobs()
+  }, [searchQuery, location, filters, sortBy, currentPage])
+
+  // Load saved jobs from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('savedJobs')
+    if (saved) {
+      setSavedJobs(JSON.parse(saved))
+    }
+  }, [])
+
+  // Save to localStorage when savedJobs changes
+  useEffect(() => {
+    localStorage.setItem('savedJobs', JSON.stringify(savedJobs))
+  }, [savedJobs])
 
   const handleFilterChange = (type, value) => {
     setFilters(prev => {
@@ -456,6 +103,7 @@ const JobsPage = () => {
       }
       return { ...prev, [type]: value }
     })
+    setCurrentPage(1) // Reset to first page when filter changes
   }
 
   const clearFilters = () => {
@@ -467,6 +115,7 @@ const JobsPage = () => {
     })
     setSearchQuery('')
     setLocation('')
+    setCurrentPage(1)
   }
 
   const toggleSaveJob = (jobId) => {
@@ -484,6 +133,23 @@ const JobsPage = () => {
     return `${days} hari yang lalu`
   }
 
+  const formatJobType = (type) => {
+    const typeMap = {
+      'FULL_TIME': 'Full Time',
+      'PART_TIME': 'Part Time',
+      'CONTRACT': 'Contract',
+      'FREELANCE': 'Freelance',
+      'INTERNSHIP': 'Internship'
+    }
+    return typeMap[type] || type
+  }
+
+  const handleSearch = (e) => {
+    e.preventDefault()
+    setCurrentPage(1)
+    fetchJobs()
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Search Header */}
@@ -492,7 +158,7 @@ const JobsPage = () => {
           <h1 className="text-3xl md:text-4xl font-bold mb-6 text-center">Temukan Pekerjaan Impian Anda</h1>
           
           {/* Search Bar */}
-          <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-2xl p-4">
+          <form onSubmit={handleSearch} className="max-w-4xl mx-auto bg-white rounded-2xl shadow-2xl p-4">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <div className="relative">
@@ -518,21 +184,20 @@ const JobsPage = () => {
                   />
                 </div>
               </div>
-              <button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all font-semibold shadow-lg hover:shadow-xl">
+              <button 
+                type="submit"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all font-semibold shadow-lg hover:shadow-xl"
+              >
                 Cari
               </button>
             </div>
-          </div>
+          </form>
 
           {/* Stats */}
           <div className="flex justify-center gap-8 mt-8 text-center">
             <div>
-              <div className="text-2xl font-bold">{sortedJobs.length}</div>
+              <div className="text-2xl font-bold">{pagination.totalCount}</div>
               <div className="text-blue-200 text-sm">Lowongan Ditemukan</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold">{allJobs.length}</div>
-              <div className="text-blue-200 text-sm">Total Lowongan</div>
             </div>
             <div>
               <div className="text-2xl font-bold">{savedJobs.length}</div>
@@ -575,7 +240,7 @@ const JobsPage = () => {
                         onChange={() => handleFilterChange('jobType', type)}
                         className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
-                      <span className="text-gray-700 group-hover:text-blue-600 transition">{type}</span>
+                      <span className="text-gray-700 group-hover:text-blue-600 transition">{formatJobType(type)}</span>
                     </label>
                   ))}
                 </div>
@@ -597,22 +262,6 @@ const JobsPage = () => {
                     </label>
                   ))}
                 </div>
-              </div>
-
-              {/* Salary Range Filter */}
-              <div className="mb-6">
-                <h4 className="font-semibold text-gray-900 mb-3">Rentang Gaji</h4>
-                <select
-                  value={filters.salary}
-                  onChange={(e) => handleFilterChange('salary', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {salaryRanges.map((range) => (
-                    <option key={range.value} value={range.value}>
-                      {range.label}
-                    </option>
-                  ))}
-                </select>
               </div>
 
               {/* Category Filter */}
@@ -649,7 +298,7 @@ const JobsPage = () => {
             <div className="bg-white rounded-xl shadow-sm p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <span className="text-gray-600 font-medium">
-                  {sortedJobs.length} lowongan ditemukan
+                  {pagination.totalCount} lowongan ditemukan
                 </span>
               </div>
               
@@ -667,8 +316,13 @@ const JobsPage = () => {
               </div>
             </div>
 
-            {/* Jobs Grid */}
-            {sortedJobs.length === 0 ? (
+            {/* Loading State */}
+            {loading ? (
+              <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
+                <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+                <p className="text-gray-600">Memuat lowongan...</p>
+              </div>
+            ) : jobs.length === 0 ? (
               <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
                 <div className="text-6xl mb-4">🔍</div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Tidak ada lowongan ditemukan</h3>
@@ -682,24 +336,30 @@ const JobsPage = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {sortedJobs.map((job) => (
+                {jobs.map((job) => (
                   <div
                     key={job.id}
                     className="group bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200"
                   >
                     <div className="flex items-start gap-4">
                       {/* Company Logo */}
-                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-3xl flex-shrink-0 group-hover:scale-110 transition-transform">
-                        {job.logo}
+                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-3xl flex-shrink-0 group-hover:scale-110 transition-transform overflow-hidden">
+                        {job.logo.startsWith('http') ? (
+                          <img src={job.logo} alt={job.company} className="w-full h-full object-cover" />
+                        ) : (
+                          <span>{job.logo}</span>
+                        )}
                       </div>
 
                       {/* Job Details */}
                       <div className="flex-1">
                         <div className="flex items-start justify-between mb-3">
                           <div>
-                            <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition mb-1">
-                              {job.title}
-                            </h3>
+                            <Link href={`/jobs/${job.slug}`}>
+                              <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition mb-1 cursor-pointer">
+                                {job.title}
+                              </h3>
+                            </Link>
                             <div className="flex items-center gap-2 text-gray-600">
                               <Building2 className="w-4 h-4" />
                               <span className="font-medium">{job.company}</span>
@@ -731,7 +391,7 @@ const JobsPage = () => {
                           </div>
                           <div className="flex items-center gap-2 text-sm text-gray-600">
                             <Briefcase className="w-4 h-4 text-gray-400" />
-                            <span>{job.type}</span>
+                            <span>{formatJobType(job.type)}</span>
                           </div>
                           <div className="flex items-center gap-2 text-sm text-gray-600">
                             <Clock className="w-4 h-4 text-gray-400" />
@@ -739,7 +399,7 @@ const JobsPage = () => {
                           </div>
                           <div className="flex items-center gap-2 text-sm font-semibold text-green-600">
                             <DollarSign className="w-4 h-4" />
-                            <span className="truncate">{job.salary.split(' - ')[0]}</span>
+                            <span className="truncate">{job.salary}</span>
                           </div>
                         </div>
 
@@ -755,7 +415,13 @@ const JobsPage = () => {
                           )}
                           {job.urgent && (
                             <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium animate-pulse">
-                              Urgent
+                              Featured
+                            </span>
+                          )}
+                          {job.hasApplied && (
+                            <span className="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-xs font-medium flex items-center gap-1">
+                              <CheckCircle className="w-3 h-3" />
+                              Sudah Melamar
                             </span>
                           )}
                         </div>
@@ -780,9 +446,11 @@ const JobsPage = () => {
                             >
                               Detail
                             </button>
-                            <button className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition font-medium text-sm shadow-lg hover:shadow-xl">
-                              Lamar Sekarang
-                            </button>
+                            <Link href={`/jobs/${job.slug}`}>
+                              <button className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition font-medium text-sm shadow-lg hover:shadow-xl">
+                                Lamar Sekarang
+                              </button>
+                            </Link>
                           </div>
                         </div>
                       </div>
@@ -793,25 +461,47 @@ const JobsPage = () => {
             )}
 
             {/* Pagination */}
-            {sortedJobs.length > 0 && (
+            {!loading && jobs.length > 0 && pagination.totalPages > 1 && (
               <div className="mt-8 flex justify-center">
                 <div className="flex gap-2">
-                  <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={!pagination.hasPrevPage}
+                    className={`px-4 py-2 border border-gray-300 rounded-lg transition ${
+                      pagination.hasPrevPage
+                        ? 'hover:bg-gray-50'
+                        : 'opacity-50 cursor-not-allowed'
+                    }`}
+                  >
                     Previous
                   </button>
-                  {[1, 2, 3, 4].map((page) => (
-                    <button
-                      key={page}
-                      className={`px-4 py-2 rounded-lg transition ${
-                        page === 1
-                          ? 'bg-blue-600 text-white'
-                          : 'border border-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                  <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                  
+                  {[...Array(Math.min(5, pagination.totalPages))].map((_, i) => {
+                    const pageNum = i + 1
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`px-4 py-2 rounded-lg transition ${
+                          pageNum === currentPage
+                            ? 'bg-blue-600 text-white'
+                            : 'border border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    )
+                  })}
+                  
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
+                    disabled={!pagination.hasNextPage}
+                    className={`px-4 py-2 border border-gray-300 rounded-lg transition ${
+                      pagination.hasNextPage
+                        ? 'hover:bg-gray-50'
+                        : 'opacity-50 cursor-not-allowed'
+                    }`}
+                  >
                     Next
                   </button>
                 </div>
@@ -835,8 +525,12 @@ const JobsPage = () => {
             <div className="sticky top-0 bg-white border-b border-gray-200 p-6 z-10">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-3xl">
-                    {selectedJob.logo}
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-3xl overflow-hidden">
+                    {selectedJob.logo.startsWith('http') ? (
+                      <img src={selectedJob.logo} alt={selectedJob.company} className="w-full h-full object-cover" />
+                    ) : (
+                      <span>{selectedJob.logo}</span>
+                    )}
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900 mb-1">{selectedJob.title}</h2>
@@ -864,7 +558,7 @@ const JobsPage = () => {
                   <Briefcase className="w-5 h-5 text-gray-400" />
                   <div>
                     <div className="text-xs text-gray-500">Tipe</div>
-                    <div className="font-semibold text-gray-900">{selectedJob.type}</div>
+                    <div className="font-semibold text-gray-900">{formatJobType(selectedJob.type)}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -885,9 +579,11 @@ const JobsPage = () => {
 
               {/* Action Buttons */}
               <div className="flex gap-3 mt-6">
-                <button className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition font-semibold shadow-lg hover:shadow-xl">
-                  Lamar Sekarang
-                </button>
+                <Link href={`/jobs/${selectedJob.slug}`} className="flex-1">
+                  <button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition font-semibold shadow-lg hover:shadow-xl">
+                    Lamar Sekarang
+                  </button>
+                </Link>
                 <button
                   onClick={() => toggleSaveJob(selectedJob.id)}
                   className={`px-6 py-3 rounded-xl transition font-semibold ${
@@ -906,69 +602,53 @@ const JobsPage = () => {
               {/* Description */}
               <div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">Deskripsi Pekerjaan</h3>
-                <p className="text-gray-700 leading-relaxed">{selectedJob.description}</p>
+                <p className="text-gray-700 leading-relaxed whitespace-pre-line">{selectedJob.description}</p>
               </div>
 
               {/* Requirements */}
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Persyaratan</h3>
-                <ul className="space-y-3">
-                  {selectedJob.requirements.map((req, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                      </div>
-                      <span className="text-gray-700">{req}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {selectedJob.requirements && (
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">Persyaratan</h3>
+                  <div className="text-gray-700 leading-relaxed whitespace-pre-line">{selectedJob.requirements}</div>
+                </div>
+              )}
 
               {/* Responsibilities */}
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Tanggung Jawab</h3>
-                <ul className="space-y-3">
-                  {selectedJob.responsibilities.map((resp, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                      </div>
-                      <span className="text-gray-700">{resp}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {selectedJob.responsibilities && (
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">Tanggung Jawab</h3>
+                  <div className="text-gray-700 leading-relaxed whitespace-pre-line">{selectedJob.responsibilities}</div>
+                </div>
+              )}
 
               {/* Benefits */}
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Benefit & Fasilitas</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {selectedJob.benefits.map((benefit, index) => (
-                    <div key={index} className="flex items-center gap-3 bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-lg">
-                      <Star className="w-5 h-5 text-yellow-500 fill-yellow-500 flex-shrink-0" />
-                      <span className="text-gray-700 font-medium">{benefit}</span>
-                    </div>
-                  ))}
+              {selectedJob.benefits && selectedJob.benefits.length > 0 && (
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">Benefit & Fasilitas</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {selectedJob.benefits.map((benefit, index) => (
+                      <div key={index} className="flex items-center gap-3 bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-lg">
+                        <Star className="w-5 h-5 text-yellow-500 fill-yellow-500 flex-shrink-0" />
+                        <span className="text-gray-700 font-medium">{benefit}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Company Info */}
-              <div className="bg-gray-50 rounded-xl p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Tentang Perusahaan</h3>
-                <p className="text-gray-700 mb-4">
-                  {selectedJob.company} adalah perusahaan terkemuka di bidang {selectedJob.category} yang berkomitmen untuk memberikan solusi terbaik bagi klien kami.
-                </p>
-                <div className="flex gap-4 text-sm text-gray-600">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4" />
-                    <span>200-500 karyawan</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4" />
-                    <span>Growing fast</span>
+              {/* Skills */}
+              {selectedJob.skills && selectedJob.skills.length > 0 && (
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">Skills Required</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedJob.skills.map((skill, index) => (
+                      <span key={index} className="px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                        {skill}
+                      </span>
+                    ))}
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -985,7 +665,6 @@ const JobsPage = () => {
               </button>
             </div>
 
-            {/* Same filter content as desktop */}
             <div className="space-y-6">
               {/* Job Type */}
               <div>
@@ -999,7 +678,7 @@ const JobsPage = () => {
                         onChange={() => handleFilterChange('jobType', type)}
                         className="w-4 h-4 text-blue-600 rounded"
                       />
-                      <span>{type}</span>
+                      <span>{formatJobType(type)}</span>
                     </label>
                   ))}
                 </div>

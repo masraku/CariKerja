@@ -45,7 +45,7 @@ export default function ApplicationDetailPage() {
             const token = localStorage.getItem('token')
 
             // Use new cleaner API endpoint
-            const response = await fetch(`/api/profile/recruiter/applications/${params.applicationId}`, {
+            const response = await fetch(`/api/profile/recruiter/applications/${params.id}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -95,7 +95,7 @@ export default function ApplicationDetailPage() {
 
         try {
             const token = localStorage.getItem('token')
-            const response = await fetch(`/api/profile/recruiter/applications/${params.applicationId}`, {
+            const response = await fetch(`/api/profile/recruiter/applications/${params.id}`, {
                 method: 'PATCH',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -134,7 +134,7 @@ export default function ApplicationDetailPage() {
             setSavingNotes(true)
             const token = localStorage.getItem('token')
 
-            const response = await fetch(`/api/profile/recruiter/applications/${params.applicationId}`, {
+            const response = await fetch(`/api/profile/recruiter/applications/${params.id}`, {
                 method: 'PATCH',
                 headers: {
                     'Authorization': `Bearer ${token}`,

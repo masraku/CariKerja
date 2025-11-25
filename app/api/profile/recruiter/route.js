@@ -165,6 +165,9 @@ export async function POST(request) {
                 })
             }
 
+            // Check if profile is complete for auto-verification
+            const isProfileComplete = firstName && lastName && phone && position
+            
             // Update recruiter
             recruiter = await prisma.recruiter.update({
                 where: { id: recruiter.id },
@@ -174,7 +177,8 @@ export async function POST(request) {
                     position,
                     phone,
                     department,
-                    companyId: companyId || recruiter.companyId
+                    companyId: companyId || recruiter.companyId,
+                    isVerified: isProfileComplete // Auto-verify if all basic info is complete
                 },
                 include: { company: true }
             })
@@ -227,6 +231,9 @@ export async function POST(request) {
                 })
             }
 
+            // Check if profile is complete for auto-verification
+            const isProfileComplete = firstName && lastName && phone && position
+            
             // Create recruiter profile
             recruiter = await prisma.recruiter.create({
                 data: {
@@ -237,7 +244,7 @@ export async function POST(request) {
                     position,
                     phone,
                     department,
-                    isVerified: false
+                    isVerified: isProfileComplete // Auto-verify if all basic info is complete
                 },
                 include: { company: true }
             })

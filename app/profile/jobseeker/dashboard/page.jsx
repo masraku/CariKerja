@@ -69,12 +69,27 @@ const JobseekerDashboard = () => {
 
   const loadDashboardData = async () => {
     try {
-      // Fetch application stats
-      const statsResponse = await fetch('/api/applications/my-applications', {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        router.push('/login?role=jobseeker')
+        return
+      }
+
+      // Fetch stats from my-applications API
+      const statsResponse = await fetch('/api/profile/jobseeker/my-applications', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       })
+
+      if (!statsResponse.ok) {
+        const errorText = await statsResponse.text()
+        console.error('API Error Status:', statsResponse.status)
+        console.error('API Error Body:', errorText)
+        throw new Error(`Failed to fetch applications: ${statsResponse.status}`)
+      }
+
       const statsData = await statsResponse.json()
 
       if (statsData.success) {
@@ -222,7 +237,7 @@ const JobseekerDashboard = () => {
           </button>
 
           <button
-            onClick={() => router.push('/jobseeker/applications')}
+            onClick={() => router.push('/profile/jobseeker/applications')}
             className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 rounded-lg hover:from-purple-700 hover:to-pink-700 transition shadow-lg flex items-center justify-between group"
           >
             <div className="text-left">
@@ -239,7 +254,7 @@ const JobseekerDashboard = () => {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900">Lamaran Terbaru</h2>
               <button
-                onClick={() => router.push('/jobseeker/applications')}
+                onClick={() => router.push('/profile/jobseeker/applications')}
                 className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
               >
                 Lihat Semua
@@ -252,7 +267,7 @@ const JobseekerDashboard = () => {
                 <div
                   key={application.id}
                   className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition cursor-pointer"
-                  onClick={() => router.push('/jobseeker/applications')}
+                  onClick={() => router.push('/profile/jobseeker/applications')}
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white">

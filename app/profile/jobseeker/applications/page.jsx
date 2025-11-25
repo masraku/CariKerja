@@ -30,7 +30,7 @@ export default function JobseekerApplicationsPage() {
             }
 
             const response = await fetch(
-                `/api/applications/my-applications?${queryParams}`,
+                `/api/profile/jobseeker/my-applications?${queryParams}`,
                 {
                     headers: getAuthHeader()
                 }
@@ -85,7 +85,7 @@ export default function JobseekerApplicationsPage() {
     const viewDetails = async (applicationId) => {
         try {
             const response = await fetch(
-                `/api/applications/${applicationId}`,
+                `/api/profile/jobseeker/applications/${applicationId}`,
                 {
                     headers: getAuthHeader()
                 }
@@ -101,6 +101,7 @@ export default function JobseekerApplicationsPage() {
             }
         } catch (error) {
             console.error('Error fetching application details:', error)
+            alert('Terjadi kesalahan saat memuat detail')
         }
     }
 
@@ -483,13 +484,21 @@ export default function JobseekerApplicationsPage() {
                                                 {selectedApplication.job.company.city}
                                             </div>
                                         </div>
-                                    </div>
-
-                                    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${statusConfig[selectedApplication.status].color}`}>
-                                        <StatusIcon className="w-5 h-5" />
-                                        <span className="font-medium">{statusConfig[selectedApplication.status].label}</span>
-                                    </div>
                                 </div>
+
+                                {/* Status Badge */}
+                                <div>
+                                    {(() => {
+                                        const StatusIcon = statusConfig[selectedApplication.status].icon
+                                        return (
+                                            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${statusConfig[selectedApplication.status].color}`}>
+                                                <StatusIcon className="w-5 h-5" />
+                                                <span className="font-medium">{statusConfig[selectedApplication.status].label}</span>
+                                            </div>
+                                        )
+                                    })()}
+                                </div>
+                            </div>
 
                                 {/* Timeline */}
                                 <div className="mb-6">
@@ -589,6 +598,16 @@ export default function JobseekerApplicationsPage() {
 
                                 {/* Actions */}
                                 <div className="flex gap-3">
+                                    {/* View Interview button for interview statuses */}
+                                    {['INTERVIEW_SCHEDULED', 'INTERVIEW_COMPLETED'].includes(selectedApplication.status) && selectedApplication.interview && (
+                                        <a
+                                            href={`/profile/jobseeker/interviews/${selectedApplication.interview.id}`}
+                                            className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-center font-medium"
+                                        >
+                                            📅 Lihat Detail Interview
+                                        </a>
+                                    )}
+                                    
                                     <button
                                         onClick={() => setShowDetailModal(false)}
                                         className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"

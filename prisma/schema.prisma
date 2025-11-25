@@ -367,6 +367,7 @@ model Job {
   skills       JobSkill[]
   applications Application[]
   savedJobs    SavedJob[]
+  interviews   Interview[]
 
   @@index([slug])
   @@index([companyId])
@@ -539,8 +540,8 @@ model Application {
   viewed   Boolean   @default(false)
   viewedAt DateTime?
 
-  // ✅ ADD THIS LINE
-  interviews Interview[]
+  // Relations
+  interviewParticipants InterviewParticipant[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -571,31 +572,59 @@ model SavedJob {
 }
 
 model Interview {
-  id            String      @id @default(cuid())
-  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  applicationId String
-  recruiter     Recruiter   @relation(fields: [recruiterId], references: [id])
-  recruiterId   String
+  id          String   @id @default(cuid())
+  recruiter   Recruiter @relation(fields: [recruiterId], references: [id])
+  recruiterId String
+  job         Job?      @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  jobId       String?
 
   title       String
   scheduledAt DateTime
   duration    Int      @default(60) // in minutes
-  meetingType String // GOOGLE_MEET, ZOOM, IN_PERSON
+  meetingType String   @default("GOOGLE_MEET") // GOOGLE_MEET, ZOOM, IN_PERSON
   meetingUrl  String?
   location    String?
   description String?  @db.Text
   notes       String?  @db.Text // Private notes for recruiter
 
-  status   String  @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED, NO_SHOW
-  feedback String? @db.Text
-  rating   Int? // 1-5 rating
-
+  status   String  @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED, RESCHEDULED
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([applicationId])
+  // Relations
+  participants InterviewParticipant[]
+
   @@index([recruiterId])
+  @@index([jobId])
   @@index([scheduledAt])
+  @@map("interviews")
+}
+
+model InterviewParticipant {
+  id            String      @id @default(cuid())
+  interview     Interview   @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  interviewId   String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  applicationId String
+  
+  // Invitation status
+  invitedAt    DateTime  @default(now())
+  respondedAt  DateTime?
+  status       String    @default("PENDING") // PENDING, ACCEPTED, DECLINED, COMPLETED, NO_SHOW
+  
+  // Feedback per participant
+  feedback     String?   @db.Text
+  rating       Int?      // 1-5 rating
+  notes        String?   @db.Text
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([interviewId, applicationId])
+  @@index([interviewId])
+  @@index([applicationId])
+  @@map("interview_participants")
 }
 
 // ==================== REVIEW MODELS ====================

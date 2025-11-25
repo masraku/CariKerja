@@ -32,6 +32,15 @@ export default function JobApplicationsPage() {
     const [searchQuery, setSearchQuery] = useState('')
     const [statusFilter, setStatusFilter] = useState('all')
     const [filteredApplications, setFilteredApplications] = useState([])
+    const [selectedApplications, setSelectedApplications] = useState([]) // For multi-select
+    const [showInterviewModal, setShowInterviewModal] = useState(false)
+    const [selectedApplicationForInterview, setSelectedApplicationForInterview] = useState(null)
+    const [interviewForm, setInterviewForm] = useState({
+        scheduledAt: '',
+        duration: 60,
+        meetingUrl: '',
+        description: ''
+    })
 
     useEffect(() => {
         loadApplications()
@@ -106,6 +115,7 @@ export default function JobApplicationsPage() {
             REVIEWING: { label: 'Reviewing', color: 'bg-blue-100 text-blue-700', icon: Eye },
             SHORTLISTED: { label: 'Shortlisted', color: 'bg-purple-100 text-purple-700', icon: Star },
             INTERVIEW_SCHEDULED: { label: 'Interview', color: 'bg-indigo-100 text-indigo-700', icon: Calendar },
+            INTERVIEW_COMPLETED: { label: 'Interview Completed', color: 'bg-teal-100 text-teal-700', icon: CheckCircle },
             ACCEPTED: { label: 'Accepted', color: 'bg-green-100 text-green-700', icon: CheckCircle },
             REJECTED: { label: 'Rejected', color: 'bg-red-100 text-red-700', icon: XCircle }
         }
@@ -130,6 +140,8 @@ export default function JobApplicationsPage() {
     }
 
     const handleQuickAction = async (applicationId, newStatus) => {
+        const application = applications.find(app => app.id === applicationId)
+        
         const statusLabels = {
             REVIEWING: 'Review',
             SHORTLISTED: 'Shortlist',
@@ -138,49 +150,80 @@ export default function JobApplicationsPage() {
             REJECTED: 'Reject'
         }
 
-        const result = await Swal.fire({
-            title: `${statusLabels[newStatus]} Pelamar?`,
-            text: `Ubah status menjadi ${statusLabels[newStatus]}?`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, Ubah',
-            cancelButtonText: 'Batal'
-        })
+        // For accept/reject, ask for optional message
+        let message = ''
+        if (newStatus === 'ACCEPTED' || newStatus === 'REJECTED') {
+            const result = await Swal.fire({
+                title: `${statusLabels[newStatus]} Candidate?`,
+                html: `
+                    <p class="mb-4">Apakah Anda yakin ingin ${newStatus === 'ACCEPTED' ? 'menerima' : 'menolak'} kandidat ini?</p>
+                    <textarea 
+                        id="recruiter-message" 
+                        class="swal2-input" 
+                        placeholder="${newStatus === 'ACCEPTED' ? 'Pesan untuk kandidat (opsional)\nContoh: Selamat! Silakan hubungi HR kami di...' : 'Feedback untuk kandidat (opsional)\nContoh: Terima kasih atas partisipasi Anda...'}"
+                        rows="4"
+                        style="width: 90%; height: 100px; resize: vertical;"
+                    ></textarea>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: `Ya, ${statusLabels[newStatus]}`,
+                cancelButtonText: 'Batal',
+                confirmButtonColor: newStatus === 'ACCEPTED' ? '#10b981' : '#ef4444',
+                preConfirm: () => {
+                    return document.getElementById('recruiter-message').value
+                }
+            })
 
-        if (!result.isConfirmed) return
+            if (!result.isConfirmed) return
+            message = result.value || ''
+        } else {
+            const result = await Swal.fire({
+                title: `${statusLabels[newStatus]} Candidate?`,
+                text: `Change status to ${statusLabels[newStatus]}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: `Yes, ${statusLabels[newStatus]}`,
+                cancelButtonText: 'Cancel'
+            })
+
+            if (!result.isConfirmed) return
+        }
 
         try {
             const token = localStorage.getItem('token')
-            console.log('🔄 Updating application status:', applicationId, newStatus)
-            
-            // Use new cleaner API endpoint
             const response = await fetch(`/api/profile/recruiter/applications/${applicationId}`, {
                 method: 'PATCH',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ status: newStatus })
+                body: JSON.stringify({ 
+                    status: newStatus,
+                    recruiterNotes: message
+                })
             })
+
+            const data = await response.json()
 
             if (response.ok) {
                 Swal.fire({
                     icon: 'success',
-                    title: 'Berhasil!',
-                    text: 'Status berhasil diubah',
+                    title: 'Success!',
+                    text: data.message || 'Status updated successfully',
                     timer: 2000,
                     showConfirmButton: false
                 })
                 loadApplications()
             } else {
-                throw new Error('Failed to update status')
+                throw new Error(data.error || 'Failed to update status')
             }
         } catch (error) {
             console.error('❌ Update status error:', error)
             Swal.fire({
                 icon: 'error',
-                title: 'Gagal',
-                text: 'Gagal mengubah status'
+                title: 'Error',
+                text: error.message || 'Failed to update application status'
             })
         }
     }
@@ -189,6 +232,70 @@ export default function JobApplicationsPage() {
         console.log('👁️ Viewing application detail:', applicationId)
         console.log('📍 Navigating to:', `/profile/recruiter/dashboard/jobs/${params.slug}/applications/${applicationId}`)
         router.push(`/profile/recruiter/dashboard/jobs/${params.slug}/applications/${applicationId}`)
+    }
+
+    const handleScheduleInterview = (application) => {
+        setSelectedApplicationForInterview(application)
+        setShowInterviewModal(true)
+    }
+
+    const handleScheduleSubmit = async () => {
+        try {
+            const token = localStorage.getItem('token')
+            
+            // Validate form
+            if (!interviewForm.scheduledAt || !interviewForm.meetingUrl) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Form Tidak Lengkap',
+                    text: 'Harap isi tanggal/waktu dan link Google Meet'
+                })
+                return
+            }
+
+            const response = await fetch('/api/profile/recruiter/interviews', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    applicationId: selectedApplicationForInterview.id,
+                    jobId: job.id,
+                    scheduledAt: new Date(interviewForm.scheduledAt).toISOString(),
+                    duration: interviewForm.duration,
+                    meetingUrl: interviewForm.meetingUrl,
+                    description: interviewForm.description
+                })
+            })
+
+            if (response.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Interview Dijadwalkan!',
+                    text: 'Email undangan telah dikirim ke kandidat',
+                    timer: 2000,
+                    showConfirmButton: false
+                })
+                setShowInterviewModal(false)
+                setInterviewForm({
+                    scheduledAt: '',
+                    duration: 60,
+                    meetingUrl: '',
+                    description: ''
+                })
+                loadApplications()
+            } else {
+                throw new Error('Failed to schedule interview')
+            }
+        } catch (error) {
+            console.error('Schedule interview error:', error)
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: 'Gagal menjadwalkan interview'
+            })
+        }
     }
 
     if (loading) {
@@ -236,7 +343,7 @@ export default function JobApplicationsPage() {
 
                 {/* Stats Cards */}
                 {stats && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
                         <div className="bg-white rounded-lg shadow-sm p-4">
                             <p className="text-sm text-gray-600 mb-1">Total</p>
                             <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
@@ -256,6 +363,10 @@ export default function JobApplicationsPage() {
                         <div className="bg-indigo-50 rounded-lg shadow-sm p-4">
                             <p className="text-sm text-indigo-700 mb-1">Interview</p>
                             <p className="text-3xl font-bold text-indigo-900">{stats.interview}</p>
+                        </div>
+                        <div className="bg-teal-50 rounded-lg shadow-sm p-4">
+                            <p className="text-sm text-teal-700 mb-1">Completed</p>
+                            <p className="text-3xl font-bold text-teal-900">{stats.interviewCompleted || 0}</p>
                         </div>
                         <div className="bg-green-50 rounded-lg shadow-sm p-4">
                             <p className="text-sm text-green-700 mb-1">Accepted</p>
@@ -285,7 +396,8 @@ export default function JobApplicationsPage() {
                             <option value="PENDING">Pending</option>
                             <option value="REVIEWING">Reviewing</option>
                             <option value="SHORTLISTED">Shortlisted</option>
-                            <option value="INTERVIEW_SCHEDULED">Interview</option>
+                            <option value="INTERVIEW_SCHEDULED">Interview Scheduled</option>
+                            <option value="INTERVIEW_COMPLETED">Interview Completed</option>
                             <option value="ACCEPTED">Accepted</option>
                             <option value="REJECTED">Rejected</option>
                         </select>
@@ -467,7 +579,7 @@ export default function JobApplicationsPage() {
 
                                             {['SHORTLISTED'].includes(application.status) && (
                                                 <button
-                                                    onClick={() => handleQuickAction(application.id, 'INTERVIEW_SCHEDULED')}
+                                                    onClick={() => handleScheduleInterview(application)}
                                                     className="flex items-center gap-2 px-4 py-2 border border-indigo-300 text-indigo-700 rounded-lg hover:bg-indigo-50 transition text-sm"
                                                 >
                                                     <Calendar className="w-4 h-4" />
@@ -475,11 +587,39 @@ export default function JobApplicationsPage() {
                                                 </button>
                                             )}
 
-                                            {!['ACCEPTED', 'REJECTED'].includes(application.status) && (
+                                            {['INTERVIEW_SCHEDULED', 'INTERVIEW_COMPLETED'].includes(application.status) && application.interview && (
+                                                <button
+                                                    onClick={() => router.push(`/profile/recruiter/interviews/${application.interview.id}`)}
+                                                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm"
+                                                >
+                                                    <Calendar className="w-4 h-4" />
+                                                    View Interview
+                                                </button>
+                                            )}
+
+                                            {application.status === 'INTERVIEW_SCHEDULED' && (
+                                                <button
+                                                    onClick={() => handleQuickAction(application.id, 'INTERVIEW_COMPLETED')}
+                                                    className="flex items-center gap-2 px-4 py-2 border border-teal-300 text-teal-700 rounded-lg hover:bg-teal-50 transition text-sm"
+                                                >
+                                                    <CheckCircle className="w-4 h-4" />
+                                                    Complete Interview
+                                                </button>
+                                            )}
+
+                                            {/* Accept/Reject buttons - only show for non-final statuses */}
+                                            {!['ACCEPTED', 'REJECTED', 'INTERVIEW_SCHEDULED'].includes(application.status) && (
                                                 <>
+                                                    {/* Accept button - only enabled if interview completed */}
                                                     <button
                                                         onClick={() => handleQuickAction(application.id, 'ACCEPTED')}
-                                                        className="flex items-center gap-2 px-4 py-2 border border-green-300 text-green-700 rounded-lg hover:bg-green-50 transition text-sm"
+                                                        disabled={application.status !== 'INTERVIEW_COMPLETED'}
+                                                        title={application.status !== 'INTERVIEW_COMPLETED' ? "Selesaikan interview terlebih dahulu" : ""}
+                                                        className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm transition ${
+                                                            application.status === 'INTERVIEW_COMPLETED'
+                                                                ? 'border-green-300 text-green-700 hover:bg-green-50 cursor-pointer'
+                                                                : 'border-gray-300 text-gray-400 cursor-not-allowed'
+                                                        }`}
                                                     >
                                                         <CheckCircle className="w-4 h-4" />
                                                         Accept
@@ -502,6 +642,118 @@ export default function JobApplicationsPage() {
                     </div>
                 )}
             </div>
+
+            {/* Interview Scheduling Modal */}
+            {showInterviewModal && selectedApplicationForInterview && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-2xl max-w-2xl w-full p-8">
+                        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                            Jadwalkan Interview
+                        </h2>
+
+                        {/* Candidate Info */}
+                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                            <h3 className="font-semibold text-gray-900 mb-2">Kandidat:</h3>
+                            <p className="text-gray-700">
+                                {selectedApplicationForInterview.jobseeker.firstName} {selectedApplicationForInterview.jobseeker.lastName}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                                {selectedApplicationForInterview.jobseeker.email}
+                            </p>
+                        </div>
+
+                        {/* Form */}
+                        <div className="space-y-4 mb-6">
+                            {/* Date & Time */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                                    Tanggal & Waktu Interview <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="datetime-local"
+                                    value={interviewForm.scheduledAt}
+                                    onChange={(e) => setInterviewForm({...interviewForm, scheduledAt: e.target.value})}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    min={new Date().toISOString().slice(0, 16)}
+                                />
+                            </div>
+
+                            {/* Duration */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                                    Durasi (menit)
+                                </label>
+                                <select
+                                    value={interviewForm.duration}
+                                    onChange={(e) => setInterviewForm({...interviewForm, duration: parseInt(e.target.value)})}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value={30}>30 menit</option>
+                                    <option value={45}>45 menit</option>
+                                    <option value={60}>60 menit</option>
+                                    <option value={90}>90 menit</option>
+                                    <option value={120}>120 menit</option>
+                                </select>
+                            </div>
+
+                            {/* Google Meet Link */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                                    Link Google Meet <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="url"
+                                    value={interviewForm.meetingUrl}
+                                    onChange={(e) => setInterviewForm({...interviewForm, meetingUrl: e.target.value})}
+                                    placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Buat meeting di Google Meet dan paste link-nya di sini
+                                </p>
+                            </div>
+
+                            {/* Description */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                                    Catatan/Instruksi (Opsional)
+                                </label>
+                                <textarea
+                                    value={interviewForm.description}
+                                    onChange={(e) => setInterviewForm({...interviewForm, description: e.target.value})}
+                                    rows={4}
+                                    placeholder="Informasi tambahan untuk kandidat, misalnya: dokumen yang perlu disiapkan, hal yang akan dibahas, dll."
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Buttons */}
+                        <div className="flex gap-4">
+                            <button
+                                onClick={() => {
+                                    setShowInterviewModal(false)
+                                    setInterviewForm({
+                                        scheduledAt: '',
+                                        duration: 60,
+                                        meetingUrl: '',
+                                        description: ''
+                                    })
+                                }}
+                                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                onClick={handleScheduleSubmit}
+                                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition font-semibold shadow-lg"
+                            >
+                                Jadwalkan & Kirim Undangan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

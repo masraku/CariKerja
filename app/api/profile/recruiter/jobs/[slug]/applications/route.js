@@ -53,6 +53,18 @@ export async function GET(request, { params }) {
             },
             certifications: true
           }
+        },
+        // Include interview participant to get interview ID
+        interviewParticipants: {
+          include: {
+            interview: {
+              select: {
+                id: true,
+                scheduledAt: true,
+                status: true
+              }
+            }
+          }
         }
       },
       orderBy: {
@@ -102,12 +114,16 @@ export async function GET(request, { params }) {
       // Extract skill names from jobseekerSkills
       const skills = jobseeker.jobseekerSkills?.map(js => js.skill?.name).filter(Boolean) || []
 
+      // Get interview data if exists
+      const interview = app.interviewParticipants?.[0]?.interview || null
+
       return {
         ...app,
         jobseeker: {
           ...jobseeker,
           skills // Add extracted skills array for easier access
         },
+        interview, // Add interview data
         profileCompleteness: completenessPercentage,
         hasCV: !!jobseeker.cvUrl,
         hasExperience: jobseeker.workExperiences?.length > 0,
@@ -123,6 +139,7 @@ export async function GET(request, { params }) {
       reviewing: applications.filter(a => a.status === 'REVIEWING').length,
       shortlisted: applications.filter(a => a.status === 'SHORTLISTED').length,
       interview: applications.filter(a => a.status === 'INTERVIEW_SCHEDULED').length,
+      interviewCompleted: applications.filter(a => a.status === 'INTERVIEW_COMPLETED').length,
       accepted: applications.filter(a => a.status === 'ACCEPTED').length,
       rejected: applications.filter(a => a.status === 'REJECTED').length,
       profileComplete: applicationsWithCompleteness.filter(a => a.profileCompleteness >= 80).length

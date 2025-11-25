@@ -138,16 +138,45 @@ export default function AllApplicationsPage() {
             REJECTED: 'Reject'
         }
 
-        const result = await Swal.fire({
-            title: `${statusLabels[newStatus]} Pelamar?`,
-            text: `Ubah status menjadi ${statusLabels[newStatus]}?`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, Ubah',
-            cancelButtonText: 'Batal'
-        })
+        // For accept/reject, ask for optional message
+        let message = ''
+        if (newStatus === 'ACCEPTED' || newStatus === 'REJECTED') {
+            const result = await Swal.fire({
+                title: `${statusLabels[newStatus]} Candidate?`,
+                html: `
+                    <p class="mb-4">Apakah Anda yakin ingin ${newStatus === 'ACCEPTED' ? 'menerima' : 'menolak'} kandidat ini?</p>
+                    <textarea 
+                        id="recruiter-message" 
+                        class="swal2-input" 
+                        placeholder="${newStatus === 'ACCEPTED' ? 'Pesan untuk kandidat (opsional)\nContoh: Selamat! Silakan hubungi HR kami di...' : 'Feedback untuk kandidat (opsional)\nContoh: Terima kasih atas partisipasi Anda...'}"
+                        rows="4"
+                        style="width: 90%; height: 100px; resize: vertical;"
+                    ></textarea>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: `Ya, ${statusLabels[newStatus]}`,
+                cancelButtonText: 'Batal',
+                confirmButtonColor: newStatus === 'ACCEPTED' ? '#10b981' : '#ef4444',
+                preConfirm: () => {
+                    return document.getElementById('recruiter-message').value
+                }
+            })
 
-        if (!result.isConfirmed) return
+            if (!result.isConfirmed) return
+            message = result.value || ''
+        } else {
+            const result = await Swal.fire({
+                title: `${statusLabels[newStatus]} Pelamar?`,
+                text: `Ubah status menjadi ${statusLabels[newStatus]}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Ubah',
+                cancelButtonText: 'Batal'
+            })
+
+            if (!result.isConfirmed) return
+        }
 
         try {
             const token = localStorage.getItem('token')
@@ -157,27 +186,32 @@ export default function AllApplicationsPage() {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ status: newStatus })
+                body: JSON.stringify({ 
+                    status: newStatus,
+                    recruiterNotes: message
+                })
             })
+
+            const data = await response.json()
 
             if (response.ok) {
                 Swal.fire({
                     icon: 'success',
                     title: 'Berhasil!',
-                    text: 'Status berhasil diubah',
+                    text: data.message || 'Status berhasil diubah',
                     timer: 2000,
                     showConfirmButton: false
                 })
                 loadAllApplications()
             } else {
-                throw new Error('Failed to update status')
+                throw new Error(data.error || 'Failed to update status')
             }
         } catch (error) {
             console.error('Update status error:', error)
             Swal.fire({
                 icon: 'error',
                 title: 'Gagal',
-                text: 'Gagal mengubah status'
+                text: error.message || 'Gagal mengubah status'
             })
         }
     }
@@ -451,11 +485,28 @@ export default function AllApplicationsPage() {
                                                 </button>
                                             )}
 
-                                            {!['ACCEPTED', 'REJECTED'].includes(application.status) && (
+                                            {/* View Interview Button */}
+                                            {['INTERVIEW_SCHEDULED', 'INTERVIEW_COMPLETED'].includes(application.status) && application.interview && (
+                                                <button
+                                                    onClick={() => router.push(`/profile/recruiter/interviews/${application.interview.id}`)}
+                                                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm"
+                                                >
+                                                    <Calendar className="w-4 h-4" />
+                                                    View Interview
+                                                </button>
+                                            )}
+
+                                            {/* Accept/Reject - hide when interview scheduled */}
+                                            {!['ACCEPTED', 'REJECTED', 'INTERVIEW_SCHEDULED'].includes(application.status) && (
                                                 <>
                                                     <button
                                                         onClick={() => handleQuickAction(application.id, 'ACCEPTED')}
-                                                        className="flex items-center gap-2 px-4 py-2 border border-green-300 text-green-700 rounded-lg hover:bg-green-50 transition text-sm"
+                                                        disabled={application.status !== 'INTERVIEW_COMPLETED'}
+                                                        className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm transition ${
+                                                            application.status === 'INTERVIEW_COMPLETED'
+                                                                ? 'border-green-300 text-green-700 hover:bg-green-50'
+                                                                : 'border-gray-300 text-gray-400 cursor-not-allowed'
+                                                        }`}
                                                     >
                                                         <CheckCircle className="w-4 h-4" />
                                                         Accept

@@ -60,6 +60,7 @@ export async function GET(request) {
             firstName: true,
             lastName: true,
             position: true,
+            isVerified: true,
             company: {
               select: {
                 id: true,

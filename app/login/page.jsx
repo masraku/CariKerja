@@ -56,9 +56,9 @@ export default function LoginPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/profile/jobseeker/dashboard') // or based on role
+      router.push('/') // Redirect to home instead of assuming dashboard
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, router])
 
   // Handle Login
   const handleLogin = async (e) => {
@@ -105,6 +105,13 @@ export default function LoginPage() {
 
       const action = searchParams.get('action')
 
+      // Debug: Log user data to check profileCompleted
+      console.log('🔍 Login Response Data:', {
+        role: data.user.role,
+        jobseeker: data.user.jobseeker,
+        recruiter: data.user.recruiter
+      })
+
       // Special flow posting lowongan
       if (action === 'post-job' && role === 'recruiter') {
         router.push('/profile/recruiter/post-job')
@@ -114,10 +121,24 @@ export default function LoginPage() {
       // Redirect based on role
       if (data.user.role === 'JOBSEEKER') {
         const completed = data.user.jobseeker?.profileCompleted
-        router.push(!completed ? '/profile/jobseeker' : '/profile/jobseeker/dashboard')
+        console.log('✅ JOBSEEKER - profileCompleted:', completed)
+        
+        // Use explicit boolean check to avoid undefined issues
+        if (completed === true) {
+          router.push('/profile/jobseeker/dashboard')
+        } else {
+          router.push('/profile/jobseeker')
+        }
       } else if (data.user.role === 'RECRUITER') {
         const verified = data.user.recruiter?.isVerified
-        router.push(!verified ? '/profile/recruiter' : '/profile/recruiter/dashboard')
+        console.log('✅ RECRUITER - isVerified:', verified)
+        
+        // Use explicit boolean check
+        if (verified === true) {
+          router.push('/profile/recruiter/dashboard')
+        } else {
+          router.push('/profile/recruiter')
+        }
       } else {
         router.push('/dashboard/admin')
       }
