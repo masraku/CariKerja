@@ -139,8 +139,10 @@ export default function LoginPage() {
         } else {
           router.push('/profile/recruiter')
         }
+      } else if (data.user.role === 'ADMIN') {
+        router.push('/admin')
       } else {
-        router.push('/dashboard/admin')
+        router.push('/')
       }
 
       // Force page refresh for header update

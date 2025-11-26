@@ -289,8 +289,8 @@ export default function CompanyProfilePage() {
               <>
                 <div className="bg-white rounded-xl shadow-sm p-6">
                   <h2 className="text-xl font-bold text-gray-900 mb-4">Tentang Perusahaan</h2>
-                  <div className="prose max-w-none text-gray-700">
-                    {company.description || 'Belum ada deskripsi perusahaan.'}
+                  <div className="prose max-w-none text-gray-700 whitespace-pre-line">
+                    {company.bio || company.description || 'Belum ada deskripsi perusahaan.'}
                   </div>
                 </div>
 

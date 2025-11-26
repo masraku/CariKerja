@@ -7,10 +7,10 @@ export async function GET(request, { params }) {
     const { slug } = await params
 
     // Get job with all related data
-    const job = await prisma.job.findUnique({
+    const job = await prisma.jobs.findUnique({
       where: { slug },
       include: {
-        company: {
+        companies: {
           select: {
             id: true,
             name: true,
@@ -26,7 +26,7 @@ export async function GET(request, { params }) {
             address: true
           }
         },
-        recruiter: {
+        recruiters: {
           select: {
             id: true,
             firstName: true,
@@ -63,7 +63,7 @@ export async function GET(request, { params }) {
     }
 
     // Increment view count
-    await prisma.job.update({
+    await prisma.jobs.update({
       where: { id: job.id },
       data: {
         viewCount: {
@@ -73,7 +73,7 @@ export async function GET(request, { params }) {
     })
 
     // Get other jobs from same company (related jobs)
-    const relatedJobs = await prisma.job.findMany({
+    const relatedJobs = await prisma.jobs.findMany({
       where: {
         companyId: job.companyId,
         isActive: true,

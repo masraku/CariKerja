@@ -19,10 +19,10 @@ export async function POST(request, { params }) {
     console.log('📅 Scheduling interview for:', { slug, applicationIds })
 
     // Verify job ownership and get recruiter
-    const job = await prisma.job.findUnique({
+    const job = await prisma.jobs.findUnique({
       where: { slug },
       include: {
-        company: {
+        companies: {
           include: {
             recruiters: {
               where: { userId: decoded.userId }
@@ -32,14 +32,14 @@ export async function POST(request, { params }) {
       }
     })
 
-    if (!job || job.company.recruiters.length === 0) {
+    if (!job || job.companies.recruiters.length === 0) {
       return NextResponse.json(
         { error: 'Job not found or unauthorized' },
         { status: 404 }
       )
     }
 
-    const recruiter = job.company.recruiters[0]
+    const recruiter = job.companies.recruiters[0]
 
     // Combine date and time
     const interviewDateTime = new Date(`${interviewDate}T${interviewTime}`)
@@ -49,14 +49,14 @@ export async function POST(request, { params }) {
     // Update all selected applications
     const updatePromises = applicationIds.map(async (appId) => {
       // First update application status
-      const application = await prisma.application.update({
+      const application = await prisma.applications.update({
         where: { id: appId },
         data: {
           status: 'INTERVIEW_SCHEDULED',
           interviewDate: interviewDateTime // ✅ Update interviewDate field
         },
         include: {
-          jobseeker: {
+          jobseekers: {
             select: {
               firstName: true,
               lastName: true,
@@ -128,10 +128,10 @@ export async function GET(request, { params }) {
     console.log('📋 Fetching applications for scheduling:', applicationIds)
 
     // Verify job ownership
-    const job = await prisma.job.findUnique({
+    const job = await prisma.jobs.findUnique({
       where: { slug },
       include: {
-        company: {
+        companies: {
           include: {
             recruiters: {
               where: { userId: decoded.userId }
@@ -141,7 +141,7 @@ export async function GET(request, { params }) {
       }
     })
 
-    if (!job || job.company.recruiters.length === 0) {
+    if (!job || job.companies.recruiters.length === 0) {
       return NextResponse.json(
         { error: 'Job not found or unauthorized' },
         { status: 404 }
@@ -149,13 +149,13 @@ export async function GET(request, { params }) {
     }
 
     // Get applications
-    const applications = await prisma.application.findMany({
+    const applications = await prisma.applications.findMany({
       where: {
         id: { in: applicationIds },
         jobId: job.id
       },
       include: {
-        jobseeker: {
+        jobseekers: {
           select: {
             firstName: true,
             lastName: true,
@@ -172,11 +172,11 @@ export async function GET(request, { params }) {
 
     return NextResponse.json({
       success: true,
-      job: {
+      jobs: {
         id: job.id,
         slug: job.slug,
         title: job.title,
-        company: job.company.name
+        company: job.companies.name
       },
       applications
     })

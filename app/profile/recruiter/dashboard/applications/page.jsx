@@ -78,7 +78,7 @@ export default function AllApplicationsPage() {
 
         // Filter by job
         if (jobFilter !== 'all') {
-            filtered = filtered.filter(app => app.job.id === jobFilter)
+            filtered = filtered.filter(app => app.jobs.id === jobFilter)
         }
 
         // Filter by status
@@ -89,9 +89,9 @@ export default function AllApplicationsPage() {
         // Search by name or email
         if (searchQuery) {
             filtered = filtered.filter(app => {
-                const fullName = `${app.jobseeker.firstName} ${app.jobseeker.lastName}`.toLowerCase()
-                const email = app.jobseeker.email?.toLowerCase() || ''
-                const jobTitle = app.job.title.toLowerCase()
+                const fullName = `${app.jobseekers.firstName} ${app.jobseekers.lastName}`.toLowerCase()
+                const email = app.jobseekers.email?.toLowerCase() || ''
+                const jobTitle = app.jobs.title.toLowerCase()
                 const query = searchQuery.toLowerCase()
                 return fullName.includes(query) || email.includes(query) || jobTitle.includes(query)
             })
@@ -373,14 +373,14 @@ export default function AllApplicationsPage() {
                                     {/* Avatar */}
                                     <div className="flex-shrink-0">
                                         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
-                                            {application.jobseeker.photo ? (
+                                            {application.jobseekers.photo ? (
                                                 <img
-                                                    src={application.jobseeker.photo}
-                                                    alt={application.jobseeker.firstName}
+                                                    src={application.jobseekers.photo}
+                                                    alt={application.jobseekers.firstName}
                                                     className="w-full h-full object-cover rounded-full"
                                                 />
                                             ) : (
-                                                application.jobseeker.firstName?.charAt(0) || 'U'
+                                                application.jobseekers.firstName?.charAt(0) || 'U'
                                             )}
                                         </div>
                                     </div>
@@ -390,37 +390,37 @@ export default function AllApplicationsPage() {
                                         <div className="flex items-start justify-between mb-3">
                                             <div>
                                                 <h3 className="text-xl font-bold text-gray-900 mb-1">
-                                                    {application.jobseeker.firstName} {application.jobseeker.lastName}
+                                                    {application.jobseekers.firstName} {application.jobseekers.lastName}
                                                 </h3>
                                                 <p className="text-gray-600 mb-2">
-                                                    {application.jobseeker.currentTitle || 'Job Seeker'}
+                                                    {application.jobseekers.currentTitle || 'Job Seeker'}
                                                 </p>
                                                 
                                                 {/* Job Info */}
                                                 <div className="flex items-center gap-2 mb-2 text-sm">
                                                     <Building2 className="w-4 h-4 text-gray-400" />
                                                     <span className="text-gray-700 font-medium">
-                                                        Melamar: {application.job.title}
+                                                        Melamar: {application.jobs.title}
                                                     </span>
                                                 </div>
 
                                                 <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
-                                                    {application.jobseeker.email && (
+                                                    {application.jobseekers.email && (
                                                         <div className="flex items-center gap-1">
                                                             <Mail className="w-4 h-4" />
-                                                            {application.jobseeker.email}
+                                                            {application.jobseekers.email}
                                                         </div>
                                                     )}
-                                                    {application.jobseeker.phone && (
+                                                    {application.jobseekers.phone && (
                                                         <div className="flex items-center gap-1">
                                                             <Phone className="w-4 h-4" />
-                                                            {application.jobseeker.phone}
+                                                            {application.jobseekers.phone}
                                                         </div>
                                                     )}
-                                                    {application.jobseeker.city && (
+                                                    {application.jobseekers.city && (
                                                         <div className="flex items-center gap-1">
                                                             <MapPin className="w-4 h-4" />
-                                                            {application.jobseeker.city}
+                                                            {application.jobseekers.city}
                                                         </div>
                                                     )}
                                                 </div>
@@ -458,7 +458,7 @@ export default function AllApplicationsPage() {
                                         {/* Actions */}
                                         <div className="flex flex-wrap items-center gap-3">
                                             <button
-                                                onClick={() => router.push(`/profile/recruiter/dashboard/jobs/${application.job.slug}/applications/${application.id}`)}
+                                                onClick={() => router.push(`/profile/recruiter/dashboard/jobs/${application.jobs.slug}/applications/${application.id}`)}
                                                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
                                             >
                                                 <Eye className="w-4 h-4" />

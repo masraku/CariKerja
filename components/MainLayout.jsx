@@ -16,7 +16,9 @@ export default function MainLayout({ children }) {
     '/unauthorized'
   ]
   
-  const showLayout = !noLayoutPages.includes(pathname)
+  // Admin routes should not have MainLayout (they have their own sidebar layout)
+  const isAdminRoute = pathname?.startsWith('/admin')
+  const showLayout = !noLayoutPages.includes(pathname) && !isAdminRoute
 
   if (!showLayout) {
     return <>{children}</>

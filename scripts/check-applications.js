@@ -2,7 +2,7 @@
 // Run this in Prisma Studio console or create a test endpoint
 
 // Check if applications exist
-const applications = await prisma.application.findMany({
+const applications = await prisma.applications.findMany({
   include: {
     jobseeker: {
       include: {

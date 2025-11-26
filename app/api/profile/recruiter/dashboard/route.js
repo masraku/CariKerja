@@ -23,7 +23,7 @@ export async function GET(request) {
     }
 
     // Get company with full details
-    const company = await prisma.company.findUnique({
+    const company = await prisma.companies.findUnique({
       where: { id: recruiter.companyId },
       include: {
         jobs: {
@@ -65,7 +65,7 @@ export async function GET(request) {
     }
 
     // Get all jobs for this company (including inactive)
-    const allJobs = await prisma.job.findMany({
+    const allJobs = await prisma.jobs.findMany({
       where: {
         companyId: company.id
       },
@@ -81,9 +81,9 @@ export async function GET(request) {
     })
 
     // Get all applications for company's jobs
-    const allApplications = await prisma.application.findMany({
+    const allApplications = await prisma.applications.findMany({
       where: {
-        job: {
+        jobs: {
           companyId: company.id
         }
       },
@@ -121,14 +121,14 @@ export async function GET(request) {
     }
 
     // Get recent applications with details
-    const recentApplications = await prisma.application.findMany({
+    const recentApplications = await prisma.applications.findMany({
       where: {
-        job: {
+        jobs: {
           companyId: company.id
         }
       },
       include: {
-        jobseeker: {
+        jobseekers: {
           select: {
             id: true,
             firstName: true,
@@ -138,7 +138,7 @@ export async function GET(request) {
             city: true
           }
         },
-        job: {
+        jobs: {
           select: {
             id: true,
             title: true,

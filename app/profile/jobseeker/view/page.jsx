@@ -20,7 +20,7 @@ const ViewProfilePage = () => {
 
     const loadProfile = async () => {
         try {
-            const response = await fetch('/api/profile/jobseeker')
+            const response = await fetch('/api/profile/jobseeker', { credentials: 'include' })
             const data = await response.json()
 
             if (response.ok && data.profile) {
@@ -408,14 +408,14 @@ const ViewProfilePage = () => {
                         )}
 
                         {/* EXPERIENCE */}
-                        {profile.workExperiences?.length > 0 && profile.workExperiences[0].company && (
+                        {profile.work_experiences?.length > 0 && profile.work_experiences[0].company && (
                             <div className="bg-white rounded-2xl shadow-lg p-6">
                                 <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                                     <Briefcase className="w-6 h-6 text-indigo-600" />
                                     Pengalaman Kerja
                                 </h2>
                                 <div className="space-y-6">
-                                    {profile.workExperiences.map((exp, index) => (
+                                    {profile.work_experiences.map((exp, index) => (
                                         <div key={index} className="border-l-4 border-indigo-600 pl-4">
                                             <h3 className="font-bold text-gray-900">{exp.position}</h3>
                                             <p className="text-indigo-600 font-semibold">{exp.company}</p>

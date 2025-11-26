@@ -24,7 +24,7 @@ export async function GET(request) {
         
         // Get jobseeker ID if user is jobseeker
         if (userRole === 'JOBSEEKER') {
-          const user = await prisma.user.findUnique({
+          const user = await prisma.users.findUnique({
             where: { id: userId },
             include: { jobseeker: true }
           })
@@ -57,7 +57,7 @@ export async function GET(request) {
         { title: { contains: search, mode: 'insensitive' } },
         { description: { contains: search, mode: 'insensitive' } },
         { category: { contains: search, mode: 'insensitive' } },
-        { company: { name: { contains: search, mode: 'insensitive' } } }
+        { companies: { name: { contains: search, mode: 'insensitive' } } }
       ]
     }
 
@@ -117,63 +117,63 @@ export async function GET(request) {
 
     // Fetch jobs with related data
     const [jobs, totalCount] = await Promise.all([
-      prisma.job.findMany({
+      prisma.jobs.findMany({
         where,
         include: {
-          company: {
-            select: {
-              id: true,
-              name: true,
-              logo: true,
-              city: true,
-              industry: true
-            }
-          },
-          skills: {
-            include: {
-              skill: true
-            }
-          },
-          _count: {
-            select: {
-              applications: true
-            }
-          }
-        },
-        orderBy,
-        skip,
-        take: limit
-      }),
-      prisma.job.count({ where })
-    ])
-
-    // Transform data for frontend
-    const transformedJobs = await Promise.all(jobs.map(async (job) => {
-      // Check if user has applied to this job
-      let hasApplied = false
-      if (jobseekerId) {
-        const existingApplication = await prisma.application.findUnique({
-          where: {
-            jobId_jobseekerId: {
-              jobId: job.id,
-              jobseekerId: jobseekerId
-            }
-          },
+        companies: {
           select: {
             id: true,
-            status: true
+            name: true,
+            logo: true,
+            city: true,
+            industry: true
           }
-        })
-        hasApplied = !!existingApplication
-      }
-      
-      return {
-        id: job.id,
-        slug: job.slug,
-        title: job.title,
-        company: job.company.name,
-        companyId: job.company.id,
-        logo: job.company.logo || '🏢',
+        },
+        job_skills: {
+          include: {
+            skills: true
+          }
+        },
+        _count: {
+          select: {
+            applications: true
+          }
+        }
+      },
+      orderBy,
+      skip,
+      take: limit
+    }),
+    prisma.jobs.count({ where })
+  ])
+
+  // Transform data for frontend
+  const transformedJobs = await Promise.all(jobs.map(async (job) => {
+    // Check if user has applied to this job
+    let hasApplied = false
+    if (jobseekerId) {
+      const existingApplication = await prisma.applications.findUnique({
+        where: {
+          jobId_jobseekerId: {
+            jobId: job.id,
+            jobseekerId: jobseekerId
+          }
+        },
+        select: {
+          id: true,
+          status: true
+        }
+      })
+      hasApplied = !!existingApplication
+    }
+    
+    return {
+      id: job.id,
+      slug: job.slug,
+      title: job.title,
+      company: job.companies.name,
+      companyId: job.companies.id,
+      logo: job.companies.logo || '🏢',
         location: job.city,
         fullLocation: `${job.city}, ${job.province}`,
         type: job.jobType,
@@ -193,7 +193,7 @@ export async function GET(request) {
         requirements: job.requirements,
         responsibilities: job.responsibilities,
         benefits: job.benefits,
-        skills: job.skills.map(s => s.skill.name),
+        skills: job.job_skills.map(js => js.skills.name),
         educationLevel: job.educationLevel,
         applicationDeadline: job.applicationDeadline
       }

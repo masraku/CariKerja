@@ -24,7 +24,7 @@ export async function GET(request) {
     }
 
     // Get recruiter profile
-    const recruiter = await prisma.recruiter.findUnique({
+    const recruiter = await prisma.recruiters.findUnique({
       where: { userId: user.id }
     })
 
@@ -51,12 +51,12 @@ export async function GET(request) {
     console.log('📋 Fetching applications:', ids)
 
     // Get applications
-    const applications = await prisma.application.findMany({
+    const applications = await prisma.applications.findMany({
       where: {
         id: { in: ids }
       },
       include: {
-        jobseeker: {
+        jobseekers: {
           include: {
             user: {
               select: {
@@ -65,7 +65,7 @@ export async function GET(request) {
             }
           }
         },
-        job: {
+        jobs: {
           include: {
             recruiter: true,
             company: true
@@ -76,7 +76,7 @@ export async function GET(request) {
 
     // Verify all applications belong to this recruiter
     const invalidApplications = applications.filter(
-      app => app.job.recruiterId !== recruiter.id
+      app => app.jobs.recruiterId !== recruiter.id
     )
 
     if (invalidApplications.length > 0) {

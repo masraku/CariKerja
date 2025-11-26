@@ -24,9 +24,9 @@ export async function GET(request, context) {
     const interview = await prisma.interview.findUnique({
       where: { id },
       include: {
-        job: {
+        jobs: {
           include: {
-            company: {
+            companies: {
               select: {
                 id: true,
                 name: true,
@@ -40,7 +40,7 @@ export async function GET(request, context) {
           include: {
             application: {
               include: {
-                jobseeker: {
+                jobseekers: {
                   select: {
                     id: true,
                     firstName: true,
@@ -128,7 +128,7 @@ export async function GET(request, context) {
           createdAt: interview.createdAt,
           updatedAt: interview.updatedAt
         },
-        job: {
+        jobs: {
           id: interview.job.id,
           title: interview.job.title,
           slug: interview.job.slug

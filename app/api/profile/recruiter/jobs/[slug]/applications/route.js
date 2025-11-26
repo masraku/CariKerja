@@ -16,10 +16,10 @@ export async function GET(request, { params }) {
     console.log('📋 Fetching applications for job slug:', slug)
 
     // Find job by slug and verify recruiter owns it
-    const job = await prisma.job.findUnique({
+    const job = await prisma.jobs.findUnique({
       where: { slug },
       include: {
-        company: {
+        companies: {
           include: {
             recruiters: {
               where: { userId: decoded.userId }
@@ -29,7 +29,7 @@ export async function GET(request, { params }) {
       }
     })
 
-    if (!job || job.company.recruiters.length === 0) {
+    if (!job || job.companies.recruiters.length === 0) {
       return NextResponse.json(
         { error: 'Job not found or unauthorized' },
         { status: 404 }
@@ -39,10 +39,10 @@ export async function GET(request, { params }) {
     console.log('✅ Job found:', job.title)
 
     // Get all applications with jobseeker details
-    const applications = await prisma.application.findMany({
+    const applications = await prisma.applications.findMany({
       where: { jobId: job.id },
       include: {
-        jobseeker: {
+        jobseekers: {
           include: {
             educations: true,
             workExperiences: true,
@@ -119,7 +119,7 @@ export async function GET(request, { params }) {
 
       return {
         ...app,
-        jobseeker: {
+        jobseekers: {
           ...jobseeker,
           skills // Add extracted skills array for easier access
         },
@@ -147,7 +147,7 @@ export async function GET(request, { params }) {
 
     return NextResponse.json({
       success: true,
-      job: {
+      jobs: {
         id: job.id,
         slug: job.slug,
         title: job.title,

@@ -17,10 +17,10 @@ export async function PUT(request, { params }) {
     console.log('📝 Updating job:', slug)
 
     // Verify job ownership
-    const existingJob = await prisma.job.findUnique({
+    const existingJob = await prisma.jobs.findUnique({
       where: { slug },
       include: {
-        company: {
+        companies: {
           include: {
             recruiters: {
               where: { userId: decoded.userId }
@@ -30,7 +30,7 @@ export async function PUT(request, { params }) {
       }
     })
 
-    if (!existingJob || existingJob.company.recruiters.length === 0) {
+    if (!existingJob || existingJob.companies.recruiters.length === 0) {
       return NextResponse.json(
         { error: 'Job not found or unauthorized' },
         { status: 404 }
@@ -79,7 +79,7 @@ export async function PUT(request, { params }) {
         .trim()
 
       // Check if slug exists
-      const slugExists = await prisma.job.findFirst({
+      const slugExists = await prisma.jobs.findFirst({
         where: {
           slug: baseSlug,
           id: { not: existingJob.id }
@@ -90,7 +90,7 @@ export async function PUT(request, { params }) {
     }
 
     // Update job
-    const updatedJob = await prisma.job.update({
+    const updatedJob = await prisma.jobs.update({
       where: { slug },
       data: {
         title,
@@ -105,7 +105,7 @@ export async function PUT(request, { params }) {
         isRemote: isRemote || false,
         jobType,
         level,
-        industry: industry || existingJob.company.industry,
+        industry: industry || existingJob.companies.industry,
         salaryMin: salaryMin ? parseInt(salaryMin) : null,
         salaryMax: salaryMax ? parseInt(salaryMax) : null,
         salaryType: salaryType || 'monthly',

@@ -14,16 +14,16 @@ export async function GET(request) {
         const { jobseeker } = auth
 
         // Get all interview participants for this jobseeker
-        const participants = await prisma.interviewParticipant.findMany({
+        const participants = await prisma.interview_participants.findMany({
             where: {
-                application: {
+                applications: {
                     jobseekerId: jobseeker.id
                 }
             },
             include: {
-                interview: {
+                interviews: {
                     include: {
-                        recruiter: {
+                        recruiters: {
                             select: {
                                 id: true,
                                 firstName: true,
@@ -33,11 +33,11 @@ export async function GET(request) {
                         }
                     }
                 },
-                application: {
+                applications: {
                     include: {
-                        job: {
+                        jobs: {
                             include: {
-                                company: {
+                                companies: {
                                     select: {
                                         id: true,
                                         name: true,
@@ -51,7 +51,7 @@ export async function GET(request) {
                 }
             },
             orderBy: {
-                interview: {
+                interviews: {
                     scheduledAt: 'asc' // Upcoming first
                 }
             }
@@ -59,26 +59,26 @@ export async function GET(request) {
 
         // Transform data
         const interviews = participants.map(participant => ({
-            id: participant.interview.id,
+            id: participant.interviews.id,
             participantId: participant.id,
-            title: participant.interview.title,
-            scheduledAt: participant.interview.scheduledAt,
-            duration: participant.interview.duration,
-            meetingUrl: participant.interview.meetingUrl,
-            description: participant.interview.description,
+            title: participant.interviews.title,
+            scheduledAt: participant.interviews.scheduledAt,
+            duration: participant.interviews.duration,
+            meetingUrl: participant.interviews.meetingUrl,
+            description: participant.interviews.description,
             status: participant.status, // PENDING, ACCEPTED, DECLINED
-            interviewStatus: participant.interview.status,
+            interviewStatus: participant.interviews.status,
             invitedAt: participant.invitedAt,
             respondedAt: participant.respondedAt,
-            job: {
-                id: participant.application.job.id,
-                title: participant.application.job.title,
-                slug: participant.application.job.slug,
-                company: participant.application.job.company
+            jobs: {
+                id: participant.applications.jobs.id,
+                title: participant.applications.jobs.title,
+                slug: participant.applications.jobs.slug,
+                company: participant.applications.jobs.companies
             },
-            recruiter: participant.interview.recruiter,
-            applicationId: participant.application.id,
-            applicationStatus: participant.application.status
+            recruiter: participant.interviews.recruiters,
+            applicationId: participant.applications.id,
+            applicationStatus: participant.applications.status
         }))
 
         // Separate into pending and responded

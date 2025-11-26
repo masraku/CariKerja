@@ -20,15 +20,15 @@ export async function GET(request, context) {
     const { jobseeker } = auth
 
     // Fetch application with full details
-    const application = await prisma.application.findUnique({
+    const application = await prisma.applications.findUnique({
       where: { 
         id,
         jobseekerId: jobseeker.id // Ensure user owns this application
       },
       include: {
-        job: {
+        jobs: {
           include: {
-            company: {
+            companies: {
               select: {
                 id: true,
                 name: true,
@@ -38,7 +38,7 @@ export async function GET(request, context) {
                 industry: true
               }
             },
-            recruiter: {
+            recruiters: {
               select: {
                 id: true,
                 firstName: true,
@@ -49,9 +49,9 @@ export async function GET(request, context) {
           }
         },
         // Include interview participant to get interview ID
-        interviewParticipants: {
+        interview_participants: {
           include: {
-            interview: {
+            interviews: {
               select: {
                 id: true,
                 scheduledAt: true,
@@ -74,7 +74,7 @@ export async function GET(request, context) {
       success: true,
       data: {
         ...application,
-        interview: application.interviewParticipants?.[0]?.interview || null
+        interview: application.interview_participants?.[0]?.interviews || null
       }
     })
 

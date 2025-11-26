@@ -18,7 +18,7 @@ export async function GET(request) {
         }
 
         // Get user
-        const user = await prisma.user.findUnique({
+        const user = await prisma.users.findUnique({
             where: { id: decoded.userId }
         })
 
@@ -28,15 +28,15 @@ export async function GET(request) {
         })
 
         // Get ALL applications (regardless of jobseekerId)
-        const allApplications = await prisma.application.findMany({
+        const allApplications = await prisma.applications.findMany({
             include: {
-                job: {
+                jobs: {
                     select: {
                         title: true,
                         slug: true
                     }
                 },
-                jobseeker: {
+                jobseekers: {
                     select: {
                         id: true,
                         userId: true,
@@ -75,7 +75,7 @@ export async function GET(request) {
                 applications: userApplications.map(app => ({
                     id: app.id,
                     jobseekerId: app.jobseekerId,
-                    jobTitle: app.job.title,
+                    jobTitle: app.jobs.title,
                     status: app.status,
                     appliedAt: app.appliedAt,
                     jobseekerInfo: app.jobseeker

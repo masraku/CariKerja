@@ -1,71 +1,332 @@
 import { NextResponse } from 'next/server'
-import { uploadFileToSupabase } from '@/lib/supabase.js'
+import { getCurrentUser } from '@/lib/authHelper'
+import { uploadFileToSupabase, supabaseAdmin } from '@/lib/supabase'
+import { prisma } from '@/lib/prisma'
 
 export async function POST(request) {
-  try {
-    const formData = await request.formData()
-    const file = formData.get('file')
-    const bucket = formData.get('bucket')
-    const userId = formData.get('userId')
+    try {
+        // Authenticate
+        const auth = await getCurrentUser(request)
+        
+        if (auth.error) {
+            return NextResponse.json(
+                { error: auth.error },
+                { status: auth.status }
+            )
+        }
 
-    console.log('📥 Upload Request:')
-    console.log('  - Bucket:', bucket)
-    console.log('  - File:', file?.name)
-    console.log('  - Size:', file?.size)
-    console.log('  - User ID:', userId)
+        const { user } = auth
+        const formData = await request.formData()
+        const file = formData.get('file')
+        const type = formData.get('type')
+        const bucket = formData.get('bucket') // 'jobseeker-photos', 'jobseeker-cv', etc.
 
-    if (!file) {
-      return NextResponse.json(
-        { error: 'No file provided' },
-        { status: 400 }
-      )
+        console.log('📂 Upload Request:', {
+            fileName: file?.name,
+            fileType: file?.type,
+            fileSize: file?.size,
+            bucket,
+            type
+        })
+
+        if (!file) {
+            return NextResponse.json(
+                { error: 'No file provided' },
+                { status: 400 }
+            )
+        }
+
+        // Validate file type based on bucket/purpose
+        const isDocument = bucket?.includes('cv') || bucket?.includes('diploma') || bucket?.includes('certificate')
+        
+        if (isDocument) {
+            // Allow PDF and Images for documents
+            if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+                return NextResponse.json(
+                    { error: 'File must be an image or PDF' },
+                    { status: 400 }
+                )
+            }
+        } else {
+            // Default to images only (for photos)
+            if (!file.type.startsWith('image/')) {
+                return NextResponse.json(
+                    { error: 'File must be an image' },
+                    { status: 400 }
+                )
+            }
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            return NextResponse.json(
+                { error: 'File size must be less than 5MB' },
+                { status: 400 }
+            )
+        }
+
+        let photoUrl
+
+        if (type === 'recruiter-photo') {
+            // Get recruiter ID
+            const recruiter = await prisma.recruiters.findUnique({
+                where: { userId: user.id },
+                select: { id: true }
+            })
+
+            if (!recruiter) {
+                return NextResponse.json(
+                    { error: 'Recruiter profile not found' },
+                    { status: 404 }
+                )
+            }
+
+            // Upload to Supabase
+            const fileExt = file.name.split('.').pop()
+            const fileName = `profile.${fileExt}`
+            const filePath = `recruiter-photos/${recruiter.id}/${fileName}`
+
+            // Delete old photo first
+            await supabaseAdmin.storage
+                .from('Profile')
+                .remove([filePath])
+                .catch(() => {})
+
+            // Upload new photo
+            const { data, error } = await supabaseAdmin.storage
+                .from('Profile')
+                .upload(filePath, file, {
+                    cacheControl: '3600',
+                    upsert: true
+                })
+
+            if (error) {
+                console.error('Upload error:', error)
+                return NextResponse.json(
+                    { error: `Failed to upload: ${error.message}` },
+                    { status: 500 }
+                )
+            }
+
+            // Get public URL
+            const { data: { publicUrl } } = supabaseAdmin.storage
+                .from('Profile')
+                .getPublicUrl(filePath)
+
+            photoUrl = publicUrl
+
+            // Update database
+            await prisma.recruiters.update({
+                where: { id: recruiter.id },
+                data: { photoUrl }
+            })
+
+        } else if (type === 'company-gallery') {
+            if (!companyId) {
+                return NextResponse.json(
+                    { error: 'Company ID required' },
+                    { status: 400 }
+                )
+            }
+
+            // Verify recruiter has access to this company
+            const recruiter = await prisma.recruiters.findUnique({
+                where: { userId: user.id },
+                select: { companyId: true }
+            })
+
+            if (!recruiter || recruiter.companyId !== companyId) {
+                return NextResponse.json(
+                    { error: 'Unauthorized' },
+                    { status: 403 }
+                )
+            }
+
+            // Check gallery limit
+            const company = await prisma.companies.findUnique({
+                where: { id: companyId },
+                select: { gallery: true }
+            })
+
+            if (company.gallery && company.gallery.length >= 10) {
+                return NextResponse.json(
+                    { error: 'Maximum 10 photos allowed' },
+                    { status: 400 }
+                )
+            }
+
+            // Upload to Supabase
+            const fileExt = file.name.split('.').pop()
+            const fileName = `${Date.now()}.${fileExt}`
+            const filePath = `company-gallery/${companyId}/${fileName}`
+
+            const { data, error } = await supabaseAdmin.storage
+                .from('Profile')
+                .upload(filePath, file, {
+                    cacheControl: '3600'
+                })
+
+            if (error) {
+                console.error('Upload error:', error)
+                return NextResponse.json(
+                    { error: `Failed to upload: ${error.message}` },
+                    { status: 500 }
+                )
+            }
+
+            // Get public URL
+            const { data: { publicUrl } } = supabaseAdmin.storage
+                .from('Profile')
+                .getPublicUrl(filePath)
+
+            photoUrl = publicUrl
+
+            // Update database - add to gallery
+            await prisma.companies.update({
+                where: { id: companyId },
+                data: {
+                    gallery: {
+                        push: photoUrl
+                    }
+                }
+            })
+
+        } else if (bucket && (bucket.includes('jobseeker') || bucket.includes('cv') || bucket.includes('diploma') || bucket.includes('certificate'))) {
+            // Jobseeker Uploads (CV, Diploma, Certificate, Photo)
+            
+            // Get jobseeker ID
+            const jobseeker = await prisma.jobseekers.findUnique({
+                where: { userId: user.id },
+                select: { id: true }
+            })
+
+            if (!jobseeker) {
+                return NextResponse.json(
+                    { error: 'Jobseeker profile not found' },
+                    { status: 404 }
+                )
+            }
+
+            // Determine folder path
+            // bucket example: 'jobseeker-cv', 'jobseeker-diploma', 'jobseeker-photo'
+            const folder = bucket.replace('jobseeker-', '')
+            const fileExt = file.name.split('.').pop()
+            const fileName = `${folder}-${Date.now()}.${fileExt}`
+            const filePath = `jobseekers/${jobseeker.id}/${folder}/${fileName}`
+
+            // Upload to Supabase
+            const { data, error } = await supabaseAdmin.storage
+                .from('Profile')
+                .upload(filePath, file, {
+                    cacheControl: '3600',
+                    upsert: true
+                })
+
+            if (error) {
+                console.error('Upload error:', error)
+                return NextResponse.json(
+                    { error: `Failed to upload: ${error.message}` },
+                    { status: 500 }
+                )
+            }
+
+            // Get public URL
+            const { data: { publicUrl } } = supabaseAdmin.storage
+                .from('Profile')
+                .getPublicUrl(filePath)
+
+            photoUrl = publicUrl
+
+        } else {
+            return NextResponse.json(
+                { error: 'Invalid upload type' },
+                { status: 400 }
+            )
+        }
+
+        return NextResponse.json({
+            success: true,
+            url: photoUrl,
+            message: 'File uploaded successfully'
+        })
+
+    } catch (error) {
+        console.error('❌ Upload error:', error)
+        return NextResponse.json(
+            { error: 'Failed to upload file' },
+            { status: 500 }
+        )
     }
+}
 
-    if (!bucket) {
-      return NextResponse.json(
-        { error: 'Bucket name required' },
-        { status: 400 }
-      )
+// DELETE - Remove photo from gallery
+export async function DELETE(request) {
+    try {
+        const auth = await getCurrentUser(request)
+        
+        if (auth.error) {
+            return NextResponse.json(
+                { error: auth.error },
+                { status: auth.status }
+            )
+        }
+
+        const { user } = auth
+        const { photoUrl, companyId } = await request.json()
+
+        if (!photoUrl || !companyId) {
+            return NextResponse.json(
+                { error: 'Photo URL and Company ID required' },
+                { status: 400 }
+            )
+        }
+
+        // Verify access
+        const recruiter = await prisma.recruiters.findUnique({
+            where: { userId: user.id },
+            select: { companyId: true }
+        })
+
+        if (!recruiter || recruiter.companyId !== companyId) {
+            return NextResponse.json(
+                { error: 'Unauthorized' },
+                { status: 403 }
+            )
+        }
+
+        // Extract filename from URL
+        const urlParts = photoUrl.split('/')
+        const fileName = urlParts[urlParts.length - 1]
+        const filePath = `company-gallery/${companyId}/${fileName}`
+
+        // Delete from Supabase
+        await supabaseAdmin.storage
+            .from('Profile')
+            .remove([filePath])
+
+        // Remove from database
+        const company = await prisma.companies.findUnique({
+            where: { id: companyId },
+            select: { gallery: true }
+        })
+
+        const newGallery = company.gallery.filter(url => url !== photoUrl)
+
+        await prisma.companies.update({
+            where: { id: companyId },
+            data: { gallery: newGallery }
+        })
+
+        return NextResponse.json({
+            success: true,
+            message: 'Photo deleted successfully'
+        })
+
+    } catch (error) {
+        console.error('❌ Delete error:', error)
+        return NextResponse.json(
+            { error: 'Failed to delete photo' },
+            { status: 500 }
+        )
     }
-
-    // Validate file size based on bucket
-    const maxSize = {
-      'Resume': 5 * 1024 * 1024, // 5MB
-      'Sertificate': 2 * 1024 * 1024, // 2MB
-      'Ijazah': 2 * 1024 * 1024, // 2MB
-      'Profile': 2 * 1024 * 1024 // 2MB
-    }
-
-    if (file.size > maxSize[bucket]) {
-      return NextResponse.json(
-        { error: `File size exceeds ${maxSize[bucket] / (1024 * 1024)}MB limit` },
-        { status: 400 }
-      )
-    }
-
-    // Upload to Supabase
-    const path = userId ? `${userId}/${Date.now()}` : `${Date.now()}`
-    const result = await uploadFileToSupabase(file, bucket, path)
-
-    if (!result.success) {
-      return NextResponse.json(
-        { error: result.error },
-        { status: 500 }
-      )
-    }
-
-    console.log('✅ Upload successful:', result.url)
-
-    return NextResponse.json({
-      success: true,
-      url: result.url,
-      path: result.path
-    })
-  } catch (error) {
-    console.error('Upload API error:', error)
-    return NextResponse.json(
-      { error: 'Failed to upload file' },
-      { status: 500 }
-    )
-  }
 }

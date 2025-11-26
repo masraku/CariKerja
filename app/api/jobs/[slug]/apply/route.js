@@ -34,7 +34,7 @@ export async function POST(request, context) {
     const userId = decoded.userId
 
     // Get user and check role
-    const user = await prisma.user.findUnique({
+    const user = await prisma.users.findUnique({
       where: { id: userId },
       include: { jobseeker: true }
     })
@@ -54,7 +54,7 @@ export async function POST(request, context) {
     }
 
     // Get job
-    const job = await prisma.job.findFirst({
+    const job = await prisma.jobs.findFirst({
       where: {
         slug,
         isActive: true,
@@ -70,11 +70,11 @@ export async function POST(request, context) {
     }
 
     // Check if already applied
-    const existingApplication = await prisma.application.findUnique({
+    const existingApplication = await prisma.applications.findUnique({
       where: {
         jobId_jobseekerId: {
           jobId: job.id,
-          jobseekerId: user.jobseeker.id
+          jobseekerId: user.jobseekers.id
         }
       }
     })
@@ -96,17 +96,17 @@ export async function POST(request, context) {
     const { coverLetter, resumeUrl, portfolioUrl } = body
 
     // Create application
-    const application = await prisma.application.create({
+    const application = await prisma.applications.create({
       data: {
         jobId: job.id,
-        jobseekerId: user.jobseeker.id,
+        jobseekerId: user.jobseekers.id,
         coverLetter,
-        resumeUrl: resumeUrl || user.jobseeker.cvUrl,
+        resumeUrl: resumeUrl || user.jobseekers.cvUrl,
         portfolioUrl,
         status: 'PENDING'
       },
       include: {
-        job: {
+        jobs: {
           include: {
             company: true
           }
@@ -115,7 +115,7 @@ export async function POST(request, context) {
     })
 
     // Increment application count
-    await prisma.job.update({
+    await prisma.jobs.update({
       where: { id: job.id },
       data: { applicationCount: { increment: 1 } }
     })

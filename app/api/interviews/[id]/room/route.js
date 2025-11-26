@@ -28,7 +28,7 @@ export async function GET(request, context) {
                     include: {
                         application: {
                             include: {
-                                job: {
+                                jobs: {
                                     include: {
                                         company: true
                                     }
@@ -37,7 +37,7 @@ export async function GET(request, context) {
                         }
                     }
                 },
-                recruiter: {
+                recruiters: {
                     select: {
                         id: true,
                         firstName: true,
@@ -94,10 +94,10 @@ export async function GET(request, context) {
                     description: interview.description,
                     status: interview.status
                 },
-                job: {
-                    id: participant.application.job.id,
-                    title: participant.application.job.title,
-                    company: participant.application.job.company
+                jobs: {
+                    id: participant.application.jobs.id,
+                    title: participant.application.jobs.title,
+                    company: participant.application.jobs.company
                 },
                 recruiter: interview.recruiter,
                 participant: {

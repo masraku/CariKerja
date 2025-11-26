@@ -24,7 +24,7 @@ export async function PATCH(request, context) {
                     include: {
                         application: {
                             include: {
-                                jobseeker: {
+                                jobseekers: {
                                     include: {
                                         user: true
                                     }
@@ -33,7 +33,7 @@ export async function PATCH(request, context) {
                         }
                     }
                 },
-                job: {
+                jobs: {
                     select: {
                         title: true
                     }
@@ -97,7 +97,7 @@ export async function PATCH(request, context) {
         const acceptedParticipants = interview.participants.filter(p => p.status === 'ACCEPTED')
         const applicationIds = acceptedParticipants.map(p => p.applicationId)
 
-        await prisma.application.updateMany({
+        await prisma.applications.updateMany({
             where: {
                 id: { in: applicationIds }
             },

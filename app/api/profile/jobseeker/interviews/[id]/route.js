@@ -23,9 +23,9 @@ export async function GET(request, { params }) {
     const interview = await prisma.interview.findUnique({
       where: { id },
       include: {
-        job: {
+        jobs: {
           include: {
-            company: {
+            companies: {
               select: {
                 id: true,
                 name: true,
@@ -37,7 +37,7 @@ export async function GET(request, { params }) {
             }
           }
         },
-        recruiter: {
+        recruiters: {
           select: {
             id: true,
             firstName: true,
@@ -106,7 +106,7 @@ export async function GET(request, { params }) {
           status: interview.status,
           createdAt: interview.createdAt
         },
-        job: {
+        jobs: {
           id: interview.job.id,
           title: interview.job.title,
           slug: interview.job.slug,
@@ -115,10 +115,10 @@ export async function GET(request, { params }) {
           location: interview.job.location
         },
         company: interview.job.company,
-        recruiter: {
-          name: `${interview.recruiter.firstName} ${interview.recruiter.lastName}`,
-          position: interview.recruiter.position,
-          email: interview.recruiter.user.email
+        recruiters: {
+          name: `${interview.recruiters.firstName} ${interview.recruiters.lastName}`,
+          position: interview.recruiters.position,
+          email: interview.recruiters.user.email
         },
         myParticipation: {
           id: myParticipation.id,

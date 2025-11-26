@@ -17,7 +17,7 @@ export async function GET(request) {
     console.log('📋 Fetching jobs for recruiter:', decoded.userId)
 
     // Get recruiter's company
-    const recruiter = await prisma.recruiter.findUnique({
+    const recruiter = await prisma.recruiters.findUnique({
       where: { userId: decoded.userId }
     })
 
@@ -58,7 +58,7 @@ export async function GET(request) {
     }
 
     // Fetch jobs
-    const jobs = await prisma.job.findMany({
+    const jobs = await prisma.jobs.findMany({
       where,
       include: {
         _count: {

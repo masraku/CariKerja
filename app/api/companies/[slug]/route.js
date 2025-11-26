@@ -8,7 +8,7 @@ export async function GET(request, { params }) {
     console.log('🏢 Fetching company with slug:', slug)
 
     // Get company with all related data
-    const company = await prisma.company.findUnique({
+    const company = await prisma.companies.findUnique({
       where: { slug },
       include: {
         jobs: {
@@ -61,7 +61,7 @@ export async function GET(request, { params }) {
           },
           take: 10,
           include: {
-            jobseeker: {
+            jobseekers: {
               select: {
                 firstName: true,
                 photo: true

@@ -19,13 +19,13 @@ export async function POST(request) {
     }
 
     // Cari user berdasarkan email
-    const user = await prisma.user.findUnique({
+    const user = await prisma.users.findUnique({
       where: { email },
       include: {
-        jobseeker: true,
-        recruiter: {
+        jobseekers: true,
+        recruiters: {
           include: {
-            company: true
+            companies: true
           }
         }
       }
@@ -65,12 +65,12 @@ export async function POST(request) {
     }
 
     // Update last login
-    await prisma.user.update({
+    await prisma.users.update({
       where: { id: user.id },
       data: { lastLogin: new Date() }
     })
 
-    // Generate JWT token
+    // Generate JWT token with 1 hour expiry
     const token = jwt.sign(
       {
         userId: user.id,
@@ -78,22 +78,26 @@ export async function POST(request) {
         role: user.role
       },
       JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '1h' } // Token expires in 1 hour
     )
 
     // Hapus password dari response
     const { password: _, ...userWithoutPassword } = user
 
     // Prepare user data based on role
+    const jobseeker = Array.isArray(user.jobseekers) ? user.jobseekers[0] : user.jobseekers
+    const recruiter = Array.isArray(user.recruiters) ? user.recruiters[0] : user.recruiters
+    
     let userData = {
       ...userWithoutPassword,
       name: user.role === 'JOBSEEKER' 
-        ? `${user.jobseeker?.firstName || ''} ${user.jobseeker?.lastName || ''}`.trim()
-        : `${user.recruiter?.firstName || ''} ${user.recruiter?.lastName || ''}`.trim(),
+        ? `${jobseeker?.firstName || ''} ${jobseeker?.lastName || ''}`.trim()
+        : `${recruiter?.firstName || ''} ${recruiter?.lastName || ''}`.trim(),
+      tokenExpiresAt: Date.now() + (60 * 60 * 1000) // 1 hour from now
     }
 
-    if (user.role === 'RECRUITER' && user.recruiter) {
-      userData.company = user.recruiter.company
+    if (user.role === 'RECRUITER' && recruiter) {
+      userData.company = recruiter.companies
     }
 
     const response = NextResponse.json(
@@ -105,12 +109,12 @@ export async function POST(request) {
       { status: 200 }
     )
 
-    // Set cookie untuk token
+    // Set cookie untuk token (1 hour)
     response.cookies.set('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7 // 7 days
+      maxAge: 60 * 60 // 1 hour
     })
 
     return response

@@ -17,10 +17,10 @@ export async function POST(request, { params }) {
     console.log('🔄 Toggling job status:', slug)
 
     // Verify job ownership
-    const job = await prisma.job.findUnique({
+    const job = await prisma.jobs.findUnique({
       where: { slug },
       include: {
-        company: {
+        companies: {
           include: {
             recruiters: {
               where: { userId: decoded.userId }
@@ -30,7 +30,7 @@ export async function POST(request, { params }) {
       }
     })
 
-    if (!job || job.company.recruiters.length === 0) {
+    if (!job || job.companies.recruiters.length === 0) {
       return NextResponse.json(
         { error: 'Job not found or unauthorized' },
         { status: 404 }
@@ -38,7 +38,7 @@ export async function POST(request, { params }) {
     }
 
     // Toggle status
-    const updatedJob = await prisma.job.update({
+    const updatedJob = await prisma.jobs.update({
       where: { slug },
       data: {
         isActive: !job.isActive

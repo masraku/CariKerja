@@ -16,6 +16,32 @@ export function AuthProvider({ children }) {
     loadUser()
   }, [])
 
+  // Check token expiry every minute
+  useEffect(() => {
+    const checkTokenExpiry = () => {
+      const userData = localStorage.getItem('user')
+      if (userData) {
+        try {
+          const user = JSON.parse(userData)
+          if (user.tokenExpiresAt && Date.now() >= user.tokenExpiresAt) {
+            console.log('⏰ Token expired, logging out...')
+            logout()
+          }
+        } catch (e) {
+          console.error('Error parsing user data:', e)
+        }
+      }
+    }
+
+    // Check immediately
+    checkTokenExpiry()
+
+    // Check every minute
+    const interval = setInterval(checkTokenExpiry, 60 * 1000)
+
+    return () => clearInterval(interval)
+  }, [])
+
   // Load user from token
   const loadUser = async () => {
     try {
@@ -43,16 +69,20 @@ export function AuthProvider({ children }) {
         console.log('✅ User data loaded:', data.user)
         setUser(data.user)
         setIsAuthenticated(true)
+        // Store user data with expiry time
+        localStorage.setItem('user', JSON.stringify(data.user))
       } else {
-        // Token invalid, clear it
-        console.log('❌ Invalid token, clearing...')
+        // Token invalid or expired, clear it
+        console.log('❌ Invalid or expired token, clearing...')
         localStorage.removeItem('token')
+        localStorage.removeItem('user')
         setUser(null)
         setIsAuthenticated(false)
       }
     } catch (error) {
       console.error('❌ Load user error:', error)
       localStorage.removeItem('token')
+      localStorage.removeItem('user')
       setUser(null)
       setIsAuthenticated(false)
     } finally {
@@ -65,6 +95,7 @@ export function AuthProvider({ children }) {
   const login = async (token, userData) => {
     console.log('🔐 Login called with token:', token)
     localStorage.setItem('token', token)
+    localStorage.setItem('user', JSON.stringify(userData))
     setUser(userData)
     setIsAuthenticated(true)
     
@@ -77,6 +108,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     console.log('👋 Logout called')
     localStorage.removeItem('token')
+    localStorage.removeItem('user')
     setUser(null)
     setIsAuthenticated(false)
     router.push('/login')

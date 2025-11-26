@@ -48,7 +48,7 @@ export async function GET(request) {
     }
 
     // Fetch companies
-    const companies = await prisma.company.findMany({
+    const companies = await prisma.companies.findMany({
       where,
       include: {
         jobs: {

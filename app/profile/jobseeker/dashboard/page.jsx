@@ -271,24 +271,24 @@ const JobseekerDashboard = () => {
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white">
-                      {application.job.company.logo ? (
+                      {application.jobs.companies.logo ? (
                         <img
-                          src={application.job.company.logo}
-                          alt={application.job.company.name}
+                          src={application.jobs.companies.logo}
+                          alt={application.jobs.companies.name}
                           className="w-full h-full object-cover rounded-lg"
                         />
                       ) : (
-                        application.job.company.name.charAt(0)
+                        application.jobs.companies.name.charAt(0)
                       )}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">{application.job.title}</h3>
+                      <h3 className="font-semibold text-gray-900">{application.jobs.title}</h3>
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Building2 className="w-4 h-4" />
-                        {application.job.company.name}
+                        {application.jobs.companies.name}
                         <span>•</span>
                         <MapPin className="w-4 h-4" />
-                        {application.job.company.city}
+                        {application.jobs.companies.city}
                       </div>
                     </div>
                   </div>

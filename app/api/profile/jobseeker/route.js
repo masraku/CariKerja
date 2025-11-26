@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
 import jwt from 'jsonwebtoken'
+import crypto from 'crypto'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 
@@ -93,9 +94,9 @@ export async function POST(request) {
     console.log('🔍 Checking user exists...')
     
     // Check if user exists and is jobseeker
-    const user = await prisma.user.findUnique({
+    const user = await prisma.users.findUnique({
       where: { id: userId },
-      include: { jobseeker: true }
+      include: { jobseekers: true }
     })
 
     if (!user) {
@@ -114,7 +115,7 @@ export async function POST(request) {
       )
     }
 
-    if (!user.jobseeker) {
+    if (!user.jobseekers) {
       console.error('❌ Jobseeker profile not found for user:', userId)
       return NextResponse.json(
         { error: 'Jobseeker profile not found' },
@@ -122,7 +123,7 @@ export async function POST(request) {
       )
     }
 
-    console.log('✅ User found, jobseekerId:', user.jobseeker.id)
+    console.log('✅ User found, jobseekerId:', user.jobseekers.id)
 
     // Calculate profile completeness
     const totalFields = 15
@@ -150,7 +151,7 @@ export async function POST(request) {
     console.log('💾 Updating jobseeker profile...')
 
     // Update jobseeker profile
-    const jobseeker = await prisma.jobseeker.update({
+    const jobseeker = await prisma.jobseekers.update({
       where: { userId: userId },
       data: {
         // Personal Info
@@ -201,12 +202,13 @@ export async function POST(request) {
     // Handle educations
     if (educations && educations.length > 0) {
       console.log('🎓 Processing educations...')
-      await prisma.education.deleteMany({
+      await prisma.educations.deleteMany({
         where: { jobseekerId: jobseeker.id }
       })
 
-      await prisma.education.createMany({
+      await prisma.educations.createMany({
         data: educations.map(edu => ({
+          id: crypto.randomUUID(),
           jobseekerId: jobseeker.id,
           institution: edu.institution,
           degree: edu.degree,
@@ -216,7 +218,8 @@ export async function POST(request) {
           endDate: edu.endDate ? new Date(edu.endDate + '-01') : null,
           gpa: edu.gpa ? parseFloat(edu.gpa) : null,
           isCurrent: edu.isCurrent || false,
-          diplomaUrl: edu.diplomaUrl || null
+          diplomaUrl: edu.diplomaUrl || null,
+          updatedAt: new Date()
         }))
       })
       console.log('✅ Educations saved')
@@ -225,14 +228,15 @@ export async function POST(request) {
     // Handle work experiences
     if (experiences && experiences.length > 0 && experiences[0].company) {
       console.log('💼 Processing work experiences...')
-      await prisma.workExperience.deleteMany({
+      await prisma.work_experiences.deleteMany({
         where: { jobseekerId: jobseeker.id }
       })
 
       for (const exp of experiences) {
         if (exp.company) {
-          await prisma.workExperience.create({
+          await prisma.work_experiences.create({
             data: {
+              id: crypto.randomUUID(),
               jobseekerId: jobseeker.id,
               company: exp.company,
               position: exp.position,
@@ -241,7 +245,8 @@ export async function POST(request) {
               endDate: exp.endDate ? new Date(exp.endDate + '-01') : null,
               isCurrent: exp.isCurrent || false,
               description: exp.description,
-              achievements: exp.achievements || []
+              achievements: exp.achievements || [],
+              updatedAt: new Date()
             }
           })
         }
@@ -254,21 +259,22 @@ export async function POST(request) {
       console.log('🎯 Processing skills...')
       
       // Delete existing jobseeker skills
-      await prisma.jobseekerSkill.deleteMany({
+      await prisma.jobseeker_skills.deleteMany({
         where: { jobseekerId: jobseeker.id }
       })
 
       // Create new skills
       for (const skillName of skills.filter(s => s)) {
         // Find or create skill
-        let skill = await prisma.skill.findUnique({
+        let skill = await prisma.skills.findUnique({
           where: { name: skillName }
         })
         
         if (!skill) {
           console.log(`📝 Creating new skill: ${skillName}`)
-          skill = await prisma.skill.create({
+          skill = await prisma.skills.create({
             data: { 
+              id: crypto.randomUUID(),
               name: skillName,
               category: 'General' // You can customize this
             }
@@ -276,8 +282,9 @@ export async function POST(request) {
         }
         
         // Create jobseeker skill relation
-        await prisma.jobseekerSkill.create({
+        await prisma.jobseeker_skills.create({
           data: {
+            id: crypto.randomUUID(),
             jobseekerId: jobseeker.id,
             skillId: skill.id,
             proficiencyLevel: 'INTERMEDIATE',
@@ -291,14 +298,15 @@ export async function POST(request) {
     // Handle certifications
     if (certifications && certifications.length > 0 && certifications[0].name) {
       console.log('🏆 Processing certifications...')
-      await prisma.certification.deleteMany({
+      await prisma.certifications.deleteMany({
         where: { jobseekerId: jobseeker.id }
       })
 
-      await prisma.certification.createMany({
+      await prisma.certifications.createMany({
         data: certifications
           .filter(cert => cert.name)
           .map(cert => ({
+            id: crypto.randomUUID(),
             jobseekerId: jobseeker.id,
             name: cert.name,
             issuingOrganization: cert.issuingOrganization,
@@ -306,7 +314,8 @@ export async function POST(request) {
             expiryDate: cert.expiryDate ? new Date(cert.expiryDate + '-01') : null,
             credentialId: cert.credentialId,
             credentialUrl: cert.credentialUrl,
-            certificateUrl: cert.certificateUrl || null
+            certificateUrl: cert.certificateUrl || null,
+            updatedAt: new Date()
           }))
       })
       console.log('✅ Certifications saved')
@@ -314,14 +323,14 @@ export async function POST(request) {
 
     // Fetch complete profile - UPDATED INCLUDES
     console.log('📋 Fetching complete profile...')
-    const completeProfile = await prisma.jobseeker.findUnique({
+    const completeProfile = await prisma.jobseekers.findUnique({
       where: { id: jobseeker.id },
       include: {
         educations: true,
-        workExperiences: true,
-        jobseekerSkills: {
+        work_experiences: true,
+        jobseeker_skills: {
           include: {
-            skill: true
+            skills: true
           }
         },
         certifications: true
@@ -386,7 +395,7 @@ export async function GET(request) {
     const userId = decoded.userId
 
     // Fetch profile with all relations - UPDATED INCLUDES
-    const profile = await prisma.jobseeker.findUnique({
+    const profile = await prisma.jobseekers.findUnique({
       where: { userId: userId },
       include: {
         educations: {
@@ -394,14 +403,14 @@ export async function GET(request) {
             startDate: 'desc'
           }
         },
-        workExperiences: {
+        work_experiences: {
           orderBy: {
             startDate: 'desc'
           }
         },
-        jobseekerSkills: {
+        jobseeker_skills: {
           include: {
-            skill: true
+            skills: true
           }
         },
         certifications: {
@@ -423,15 +432,21 @@ export async function GET(request) {
     // Transform jobseekerSkills to simple skills array for frontend
     const transformedProfile = {
       ...profile,
-      skills: profile.jobseekerSkills.map(js => ({
+      skills: profile.jobseeker_skills.map(js => ({
         id: js.id,
-        name: js.skill.name,
+        name: js.skills.name,
         proficiencyLevel: js.proficiencyLevel,
         yearsOfExperience: js.yearsOfExperience
       }))
     }
 
     console.log('✅ Profile fetched successfully')
+    console.log('📦 Returning profile data:', {
+      id: transformedProfile.id,
+      firstName: transformedProfile.firstName,
+      workExpCount: transformedProfile.work_experiences?.length,
+      skillsCount: transformedProfile.skills?.length
+    })
 
     return NextResponse.json({ 
       success: true,
@@ -476,7 +491,7 @@ export async function PATCH(request) {
     const body = await request.json()
     
     // Update only provided fields
-    const jobseeker = await prisma.jobseeker.update({
+    const jobseeker = await prisma.jobseekers.update({
       where: { userId: userId },
       data: body
     })
@@ -519,7 +534,7 @@ export async function DELETE(request) {
     const userId = decoded.userId
 
     // Get jobseeker
-    const jobseeker = await prisma.jobseeker.findUnique({
+    const jobseeker = await prisma.jobseekers.findUnique({
       where: { userId: userId }
     })
 

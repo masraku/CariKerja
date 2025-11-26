@@ -144,7 +144,12 @@ const JobseekerProfilePage = () => {
 
   const loadProfile = async () => {
     try {
-      const response = await fetch('/api/profile/jobseeker')
+      const response = await fetch('/api/profile/jobseeker', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
       const data = await response.json()
 
       if (response.ok && data.profile) {
@@ -227,8 +232,8 @@ const JobseekerProfilePage = () => {
             }],
 
           // Work Experience
-          experiences: profile.workExperiences && profile.workExperiences.length > 0
-            ? profile.workExperiences.map(exp => ({
+          experiences: profile.work_experiences && profile.work_experiences.length > 0
+            ? profile.work_experiences.map(exp => ({
               company: exp.company || '',
               position: exp.position || '',
               location: exp.location || '',
@@ -310,6 +315,7 @@ const JobseekerProfilePage = () => {
 
     const response = await fetch('/api/upload', {
       method: 'POST',
+      credentials: 'include', // Important: send cookies with request
       body: formDataUpload
     })
 
@@ -385,7 +391,7 @@ const JobseekerProfilePage = () => {
       setUploadProgress({ cv: 0 })
       setUploadProgress({ cv: 50 })
 
-      const result = await uploadFile(file, 'Resume')
+      const result = await uploadFile(file, 'jobseeker-cv')
 
       setFormData(prev => ({
         ...prev,
@@ -427,7 +433,7 @@ const JobseekerProfilePage = () => {
       setUploadProgress({ [`diploma-${index}`]: 0 })
       setUploadProgress({ [`diploma-${index}`]: 50 })
 
-      const result = await uploadFile(file, 'Ijazah')
+      const result = await uploadFile(file, 'jobseeker-diploma')
 
       handleArrayChange(index, 'diplomaFile', file, 'educations')
       handleArrayChange(index, 'diplomaFileName', file.name, 'educations')
@@ -466,7 +472,7 @@ const JobseekerProfilePage = () => {
       setUploadProgress({ [`cert-${index}`]: 0 })
       setUploadProgress({ [`cert-${index}`]: 50 })
 
-      const result = await uploadFile(file, 'Sertificate')
+      const result = await uploadFile(file, 'jobseeker-certificate')
 
       handleArrayChange(index, 'certificateFile', file, 'certifications')
       handleArrayChange(index, 'certificateFileName', file.name, 'certifications')
@@ -637,6 +643,7 @@ const JobseekerProfilePage = () => {
 
       const response = await fetch('/api/profile/jobseeker', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

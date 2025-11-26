@@ -375,25 +375,25 @@ export default function RecruiterDashboard() {
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold overflow-hidden">
-                      {application.jobseeker.photo ? (
+                      {application.jobseekers.photo ? (
                         <img 
-                          src={application.jobseeker.photo}
-                          alt={application.jobseeker.firstName}
+                          src={application.jobseekers.photo}
+                          alt={application.jobseekers.firstName}
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        application.jobseeker.firstName?.charAt(0) || 'U'
+                        application.jobseekers.firstName?.charAt(0) || 'U'
                       )}
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900">
-                        {application.jobseeker.firstName} {application.jobseeker.lastName}
+                        {application.jobseekers.firstName} {application.jobseekers.lastName}
                       </h3>
                       <p className="text-sm text-gray-600">
-                        {application.jobseeker.currentTitle || 'Job Seeker'}
+                        {application.jobseekers.currentTitle || 'Job Seeker'}
                       </p>
                       <p className="text-xs text-gray-500">
-                        Melamar: {application.job.title}
+                        Melamar: {application.jobs.title}
                       </p>
                     </div>
                   </div>

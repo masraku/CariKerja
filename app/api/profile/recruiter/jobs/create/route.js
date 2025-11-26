@@ -29,9 +29,9 @@ export async function POST(request) {
     }
 
     // Get recruiter profile
-    const recruiter = await prisma.recruiter.findUnique({
+    const recruiter = await prisma.recruiters.findUnique({
       where: { userId: user.id },
-      include: { company: true }
+      include: { companies: true }
     })
 
     console.log('🏢 Recruiter found:', recruiter ? 'YES' : 'NO')
@@ -47,6 +47,14 @@ export async function POST(request) {
       return NextResponse.json(
         { error: 'Company not found. Please complete your company profile first.' },
         { status: 404 }
+      )
+    }
+
+    // ✅ Check if recruiter is verified
+    if (!recruiter.isVerified) {
+      return NextResponse.json(
+        { error: 'Akun Anda belum diverifikasi oleh admin. Silakan tunggu verifikasi untuk dapat memposting lowongan.' },
+        { status: 403 }
       )
     }
 
@@ -124,7 +132,7 @@ export async function POST(request) {
     console.log('💼 Creating job in database...')
 
     // Create job
-    const job = await prisma.job.create({
+    const job = await prisma.jobs.create({
       data: {
         companyId: recruiter.companyId,
         recruiterId: recruiter.id,

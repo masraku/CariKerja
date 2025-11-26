@@ -5,12 +5,12 @@ import { prisma } from '@/lib/prisma'
 export async function GET(request) {
     try {
         // Count applications
-        const applicationCount = await prisma.application.count()
+        const applicationCount = await prisma.applications.count()
         
         // Get all applications
-        const applications = await prisma.application.findMany({
+        const applications = await prisma.applications.findMany({
             include: {
-                jobseeker: {
+                jobseekers: {
                     include: {
                         user: {
                             select: {
@@ -19,7 +19,7 @@ export async function GET(request) {
                         }
                     }
                 },
-                job: {
+                jobs: {
                     select: {
                         title: true,
                         slug: true
@@ -42,7 +42,7 @@ export async function GET(request) {
                     include: {
                         application: {
                             include: {
-                                jobseeker: {
+                                jobseekers: {
                                     include: {
                                         user: {
                                             select: {
@@ -74,7 +74,7 @@ export async function GET(request) {
                     id: app.id,
                     status: app.status,
                     jobseeker: app.jobseeker.user.email,
-                    job: app.job.title,
+                    job: app.jobs.title,
                     createdAt: app.createdAt
                 })),
                 interviews: interviews.map(int => ({

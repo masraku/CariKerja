@@ -21,20 +21,20 @@ export async function GET(request, context) {
     const { recruiter } = auth
 
     // Fetch application with full details
-    const application = await prisma.application.findFirst({
+    const application = await prisma.applications.findFirst({
       where: { 
         id,
-        job: {
+        jobs: {
           recruiterId: recruiter.id // Ensure recruiter owns this job
         }
       },
       include: {
-        job: {
+        jobs: {
           select: {
             id: true,
             title: true,
             slug: true,
-            company: {
+            companies: {
               select: {
                 id: true,
                 name: true,
@@ -43,7 +43,7 @@ export async function GET(request, context) {
             }
           }
         },
-        jobseeker: {
+        jobseekers: {
           include: {
             workExperiences: {
               orderBy: { startDate: 'desc' }
@@ -122,10 +122,10 @@ export async function PATCH(request, context) {
     const { recruiter } = auth
 
     // Verify application exists and belongs to recruiter's job
-    const application = await prisma.application.findFirst({
+    const application = await prisma.applications.findFirst({
       where: {
         id,
-        job: {
+        jobs: {
           recruiterId: recruiter.id
         }
       }
@@ -156,7 +156,7 @@ export async function PATCH(request, context) {
     }
 
     // Update application
-    const updatedApplication = await prisma.application.update({
+    const updatedApplication = await prisma.applications.update({
       where: { id },
       data: {
         status,
@@ -164,19 +164,19 @@ export async function PATCH(request, context) {
         reviewedAt: status !== 'PENDING' && !application.reviewedAt ? new Date() : application.reviewedAt
       },
       include: {
-        job: {
+        jobs: {
           select: {
             id: true,
             title: true,
             slug: true,
-            company: {
+            companies: {
               select: {
                 name: true
               }
             }
           }
         },
-        jobseeker: {
+        jobseekers: {
           select: {
             id: true,
             firstName: true,
@@ -199,7 +199,7 @@ export async function PATCH(request, context) {
           to: updatedApplication.jobseeker.user?.email || updatedApplication.jobseeker.email,
           jobseekerName: `${updatedApplication.jobseeker.firstName} ${updatedApplication.jobseeker.lastName}`,
           jobTitle: updatedApplication.job.title,
-          companyName: updatedApplication.job.company.name,
+          companyName: updatedApplication.job.companies.name,
           decision: status,
           message: recruiterNotes || '',
           nextSteps: status === 'ACCEPTED' ? 

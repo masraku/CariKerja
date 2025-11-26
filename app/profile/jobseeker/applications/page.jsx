@@ -113,8 +113,8 @@ export default function JobseekerApplicationsPage() {
     // Filter applications
     const filteredApplications = applications.filter(app => {
         const matchSearch =
-            app.job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            app.job.company.name.toLowerCase().includes(searchTerm.toLowerCase())
+            app.jobs.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            app.jobs.companies.name.toLowerCase().includes(searchTerm.toLowerCase())
         return matchSearch
     })
 
@@ -353,30 +353,30 @@ export default function JobseekerApplicationsPage() {
                                         <div className="flex gap-4 flex-1">
                                             {/* Company Logo */}
                                             <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-2xl flex-shrink-0">
-                                                {application.job.company.logo ? (
+                                                {application.jobs.companies.logo ? (
                                                     <img
-                                                        src={application.job.company.logo}
-                                                        alt={application.job.company.name}
+                                                        src={application.jobs.companies.logo}
+                                                        alt={application.jobs.companies.name}
                                                         className="w-full h-full object-cover rounded-lg"
                                                     />
                                                 ) : (
-                                                    application.job.company.name.charAt(0)
+                                                    application.jobs.companies.name.charAt(0)
                                                 )}
                                             </div>
 
                                             {/* Job Info */}
                                             <div className="flex-1">
                                                 <h3 className="text-xl font-semibold text-gray-900 mb-1">
-                                                    {application.job.title}
+                                                    {application.jobs.title}
                                                 </h3>
                                                 <div className="flex items-center gap-4 text-gray-600 text-sm mb-3">
                                                     <div className="flex items-center gap-1">
                                                         <Building2 className="w-4 h-4" />
-                                                        {application.job.company.name}
+                                                        {application.jobs.companies.name}
                                                     </div>
                                                     <div className="flex items-center gap-1">
                                                         <MapPin className="w-4 h-4" />
-                                                        {application.job.company.city}
+                                                        {application.jobs.companies.city}
                                                     </div>
                                                     <div className="flex items-center gap-1">
                                                         <Calendar className="w-4 h-4" />
@@ -464,24 +464,24 @@ export default function JobseekerApplicationsPage() {
                                 <div className="mb-6">
                                     <div className="flex gap-4 mb-4">
                                         <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-3xl">
-                                            {selectedApplication.job.company.logo ? (
+                                            {selectedApplication.jobs.companies.logo ? (
                                                 <img
-                                                    src={selectedApplication.job.company.logo}
-                                                    alt={selectedApplication.job.company.name}
+                                                    src={selectedApplication.jobs.companies.logo}
+                                                    alt={selectedApplication.jobs.companies.name}
                                                     className="w-full h-full object-cover rounded-lg"
                                                 />
                                             ) : (
-                                                selectedApplication.job.company.name.charAt(0)
+                                                selectedApplication.jobs.companies.name.charAt(0)
                                             )}
                                         </div>
                                         <div>
                                             <h3 className="text-xl font-semibold text-gray-900">
-                                                {selectedApplication.job.title}
+                                                {selectedApplication.jobs.title}
                                             </h3>
-                                            <p className="text-gray-600">{selectedApplication.job.company.name}</p>
+                                            <p className="text-gray-600">{selectedApplication.jobs.companies.name}</p>
                                             <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
                                                 <MapPin className="w-4 h-4" />
-                                                {selectedApplication.job.company.city}
+                                                {selectedApplication.jobs.companies.city}
                                             </div>
                                         </div>
                                 </div>

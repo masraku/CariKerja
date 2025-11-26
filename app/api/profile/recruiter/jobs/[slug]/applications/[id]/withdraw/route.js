@@ -21,7 +21,7 @@ export async function PATCH(request, { params }) {
     const { id } = await params
 
     // Find application
-    const application = await prisma.application.findUnique({
+    const application = await prisma.applications.findUnique({
       where: { id }
     })
 
@@ -49,14 +49,14 @@ export async function PATCH(request, { params }) {
     }
 
     // Update status to WITHDRAWN
-    const updatedApplication = await prisma.application.update({
+    const updatedApplication = await prisma.applications.update({
       where: { id },
       data: {
         status: 'WITHDRAWN',
         respondedAt: new Date()
       },
       include: {
-        job: {
+        jobs: {
           include: {
             company: true
           }
@@ -65,7 +65,7 @@ export async function PATCH(request, { params }) {
     })
 
     // Update job application count
-    await prisma.job.update({
+    await prisma.jobs.update({
       where: { id: application.jobId },
       data: {
         applicationCount: {

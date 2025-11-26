@@ -49,10 +49,10 @@ export async function PATCH(request, { params }) {
     }
 
     // Get application and verify ownership
-    const application = await prisma.application.findUnique({
+    const application = await prisma.applications.findUnique({
       where: { id },
       include: {
-        job: {
+        jobs: {
           include: {
             recruiter: true
           }
@@ -68,11 +68,11 @@ export async function PATCH(request, { params }) {
     }
 
     // Get recruiter profile
-    const recruiter = await prisma.recruiter.findUnique({
+    const recruiter = await prisma.recruiters.findUnique({
       where: { userId: user.id }
     })
 
-    if (!recruiter || application.job.recruiterId !== recruiter.id) {
+    if (!recruiter || application.jobs.recruiterId !== recruiter.id) {
       return NextResponse.json(
         { error: 'Access denied. You can only update applications for your own jobs' },
         { status: 403 }
@@ -80,7 +80,7 @@ export async function PATCH(request, { params }) {
     }
 
     // ✅ FIXED: Use recruiterNotes instead of reviewNotes
-    const updatedApplication = await prisma.application.update({
+    const updatedApplication = await prisma.applications.update({
       where: { id },
       data: {
         status,
@@ -88,7 +88,7 @@ export async function PATCH(request, { params }) {
         reviewedAt: new Date()
       },
       include: {
-        jobseeker: {
+        jobseekers: {
           select: {
             id: true,
             firstName: true,
@@ -97,7 +97,7 @@ export async function PATCH(request, { params }) {
             currentTitle: true
           }
         },
-        job: {
+        jobs: {
           select: {
             id: true,
             title: true,

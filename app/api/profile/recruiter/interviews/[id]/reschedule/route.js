@@ -41,7 +41,7 @@ export async function PATCH(request, context) {
           include: {
             application: {
               include: {
-                jobseeker: {
+                jobseekers: {
                   include: {
                     user: {
                       select: {
@@ -50,10 +50,10 @@ export async function PATCH(request, context) {
                     }
                   }
                 },
-                job: {
+                jobs: {
                   select: {
                     title: true,
-                    company: {
+                    companies: {
                       select: {
                         name: true
                       }
@@ -64,10 +64,10 @@ export async function PATCH(request, context) {
             }
           }
         },
-        job: {
+        jobs: {
           select: {
             title: true,
-            company: {
+            companies: {
               select: {
                 name: true
               }
@@ -123,7 +123,7 @@ export async function PATCH(request, context) {
             }
           }
         },
-        job: {
+        jobs: {
           include: {
             company: true
           }
@@ -138,7 +138,7 @@ export async function PATCH(request, context) {
           to: participant.application.jobseeker.user.email,
           candidateName: `${participant.application.jobseeker.firstName} ${participant.application.jobseeker.lastName}`,
           jobTitle: interview.job.title,
-          companyName: interview.job.company.name,
+          companyName: interview.job.companies.name,
           oldScheduledAt: oldScheduledAt,
           newScheduledAt: new Date(scheduledAt),
           duration: duration || interview.duration,

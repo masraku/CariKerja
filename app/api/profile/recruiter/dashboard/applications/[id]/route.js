@@ -18,10 +18,10 @@ export async function GET(request, { params }) {
     console.log('📋 Recruiter fetching application detail:', applicationId)
 
     // Get application with full jobseeker details
-    const application = await prisma.application.findUnique({
+    const application = await prisma.applications.findUnique({
       where: { id: applicationId },
       include: {
-        jobseeker: {
+        jobseekers: {
           include: {
             educations: {
               orderBy: { startDate: 'desc' }
@@ -39,9 +39,9 @@ export async function GET(request, { params }) {
             }
           }
         },
-        job: {
+        jobs: {
           include: {
-            company: {
+            companies: {
               include: {
                 recruiters: {
                   where: { userId: decoded.userId }
@@ -54,7 +54,7 @@ export async function GET(request, { params }) {
     })
 
     // Verify recruiter owns this job
-    if (!application || application.job.company.recruiters.length === 0) {
+    if (!application || application.jobs.companies.recruiters.length === 0) {
       return NextResponse.json(
         { error: 'Application not found or unauthorized' },
         { status: 404 }
@@ -90,7 +90,7 @@ export async function GET(request, { params }) {
     // Format response
     const formattedApplication = {
       ...application,
-      jobseeker: {
+      jobseekers: {
         ...jobseeker,
         skills
       },
@@ -146,12 +146,12 @@ export async function PATCH(request, { params }) {
     }
 
     // Verify recruiter owns this job
-    const application = await prisma.application.findUnique({
+    const application = await prisma.applications.findUnique({
       where: { id: applicationId },
       include: {
-        job: {
+        jobs: {
           include: {
-            company: {
+            companies: {
               include: {
                 recruiters: {
                   where: { userId: decoded.userId }
@@ -163,7 +163,7 @@ export async function PATCH(request, { params }) {
       }
     })
 
-    if (!application || application.job.company.recruiters.length === 0) {
+    if (!application || application.jobs.companies.recruiters.length === 0) {
       return NextResponse.json(
         { error: 'Application not found or unauthorized' },
         { status: 404 }
@@ -171,7 +171,7 @@ export async function PATCH(request, { params }) {
     }
 
     // Update application
-    const updatedApplication = await prisma.application.update({
+    const updatedApplication = await prisma.applications.update({
       where: { id: applicationId },
       data: {
         ...(status && { status }),
@@ -179,14 +179,14 @@ export async function PATCH(request, { params }) {
         reviewedAt: new Date()
       },
       include: {
-        jobseeker: {
+        jobseekers: {
           select: {
             firstName: true,
             lastName: true,
             email: true
           }
         },
-        job: {
+        jobs: {
           select: {
             title: true,
             slug: true

@@ -67,7 +67,7 @@ export async function POST(request) {
     }
 
     // Cek apakah email sudah terdaftar
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await prisma.users.findUnique({
       where: { email: companyEmail.toLowerCase() }
     })
 
@@ -79,7 +79,7 @@ export async function POST(request) {
     }
 
     // Cek apakah nama perusahaan sudah ada
-    const existingCompany = await prisma.company.findFirst({
+    const existingCompany = await prisma.companies.findFirst({
       where: { 
         name: {
           equals: companyName,
@@ -109,7 +109,7 @@ export async function POST(request) {
       .trim()
 
     // Ensure unique slug
-    const existingSlug = await prisma.company.findUnique({
+    const existingSlug = await prisma.companies.findUnique({
       where: { slug }
     })
 
@@ -129,7 +129,7 @@ export async function POST(request) {
     })
 
     // ✅ Buat company dengan field yang required saja
-    const company = await prisma.company.create({
+    const company = await prisma.companies.create({
       data: {
         name: companyName,
         slug: slug,
@@ -151,13 +151,13 @@ export async function POST(request) {
     // Buat user dan recruiter profile
     console.log('📝 Creating user and recruiter...')
 
-    const user = await prisma.user.create({
+    const user = await prisma.users.create({
       data: {
         email: companyEmail.toLowerCase(),
         password: hashedPassword,
         role: 'RECRUITER',
         emailVerified: false,
-        recruiter: {
+        recruiters: {
           create: {
             firstName,
             lastName,
@@ -169,7 +169,7 @@ export async function POST(request) {
         }
       },
       include: {
-        recruiter: {
+        recruiters: {
           include: {
             company: true
           }

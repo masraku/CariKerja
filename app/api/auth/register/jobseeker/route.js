@@ -16,7 +16,7 @@ export async function POST(request) {
     }
 
     // Cek apakah email sudah terdaftar
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await prisma.users.findUnique({
       where: { email }
     })
 
@@ -36,13 +36,13 @@ export async function POST(request) {
     const lastName = nameParts.slice(1).join(' ') || ''
 
     // Buat user dan jobseeker profile
-    const user = await prisma.user.create({
+    const user = await prisma.users.create({
       data: {
         email,
         password: hashedPassword,
         role: 'JOBSEEKER',
         emailVerified: false,
-        jobseeker: {
+        jobseekers: {
           create: {
             firstName,
             lastName,

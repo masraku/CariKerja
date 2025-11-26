@@ -35,14 +35,14 @@ export async function GET(request) {
 
     console.log('📡 Fetching user from database...')
     // Get user from database with profile data
-    const user = await prisma.user.findUnique({
+    const user = await prisma.users.findUnique({
       where: { id: decoded.userId },
       select: {
         id: true,
         email: true,
         role: true,
         status: true,
-        jobseeker: {
+        jobseekers: {
           select: {
             id: true,
             firstName: true,
@@ -54,14 +54,15 @@ export async function GET(request) {
             profileCompleteness: true
           }
         },
-        recruiter: {
+        recruiters: {
           select: {
             id: true,
             firstName: true,
             lastName: true,
             position: true,
+            photoUrl: true,
             isVerified: true,
-            company: {
+            companies: {
               select: {
                 id: true,
                 name: true,

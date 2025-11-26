@@ -25,9 +25,9 @@ export async function GET(request) {
         }
 
         // Try to find recruiter profile
-        const recruiter = await prisma.recruiter.findUnique({
+        const recruiter = await prisma.recruiters.findUnique({
             where: { userId: user.id },
-            include: { company: true }
+            include: { companies: true }
         })
 
         // ✅ Return null profile if not found (not an error)
@@ -78,6 +78,8 @@ export async function POST(request) {
             position,
             phone,
             department,
+            bio,
+            photoUrl,
 
             // Company Info
             companyId, // If joining existing company
@@ -113,9 +115,9 @@ export async function POST(request) {
         } = body
 
         // Check if recruiter profile already exists
-        let recruiter = await prisma.recruiter.findUnique({
+        let recruiter = await prisma.recruiters.findUnique({
             where: { userId: user.id },
-            include: { company: true }
+            include: { companies: true }
         })
 
         let company
@@ -125,7 +127,7 @@ export async function POST(request) {
 
             // If companyId provided and different, update company association
             if (companyId && companyId !== recruiter.companyId) {
-                company = await prisma.company.findUnique({
+                company = await prisma.companies.findUnique({
                     where: { id: companyId }
                 })
 
@@ -137,7 +139,7 @@ export async function POST(request) {
                 }
             } else {
                 // Update existing company
-                company = await prisma.company.update({
+                company = await prisma.companies.update({
                     where: { id: recruiter.companyId },
                     data: {
                         name: companyName,
@@ -145,6 +147,7 @@ export async function POST(request) {
                         logo: companyLogo,
                         tagline,
                         description,
+                        bio, // Company bio/profile
                         industry,
                         companySize,
                         foundedYear: foundedYear ? parseInt(foundedYear) : null,
@@ -169,7 +172,7 @@ export async function POST(request) {
             const isProfileComplete = firstName && lastName && phone && position
             
             // Update recruiter
-            recruiter = await prisma.recruiter.update({
+            recruiter = await prisma.recruiters.update({
                 where: { id: recruiter.id },
                 data: {
                     firstName,
@@ -177,10 +180,11 @@ export async function POST(request) {
                     position,
                     phone,
                     department,
+                    photoUrl,
                     companyId: companyId || recruiter.companyId,
-                    isVerified: isProfileComplete // Auto-verify if all basic info is complete
+                    isVerified: false // Will be verified by admin
                 },
-                include: { company: true }
+                include: { companies: true }
             })
 
         } else {
@@ -189,7 +193,7 @@ export async function POST(request) {
             // Handle company - join existing or create new
             if (companyId) {
                 // Join existing company
-                company = await prisma.company.findUnique({
+                company = await prisma.companies.findUnique({
                     where: { id: companyId }
                 })
 
@@ -201,14 +205,14 @@ export async function POST(request) {
                 }
             } else {
                 // Create new company
-                company = await prisma.company.create({
+                company = await prisma.companies.create({
                     data: {
                         name: companyName,
                         slug: companySlug,
                         logo: companyLogo,
-                        slug,
                         tagline,
                         description,
+                        bio, // Company bio/profile
                         industry,
                         companySize,
                         foundedYear: foundedYear ? parseInt(foundedYear) : null,
@@ -235,7 +239,7 @@ export async function POST(request) {
             const isProfileComplete = firstName && lastName && phone && position
             
             // Create recruiter profile
-            recruiter = await prisma.recruiter.create({
+            recruiter = await prisma.recruiters.create({
                 data: {
                     userId: user.id,
                     companyId: company.id,
@@ -244,9 +248,10 @@ export async function POST(request) {
                     position,
                     phone,
                     department,
-                    isVerified: isProfileComplete // Auto-verify if all basic info is complete
+                    photoUrl,
+                    isVerified: false // Will be verified by admin
                 },
-                include: { company: true }
+                include: { companies: true }
             })
         }
 

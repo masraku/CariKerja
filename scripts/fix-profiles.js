@@ -69,7 +69,7 @@ async function fixProfiles() {
     console.log('\n📊 Summary:')
     const totalJobseekers = await prisma.jobSeeker.count()
     const totalRecruiters = await prisma.recruiter.count()
-    const totalApplications = await prisma.application.count()
+    const totalApplications = await prisma.applications.count()
     
     console.log(`  JobSeekers: ${totalJobseekers}`)
     console.log(`  Recruiters: ${totalRecruiters}`)

@@ -31,7 +31,7 @@ export async function PATCH(request, context) {
             include: {
                 interview: {
                     include: {
-                        recruiter: {
+                        recruiters: {
                             include: {
                                 user: true
                             }
@@ -41,7 +41,7 @@ export async function PATCH(request, context) {
                 application: {
                     include: {
                         jobseeker: true,
-                        job: {
+                        jobs: {
                             include: {
                                 company: true
                             }
@@ -84,7 +84,7 @@ export async function PATCH(request, context) {
         })
 
         // TODO: Send email to recruiter
-        console.log('📧 Should send email to recruiter:', participant.interview.recruiter.user.email)
+        console.log('📧 Should send email to recruiter:', participant.interview.recruiters.user.email)
         console.log('Jobseeker response:', {
             jobseeker: `${participant.application.jobseeker.firstName} ${participant.application.jobseeker.lastName}`,
             status: status,

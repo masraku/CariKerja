@@ -28,18 +28,18 @@ export async function POST(request) {
         }
 
         // Get all applications details
-        const applications = await prisma.application.findMany({
+        const applications = await prisma.applications.findMany({
             where: { 
                 id: { in: appIds },
-                job: { recruiterId: recruiter.id } // Security: ensure recruiter owns the job
+                jobs: { recruiterId: recruiter.id } // Security: ensure recruiter owns the job
             },
             include: {
-                jobseeker: {
+                jobseekers: {
                     include: {
                         user: true
                     }
                 },
-                job: {
+                jobs: {
                     include: {
                         company: true
                     }
@@ -56,7 +56,7 @@ export async function POST(request) {
 
         // Get job title from first application (all should be same job)
         const jobTitle = applications[0].job.title
-        const companyName = applications[0].job.company.name
+        const companyName = applications[0].job.companies.name
 
         // Check for existing active interviews for these applications
         const existingParticipants = await prisma.interviewParticipant.findMany({
@@ -127,7 +127,7 @@ export async function POST(request) {
 
             // Update application status
             participantPromises.push(
-                prisma.application.update({
+                prisma.applications.update({
                     where: { id: application.id },
                     data: { status: 'INTERVIEW_SCHEDULED' }
                 })

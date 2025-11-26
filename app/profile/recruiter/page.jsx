@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { User, Briefcase, Building2, MapPin, Globe, Phone, Mail, Calendar, Users, Award, FileText, ArrowLeft, ArrowRight, Check,Save, XCircle } from 'lucide-react'
 import Swal from 'sweetalert2'
+import RecruiterPhotoUpload from '@/components/recruiter/RecruiterPhotoUpload'
+import CompanyGallery from '@/components/recruiter/CompanyGallery'
 
 export default function RecruiterProfilePage() {
     const router = useRouter()
@@ -21,8 +23,10 @@ export default function RecruiterProfilePage() {
         position: '',
         phone: '',
         department: '',
+        bio: '',
 
         // Company Info
+        companyId: '',
         companyName: '',
         companySlug: '',
         companyLogo: '',
@@ -51,7 +55,8 @@ export default function RecruiterProfilePage() {
 
         // Additional
         culture: '',
-        benefits: []
+        benefits: [],
+        gallery: []
     })
 
     const [newBenefit, setNewBenefit] = useState('')
@@ -86,6 +91,15 @@ export default function RecruiterProfilePage() {
 
                 // ✅ CRITICAL: Refresh user data untuk update header
                 await refreshUser()
+                
+                // Update local state
+                if (data.profile) {
+                    setFormData(prev => ({
+                        ...prev,
+                        companyId: data.profile.companyId
+                    }))
+                    setIsEditMode(true)
+                }
 
                 // Redirect to dashboard
                 router.push('/profile/recruiter/dashboard')
@@ -133,7 +147,9 @@ export default function RecruiterProfilePage() {
                         position: data.profile.position || '',
                         phone: data.profile.phone || '',
                         department: data.profile.department || '',
-
+                        bio: data.profile.bio || '',
+                        
+                        companyId: data.profile.companyId || '',
                         companyName: data.profile.company?.name || '',
                         companySlug: data.profile.company?.slug || '',
                         companyLogo: data.profile.company?.logo || '',
@@ -158,7 +174,8 @@ export default function RecruiterProfilePage() {
                         instagramUrl: data.profile.company?.instagramUrl || '',
 
                         culture: data.profile.company?.culture || '',
-                        benefits: data.profile.company?.benefits || []
+                        benefits: data.profile.company?.benefits || [],
+                        gallery: data.profile.company?.gallery || []
                     })
                 }
             }
@@ -287,10 +304,21 @@ export default function RecruiterProfilePage() {
                 <form className="bg-white rounded-lg shadow-sm p-6">
                     {/* Step 1: Personal Info */}
                     {currentStep === 1 && (
-                        <div className="space-y-6">
+                        <div className="space-y-8">
                             <h2 className="text-2xl font-bold text-gray-900 mb-4">
                                 Informasi Personal
                             </h2>
+
+                            {/* Photo Upload Section */}
+                            <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                                <h3 className="text-lg font-semibold text-gray-900 mb-4">Logo Perusahaan</h3>
+                                <RecruiterPhotoUpload
+                                    currentPhoto={formData.companyLogo}
+                                    recruiterId={user?.recruiter?.id}
+                                    onPhotoUpdate={(url) => setFormData(prev => ({ ...prev, companyLogo: url }))}
+                                    uploadType="company-logo"
+                                />
+                            </div>
 
                             <div className="grid md:grid-cols-2 gap-6">
                                 <div>
@@ -366,6 +394,17 @@ export default function RecruiterProfilePage() {
                                     />
                                 </div>
                             </div>
+
+                            {/* Company Gallery Section */}
+                            {isEditMode && formData.companyName && (
+                                <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                                    <CompanyGallery
+                                        gallery={formData.gallery}
+                                        companyId={user?.recruiter?.companyId}
+                                        onGalleryUpdate={(newGallery) => setFormData(prev => ({ ...prev, gallery: newGallery }))}
+                                    />
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -411,20 +450,6 @@ export default function RecruiterProfilePage() {
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Logo URL
-                                    </label>
-                                    <input
-                                        type="url"
-                                        name="companyLogo"
-                                        value={formData.companyLogo}
-                                        onChange={handleChange}
-                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="https://example.com/logo.png"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Tagline Perusahaan
                                     </label>
                                     <input
@@ -450,6 +475,25 @@ export default function RecruiterProfilePage() {
                                         placeholder="Ceritakan tentang perusahaan Anda..."
                                         required
                                     />
+                                </div>
+
+                                {/* Company Bio/Profile */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Profil Lengkap Perusahaan
+                                    </label>
+                                    <textarea
+                                        name="bio"
+                                        value={formData.bio}
+                                        onChange={handleChange}
+                                        maxLength={3000}
+                                        rows={8}
+                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="Informasi detail tentang perusahaan, visi, misi, budaya kerja, pencapaian, dll..."
+                                    />
+                                    <p className="text-sm text-gray-500 mt-1 text-right">
+                                        {formData.bio.length}/3000 characters
+                                    </p>
                                 </div>
 
                                 <div className="grid md:grid-cols-2 gap-6">
@@ -512,6 +556,22 @@ export default function RecruiterProfilePage() {
                                             placeholder="2020"
                                         />
                                     </div>
+                                </div>
+
+                                {/* Company Gallery Section */}
+                                <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 mt-6">
+                                    <h3 className="text-lg font-medium text-gray-900 mb-4">Galeri Perusahaan</h3>
+                                    {isEditMode && (user?.recruiter?.companyId || formData.companyId) ? (
+                                        <CompanyGallery
+                                            gallery={formData.gallery}
+                                            companyId={user?.recruiter?.companyId || formData.companyId}
+                                            onGalleryUpdate={(newGallery) => setFormData(prev => ({ ...prev, gallery: newGallery }))}
+                                        />
+                                    ) : (
+                                        <div className="text-center py-8 text-gray-500 bg-white rounded-lg border-2 border-dashed border-gray-300">
+                                            <p>Silakan simpan profil perusahaan terlebih dahulu untuk mengupload foto galeri.</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

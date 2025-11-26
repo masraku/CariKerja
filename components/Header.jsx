@@ -10,22 +10,61 @@ const Header = () => {
   const { user, logout, isAuthenticated } = useAuth()
   const router = useRouter()
 
+  useEffect(() => {
+    console.log('👤 Header User State:', user)
+    if (user?.recruiter) {
+        console.log('🏢 Recruiter Companies:', user.recruiter.companies)
+        console.log('📸 Recruiter Photo:', user.recruiter.photoUrl)
+    }
+  }, [user])
+
   const handleLogout = () => {
     logout()
     setIsDropdownOpen(false)
     setIsMenuOpen(false)
   }
 
+  // Helper to get recruiter profile
+  const getRecruiter = () => {
+    if (user?.recruiter) return user.recruiter
+    if (Array.isArray(user?.recruiters) && user.recruiters.length > 0) return user.recruiters[0]
+    if (user?.recruiters && typeof user.recruiters === 'object') return user.recruiters
+    return null
+  }
+
+  // Helper to get jobseeker profile
+  const getJobseeker = () => {
+    if (user?.jobseekers && typeof user.jobseekers === 'object') return user.jobseekers
+    if (user?.jobseeker) return user.jobseeker
+    return null
+  }
+
+  // Helper to get company profile
+  const getCompany = (recruiter) => {
+    if (!recruiter) return null
+    if (recruiter.company) return recruiter.company
+    if (Array.isArray(recruiter.companies) && recruiter.companies.length > 0) return recruiter.companies[0]
+    if (recruiter.companies && typeof recruiter.companies === 'object') return recruiter.companies
+    return null
+  }
+
   // Get user's display name
   const getUserName = () => {
     if (!user) return 'User'
     
-    if (user.role === 'JOBSEEKER' && user.jobseeker) {
-      return user.jobseeker.firstName || 'User'
+    const jobseeker = getJobseeker()
+    if (user.role === 'JOBSEEKER' && jobseeker) {
+      return jobseeker.firstName || 'User'
     }
     
-    if (user.role === 'RECRUITER' && user.recruiter) {
-      return user.recruiter.firstName || 'User'
+    const recruiter = getRecruiter()
+    if (user.role === 'RECRUITER' && recruiter) {
+      // Prioritize Company Name for Recruiter greeting
+      const company = getCompany(recruiter)
+      if (company?.name) {
+        return company.name
+      }
+      return recruiter.firstName || 'User'
     }
     
     return user.email?.split('@')[0] || 'User'
@@ -35,12 +74,14 @@ const Header = () => {
   const getUserFullName = () => {
     if (!user) return 'User'
     
-    if (user.role === 'JOBSEEKER' && user.jobseeker) {
-      return `${user.jobseeker.firstName || ''} ${user.jobseeker.lastName || ''}`.trim()
+    const jobseeker = getJobseeker()
+    if (user.role === 'JOBSEEKER' && jobseeker) {
+      return `${jobseeker.firstName || ''} ${jobseeker.lastName || ''}`.trim()
     }
     
-    if (user.role === 'RECRUITER' && user.recruiter) {
-      return `${user.recruiter.firstName || ''} ${user.recruiter.lastName || ''}`.trim()
+    const recruiter = getRecruiter()
+    if (user.role === 'RECRUITER' && recruiter) {
+      return `${recruiter.firstName || ''} ${recruiter.lastName || ''}`.trim()
     }
     
     return user.email?.split('@')[0] || 'User'
@@ -63,12 +104,22 @@ const Header = () => {
   const getUserPhoto = () => {
     if (!user) return null
     
-    if (user.role === 'JOBSEEKER' && user.jobseeker?.photo) {
-      return user.jobseeker.photo
+    const jobseeker = getJobseeker()
+    if (user.role === 'JOBSEEKER' && jobseeker?.photo) {
+      return jobseeker.photo
     }
     
-    if (user.role === 'RECRUITER' && user.recruiter?.company?.logo) {
-      return user.recruiter.company.logo
+    const recruiter = getRecruiter()
+    if (user.role === 'RECRUITER' && recruiter) {
+        // Prioritize Recruiter Personal Photo
+        if (recruiter.photoUrl) {
+            return recruiter.photoUrl
+        }
+        // Fallback to Company Logo
+        const company = getCompany(recruiter)
+        if (company?.logo) {
+            return company.logo
+        }
     }
     
     return null

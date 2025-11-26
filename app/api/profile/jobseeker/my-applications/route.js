@@ -34,12 +34,12 @@ export async function GET(request) {
     }
 
     // Fetch applications with job and company details
-    const applications = await prisma.application.findMany({
+    const applications = await prisma.applications.findMany({
       where: whereClause,
       include: {
-        job: {
+        jobs: {
           include: {
-            company: {
+            companies: {
               select: {
                 id: true,
                 name: true,
@@ -48,7 +48,7 @@ export async function GET(request) {
                 industry: true
               }
             },
-            recruiter: {
+            recruiters: {
               select: {
                 id: true,
                 firstName: true,
@@ -64,7 +64,7 @@ export async function GET(request) {
     })
 
     // Get statistics
-    const stats = await prisma.application.groupBy({
+    const stats = await prisma.applications.groupBy({
       by: ['status'],
       where: { jobseekerId: jobseeker.id },
       _count: true

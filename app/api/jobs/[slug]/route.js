@@ -28,14 +28,14 @@ export async function GET(request, context) {
     }
 
     // Fetch job by slug with all related data
-    const job = await prisma.job.findFirst({
+    const job = await prisma.jobs.findFirst({
       where: { 
         slug,
         isActive: true,
         publishedAt: { not: null }
       },
       include: {
-        company: {
+        companies: {
           select: {
             id: true,
             name: true,
@@ -54,12 +54,12 @@ export async function GET(request, context) {
             totalReviews: true
           }
         },
-        skills: {
+        job_skills: {
           include: {
-            skill: true
+            skills: true
           }
         },
-        recruiter: {
+        recruiters: {
           select: {
             id: true,
             firstName: true,
@@ -89,17 +89,17 @@ export async function GET(request, context) {
     let hasApplied = false
     let existingApplication = null
     if (userId && userRole === 'JOBSEEKER') {
-      const user = await prisma.user.findUnique({
+      const user = await prisma.users.findUnique({
         where: { id: userId },
-        include: { jobseeker: true }
+        include: { jobseekers: true }
       })
 
-      if (user?.jobseeker) {
-        existingApplication = await prisma.application.findUnique({
+      if (user?.jobseekers) {
+        existingApplication = await prisma.applications.findUnique({
           where: {
             jobId_jobseekerId: {
               jobId: job.id,
-              jobseekerId: user.jobseeker.id
+              jobseekerId: user.jobseekers.id
             }
           },
           select: {
@@ -113,7 +113,7 @@ export async function GET(request, context) {
     }
 
     // Increment view count
-    await prisma.job.update({
+    await prisma.jobs.update({
       where: { id: job.id },
       data: { viewCount: { increment: 1 } }
     })
@@ -150,13 +150,13 @@ export async function GET(request, context) {
       viewCount: job.viewCount,
       applicationCount: job._count.applications,
       publishedAt: job.publishedAt,
-      company: job.company,
-      skills: job.skills.map(s => ({
-        id: s.skill.id,
-        name: s.skill.name,
-        isRequired: s.isRequired
+      company: job.companies,
+      skills: job.job_skills.map(js => ({
+        id: js.skills.id,
+        name: js.skills.name,
+        isRequired: js.isRequired
       })),
-      recruiter: job.recruiter,
+      recruiter: job.recruiters,
       hasApplied,
       existingApplication
     }

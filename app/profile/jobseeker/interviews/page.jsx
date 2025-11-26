@@ -247,8 +247,8 @@ export default function JobseekerInterviewsPage() {
                                         {/* Company Logo */}
                                         <div className="flex-shrink-0">
                                             <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-3xl overflow-hidden">
-                                                {interview.job.company.logo ? (
-                                                    <img src={interview.job.company.logo} alt={interview.job.company.name} className="w-full h-full object-cover" />
+                                                {interview.jobs.company.logo ? (
+                                                    <img src={interview.jobs.company.logo} alt={interview.jobs.company.name} className="w-full h-full object-cover" />
                                                 ) : (
                                                     '🏢'
                                                 )}
@@ -260,11 +260,11 @@ export default function JobseekerInterviewsPage() {
                                             <div className="flex items-start justify-between mb-3">
                                                 <div>
                                                     <h3 className="text-xl font-bold text-gray-900 mb-1">
-                                                        {interview.job.title}
+                                                        {interview.jobs.title}
                                                     </h3>
                                                     <div className="flex items-center gap-2 text-gray-700">
                                                         <Building2 className="w-4 h-4" />
-                                                        <span className="font-semibold">{interview.job.company.name}</span>
+                                                        <span className="font-semibold">{interview.jobs.company.name}</span>
                                                     </div>
                                                 </div>
                                                 <span className="px-4 py-2 bg-yellow-500 text-white rounded-full text-sm font-bold animate-pulse">
@@ -323,8 +323,8 @@ export default function JobseekerInterviewsPage() {
                                     <div className="flex flex-col md:flex-row gap-6">
                                         <div className="flex-shrink-0">
                                             <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-3xl overflow-hidden">
-                                                {interview.job.company.logo ? (
-                                                    <img src={interview.job.company.logo} alt={interview.job.company.name} className="w-full h-full object-cover" />
+                                                {interview.jobs.company.logo ? (
+                                                    <img src={interview.jobs.company.logo} alt={interview.jobs.company.name} className="w-full h-full object-cover" />
                                                 ) : (
                                                     '🏢'
                                                 )}
@@ -334,10 +334,10 @@ export default function JobseekerInterviewsPage() {
                                         <div className="flex-1">
                                             <div className="flex items-start justify-between mb-3">
                                                 <div>
-                                                    <h3 className="text-xl font-bold text-gray-900 mb-1">{interview.job.title}</h3>
+                                                    <h3 className="text-xl font-bold text-gray-900 mb-1">{interview.jobs.title}</h3>
                                                     <div className="flex items-center gap-2 text-gray-700">
                                                         <Building2 className="w-4 h-4" />
-                                                        <span className="font-semibold">{interview.job.company.name}</span>
+                                                        <span className="font-semibold">{interview.jobs.company.name}</span>
                                                     </div>
                                                 </div>
                                                 <span className="px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-bold flex items-center gap-1">

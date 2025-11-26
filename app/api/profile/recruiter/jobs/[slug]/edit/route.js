@@ -17,10 +17,10 @@ export async function GET(request, { params }) {
     console.log('📝 Loading job for edit:', slug)
 
     // Get job with ownership verification
-    const job = await prisma.job.findUnique({
+    const job = await prisma.jobs.findUnique({
       where: { slug },
       include: {
-        company: {
+        companies: {
           include: {
             recruiters: {
               where: { userId: decoded.userId }
@@ -30,7 +30,7 @@ export async function GET(request, { params }) {
       }
     })
 
-    if (!job || job.company.recruiters.length === 0) {
+    if (!job || job.companies.recruiters.length === 0) {
       return NextResponse.json(
         { error: 'Job not found or unauthorized' },
         { status: 404 }
