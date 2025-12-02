@@ -1,12 +1,12 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Swal from 'sweetalert2'
 import { User, Star, Briefcase, GraduationCap, Award, FileText, CheckCircle, Upload, X, Plus, Calendar, Phone, Mail, Globe, Linkedin, Github, ChevronRight, ChevronLeft, Save, ArrowLeft } from 'lucide-react'
 import RupiahInput from '@/components/RupiahInput'
 
-const JobseekerProfilePage = () => {
+function JobseekerProfileContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user } = useAuth()
@@ -2079,6 +2079,22 @@ const JobseekerProfilePage = () => {
         </form>
       </div>
     </div >
+  )
+}
+
+// Main component with Suspense boundary
+const JobseekerProfilePage = () => {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Memuat halaman...</p>
+        </div>
+      </div>
+    }>
+      <JobseekerProfileContent />
+    </Suspense>
   )
 }
 
