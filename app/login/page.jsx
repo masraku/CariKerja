@@ -177,8 +177,8 @@ function LoginContent() {
     role === 'recruiter' ? '/register/recruiter' : '/register/jobseeker'
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
-      <div className="bg-white shadow-2xl rounded-2xl p-8 w-full max-w-md">
+    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-8 sm:py-12 px-4 sm:px-6">
+      <div className="bg-white shadow-2xl rounded-2xl p-6 sm:p-8 w-full max-w-md">
 
         {/* Header */}
         <div className="text-center mb-8">
@@ -222,7 +222,7 @@ function LoginContent() {
           {/* Role Selection */}
           <div>
             <label className="text-gray-900 block text-sm font-semibold mb-3">Login Sebagai</label>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
               {['jobseeker', 'recruiter', 'admin'].map((r) => (
                 <label
                   key={r}
@@ -288,7 +288,7 @@ function LoginContent() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700">
+      <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-white mx-auto mb-4"></div>
           <p className="text-white">Memuat halaman...</p>

@@ -173,7 +173,7 @@ const AboutPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="relative min-h-screen bg-gray-50">
       {/* Hero Section */}
       <div className="relative bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 text-white overflow-hidden">
         {/* Animated Background */}
@@ -183,7 +183,7 @@ const AboutPage = () => {
           <div className="absolute top-40 left-40 w-80 h-80 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
         </div>
 
-        <div className="container mx-auto px-4 py-20 relative z-10">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             {/* Government Badge */}
             <div className="inline-flex items-center gap-4 bg-white/10 backdrop-blur-sm px-6 py-3 rounded-full mb-8 border border-white/20">
@@ -227,9 +227,10 @@ const AboutPage = () => {
       </div>
 
       {/* Vision & Mission */}
-      <div className="container mx-auto px-4 py-20">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12">
+      <div className="relative w-full">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12">
             {/* Vision */}
             <div className="bg-white rounded-3xl shadow-2xl p-8 hover:shadow-3xl transition-all duration-300 border-t-4 border-blue-600">
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mb-6">
@@ -263,6 +264,7 @@ const AboutPage = () => {
                   </li>
                 ))}
               </ul>
+            </div>
             </div>
           </div>
         </div>

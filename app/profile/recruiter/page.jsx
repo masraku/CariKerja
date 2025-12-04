@@ -253,10 +253,10 @@ export default function RecruiterProfilePage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8">
-            <div className="container mx-auto px-4 max-w-4xl">
+        <div className="relative min-h-screen bg-gray-50 py-6 sm:py-8">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
                 {/* Header */}
-                <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">
                         {isEditMode ? 'Edit Profile Recruiter' : 'Lengkapi Profile Recruiter'}
                     </h1>
@@ -266,7 +266,7 @@ export default function RecruiterProfilePage() {
                 </div>
 
                 {/* Progress Steps */}
-                <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
                     <div className="flex items-center justify-between">
                         {steps.map((step, index) => (
                             <div key={step.number} className="flex items-center flex-1">
@@ -301,7 +301,7 @@ export default function RecruiterProfilePage() {
                 </div>
 
                 {/* Form Content */}
-                <form className="bg-white rounded-lg shadow-sm p-6">
+                <form className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
                     {/* Step 1: Personal Info */}
                     {currentStep === 1 && (
                         <div className="space-y-8">

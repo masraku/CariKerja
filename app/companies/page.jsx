@@ -102,11 +102,11 @@ const CompaniesPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="relative min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white py-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
+      <div className="relative w-full bg-gradient-to-r from-indigo-600 to-purple-700 text-white py-12 sm:py-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-6 sm:mb-8">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Jelajahi Perusahaan Terbaik</h1>
             <p className="text-xl text-indigo-100 max-w-2xl mx-auto">
               Temukan perusahaan impianmu dan bergabunglah dengan tim yang luar biasa
@@ -146,7 +146,8 @@ const CompaniesPage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-12">
+      <div className="relative w-full">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Filters */}
         <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
           <div className="flex flex-wrap gap-4 items-center">
@@ -215,7 +216,7 @@ const CompaniesPage = () => {
             )}
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {companies.map((company) => (
               <div
                 key={company.id}
@@ -333,6 +334,7 @@ const CompaniesPage = () => {
             ))}
           </div>
         )}
+        </div>
       </div>
     </div>
   )

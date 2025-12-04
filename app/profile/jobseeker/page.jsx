@@ -708,8 +708,8 @@ function JobseekerProfileContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12">
-      <div className="container mx-auto px-4 max-w-5xl">
+    <div className="relative min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-8 sm:py-12">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl">
         {/* Header */}
         <div className="text-center mb-12">
           {isEditMode && (
@@ -730,7 +730,7 @@ function JobseekerProfileContent() {
         </div>
 
         {/* Progress Bar */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+        <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm font-semibold text-gray-600">
               Langkah {currentStep} dari {totalSteps}
@@ -770,7 +770,7 @@ function JobseekerProfileContent() {
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
-          <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8">
             {/* Step 1: Personal Info */}
             {currentStep === 1 && (
               <div className="space-y-6">

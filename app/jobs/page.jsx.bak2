@@ -509,8 +509,7 @@ const JobsPage = () => {
               </div>
             )}
           </div>
-          </div>
-        </div>
+          </div>        </div>
       </div>
 
       {/* Job Detail Modal */}
