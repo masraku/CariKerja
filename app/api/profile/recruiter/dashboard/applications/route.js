@@ -70,9 +70,9 @@ export async function GET(request) {
           }
         },
         // Include interview participants to get interview ID
-        interviewParticipants: {
+        interview_participants: {
           include: {
-            interview: {
+            interviews: {
               select: {
                 id: true,
                 scheduledAt: true,
@@ -115,7 +115,7 @@ export async function GET(request) {
       const skills = jobseeker.jobseeker_skills?.map(js => js.skills?.name).filter(Boolean) || []
 
       // Get interview data if exists
-      const interview = app.interviewParticipants?.[0]?.interview || null
+      const interview = app.interview_participants?.[0]?.interviews || null
 
       return {
         ...app,

@@ -53,13 +53,15 @@ export default function AllApplicationsPage() {
                 }
             })
 
+            const data = await response.json()
+            
             if (response.ok) {
-                const data = await response.json()
-                setApplications(data.applications)
-                setStats(data.stats)
-                setJobs(data.jobs)
+                setApplications(data.applications || [])
+                setStats(data.stats || null)
+                setJobs(data.jobs || [])
             } else {
-                throw new Error('Failed to load applications')
+                console.error('API Error:', data)
+                throw new Error(data.error || data.details || 'Failed to load applications')
             }
         } catch (error) {
             console.error('Load applications error:', error)
