@@ -61,21 +61,29 @@ export default function RecruiterProfilePage() {
 
     const [newBenefit, setNewBenefit] = useState('')
 
-    // Load existing profile
+    // Load existing profile and check redirect
     useEffect(() => {
-        loadProfile()
-    }, [])
-
-    // Check if profile is already complete and verified, then redirect to dashboard
-    useEffect(() => {
-        if (user && user.role === 'RECRUITER' && user.recruiter?.isVerified) {
-            // If recruiter is verified and has company data, redirect to dashboard
-            if (user.recruiter.companyId) {
-                console.log('✅ Recruiter already verified with company, redirecting to dashboard')
+        console.log('🔍 Checking user data:', user)
+        
+        // Check from AuthContext first
+        if (user && user.role === 'RECRUITER') {
+            console.log('👤 Recruiter data:', {
+                isVerified: user.recruiter?.isVerified,
+                companyId: user.recruiter?.companyId,
+                hasRecruiterData: !!user.recruiter
+            })
+            
+            // If verified and has company, redirect to dashboard immediately
+            if (user.recruiter?.isVerified === true && user.recruiter?.companyId) {
+                console.log('✅ Recruiter verified with company, redirecting to dashboard')
                 router.push('/profile/recruiter/dashboard')
+                return
             }
         }
-    }, [user, router])
+        
+        // Load profile data
+        loadProfile()
+    }, [user])
 
     const handleSave = async () => {
         try {
@@ -142,6 +150,8 @@ export default function RecruiterProfilePage() {
     const loadProfile = async () => {
         try {
             setIsLoading(true)
+            console.log('📡 Loading recruiter profile...')
+            
             const response = await fetch('/api/profile/recruiter', {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -150,14 +160,22 @@ export default function RecruiterProfilePage() {
 
             if (response.ok) {
                 const data = await response.json()
+                console.log('📥 Profile data received:', {
+                    hasProfile: !!data.profile,
+                    isVerified: data.profile?.isVerified,
+                    companyId: data.profile?.companyId,
+                    companyName: data.profile?.company?.name
+                })
+                
                 if (data.profile) {
                     // Check if recruiter is already verified and has company
-                    if (data.profile.isVerified && data.profile.companyId) {
+                    if (data.profile.isVerified === true && data.profile.companyId) {
                         console.log('✅ Recruiter verified with company, redirecting to dashboard')
                         router.push('/profile/recruiter/dashboard')
                         return
                     }
 
+                    console.log('ℹ️ Loading profile data to form...')
                     setIsEditMode(true)
                     setFormData({
                         firstName: data.profile.firstName || '',

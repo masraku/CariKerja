@@ -44,10 +44,10 @@ export async function GET(request) {
         jobseekers: {
           include: {
             educations: true,
-            workExperiences: true,
-            jobseekerSkills: {
+            work_experiences: true,
+            jobseeker_skills: {
               include: {
-                skill: true
+                skills: true
               }
             },
             certifications: true
@@ -91,7 +91,7 @@ export async function GET(request) {
 
     // Calculate profile completeness for each applicant
     const applicationsWithCompleteness = applications.map(app => {
-      const jobseeker = app.jobseeker
+      const jobseeker = app.jobseekers
       let completeness = 0
       let totalFields = 13
 
@@ -103,8 +103,8 @@ export async function GET(request) {
       if (jobseeker.summary) completeness++
       if (jobseeker.cvUrl) completeness++
       if (jobseeker.educations?.length > 0) completeness++
-      if (jobseeker.workExperiences?.length > 0) completeness++
-      if (jobseeker.jobseekerSkills?.length > 0) completeness++
+      if (jobseeker.work_experiences?.length > 0) completeness++
+      if (jobseeker.jobseeker_skills?.length > 0) completeness++
       if (jobseeker.certifications?.length > 0) completeness++
       if (jobseeker.photo) completeness++
       if (jobseeker.city && jobseeker.province) completeness++
@@ -112,7 +112,7 @@ export async function GET(request) {
       const completenessPercentage = Math.round((completeness / totalFields) * 100)
 
       // Extract skill names
-      const skills = jobseeker.jobseekerSkills?.map(js => js.skill?.name).filter(Boolean) || []
+      const skills = jobseeker.jobseeker_skills?.map(js => js.skills?.name).filter(Boolean) || []
 
       // Get interview data if exists
       const interview = app.interviewParticipants?.[0]?.interview || null
@@ -126,7 +126,7 @@ export async function GET(request) {
         interview, // Add interview data
         profileCompleteness: completenessPercentage,
         hasCV: !!jobseeker.cvUrl,
-        hasExperience: jobseeker.workExperiences?.length > 0,
+        hasExperience: jobseeker.work_experiences?.length > 0,
         hasEducation: jobseeker.educations?.length > 0,
         skillsCount: skills.length
       }
