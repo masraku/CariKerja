@@ -66,6 +66,17 @@ export default function RecruiterProfilePage() {
         loadProfile()
     }, [])
 
+    // Check if profile is already complete and verified, then redirect to dashboard
+    useEffect(() => {
+        if (user && user.role === 'RECRUITER' && user.recruiter?.isVerified) {
+            // If recruiter is verified and has company data, redirect to dashboard
+            if (user.recruiter.companyId) {
+                console.log('✅ Recruiter already verified with company, redirecting to dashboard')
+                router.push('/profile/recruiter/dashboard')
+            }
+        }
+    }, [user, router])
+
     const handleSave = async () => {
         try {
             setIsSaving(true)
@@ -140,6 +151,13 @@ export default function RecruiterProfilePage() {
             if (response.ok) {
                 const data = await response.json()
                 if (data.profile) {
+                    // Check if recruiter is already verified and has company
+                    if (data.profile.isVerified && data.profile.companyId) {
+                        console.log('✅ Recruiter verified with company, redirecting to dashboard')
+                        router.push('/profile/recruiter/dashboard')
+                        return
+                    }
+
                     setIsEditMode(true)
                     setFormData({
                         firstName: data.profile.firstName || '',
