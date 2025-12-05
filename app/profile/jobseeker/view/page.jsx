@@ -505,7 +505,7 @@ const ViewProfilePage = () => {
                 {/* BACK BUTTON */}
                 <div className="mt-8 text-center">
                     <button
-                        onClick={() => router.push('/dashboard/jobseeker')}
+                        onClick={() => router.push('/profile/jobseeker/dashboard')}
                         className="px-8 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition font-semibold"
                     >
                         Kembali ke Dashboard

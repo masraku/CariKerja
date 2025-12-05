@@ -96,7 +96,23 @@ export async function POST(request) {
       tokenExpiresAt: Date.now() + (60 * 60 * 1000) // 1 hour from now
     }
 
+    // Add role-specific data
+    if (user.role === 'JOBSEEKER' && jobseeker) {
+      userData.jobseeker = {
+        id: jobseeker.id,
+        photo: jobseeker.photo,
+        profileCompleted: jobseeker.profileCompleted,
+        profileCompleteness: jobseeker.profileCompleteness
+      }
+    }
+
     if (user.role === 'RECRUITER' && recruiter) {
+      userData.recruiter = {
+        id: recruiter.id,
+        photo: recruiter.photo,
+        isVerified: recruiter.isVerified,
+        companyId: recruiter.companyId
+      }
       userData.company = recruiter.companies
     }
 

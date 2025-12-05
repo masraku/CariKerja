@@ -92,10 +92,50 @@ export async function GET(request) {
       )
     }
 
-    console.log('✅ Returning user data')
+    // Prepare user data in the same format as login
+    const jobseeker = Array.isArray(user.jobseekers) ? user.jobseekers[0] : user.jobseekers
+    const recruiter = Array.isArray(user.recruiters) ? user.recruiters[0] : user.recruiters
+    
+    let userData = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      name: user.role === 'JOBSEEKER' 
+        ? `${jobseeker?.firstName || ''} ${jobseeker?.lastName || ''}`.trim()
+        : `${recruiter?.firstName || ''} ${recruiter?.lastName || ''}`.trim()
+    }
+
+    // Add role-specific data
+    if (user.role === 'JOBSEEKER' && jobseeker) {
+      userData.jobseeker = {
+        id: jobseeker.id,
+        photo: jobseeker.photo,
+        profileCompleted: jobseeker.profileCompleted,
+        profileCompleteness: jobseeker.profileCompleteness,
+        firstName: jobseeker.firstName,
+        lastName: jobseeker.lastName,
+        currentTitle: jobseeker.currentTitle,
+        city: jobseeker.city
+      }
+    }
+
+    if (user.role === 'RECRUITER' && recruiter) {
+      userData.recruiter = {
+        id: recruiter.id,
+        photo: recruiter.photoUrl,
+        isVerified: recruiter.isVerified,
+        firstName: recruiter.firstName,
+        lastName: recruiter.lastName,
+        position: recruiter.position
+      }
+      userData.company = recruiter.companies
+    }
+
+    console.log('✅ Returning user data:', userData)
     return NextResponse.json({
       success: true,
-      user
+      user: userData
     })
 
   } catch (error) {
