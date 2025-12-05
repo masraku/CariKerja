@@ -51,13 +51,15 @@ export default function ApplicationDetailPage() {
                 }
             })
 
+            const data = await response.json()
+
             if (response.ok) {
-                const data = await response.json()
                 setApplication(data.application)
                 setNotes(data.application.recruiterNotes || '')
                 setSelectedStatus(data.application.status)
             } else {
-                throw new Error('Failed to load application')
+                console.error('API Error:', data)
+                throw new Error(data.error || data.details || 'Failed to load application')
             }
         } catch (error) {
             console.error('Load application error:', error)
@@ -213,7 +215,7 @@ export default function ApplicationDetailPage() {
 
     if (!application) return null
 
-    const jobseeker = application.jobseeker
+    const jobseeker = application.jobseekers
 
     return (
         <div className="min-h-screen bg-gray-50 py-8">
@@ -408,7 +410,7 @@ export default function ApplicationDetailPage() {
                             <div className="grid grid-cols-2 gap-4 mb-6">
                                 <div>
                                     <p className="text-sm text-gray-600 mb-1">Applied For</p>
-                                    <p className="font-semibold text-gray-900">{application.job.title}</p>
+                                    <p className="font-semibold text-gray-900">{application.jobs.title}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-600 mb-1">Applied Date</p>

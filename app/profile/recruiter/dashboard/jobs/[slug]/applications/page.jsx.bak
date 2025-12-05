@@ -453,14 +453,14 @@ export default function JobApplicationsPage() {
                                     {/* Avatar */}
                                     <div className="flex-shrink-0">
                                         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
-                                            {application.jobseekers.photo ? (
+                                            {application.jobseeker.photo ? (
                                                 <img
-                                                    src={application.jobseekers.photo}
-                                                    alt={application.jobseekers.firstName}
+                                                    src={application.jobseeker.photo}
+                                                    alt={application.jobseeker.firstName}
                                                     className="w-full h-full object-cover rounded-full"
                                                 />
                                             ) : (
-                                                application.jobseekers.firstName?.charAt(0) || 'U'
+                                                application.jobseeker.firstName?.charAt(0) || 'U'
                                             )}
                                         </div>
                                     </div>
@@ -470,28 +470,28 @@ export default function JobApplicationsPage() {
                                         <div className="flex items-start justify-between mb-3">
                                             <div>
                                                 <h3 className="text-xl font-bold text-gray-900 mb-1">
-                                                    {application.jobseekers.firstName} {application.jobseekers.lastName}
+                                                    {application.jobseeker.firstName} {application.jobseeker.lastName}
                                                 </h3>
                                                 <p className="text-gray-600 mb-2">
-                                                    {application.jobseekers.currentTitle || 'Job Seeker'}
+                                                    {application.jobseeker.currentTitle || 'Job Seeker'}
                                                 </p>
                                                 <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
-                                                    {application.jobseekers.email && (
+                                                    {application.jobseeker.email && (
                                                         <div className="flex items-center gap-1">
                                                             <Mail className="w-4 h-4" />
-                                                            {application.jobseekers.email}
+                                                            {application.jobseeker.email}
                                                         </div>
                                                     )}
-                                                    {application.jobseekers.phone && (
+                                                    {application.jobseeker.phone && (
                                                         <div className="flex items-center gap-1">
                                                             <Phone className="w-4 h-4" />
-                                                            {application.jobseekers.phone}
+                                                            {application.jobseeker.phone}
                                                         </div>
                                                     )}
-                                                    {application.jobseekers.city && (
+                                                    {application.jobseeker.city && (
                                                         <div className="flex items-center gap-1">
                                                             <MapPin className="w-4 h-4" />
-                                                            {application.jobseekers.city}
+                                                            {application.jobseeker.city}
                                                         </div>
                                                     )}
                                                 </div>

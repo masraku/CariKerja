@@ -45,19 +45,19 @@ export async function GET(request, { params }) {
         jobseekers: {
           include: {
             educations: true,
-            workExperiences: true,
-            jobseekerSkills: { // ✅ Fixed: was 'skills', now 'jobseekerSkills'
+            work_experiences: true,
+            jobseeker_skills: {
               include: {
-                skill: true // Get the actual skill name
+                skills: true
               }
             },
             certifications: true
           }
         },
         // Include interview participant to get interview ID
-        interviewParticipants: {
+        interview_participants: {
           include: {
-            interview: {
+            interviews: {
               select: {
                 id: true,
                 scheduledAt: true,
@@ -76,7 +76,7 @@ export async function GET(request, { params }) {
 
     // Calculate profile completeness for each applicant
     const applicationsWithCompleteness = applications.map(app => {
-      const jobseeker = app.jobseeker
+      const jobseeker = app.jobseekers
       let completeness = 0
       let totalFields = 13
 
@@ -95,10 +95,10 @@ export async function GET(request, { params }) {
       if (jobseeker.educations?.length > 0) completeness++
 
       // Work Experience
-      if (jobseeker.workExperiences?.length > 0) completeness++
+      if (jobseeker.work_experiences?.length > 0) completeness++
 
-      // Skills - ✅ Fixed: access through jobseekerSkills
-      if (jobseeker.jobseekerSkills?.length > 0) completeness++
+      // Skills
+      if (jobseeker.jobseeker_skills?.length > 0) completeness++
 
       // Certifications
       if (jobseeker.certifications?.length > 0) completeness++
@@ -111,11 +111,11 @@ export async function GET(request, { params }) {
 
       const completenessPercentage = Math.round((completeness / totalFields) * 100)
 
-      // Extract skill names from jobseekerSkills
-      const skills = jobseeker.jobseekerSkills?.map(js => js.skill?.name).filter(Boolean) || []
+      // Extract skill names from jobseeker_skills
+      const skills = jobseeker.jobseeker_skills?.map(js => js.skills?.name).filter(Boolean) || []
 
       // Get interview data if exists
-      const interview = app.interviewParticipants?.[0]?.interview || null
+      const interview = app.interview_participants?.[0]?.interviews || null
 
       return {
         ...app,
@@ -126,7 +126,7 @@ export async function GET(request, { params }) {
         interview, // Add interview data
         profileCompleteness: completenessPercentage,
         hasCV: !!jobseeker.cvUrl,
-        hasExperience: jobseeker.workExperiences?.length > 0,
+        hasExperience: jobseeker.work_experiences?.length > 0,
         hasEducation: jobseeker.educations?.length > 0,
         skillsCount: skills.length
       }

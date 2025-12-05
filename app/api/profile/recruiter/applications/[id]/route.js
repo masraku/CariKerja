@@ -20,12 +20,15 @@ export async function GET(request, context) {
 
     const { recruiter } = auth
 
+    console.log('📋 Fetching application detail for ID:', id)
+    console.log('👤 Recruiter ID:', recruiter.id)
+
     // Fetch application with full details
     const application = await prisma.applications.findFirst({
       where: { 
         id,
         jobs: {
-          recruiterId: recruiter.id // Ensure recruiter owns this job
+          companyId: recruiter.companyId // Use company ID instead
         }
       },
       include: {
@@ -45,7 +48,7 @@ export async function GET(request, context) {
         },
         jobseekers: {
           include: {
-            workExperiences: {
+            work_experiences: {
               orderBy: { startDate: 'desc' }
             },
             educations: {
@@ -67,7 +70,7 @@ export async function GET(request, context) {
     }
 
     // Calculate profile completeness
-    const jobseeker = application.jobseeker
+    const jobseeker = application.jobseekers
     let completenessScore = 0
     const fields = [
       jobseeker.firstName,
