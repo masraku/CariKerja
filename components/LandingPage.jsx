@@ -230,12 +230,34 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* Featured Jobs - Clean Grid */}
+            {/* Featured Jobs - Gradient Background */}
             <section style={{
                 padding: '8% 5%',
-                background: 'white'
+                background: 'linear-gradient(180deg, #ffffff 0%, #f5f3ff 50%, #ede9fe 100%)',
+                position: 'relative'
             }}>
-                <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+                {/* Decorative elements */}
+                <div style={{
+                    position: 'absolute',
+                    top: '10%',
+                    right: '5%',
+                    width: '200px',
+                    height: '200px',
+                    background: 'radial-gradient(circle, rgba(124, 58, 237, 0.08) 0%, transparent 70%)',
+                    borderRadius: '50%',
+                    pointerEvents: 'none'
+                }} />
+                <div style={{
+                    position: 'absolute',
+                    bottom: '15%',
+                    left: '3%',
+                    width: '150px',
+                    height: '150px',
+                    background: 'radial-gradient(circle, rgba(79, 70, 229, 0.06) 0%, transparent 70%)',
+                    borderRadius: '50%',
+                    pointerEvents: 'none'
+                }} />
+                <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
                     {/* Section Header */}
                     <div style={{
                         display: 'flex',
@@ -246,19 +268,41 @@ export default function LandingPage() {
                         gap: '16px'
                     }}>
                         <div>
-                            <h2 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>
+                            <h2 style={{ 
+                                fontSize: '1.75rem', 
+                                fontWeight: 700, 
+                                color: '#1e1b4b', 
+                                marginBottom: '8px',
+                                background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text'
+                            }}>
                                 Lowongan Terbaru
                             </h2>
-                            <p style={{ color: '#6b7280' }}>Peluang terbaik untuk Anda</p>
+                            <p style={{ color: '#6366f1' }}>Peluang terbaik untuk Anda</p>
                         </div>
                         <Link href="/jobs" style={{
                             display: 'flex',
                             alignItems: 'center',
                             gap: '4px',
                             color: '#7c3aed',
-                            fontWeight: 500,
-                            textDecoration: 'none'
-                        }}>
+                            fontWeight: 600,
+                            textDecoration: 'none',
+                            padding: '10px 20px',
+                            background: 'rgba(124, 58, 237, 0.1)',
+                            borderRadius: '100px',
+                            transition: 'all 0.3s'
+                        }}
+                        onMouseOver={(e) => {
+                            e.currentTarget.style.background = 'rgba(124, 58, 237, 0.2)';
+                            e.currentTarget.style.transform = 'translateX(4px)';
+                        }}
+                        onMouseOut={(e) => {
+                            e.currentTarget.style.background = 'rgba(124, 58, 237, 0.1)';
+                            e.currentTarget.style.transform = 'translateX(0)';
+                        }}
+                        >
                             Lihat Semua <ChevronRight size={18} />
                         </Link>
                     </div>
@@ -292,23 +336,25 @@ export default function LandingPage() {
                                     style={{
                                         display: 'block',
                                         padding: '24px',
-                                        background: '#fafafa',
-                                        borderRadius: '16px',
+                                        background: 'white',
+                                        borderRadius: '20px',
                                         textDecoration: 'none',
-                                        transition: 'all 0.3s',
-                                        border: '1px solid transparent'
+                                        transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                                        border: '1px solid rgba(124, 58, 237, 0.1)',
+                                        position: 'relative',
+                                        overflow: 'hidden'
                                     }}
                                     onMouseOver={(e) => {
-                                        e.currentTarget.style.background = '#fff';
-                                        e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.08)';
-                                        e.currentTarget.style.transform = 'translateY(-4px)';
-                                        e.currentTarget.style.border = '1px solid #e5e7eb';
+                                        e.currentTarget.style.background = 'linear-gradient(135deg, #ffffff, #faf5ff)';
+                                        e.currentTarget.style.boxShadow = '0 20px 40px rgba(124, 58, 237, 0.15), 0 0 0 1px rgba(124, 58, 237, 0.2)';
+                                        e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
+                                        e.currentTarget.style.borderColor = 'rgba(124, 58, 237, 0.3)';
                                     }}
                                     onMouseOut={(e) => {
-                                        e.currentTarget.style.background = '#fafafa';
+                                        e.currentTarget.style.background = 'white';
                                         e.currentTarget.style.boxShadow = 'none';
-                                        e.currentTarget.style.transform = 'translateY(0)';
-                                        e.currentTarget.style.border = '1px solid transparent';
+                                        e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                                        e.currentTarget.style.borderColor = 'rgba(124, 58, 237, 0.1)';
                                     }}
                                 >
                                     {/* Company Logo */}
@@ -375,17 +421,49 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* Top Companies - Minimal */}
+            {/* Top Companies - Gradient Background */}
             <section style={{
                 padding: '8% 5%',
-                background: '#f9fafb'
+                background: 'linear-gradient(180deg, #ede9fe 0%, #e0e7ff 50%, #eef2ff 100%)',
+                position: 'relative',
+                overflow: 'hidden'
             }}>
-                <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+                {/* Decorative elements */}
+                <div style={{
+                    position: 'absolute',
+                    top: '20%',
+                    left: '10%',
+                    width: '300px',
+                    height: '300px',
+                    background: 'radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%)',
+                    borderRadius: '50%',
+                    pointerEvents: 'none'
+                }} />
+                <div style={{
+                    position: 'absolute',
+                    bottom: '10%',
+                    right: '5%',
+                    width: '250px',
+                    height: '250px',
+                    background: 'radial-gradient(circle, rgba(79, 70, 229, 0.08) 0%, transparent 70%)',
+                    borderRadius: '50%',
+                    pointerEvents: 'none'
+                }} />
+                
+                <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
                     <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-                        <h2 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>
+                        <h2 style={{ 
+                            fontSize: '1.75rem', 
+                            fontWeight: 700, 
+                            marginBottom: '8px',
+                            background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            backgroundClip: 'text'
+                        }}>
                             Perusahaan Terpercaya
                         </h2>
-                        <p style={{ color: '#6b7280' }}>Bergabung dengan yang terbaik</p>
+                        <p style={{ color: '#6366f1' }}>Bergabung dengan yang terbaik</p>
                     </div>
 
                     {/* Companies Grid */}
@@ -419,17 +497,23 @@ export default function LandingPage() {
                                         alignItems: 'center',
                                         padding: '28px 20px',
                                         background: 'white',
-                                        borderRadius: '16px',
+                                        borderRadius: '20px',
                                         textDecoration: 'none',
-                                        transition: 'all 0.3s'
+                                        transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                                        border: '2px solid transparent',
+                                        position: 'relative'
                                     }}
                                     onMouseOver={(e) => {
-                                        e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.08)';
-                                        e.currentTarget.style.transform = 'translateY(-4px)';
+                                        e.currentTarget.style.background = 'linear-gradient(135deg, #ffffff, #faf5ff)';
+                                        e.currentTarget.style.boxShadow = '0 20px 50px rgba(124, 58, 237, 0.2)';
+                                        e.currentTarget.style.transform = 'translateY(-10px) scale(1.05)';
+                                        e.currentTarget.style.borderColor = '#a855f7';
                                     }}
                                     onMouseOut={(e) => {
+                                        e.currentTarget.style.background = 'white';
                                         e.currentTarget.style.boxShadow = 'none';
-                                        e.currentTarget.style.transform = 'translateY(0)';
+                                        e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                                        e.currentTarget.style.borderColor = 'transparent';
                                     }}
                                 >
                                     <div style={{
@@ -472,15 +556,24 @@ export default function LandingPage() {
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '8px',
-                            padding: '12px 24px',
-                            background: 'white',
-                            color: '#111827',
+                            padding: '14px 28px',
+                            background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                            color: 'white',
                             borderRadius: '100px',
                             textDecoration: 'none',
-                            fontWeight: 500,
-                            border: '1px solid #e5e7eb',
-                            transition: 'all 0.2s'
-                        }}>
+                            fontWeight: 600,
+                            boxShadow: '0 4px 16px rgba(124, 58, 237, 0.3)',
+                            transition: 'all 0.3s'
+                        }}
+                        onMouseOver={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-3px)';
+                            e.currentTarget.style.boxShadow = '0 8px 24px rgba(124, 58, 237, 0.4)';
+                        }}
+                        onMouseOut={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 4px 16px rgba(124, 58, 237, 0.3)';
+                        }}
+                        >
                             Lihat Semua Perusahaan <ChevronRight size={18} />
                         </Link>
                     </div>
