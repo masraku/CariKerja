@@ -65,19 +65,30 @@ export default function LandingPage() {
     return (
         <div className="min-h-screen bg-white" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
             
-            {/* Hero Section - Clean & Minimal */}
+            {/* Hero Section - Gradient Indigo-Purple */}
             <section style={{ 
                 position: 'relative',
                 padding: '10% 5%',
                 minHeight: '90vh',
                 display: 'flex',
                 alignItems: 'center',
-                background: 'linear-gradient(135deg, #fafafa 0%, #f0f4ff 100%)'
+                background: 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 25%, #f5f3ff 50%, #ede9fe 75%, #faf5ff 100%)',
+                overflow: 'hidden'
             }}>
+                {/* Subtle animated gradient overlay */}
+                <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'radial-gradient(ellipse at 30% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(168, 85, 247, 0.06) 0%, transparent 50%)',
+                    pointerEvents: 'none'
+                }} />
+                
                 <div style={{ 
                     width: '100%',
                     maxWidth: '1200px',
-                    margin: '0 auto' 
+                    margin: '0 auto',
+                    position: 'relative',
+                    zIndex: 1
                 }}>
                     {/* Badge */}
                     <div style={{
@@ -85,12 +96,13 @@ export default function LandingPage() {
                         alignItems: 'center',
                         gap: '8px',
                         padding: '8px 16px',
-                        background: 'rgba(59, 130, 246, 0.1)',
+                        background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(168, 85, 247, 0.1))',
                         borderRadius: '100px',
-                        marginBottom: '32px'
+                        marginBottom: '32px',
+                        border: '1px solid rgba(79, 70, 229, 0.15)'
                     }}>
-                        <Sparkles size={16} style={{ color: '#3b82f6' }} />
-                        <span style={{ fontSize: '14px', color: '#3b82f6', fontWeight: 500 }}>
+                        <Sparkles size={16} style={{ color: '#7c3aed' }} />
+                        <span style={{ fontSize: '14px', color: '#6d28d9', fontWeight: 500 }}>
                             Platform Kerja #1 Indonesia
                         </span>
                     </div>
@@ -100,26 +112,32 @@ export default function LandingPage() {
                         fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
                         fontWeight: 700,
                         lineHeight: 1.1,
-                        color: '#111827',
+                        color: '#1e1b4b',
                         marginBottom: '24px',
                         maxWidth: '800px'
                     }}>
                         Temukan Karir
                         <br />
-                        <span style={{ color: '#3b82f6' }}>Impianmu</span>
+                        <span style={{ 
+                            background: 'linear-gradient(135deg, #4f46e5, #7c3aed, #a855f7)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            backgroundClip: 'text'
+                        }}>Impianmu</span>
                     </h1>
 
                     <p style={{
                         fontSize: 'clamp(1rem, 2vw, 1.25rem)',
-                        color: '#6b7280',
+                        color: '#6366f1',
                         marginBottom: '40px',
                         maxWidth: '500px',
-                        lineHeight: 1.6
+                        lineHeight: 1.6,
+                        opacity: 0.85
                     }}>
                         Ribuan lowongan dari perusahaan terpercaya menunggu Anda
                     </p>
 
-                    {/* Search Bar - Simplified */}
+                    {/* Search Bar - Enhanced with gradient shadow */}
                     <form onSubmit={handleSearch} style={{
                         display: 'flex',
                         flexWrap: 'wrap',
@@ -134,10 +152,10 @@ export default function LandingPage() {
                             background: 'white',
                             borderRadius: '12px',
                             padding: '16px 20px',
-                            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-                            border: '1px solid #e5e7eb'
+                            boxShadow: '0 4px 24px rgba(79, 70, 229, 0.12)',
+                            border: '1px solid rgba(79, 70, 229, 0.1)'
                         }}>
-                            <Search size={20} style={{ color: '#9ca3af', marginRight: '12px' }} />
+                            <Search size={20} style={{ color: '#7c3aed', marginRight: '12px' }} />
                             <input
                                 type="text"
                                 placeholder="Cari pekerjaan..."
@@ -148,7 +166,7 @@ export default function LandingPage() {
                                     border: 'none',
                                     outline: 'none',
                                     fontSize: '16px',
-                                    color: '#111827',
+                                    color: '#1e1b4b',
                                     background: 'transparent'
                                 }}
                             />
@@ -157,20 +175,29 @@ export default function LandingPage() {
                             type="submit"
                             style={{
                                 padding: '16px 32px',
-                                background: '#3b82f6',
+                                background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
                                 color: 'white',
                                 borderRadius: '12px',
                                 border: 'none',
                                 fontWeight: 600,
                                 fontSize: '16px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s',
+                                transition: 'all 0.3s',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '8px'
+                                gap: '8px',
+                                boxShadow: '0 4px 16px rgba(124, 58, 237, 0.3)'
                             }}
-                            onMouseOver={(e) => e.target.style.background = '#2563eb'}
-                            onMouseOut={(e) => e.target.style.background = '#3b82f6'}
+                            onMouseOver={(e) => {
+                                e.target.style.background = 'linear-gradient(135deg, #4338ca, #6d28d9)';
+                                e.target.style.transform = 'translateY(-2px)';
+                                e.target.style.boxShadow = '0 6px 20px rgba(124, 58, 237, 0.4)';
+                            }}
+                            onMouseOut={(e) => {
+                                e.target.style.background = 'linear-gradient(135deg, #4f46e5, #7c3aed)';
+                                e.target.style.transform = 'translateY(0)';
+                                e.target.style.boxShadow = '0 4px 16px rgba(124, 58, 237, 0.3)';
+                            }}
                         >
                             Cari
                             <ArrowRight size={18} />
@@ -228,7 +255,7 @@ export default function LandingPage() {
                             display: 'flex',
                             alignItems: 'center',
                             gap: '4px',
-                            color: '#3b82f6',
+                            color: '#7c3aed',
                             fontWeight: 500,
                             textDecoration: 'none'
                         }}>
@@ -288,7 +315,7 @@ export default function LandingPage() {
                                     <div style={{
                                         width: '48px',
                                         height: '48px',
-                                        background: job.companies?.logo ? 'white' : 'linear-gradient(135deg, #3b82f6, #6366f1)',
+                                        background: job.companies?.logo ? 'white' : 'linear-gradient(135deg, #4f46e5, #7c3aed)',
                                         borderRadius: '12px',
                                         marginBottom: '16px',
                                         display: 'flex',
@@ -408,7 +435,7 @@ export default function LandingPage() {
                                     <div style={{
                                         width: '56px',
                                         height: '56px',
-                                        background: company.logo ? 'white' : 'linear-gradient(135deg, #3b82f6, #6366f1)',
+                                        background: company.logo ? 'white' : 'linear-gradient(135deg, #4f46e5, #7c3aed)',
                                         borderRadius: '12px',
                                         marginBottom: '12px',
                                         display: 'flex',
@@ -432,7 +459,7 @@ export default function LandingPage() {
                                     }}>
                                         {company.name?.length > 15 ? company.name.slice(0, 15) + '...' : company.name}
                                     </span>
-                                    <span style={{ fontSize: '12px', color: '#3b82f6' }}>
+                                    <span style={{ fontSize: '12px', color: '#7c3aed' }}>
                                         {company.activeJobsCount} lowongan
                                     </span>
                                 </Link>
@@ -460,10 +487,10 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* CTA Section - Clean */}
+            {/* CTA Section - Gradient Indigo-Purple */}
             <section style={{
                 padding: '8% 5%',
-                background: 'linear-gradient(135deg, #111827 0%, #1f2937 100%)'
+                background: 'linear-gradient(135deg, #312e81 0%, #4c1d95 50%, #581c87 100%)'
             }}>
                 <div style={{ 
                     maxWidth: '1000px', 
@@ -497,12 +524,13 @@ export default function LandingPage() {
                             alignItems: 'center',
                             gap: '8px',
                             padding: '14px 28px',
-                            background: '#3b82f6',
+                            background: 'linear-gradient(135deg, #a855f7, #c084fc)',
                             color: 'white',
                             borderRadius: '12px',
                             textDecoration: 'none',
                             fontWeight: 600,
-                            transition: 'all 0.2s'
+                            transition: 'all 0.3s',
+                            boxShadow: '0 4px 16px rgba(168, 85, 247, 0.4)'
                         }}>
                             Cari Kerja <ArrowRight size={18} />
                         </Link>
