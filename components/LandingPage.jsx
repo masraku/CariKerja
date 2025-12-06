@@ -2,20 +2,18 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { 
-    Search, Briefcase, Building2, Users, TrendingUp,
-    MapPin, DollarSign, Clock, ArrowRight, CheckCircle
+import {
+    Search, Briefcase, Building2, MapPin, ArrowRight, 
+    ChevronRight, Sparkles
 } from 'lucide-react'
 
-export default function DynamicHomepage() {
+export default function LandingPage() {
     const router = useRouter()
     const [stats, setStats] = useState(null)
     const [featuredJobs, setFeaturedJobs] = useState([])
     const [topCompanies, setTopCompanies] = useState([])
-    const [categories, setCategories] = useState([])
     const [loading, setLoading] = useState(true)
     const [searchKeyword, setSearchKeyword] = useState('')
-    const [searchLocation, setSearchLocation] = useState('')
 
     useEffect(() => {
         loadHomepageData()
@@ -23,24 +21,21 @@ export default function DynamicHomepage() {
 
     const loadHomepageData = async () => {
         try {
-            const [statsRes, jobsRes, companiesRes, categoriesRes] = await Promise.all([
+            const [statsRes, jobsRes, companiesRes] = await Promise.all([
                 fetch('/api/homepage/stats'),
-                fetch('/api/homepage/featured-jobs?limit=6'),
-                fetch('/api/homepage/top-companies?limit=8'),
-                fetch('/api/homepage/categories')
+                fetch('/api/homepage/featured-jobs?limit=4'),
+                fetch('/api/homepage/top-companies?limit=6')
             ])
 
-            const [statsData, jobsData, companiesData, categoriesData] = await Promise.all([
+            const [statsData, jobsData, companiesData] = await Promise.all([
                 statsRes.json(),
                 jobsRes.json(),
-                companiesRes.json(),
-                categoriesRes.json()
+                companiesRes.json()
             ])
 
             if (statsData.success) setStats(statsData.data)
             if (jobsData.success) setFeaturedJobs(jobsData.data.jobs)
             if (companiesData.success) setTopCompanies(companiesData.data.companies)
-            if (categoriesData.success) setCategories(categoriesData.data.categories.slice(0, 8))
         } catch (error) {
             console.error('Failed to load homepage data:', error)
         } finally {
@@ -52,187 +47,300 @@ export default function DynamicHomepage() {
         e.preventDefault()
         const params = new URLSearchParams()
         if (searchKeyword) params.set('keyword', searchKeyword)
-        if (searchLocation) params.set('location', searchLocation)
         router.push(`/jobs?${params.toString()}`)
     }
 
-    const formatSalary = (min, max, currency = 'IDR') => {
+    const formatSalary = (min, max) => {
         const format = (num) => {
             if (!num) return null
-            return new Intl.NumberFormat('id-ID', { 
-                notation: 'compact',
-                maximumFractionDigits: 1 
-            }).format(num)
+            if (num >= 1000000) return `${(num / 1000000).toFixed(0)}jt`
+            if (num >= 1000) return `${(num / 1000).toFixed(0)}rb`
+            return num
         }
-        
         if (min && max) return `${format(min)} - ${format(max)}`
         if (min) return `${format(min)}+`
-        return 'Negotiable'
-    }
-
-    const timeAgo = (date) => {
-        const seconds = Math.floor((new Date() - new Date(date)) / 1000)
-        const intervals = {
-            tahun: 31536000,
-            bulan: 2592000,
-            minggu: 604800,
-            hari: 86400,
-            jam: 3600,
-            menit: 60
-        }
-        
-        for (const [name, seconds_in] of Object.entries(intervals)) {
-            const interval = Math.floor(seconds / seconds_in)
-            if (interval >= 1) {
-                return `${interval} ${name} lalu`
-            }
-        }
-        return 'Baru saja'
+        return 'Nego'
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-            {/* Hero Section */}
-            <section className="relative py-20 px-4 overflow-hidden">
-                {/* Background decoration */}
-                <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-                    <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-                </div>
-
-                <div className="max-w-7xl mx-auto relative z-10">
-                    {/* Hero Content */}
-                    <div className="text-center max-w-4xl mx-auto">
-                        <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-                            Temukan Pekerjaan <span className="text-blue-600">Impian Anda</span>
-                        </h1>
-                        <p className="text-xl text-gray-600 mb-8">
-                            Platform terpercaya untuk menghubungkan pencari kerja dengan perusahaan terbaik di Indonesia
-                        </p>
-
-                        {/* Search Bar */}
-                        <form onSubmit={handleSearch} className="bg-white rounded-2xl shadow-xl p-3 flex flex-col md:flex-row gap-3 mb-12">
-                            <div className="flex-1 flex items-center px-4 border-r border-gray-200">
-                                <Search className="w-5 h-5 text-gray-400 mr-2" />
-                                <input
-                                    type="text"
-                                    placeholder="Cari pekerjaan, posisi, perusahaan..."
-                                    value={searchKeyword}
-                                    onChange={(e) => setSearchKeyword(e.target.value)}
-                                    className="flex-1 py-3 outline-none text-gray-900 placeholder-gray-400"
-                                />
-                            </div>
-                            <div className="flex-1 flex items-center px-4">
-                                <MapPin className="w-5 h-5 text-gray-400 mr-2" />
-                                <input
-                                    type="text"
-                                    placeholder="Lokasi..."
-                                    value={searchLocation}
-                                    onChange={(e) => setSearchLocation(e.target.value)}
-                                    className="flex-1 py-3 outline-none text-gray-900 placeholder-gray-400"
-                                />
-                            </div>
-                            <button
-                                type="submit"
-                                className="px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-medium flex items-center justify-center gap-2"
-                            >
-                                <Search className="w-5 h-5" />
-                                Cari Lowongan
-                            </button>
-                        </form>
-
-                        {/* Stats */}
-                        {!loading && stats && (
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                                <div className="text-center">
-                                    <div className="text-4xl font-bold text-blue-600">{stats.totalJobs.toLocaleString()}+</div>
-                                    <div className="text-gray-600 mt-1">Lowongan Aktif</div>
-                                </div>
-                                <div className="text-center">
-                                    <div className="text-4xl font-bold text-blue-600">{stats.totalCompanies.toLocaleString()}+</div>
-                                    <div className="text-gray-600 mt-1">Perusahaan</div>
-                                </div>
-                                <div className="text-center">
-                                    <div className="text-4xl font-bold text-blue-600">{stats.totalApplications.toLocaleString()}+</div>
-                                    <div className="text-gray-600 mt-1">Lamaran</div>
-                                </div>
-                                <div className="text-center">
-                                    <div className="text-4xl font-bold text-green-600">{stats.totalHires.toLocaleString()}+</div>
-                                    <div className="text-gray-600 mt-1">Kandidat Diterima</div>
-                                </div>
-                            </div>
-                        )}
+        <div className="min-h-screen bg-white" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+            
+            {/* Hero Section - Clean & Minimal */}
+            <section style={{ 
+                position: 'relative',
+                padding: '10% 5%',
+                minHeight: '90vh',
+                display: 'flex',
+                alignItems: 'center',
+                background: 'linear-gradient(135deg, #fafafa 0%, #f0f4ff 100%)'
+            }}>
+                <div style={{ 
+                    width: '100%',
+                    maxWidth: '1200px',
+                    margin: '0 auto' 
+                }}>
+                    {/* Badge */}
+                    <div style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '8px 16px',
+                        background: 'rgba(59, 130, 246, 0.1)',
+                        borderRadius: '100px',
+                        marginBottom: '32px'
+                    }}>
+                        <Sparkles size={16} style={{ color: '#3b82f6' }} />
+                        <span style={{ fontSize: '14px', color: '#3b82f6', fontWeight: 500 }}>
+                            Platform Kerja #1 Indonesia
+                        </span>
                     </div>
+
+                    {/* Main Heading */}
+                    <h1 style={{
+                        fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
+                        fontWeight: 700,
+                        lineHeight: 1.1,
+                        color: '#111827',
+                        marginBottom: '24px',
+                        maxWidth: '800px'
+                    }}>
+                        Temukan Karir
+                        <br />
+                        <span style={{ color: '#3b82f6' }}>Impianmu</span>
+                    </h1>
+
+                    <p style={{
+                        fontSize: 'clamp(1rem, 2vw, 1.25rem)',
+                        color: '#6b7280',
+                        marginBottom: '40px',
+                        maxWidth: '500px',
+                        lineHeight: 1.6
+                    }}>
+                        Ribuan lowongan dari perusahaan terpercaya menunggu Anda
+                    </p>
+
+                    {/* Search Bar - Simplified */}
+                    <form onSubmit={handleSearch} style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '12px',
+                        maxWidth: '600px',
+                        marginBottom: '48px'
+                    }}>
+                        <div style={{
+                            flex: '1 1 300px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            background: 'white',
+                            borderRadius: '12px',
+                            padding: '16px 20px',
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                            border: '1px solid #e5e7eb'
+                        }}>
+                            <Search size={20} style={{ color: '#9ca3af', marginRight: '12px' }} />
+                            <input
+                                type="text"
+                                placeholder="Cari pekerjaan..."
+                                value={searchKeyword}
+                                onChange={(e) => setSearchKeyword(e.target.value)}
+                                style={{
+                                    flex: 1,
+                                    border: 'none',
+                                    outline: 'none',
+                                    fontSize: '16px',
+                                    color: '#111827',
+                                    background: 'transparent'
+                                }}
+                            />
+                        </div>
+                        <button
+                            type="submit"
+                            style={{
+                                padding: '16px 32px',
+                                background: '#3b82f6',
+                                color: 'white',
+                                borderRadius: '12px',
+                                border: 'none',
+                                fontWeight: 600,
+                                fontSize: '16px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                            }}
+                            onMouseOver={(e) => e.target.style.background = '#2563eb'}
+                            onMouseOut={(e) => e.target.style.background = '#3b82f6'}
+                        >
+                            Cari
+                            <ArrowRight size={18} />
+                        </button>
+                    </form>
+
+                    {/* Stats - Minimal */}
+                    {!loading && stats && (
+                        <div style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '40px'
+                        }}>
+                            {[
+                                { value: stats.totalJobs?.toLocaleString() || '0', label: 'Lowongan' },
+                                { value: stats.totalCompanies?.toLocaleString() || '0', label: 'Perusahaan' },
+                                { value: stats.totalHires?.toLocaleString() || '0', label: 'Diterima' }
+                            ].map((stat, i) => (
+                                <div key={i}>
+                                    <div style={{ fontSize: '2rem', fontWeight: 700, color: '#111827' }}>
+                                        {stat.value}+
+                                    </div>
+                                    <div style={{ fontSize: '14px', color: '#6b7280' }}>
+                                        {stat.label}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </section>
 
-            {/* Featured Jobs Section */}
-            <section className="py-20 px-4 bg-white">
-                <div className="max-w-7xl mx-auto">
-                    <div className="flex justify-between items-center mb-12">
+            {/* Featured Jobs - Clean Grid */}
+            <section style={{
+                padding: '8% 5%',
+                background: 'white'
+            }}>
+                <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+                    {/* Section Header */}
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '40px',
+                        flexWrap: 'wrap',
+                        gap: '16px'
+                    }}>
                         <div>
-                            <h2 className="text-3xl font-bold text-gray-900 mb-2">Lowongan Terbaru</h2>
-                            <p className="text-gray-600">Peluang karir terbaik menunggu Anda</p>
+                            <h2 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>
+                                Lowongan Terbaru
+                            </h2>
+                            <p style={{ color: '#6b7280' }}>Peluang terbaik untuk Anda</p>
                         </div>
-                        <Link href="/jobs" className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium">
-                            Lihat Semua
-                            <ArrowRight className="w-5 h-5" />
+                        <Link href="/jobs" style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            color: '#3b82f6',
+                            fontWeight: 500,
+                            textDecoration: 'none'
+                        }}>
+                            Lihat Semua <ChevronRight size={18} />
                         </Link>
                     </div>
 
+                    {/* Jobs Grid */}
                     {loading ? (
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {[1,2,3,4,5,6].map(i => (
-                                <div key={i} className="bg-gray-100 rounded-2xl h-64 animate-pulse"></div>
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                            gap: '20px'
+                        }}>
+                            {[1, 2, 3, 4].map(i => (
+                                <div key={i} style={{
+                                    height: '200px',
+                                    background: '#f3f4f6',
+                                    borderRadius: '16px',
+                                    animation: 'pulse 2s infinite'
+                                }} />
                             ))}
                         </div>
                     ) : (
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                            gap: '20px'
+                        }}>
                             {featuredJobs.map(job => (
                                 <Link
                                     key={job.id}
                                     href={`/jobs/${job.slug}`}
-                                    className="bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group"
+                                    style={{
+                                        display: 'block',
+                                        padding: '24px',
+                                        background: '#fafafa',
+                                        borderRadius: '16px',
+                                        textDecoration: 'none',
+                                        transition: 'all 0.3s',
+                                        border: '1px solid transparent'
+                                    }}
+                                    onMouseOver={(e) => {
+                                        e.currentTarget.style.background = '#fff';
+                                        e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.08)';
+                                        e.currentTarget.style.transform = 'translateY(-4px)';
+                                        e.currentTarget.style.border = '1px solid #e5e7eb';
+                                    }}
+                                    onMouseOut={(e) => {
+                                        e.currentTarget.style.background = '#fafafa';
+                                        e.currentTarget.style.boxShadow = 'none';
+                                        e.currentTarget.style.transform = 'translateY(0)';
+                                        e.currentTarget.style.border = '1px solid transparent';
+                                    }}
                                 >
-                                    <div className="flex items-start gap-4 mb-4">
-                                        {job.companies.logo ? (
-                                            <img src={job.companies.logo} alt={job.companies.name} className="w-14 h-14 rounded-xl object-cover" />
+                                    {/* Company Logo */}
+                                    <div style={{
+                                        width: '48px',
+                                        height: '48px',
+                                        background: job.companies?.logo ? 'white' : 'linear-gradient(135deg, #3b82f6, #6366f1)',
+                                        borderRadius: '12px',
+                                        marginBottom: '16px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        overflow: 'hidden'
+                                    }}>
+                                        {job.companies?.logo ? (
+                                            <img src={job.companies.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                         ) : (
-                                            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white text-xl font-bold">
-                                                {job.companies.name.charAt(0)}
-                                            </div>
-                                        )}
-                                        <div className="flex-1">
-                                            <h3 className="font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition">
-                                                {job.title}
-                                            </h3>
-                                            <p className="text-gray-600 text-sm">{job.companies.name}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2 mb-4">
-                                        <div className="flex items-center gap-2 text-gray-600 text-sm">
-                                            <MapPin className="w-4 h-4" />
-                                            {job.location}
-                                        </div>
-                                        <div className="flex items-center gap-2 text-gray-600 text-sm">
-                                            <Briefcase className="w-4 h-4" />
-                                            {job.jobType}
-                                        </div>
-                                        {(job.salaryMin || job.salaryMax) && (
-                                            <div className="flex items-center gap-2 text-green-600 text-sm font-medium">
-                                                <DollarSign className="w-4 h-4" />
-                                                Rp {formatSalary(job.salaryMin, job.salaryMax)}
-                                            </div>
+                                            <span style={{ color: 'white', fontWeight: 700 }}>{job.companies?.name?.charAt(0) || 'C'}</span>
                                         )}
                                     </div>
 
-                                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                                        <span className="text-gray-500 text-xs">{timeAgo(job.postedAt)}</span>
-                                        <span className="text-blue-600 text-sm font-medium group-hover:underline">
-                                            Lihat Detail →
+                                    {/* Job Details */}
+                                    <h3 style={{ 
+                                        fontSize: '1rem', 
+                                        fontWeight: 600, 
+                                        color: '#111827',
+                                        marginBottom: '6px'
+                                    }}>
+                                        {job.title}
+                                    </h3>
+                                    <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '12px' }}>
+                                        {job.companies?.name}
+                                    </p>
+
+                                    {/* Meta */}
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '13px', color: '#9ca3af' }}>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <MapPin size={14} /> {job.location}
+                                        </span>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <Briefcase size={14} /> {job.jobType}
                                         </span>
                                     </div>
+
+                                    {/* Salary */}
+                                    {(job.salaryMin || job.salaryMax) && (
+                                        <div style={{
+                                            marginTop: '16px',
+                                            padding: '8px 12px',
+                                            background: 'rgba(16, 185, 129, 0.1)',
+                                            borderRadius: '8px',
+                                            display: 'inline-block',
+                                            fontSize: '13px',
+                                            fontWeight: 500,
+                                            color: '#059669'
+                                        }}>
+                                            Rp {formatSalary(job.salaryMin, job.salaryMax)}
+                                        </div>
+                                    )}
                                 </Link>
                             ))}
                         </div>
@@ -240,177 +348,188 @@ export default function DynamicHomepage() {
                 </div>
             </section>
 
-            {/* Job Categories */}
-            <section className="py-20 px-4">
-                <div className="max-w-7xl mx-auto">
-                    <div className="text-center mb-12">
-                        <h2 className="text-3xl font-bold text-gray-900 mb-2">Jelajahi Berdasarkan Kategori</h2>
-                        <p className="text-gray-600">Temukan pekerjaan sesuai bidang Anda</p>
+            {/* Top Companies - Minimal */}
+            <section style={{
+                padding: '8% 5%',
+                background: '#f9fafb'
+            }}>
+                <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+                    <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+                        <h2 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>
+                            Perusahaan Terpercaya
+                        </h2>
+                        <p style={{ color: '#6b7280' }}>Bergabung dengan yang terbaik</p>
                     </div>
 
+                    {/* Companies Grid */}
                     {loading ? (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {[1,2,3,4,5,6,7,8].map(i => (
-                                <div key={i} className="bg-gray-100 rounded-xl h-32 animate-pulse"></div>
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+                            gap: '20px'
+                        }}>
+                            {[1, 2, 3, 4, 5, 6].map(i => (
+                                <div key={i} style={{
+                                    height: '140px',
+                                    background: '#e5e7eb',
+                                    borderRadius: '16px'
+                                }} />
                             ))}
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {categories.map(category => (
-                                <Link
-                                    key={category.name}
-                                    href={`/jobs?category=${encodeURIComponent(category.name)}`}
-                                    className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 text-center group"
-                                >
-                                    <div className="text-4xl mb-3">{category.icon}</div>
-                                    <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition">
-                                        {category.name}
-                                    </h3>
-                                    <p className="text-gray-500 text-sm">{category.count} lowongan</p>
-                                </Link>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </section>
-
-            {/* Top Companies */}
-            <section className="py-20 px-4 bg-gray-50">
-                <div className="max-w-7xl mx-auto">
-                    <div className="text-center mb-12">
-                        <h2 className="text-3xl font-bold text-gray-900 mb-2">Perusahaan Terpercaya</h2>
-                        <p className="text-gray-600">Bergabunglah dengan perusahaan-perusahaan terbaik</p>
-                    </div>
-
-                    {loading ? (
-                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {[1,2,3,4,5,6,7,8].map(i => (
-                                <div key={i} className="bg-white rounded-xl h-48 animate-pulse"></div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+                            gap: '20px'
+                        }}>
                             {topCompanies.map(company => (
                                 <Link
                                     key={company.id}
                                     href={`/companies/${company.id}`}
-                                    className="bg-white rounded-xl p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100 group"
+                                    style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        padding: '28px 20px',
+                                        background: 'white',
+                                        borderRadius: '16px',
+                                        textDecoration: 'none',
+                                        transition: 'all 0.3s'
+                                    }}
+                                    onMouseOver={(e) => {
+                                        e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.08)';
+                                        e.currentTarget.style.transform = 'translateY(-4px)';
+                                    }}
+                                    onMouseOut={(e) => {
+                                        e.currentTarget.style.boxShadow = 'none';
+                                        e.currentTarget.style.transform = 'translateY(0)';
+                                    }}
                                 >
-                                    <div className="text-center">
+                                    <div style={{
+                                        width: '56px',
+                                        height: '56px',
+                                        background: company.logo ? 'white' : 'linear-gradient(135deg, #3b82f6, #6366f1)',
+                                        borderRadius: '12px',
+                                        marginBottom: '12px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        overflow: 'hidden',
+                                        border: company.logo ? '1px solid #e5e7eb' : 'none'
+                                    }}>
                                         {company.logo ? (
-                                            <img src={company.logo} alt={company.name} className="w-20 h-20 mx-auto mb-4 rounded-xl object-cover" />
+                                            <img src={company.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                         ) : (
-                                            <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white text-2xl font-bold">
-                                                {company.name.charAt(0)}
-                                            </div>
+                                            <span style={{ color: 'white', fontWeight: 700, fontSize: '1.25rem' }}>{company.name?.charAt(0)}</span>
                                         )}
-                                        <h3 className="font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition line-clamp-1">
-                                            {company.name}
-                                        </h3>
-                                        <p className="text-gray-600 text-sm mb-3 line-clamp-1">{company.city}</p>
-                                        <div className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-sm font-medium">
-                                            <Briefcase className="w-4 h-4" />
-                                            {company.activeJobsCount} lowongan
-                                        </div>
                                     </div>
+                                    <span style={{
+                                        fontWeight: 600,
+                                        color: '#111827',
+                                        fontSize: '14px',
+                                        textAlign: 'center',
+                                        marginBottom: '4px'
+                                    }}>
+                                        {company.name?.length > 15 ? company.name.slice(0, 15) + '...' : company.name}
+                                    </span>
+                                    <span style={{ fontSize: '12px', color: '#3b82f6' }}>
+                                        {company.activeJobsCount} lowongan
+                                    </span>
                                 </Link>
                             ))}
                         </div>
                     )}
-                </div>
-            </section>
 
-            {/* CTA Section */}
-            <section className="py-20 px-4 bg-gradient-to-r from-blue-600 to-indigo-700">
-                <div className="max-w-7xl mx-auto">
-                    <div className="grid md:grid-cols-2 gap-12">
-                        {/* For Job Seekers */}
-                        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 text-white">
-                            <Users className="w-12 h-12 mb-4" />
-                            <h3 className="text-2xl font-bold mb-3">Untuk Pencari Kerja</h3>
-                            <p className="text-white/90 mb-6">
-                                Daftar sekarang dan temukan ribuan peluang karir dari perusahaan-perusahaan terbaik di Indonesia.
-                            </p>
-                            <ul className="space-y-3 mb-6">
-                                <li className="flex items-start gap-2">
-                                    <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                                    <span>Akses ke ribuan lowongan kerja</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                                    <span>Buat profil profesional</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                                    <span>Lamar dengan satu klik</span>
-                                </li>
-                            </ul>
-                            <Link href="/register/jobseeker" className="inline-block px-6 py-3 bg-white text-blue-600 rounded-lg hover:bg-gray-50 transition font-medium">
-                                Daftar Sebagai Pencari Kerja
-                            </Link>
-                        </div>
-
-                        {/* For Recruiters */}
-                        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 text-white">
-                            <Building2 className="w-12 h-12 mb-4" />
-                            <h3 className="text-2xl font-bold mb-3">Untuk Perusahaan</h3>
-                            <p className="text-white/90 mb-6">
-                                Post lowongan kerja dan temukan kandidat terbaik dengan mudah dan cepat.
-                            </p>
-                            <ul className="space-y-3 mb-6">
-                                <li className="flex items-start gap-2">
-                                    <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                                    <span>Posting lowongan unlimited</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                                    <span>Kelola kandidat dengan mudah</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                                    <span>Dashboard analytics lengkap</span>
-                                </li>
-                            </ul>
-                            <Link href="/register/recruiter" className="inline-block px-6 py-3 bg-white text-blue-600 rounded-lg hover:bg-gray-50 transition font-medium">
-                                Daftar Sebagai Recruiter
-                            </Link>
-                        </div>
+                    <div style={{ textAlign: 'center', marginTop: '40px' }}>
+                        <Link href="/companies" style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '12px 24px',
+                            background: 'white',
+                            color: '#111827',
+                            borderRadius: '100px',
+                            textDecoration: 'none',
+                            fontWeight: 500,
+                            border: '1px solid #e5e7eb',
+                            transition: 'all 0.2s'
+                        }}>
+                            Lihat Semua Perusahaan <ChevronRight size={18} />
+                        </Link>
                     </div>
                 </div>
             </section>
 
-            {/* Footer */}
-            <footer className="bg-gray-900 text-white py-12 px-4">
-                <div className="max-w-7xl mx-auto text-center">
-                    <div className="flex items-center justify-center gap-2 mb-4">
-                        <Briefcase className="w-6 h-6" />
-                        <span className="text-xl font-bold">JobSeeker</span>
-                    </div>
-                    <p className="text-gray-400 mb-6">Platform pencarian kerja terpercaya di Indonesia</p>
-                    <div className="flex justify-center gap-8 text-gray-400 text-sm">
-                        <Link href="/about" className="hover:text-white transition">Tentang Kami</Link>
-                        <Link href="/companies" className="hover:text-white transition">Perusahaan</Link>
-                        <Link href="/jobs" className="hover:text-white transition">Lowongan</Link>
-                        <Link href="/contact" className="hover:text-white transition">Kontak</Link>
-                    </div>
-                    <div className="mt-8 pt-8 border-t border-gray-800 text-gray-500 text-sm">
-                        © 2025 JobSeeker. All rights reserved.
+            {/* CTA Section - Clean */}
+            <section style={{
+                padding: '8% 5%',
+                background: 'linear-gradient(135deg, #111827 0%, #1f2937 100%)'
+            }}>
+                <div style={{ 
+                    maxWidth: '1000px', 
+                    margin: '0 auto',
+                    textAlign: 'center'
+                }}>
+                    <h2 style={{
+                        fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
+                        fontWeight: 700,
+                        color: 'white',
+                        marginBottom: '16px'
+                    }}>
+                        Siap Memulai Karir Baru?
+                    </h2>
+                    <p style={{
+                        color: 'rgba(255,255,255,0.7)',
+                        marginBottom: '32px',
+                        maxWidth: '500px',
+                        margin: '0 auto 32px'
+                    }}>
+                        Daftar sekarang dan akses ribuan peluang kerja
+                    </p>
+                    <div style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        justifyContent: 'center',
+                        gap: '16px'
+                    }}>
+                        <Link href="/register/jobseeker" style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '14px 28px',
+                            background: '#3b82f6',
+                            color: 'white',
+                            borderRadius: '12px',
+                            textDecoration: 'none',
+                            fontWeight: 600,
+                            transition: 'all 0.2s'
+                        }}>
+                            Cari Kerja <ArrowRight size={18} />
+                        </Link>
+                        <Link href="/register/recruiter" style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '14px 28px',
+                            background: 'rgba(255,255,255,0.1)',
+                            color: 'white',
+                            borderRadius: '12px',
+                            textDecoration: 'none',
+                            fontWeight: 600,
+                            border: '1px solid rgba(255,255,255,0.2)',
+                            transition: 'all 0.2s'
+                        }}>
+                            <Building2 size={18} /> Pasang Lowongan
+                        </Link>
                     </div>
                 </div>
-            </footer>
+            </section>
+
 
             <style jsx>{`
-                @keyframes blob {
-                    0%, 100% { transform: translate(0, 0) scale(1); }
-                    25% { transform: translate(20px, -50px) scale(1.1); }
-                    50% { transform: translate(-20px, 20px) scale(0.9); }
-                    75% { transform: translate(50px, 50px) scale(1.05); }
-                }
-                .animate-blob {
-                    animation: blob 7s infinite;
-                }
-                .animation-delay-2000 {
-                    animation-delay: 2s;
+                @keyframes pulse {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.5; }
                 }
             `}</style>
         </div>

@@ -179,7 +179,7 @@ export async function POST(request) {
       
       for (const skillName of skills) {
         // Find or create skill
-        let skill = await prisma.skill.findFirst({
+        let skill = await prisma.skills.findFirst({
           where: {
             name: {
               equals: skillName,
@@ -189,13 +189,13 @@ export async function POST(request) {
         })
 
         if (!skill) {
-          skill = await prisma.skill.create({
+          skill = await prisma.skills.create({
             data: { name: skillName }
           })
         }
 
         // Link skill to job
-        await prisma.jobSkill.create({
+        await prisma.job_skills.create({
           data: {
             jobId: job.id,
             skillId: skill.id,
@@ -215,8 +215,9 @@ export async function POST(request) {
 
   } catch (error) {
     console.error('❌ Create job error:', error)
+    // Don't expose internal error details to users
     return NextResponse.json(
-      { error: 'Failed to create job posting: ' + error.message },
+      { error: 'Gagal membuat lowongan. Silakan coba lagi atau hubungi admin jika masalah berlanjut.' },
       { status: 500 }
     )
   }

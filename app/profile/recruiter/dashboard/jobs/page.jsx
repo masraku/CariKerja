@@ -424,7 +424,7 @@ export default function RecruiterJobsPage() {
                                     </button>
 
                                     <button
-                                        onClick={() => router.push(`/profile/recruiter/dashboard/jobs/${job.slug}`)}
+                                        onClick={() => router.push(`/jobs/${job.slug}`)}
                                         className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm"
                                     >
                                         <ExternalLink className="w-4 h-4" />

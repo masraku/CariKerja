@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import {
     User, Mail, Phone, MapPin, Calendar, Briefcase, GraduationCap,
     Award, FileText, Globe, Linkedin, Github, Edit, Download,
-    Star, Target, ExternalLink
+    Star, Target, ExternalLink, ArrowLeft
 } from 'lucide-react'
 
 const ViewProfilePage = () => {
@@ -49,7 +49,7 @@ const ViewProfilePage = () => {
         if (!dateString) return '-'
         return new Date(dateString).toLocaleDateString('id-ID', {
             year: 'numeric',
-            month: 'long'
+            month: 'short'
         })
     }
 
@@ -75,439 +75,430 @@ const ViewProfilePage = () => {
     }
 
     const getCompletenessColor = (val) => {
-        if (val >= 80) return 'text-green-600 bg-green-100'
-        if (val >= 50) return 'text-yellow-600 bg-yellow-100'
-        return 'text-red-600 bg-red-100'
+        if (val >= 80) return { bg: '#dcfce7', color: '#16a34a' }
+        if (val >= 50) return { bg: '#fef9c3', color: '#ca8a04' }
+        return { bg: '#fee2e2', color: '#dc2626' }
+    }
+
+    // Styles
+    const containerStyle = {
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #f0f4ff 0%, #faf5ff 100%)',
+        padding: '5% 4%'
+    }
+
+    const cardStyle = {
+        background: 'white',
+        borderRadius: '16px',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+        padding: 'clamp(20px, 4%, 32px)',
+        marginBottom: '24px'
+    }
+
+    const sectionTitleStyle = {
+        fontSize: 'clamp(1.1rem, 2vw, 1.25rem)',
+        fontWeight: 700,
+        color: '#111827',
+        marginBottom: '16px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px'
+    }
+
+    const labelStyle = {
+        fontSize: '13px',
+        color: '#6b7280',
+        marginBottom: '4px'
+    }
+
+    const valueStyle = {
+        fontSize: '14px',
+        fontWeight: 600,
+        color: '#111827'
+    }
+
+    const badgeStyle = {
+        display: 'inline-block',
+        padding: '6px 12px',
+        background: '#eef2ff',
+        color: '#4f46e5',
+        borderRadius: '100px',
+        fontSize: '13px',
+        fontWeight: 500
     }
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-indigo-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Memuat profile...</p>
+            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9fafb' }}>
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{ width: '48px', height: '48px', border: '4px solid #e5e7eb', borderTopColor: '#4f46e5', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
+                    <p style={{ color: '#6b7280' }}>Memuat profile...</p>
                 </div>
+                <style jsx>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
         )
     }
 
     if (!profile) return null
 
+    const completenessColors = getCompletenessColor(profile.profileCompleteness)
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12">
-            <div className="container mx-auto px-4 max-w-6xl">
+        <div style={containerStyle}>
+            <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
 
-                {/* HEADER */}
-                <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-                    <div className="flex justify-between items-start">
-                        <div className="flex gap-6">
-
-                            {/* PHOTO */}
-                            <div className="relative">
+                {/* Header Card */}
+                <div style={cardStyle}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '24px' }}>
+                        
+                        {/* Left: Photo + Info */}
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', flex: '1 1 300px' }}>
+                            {/* Photo */}
+                            <div style={{ position: 'relative' }}>
                                 {profile.photo ? (
                                     <img
                                         src={profile.photo}
                                         alt="Profile"
-                                        className="w-32 h-32 rounded-full object-cover border-4 border-indigo-200"
+                                        style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', border: '4px solid #e0e7ff' }}
                                     />
                                 ) : (
-                                    <div className="w-32 h-32 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center border-4 border-indigo-200">
-                                        <User className="w-16 h-16 text-indigo-400" />
+                                    <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: 'linear-gradient(135deg, #e0e7ff, #f3e8ff)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '4px solid #e0e7ff' }}>
+                                        <User size={40} color="#818cf8" />
                                     </div>
                                 )}
-
-                                <div className={`absolute -bottom-2 -right-2 px-3 py-1 rounded-full text-xs font-bold ${getCompletenessColor(profile.profileCompleteness)}`}>
+                                <div style={{
+                                    position: 'absolute',
+                                    bottom: '-4px',
+                                    right: '-4px',
+                                    padding: '4px 10px',
+                                    borderRadius: '100px',
+                                    fontSize: '12px',
+                                    fontWeight: 700,
+                                    background: completenessColors.bg,
+                                    color: completenessColors.color
+                                }}>
                                     {profile.profileCompleteness}%
                                 </div>
                             </div>
 
-                            {/* BASIC INFO */}
-                            <div>
-                                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                            {/* Info */}
+                            <div style={{ flex: 1 }}>
+                                <h1 style={{ fontSize: 'clamp(1.5rem, 3vw, 2rem)', fontWeight: 700, color: '#111827', marginBottom: '4px' }}>
                                     {profile.firstName} {profile.lastName}
                                 </h1>
-
                                 {profile.currentTitle && (
-                                    <p className="text-xl text-indigo-600 font-semibold mb-3">
+                                    <p style={{ fontSize: '1rem', color: '#4f46e5', fontWeight: 600, marginBottom: '12px' }}>
                                         {profile.currentTitle}
                                     </p>
                                 )}
-
-                                <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '14px', color: '#6b7280' }}>
                                     {profile.email && (
-                                        <div className="flex items-center gap-2">
-                                            <Mail className="w-4 h-4" />
-                                            {profile.email}
-                                        </div>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <Mail size={16} /> {profile.email}
+                                        </span>
                                     )}
-
                                     {profile.phone && (
-                                        <div className="flex items-center gap-2">
-                                            <Phone className="w-4 h-4" />
-                                            {profile.phone}
-                                        </div>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <Phone size={16} /> {profile.phone}
+                                        </span>
                                     )}
-
                                     {(profile.city && profile.province) && (
-                                        <div className="flex items-center gap-2">
-                                            <MapPin className="w-4 h-4" />
-                                            {profile.city}, {profile.province}
-                                        </div>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <MapPin size={16} /> {profile.city}, {profile.province}
+                                        </span>
                                     )}
-
                                     {profile.dateOfBirth && (
-                                        <div className="flex items-center gap-2">
-                                            <Calendar className="w-4 h-4" />
-                                            {calculateAge(profile.dateOfBirth)} tahun
-                                        </div>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <Calendar size={16} /> {calculateAge(profile.dateOfBirth)} tahun
+                                        </span>
                                     )}
                                 </div>
 
-                                {/* SOCIAL LINKS */}
-                                {(profile.linkedinUrl ||
-                                    profile.githubUrl ||
-                                    profile.portfolioUrl ||
-                                    profile.websiteUrl) && (
-                                        <div className="flex gap-3 mt-4">
-
-                                            {profile.linkedinUrl && (
-                                                <a
-                                                    href={profile.linkedinUrl}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition"
-                                                >
-                                                    <Linkedin className="w-5 h-5" />
-                                                </a>
-                                            )}
-
-                                            {profile.githubUrl && (
-                                                <a
-                                                    href={profile.githubUrl}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
-                                                >
-                                                    <Github className="w-5 h-5" />
-                                                </a>
-                                            )}
-
-                                            {profile.portfolioUrl && (
-                                                <a
-                                                    href={profile.portfolioUrl}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="p-2 bg-indigo-100 text-indigo-600 rounded-lg hover:bg-indigo-200 transition"
-                                                >
-                                                    <Globe className="w-5 h-5" />
-                                                </a>
-                                            )}
-
-                                            {profile.websiteUrl && (
-                                                <a
-                                                    href={profile.websiteUrl}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="p-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition"
-                                                >
-                                                    <Globe className="w-5 h-5" />
-                                                </a>
-                                            )}
-
-                                        </div>
-                                    )}
+                                {/* Social Links */}
+                                {(profile.linkedinUrl || profile.githubUrl || profile.portfolioUrl) && (
+                                    <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
+                                        {profile.linkedinUrl && (
+                                            <a href={profile.linkedinUrl} target="_blank" rel="noopener noreferrer"
+                                                style={{ padding: '8px', background: '#dbeafe', borderRadius: '8px', color: '#2563eb' }}>
+                                                <Linkedin size={18} />
+                                            </a>
+                                        )}
+                                        {profile.githubUrl && (
+                                            <a href={profile.githubUrl} target="_blank" rel="noopener noreferrer"
+                                                style={{ padding: '8px', background: '#f3f4f6', borderRadius: '8px', color: '#374151' }}>
+                                                <Github size={18} />
+                                            </a>
+                                        )}
+                                        {profile.portfolioUrl && (
+                                            <a href={profile.portfolioUrl} target="_blank" rel="noopener noreferrer"
+                                                style={{ padding: '8px', background: '#e0e7ff', borderRadius: '8px', color: '#4f46e5' }}>
+                                                <Globe size={18} />
+                                            </a>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
-                        {/* EDIT BUTTON */}
-                        <button
-                            onClick={() => router.push('/profile/jobseeker?mode=edit')}
-                            className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition font-semibold shadow-lg hover:shadow-xl"
-                        >
-                            <Edit className="w-5 h-5" />
-                            Edit Profile
-                        </button>
+                        {/* Right: Action Buttons */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            <button
+                                onClick={() => router.push('/profile/jobseeker/dashboard')}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    padding: '12px 24px',
+                                    background: '#f3f4f6',
+                                    color: '#374151',
+                                    borderRadius: '10px',
+                                    border: 'none',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    fontSize: '14px'
+                                }}
+                            >
+                                <ArrowLeft size={18} />
+                                Dashboard
+                            </button>
+                            <button
+                                onClick={() => router.push('/profile/jobseeker?mode=edit')}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    padding: '12px 24px',
+                                    background: '#4f46e5',
+                                    color: 'white',
+                                    borderRadius: '10px',
+                                    border: 'none',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    fontSize: '14px'
+                                }}
+                            >
+                                <Edit size={18} />
+                                Edit Profile
+                            </button>
+                            <button
+                                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    padding: '12px 24px',
+                                    background: '#10b981',
+                                    color: 'white',
+                                    borderRadius: '10px',
+                                    border: 'none',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    fontSize: '14px'
+                                }}
+                            >
+                                <User size={18} />
+                                Lihat Profile
+                            </button>
+                        </div>
                     </div>
 
-                    {/* CV DOWNLOAD */}
+                    {/* CV Download */}
                     {profile.cvUrl && (
-                        <div className="mt-6 pt-6 border-t border-gray-200">
+                        <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
                             <a
                                 href={profile.cvUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-green-100 text-green-700 rounded-xl hover:bg-green-200 transition font-semibold"
+                                style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    padding: '12px 20px',
+                                    background: '#dcfce7',
+                                    color: '#16a34a',
+                                    borderRadius: '10px',
+                                    textDecoration: 'none',
+                                    fontWeight: 600,
+                                    fontSize: '14px'
+                                }}
                             >
-                                <Download className="w-5 h-5" />
-                                Download CV / Resume
+                                <Download size={18} />
+                                Download CV
                             </a>
                         </div>
                     )}
                 </div>
 
-                {/* GRID CONTENT */}
-                <div className="grid md:grid-cols-3 gap-8">
-
-                    {/* LEFT SIDE */}
-                    <div className="space-y-8">
-
-                        {/* PERSONAL INFO */}
-                        <div className="bg-white rounded-2xl shadow-lg p-6">
-                            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <User className="w-6 h-6 text-indigo-600" />
+                {/* Grid Content */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+                    
+                    {/* Left Column */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                        
+                        {/* Personal Info */}
+                        <div style={cardStyle}>
+                            <h2 style={sectionTitleStyle}>
+                                <User size={20} color="#4f46e5" />
                                 Informasi Pribadi
                             </h2>
-                            <div className="space-y-3 text-sm">
+                            <div style={{ display: 'grid', gap: '12px' }}>
                                 {profile.gender && (
-                                    <div>
-                                        <p className="text-gray-500">Jenis Kelamin</p>
-                                        <p className="font-semibold text-gray-900">{profile.gender}</p>
-                                    </div>
+                                    <div><p style={labelStyle}>Jenis Kelamin</p><p style={valueStyle}>{profile.gender}</p></div>
                                 )}
                                 {profile.religion && (
-                                    <div>
-                                        <p className="text-gray-500">Agama</p>
-                                        <p className="font-semibold text-gray-900">{profile.religion}</p>
-                                    </div>
+                                    <div><p style={labelStyle}>Agama</p><p style={valueStyle}>{profile.religion}</p></div>
                                 )}
                                 {profile.maritalStatus && (
-                                    <div>
-                                        <p className="text-gray-500">Status Pernikahan</p>
-                                        <p className="font-semibold text-gray-900">{profile.maritalStatus}</p>
-                                    </div>
+                                    <div><p style={labelStyle}>Status</p><p style={valueStyle}>{profile.maritalStatus}</p></div>
                                 )}
                                 {profile.nationality && (
-                                    <div>
-                                        <p className="text-gray-500">Kewarganegaraan</p>
-                                        <p className="font-semibold text-gray-900">{profile.nationality}</p>
-                                    </div>
+                                    <div><p style={labelStyle}>Kewarganegaraan</p><p style={valueStyle}>{profile.nationality}</p></div>
                                 )}
                             </div>
                         </div>
 
-                        {/* JOB PREFERENCES */}
-                        <div className="bg-white rounded-2xl shadow-lg p-6">
-                            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <Target className="w-6 h-6 text-indigo-600" />
-                                Preferensi Pekerjaan
+                        {/* Job Preferences */}
+                        <div style={cardStyle}>
+                            <h2 style={sectionTitleStyle}>
+                                <Target size={20} color="#4f46e5" />
+                                Preferensi Kerja
                             </h2>
-                            <div className="space-y-3 text-sm">
+                            <div style={{ display: 'grid', gap: '12px' }}>
                                 {profile.desiredJobTitle && (
-                                    <div>
-                                        <p className="text-gray-500">Posisi yang Diinginkan</p>
-                                        <p className="font-semibold text-gray-900">{profile.desiredJobTitle}</p>
-                                    </div>
+                                    <div><p style={labelStyle}>Posisi Diinginkan</p><p style={valueStyle}>{profile.desiredJobTitle}</p></div>
                                 )}
-
                                 {profile.preferredJobType && (
-                                    <div>
-                                        <p className="text-gray-500">Tipe Pekerjaan</p>
-                                        <p className="font-semibold text-gray-900">{profile.preferredJobType}</p>
-                                    </div>
+                                    <div><p style={labelStyle}>Tipe Pekerjaan</p><p style={valueStyle}>{profile.preferredJobType}</p></div>
                                 )}
-
                                 {(profile.desiredSalaryMin || profile.desiredSalaryMax) && (
-                                    <div>
-                                        <p className="text-gray-500">Ekspektasi Gaji</p>
-                                        <p className="font-semibold text-gray-900">
-                                            {formatCurrency(profile.desiredSalaryMin)} - {formatCurrency(profile.desiredSalaryMax)}
-                                        </p>
-                                    </div>
+                                    <div><p style={labelStyle}>Ekspektasi Gaji</p><p style={valueStyle}>{formatCurrency(profile.desiredSalaryMin)} - {formatCurrency(profile.desiredSalaryMax)}</p></div>
                                 )}
-
                                 {profile.preferredLocation && (
-                                    <div>
-                                        <p className="text-gray-500">Lokasi Preferensi</p>
-                                        <p className="font-semibold text-gray-900">{profile.preferredLocation}</p>
-                                    </div>
+                                    <div><p style={labelStyle}>Lokasi</p><p style={valueStyle}>{profile.preferredLocation}</p></div>
                                 )}
-
-                                <div>
-                                    <p className="text-gray-500">Bersedia Relokasi</p>
-                                    <p className="font-semibold text-gray-900">
-                                        {profile.willingToRelocate ? 'Ya' : 'Tidak'}
-                                    </p>
-                                </div>
+                                <div><p style={labelStyle}>Bersedia Relokasi</p><p style={valueStyle}>{profile.willingToRelocate ? 'Ya' : 'Tidak'}</p></div>
                             </div>
                         </div>
 
-                        {/* SKILLS */}
+                        {/* Skills */}
                         {profile.skills?.length > 0 && (
-                            <div className="bg-white rounded-2xl shadow-lg p-6">
-                                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <Star className="w-6 h-6 text-indigo-600" />
+                            <div style={cardStyle}>
+                                <h2 style={sectionTitleStyle}>
+                                    <Star size={20} color="#4f46e5" />
                                     Skills
                                 </h2>
-                                <div className="flex flex-wrap gap-2">
-                                    {profile.skills.map((skill, index) => (
-                                        <span
-                                            key={index}
-                                            className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium"
-                                        >
-                                            {skill.name}
-                                        </span>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                    {profile.skills.map((skill, i) => (
+                                        <span key={i} style={badgeStyle}>{skill.name}</span>
                                     ))}
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    {/* RIGHT SIDE */}
-                    <div className="md:col-span-2 space-y-8">
-
-                        {/* SUMMARY */}
+                    {/* Right Column */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                        
+                        {/* Summary */}
                         {profile.summary && (
-                            <div className="bg-white rounded-2xl shadow-lg p-6">
-                                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <FileText className="w-6 h-6 text-indigo-600" />
-                                    Ringkasan Profesional
+                            <div style={cardStyle}>
+                                <h2 style={sectionTitleStyle}>
+                                    <FileText size={20} color="#4f46e5" />
+                                    Ringkasan
                                 </h2>
-                                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                                <p style={{ color: '#374151', lineHeight: 1.7, whiteSpace: 'pre-wrap', fontSize: '14px' }}>
                                     {profile.summary}
                                 </p>
                             </div>
                         )}
 
-                        {/* EDUCATION */}
+                        {/* Education */}
                         {profile.educations?.length > 0 && (
-                            <div className="bg-white rounded-2xl shadow-lg p-6">
-                                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <GraduationCap className="w-6 h-6 text-indigo-600" />
-                                    Riwayat Pendidikan
+                            <div style={cardStyle}>
+                                <h2 style={sectionTitleStyle}>
+                                    <GraduationCap size={20} color="#4f46e5" />
+                                    Pendidikan
                                 </h2>
-                                <div className="space-y-6">
-                                    {profile.educations.map((edu, index) => (
-                                        <div key={index} className="border-l-4 border-indigo-600 pl-4">
-                                            <h3 className="font-bold text-gray-900">
-                                                {edu.degree} - {edu.fieldOfStudy}
-                                            </h3>
-                                            <p className="text-indigo-600 font-semibold">{edu.institution}</p>
-                                            <p className="text-sm text-gray-600 mt-1">
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                    {profile.educations.map((edu, i) => (
+                                        <div key={i} style={{ borderLeft: '3px solid #4f46e5', paddingLeft: '16px' }}>
+                                            <h3 style={{ fontWeight: 600, color: '#111827', marginBottom: '2px' }}>{edu.degree} - {edu.fieldOfStudy}</h3>
+                                            <p style={{ color: '#4f46e5', fontWeight: 500, fontSize: '14px' }}>{edu.institution}</p>
+                                            <p style={{ color: '#6b7280', fontSize: '13px', marginTop: '4px' }}>
                                                 {edu.level} • {formatMonthYear(edu.startDate)} - {edu.isCurrent ? 'Sekarang' : formatMonthYear(edu.endDate)}
                                             </p>
-
-                                            {edu.gpa && (
-                                                <p className="text-sm text-gray-600">IPK: {edu.gpa}</p>
-                                            )}
-
-                                            {edu.diplomaUrl && (
-                                                <a
-                                                    href={edu.diplomaUrl}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-700 mt-2"
-                                                >
-                                                    <FileText className="w-4 h-4" />
-                                                    Lihat Ijazah
-                                                </a>
-                                            )}
+                                            {edu.gpa && <p style={{ color: '#6b7280', fontSize: '13px' }}>IPK: {edu.gpa}</p>}
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         )}
 
-                        {/* EXPERIENCE */}
+                        {/* Experience */}
                         {profile.work_experiences?.length > 0 && profile.work_experiences[0].company && (
-                            <div className="bg-white rounded-2xl shadow-lg p-6">
-                                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <Briefcase className="w-6 h-6 text-indigo-600" />
-                                    Pengalaman Kerja
+                            <div style={cardStyle}>
+                                <h2 style={sectionTitleStyle}>
+                                    <Briefcase size={20} color="#4f46e5" />
+                                    Pengalaman
                                 </h2>
-                                <div className="space-y-6">
-                                    {profile.work_experiences.map((exp, index) => (
-                                        <div key={index} className="border-l-4 border-indigo-600 pl-4">
-                                            <h3 className="font-bold text-gray-900">{exp.position}</h3>
-                                            <p className="text-indigo-600 font-semibold">{exp.company}</p>
-                                            <p className="text-sm text-gray-600 mt-1">
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                    {profile.work_experiences.map((exp, i) => (
+                                        <div key={i} style={{ borderLeft: '3px solid #4f46e5', paddingLeft: '16px' }}>
+                                            <h3 style={{ fontWeight: 600, color: '#111827', marginBottom: '2px' }}>{exp.position}</h3>
+                                            <p style={{ color: '#4f46e5', fontWeight: 500, fontSize: '14px' }}>{exp.company}</p>
+                                            <p style={{ color: '#6b7280', fontSize: '13px', marginTop: '4px' }}>
                                                 {exp.location} • {formatMonthYear(exp.startDate)} - {exp.isCurrent ? 'Sekarang' : formatMonthYear(exp.endDate)}
                                             </p>
-
-                                            {exp.description && (
-                                                <p className="text-gray-700 mt-2">{exp.description}</p>
-                                            )}
-
-                                            {exp.achievements?.length > 0 && (
-                                                <div className="mt-2">
-                                                    <p className="text-sm font-semibold text-gray-700 mb-1">
-                                                        Pencapaian:
-                                                    </p>
-                                                    <ul className="list-disc list-inside space-y-1">
-                                                        {exp.achievements.map((ach, idx) => (
-                                                            <li key={idx} className="text-sm text-gray-600">
-                                                                {ach}
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            )}
+                                            {exp.description && <p style={{ color: '#374151', fontSize: '14px', marginTop: '8px' }}>{exp.description}</p>}
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         )}
 
-                        {/* CERTIFICATIONS */}
+                        {/* Certifications */}
                         {profile.certifications?.length > 0 && profile.certifications[0].name && (
-                            <div className="bg-white rounded-2xl shadow-lg p-6">
-                                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <Award className="w-6 h-6 text-indigo-600" />
-                                    Sertifikat & Pelatihan
+                            <div style={cardStyle}>
+                                <h2 style={sectionTitleStyle}>
+                                    <Award size={20} color="#4f46e5" />
+                                    Sertifikat
                                 </h2>
-
-                                <div className="space-y-4">
-                                    {profile.certifications.map((cert, index) => (
-                                        <div key={index} className="border border-gray-200 rounded-lg p-4">
-                                            <h3 className="font-bold text-gray-900">{cert.name}</h3>
-                                            <p className="text-indigo-600">{cert.issuingOrganization}</p>
-                                            <p className="text-sm text-gray-600 mt-1">
-                                                Terbit: {formatMonthYear(cert.issueDate)}
-                                                {cert.expiryDate && ` • Berlaku hingga: ${formatMonthYear(cert.expiryDate)}`}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {profile.certifications.map((cert, i) => (
+                                        <div key={i} style={{ padding: '12px', border: '1px solid #e5e7eb', borderRadius: '10px' }}>
+                                            <h3 style={{ fontWeight: 600, color: '#111827', marginBottom: '2px' }}>{cert.name}</h3>
+                                            <p style={{ color: '#4f46e5', fontSize: '14px' }}>{cert.issuingOrganization}</p>
+                                            <p style={{ color: '#6b7280', fontSize: '13px', marginTop: '4px' }}>
+                                                {formatMonthYear(cert.issueDate)}
+                                                {cert.expiryDate && ` - ${formatMonthYear(cert.expiryDate)}`}
                                             </p>
-                                            {cert.credentialId && (
-                                                <p className="text-sm text-gray-600">ID: {cert.credentialId}</p>
-                                            )}
-
-                                            <div className="flex gap-3 mt-3">
-                                                {cert.credentialUrl && (
-                                                    <a
-                                                        href={cert.credentialUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-700"
-                                                    >
-                                                        <ExternalLink className="w-4 h-4" />
-                                                        Verifikasi
-                                                    </a>
-                                                )}
-
-                                                {cert.certificateUrl && (
-                                                    <a
-                                                        href={cert.certificateUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-700"
-                                                    >
-                                                        <FileText className="w-4 h-4" />
-                                                        Lihat Sertifikat
-                                                    </a>
-                                                )}
-                                            </div>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         )}
-
                     </div>
                 </div>
 
-                {/* BACK BUTTON */}
-                <div className="mt-8 text-center">
+                {/* Back Button */}
+                <div style={{ textAlign: 'center', marginTop: '32px' }}>
                     <button
                         onClick={() => router.push('/profile/jobseeker/dashboard')}
-                        className="px-8 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition font-semibold"
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '12px 24px',
+                            background: '#f3f4f6',
+                            color: '#374151',
+                            borderRadius: '10px',
+                            border: 'none',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            fontSize: '14px'
+                        }}
                     >
+                        <ArrowLeft size={18} />
                         Kembali ke Dashboard
                     </button>
                 </div>

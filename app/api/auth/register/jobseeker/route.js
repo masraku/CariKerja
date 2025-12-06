@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { v4 as uuidv4 } from 'uuid'
 
 export async function POST(request) {
   try {
@@ -35,25 +36,31 @@ export async function POST(request) {
     const firstName = nameParts[0]
     const lastName = nameParts.slice(1).join(' ') || ''
 
+    const now = new Date()
+
     // Buat user dan jobseeker profile
     const user = await prisma.users.create({
       data: {
+        id: uuidv4(),
         email,
         password: hashedPassword,
         role: 'JOBSEEKER',
         emailVerified: false,
+        updatedAt: now,
         jobseekers: {
           create: {
+            id: uuidv4(),
             firstName,
             lastName,
             phone,
             profileCompleted: false,
-            profileCompleteness: 0
+            profileCompleteness: 0,
+            updatedAt: now
           }
         }
       },
       include: {
-        jobseeker: true
+        jobseekers: true
       }
     })
 
@@ -70,7 +77,7 @@ export async function POST(request) {
   } catch (error) {
     console.error('Registration error:', error)
     return NextResponse.json(
-      { error: 'Terjadi kesalahan saat registrasi' },
+      { error: error.message || 'Terjadi kesalahan saat registrasi' },
       { status: 500 }
     )
   }

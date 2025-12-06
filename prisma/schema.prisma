@@ -187,7 +187,7 @@ model interviews {
 }
 
 model job_skills {
-  id               String   @id
+  id               String   @id @default(cuid())
   jobId            String
   skillId          String
   isRequired       Boolean  @default(true)
@@ -202,7 +202,7 @@ model job_skills {
 }
 
 model jobs {
-  id                  String          @id
+  id                  String          @id @default(cuid())
   companyId           String
   recruiterId         String
   title               String
@@ -240,7 +240,7 @@ model jobs {
   publishedAt         DateTime?
   closedAt            DateTime?
   createdAt           DateTime        @default(now())
-  updatedAt           DateTime
+  updatedAt           DateTime        @updatedAt
   applications        applications[]
   interviews          interviews[]
   job_skills          job_skills[]
@@ -485,7 +485,7 @@ model settings {
 }
 
 model skills {
-  id               String             @id
+  id               String             @id @default(cuid())
   name             String             @unique
   category         String?
   createdAt        DateTime           @default(now())

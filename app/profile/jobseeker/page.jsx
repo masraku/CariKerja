@@ -1862,10 +1862,20 @@ function JobseekerProfileContent() {
             {/* Step 7: Job Preferences */}
             {currentStep === 7 && (
               <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                  <FileText className="w-7 h-7 text-indigo-600" />
-                  Preferensi Pekerjaan
-                </h2>
+                <div className="mb-6">
+                  <div className="flex items-center gap-3 mb-2">
+                    <FileText className="w-7 h-7 text-indigo-600" />
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      Preferensi Pekerjaan
+                    </h2>
+                    <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
+                      Opsional
+                    </span>
+                  </div>
+                  <p className="text-gray-500 text-sm ml-10">
+                    Bagian ini opsional. Anda bisa langsung klik "Simpan Profile" atau isi preferensi untuk hasil pencarian yang lebih akurat.
+                  </p>
+                </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="md:col-span-2">

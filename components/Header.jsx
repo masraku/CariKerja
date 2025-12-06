@@ -1,22 +1,19 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const { user, logout, isAuthenticated } = useAuth()
-  const router = useRouter()
 
   useEffect(() => {
-    console.log('👤 Header User State:', user)
-    if (user?.recruiter) {
-        console.log('🏢 Recruiter Companies:', user.recruiter.companies)
-        console.log('📸 Recruiter Photo:', user.recruiter.photoUrl)
-    }
-  }, [user])
+    const handleScroll = () => setScrolled(window.scrollY > 10)
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const handleLogout = () => {
     logout()
@@ -24,7 +21,6 @@ const Header = () => {
     setIsMenuOpen(false)
   }
 
-  // Helper to get recruiter profile
   const getRecruiter = () => {
     if (user?.recruiter) return user.recruiter
     if (Array.isArray(user?.recruiters) && user.recruiters.length > 0) return user.recruiters[0]
@@ -32,15 +28,15 @@ const Header = () => {
     return null
   }
 
-  // Helper to get jobseeker profile
   const getJobseeker = () => {
     if (user?.jobseekers && typeof user.jobseekers === 'object') return user.jobseekers
     if (user?.jobseeker) return user.jobseeker
     return null
   }
 
-  // Helper to get company profile
   const getCompany = (recruiter) => {
+    // API stores company at user.company directly
+    if (user?.company) return user.company
     if (!recruiter) return null
     if (recruiter.company) return recruiter.company
     if (Array.isArray(recruiter.companies) && recruiter.companies.length > 0) return recruiter.companies[0]
@@ -48,545 +44,448 @@ const Header = () => {
     return null
   }
 
-  // Get user's display name
   const getUserName = () => {
     if (!user) return 'User'
-    
     const jobseeker = getJobseeker()
-    if (user.role === 'JOBSEEKER' && jobseeker) {
-      return jobseeker.firstName || 'User'
-    }
-    
-    const recruiter = getRecruiter()
-    if (user.role === 'RECRUITER' && recruiter) {
-      // Prioritize Company Name for Recruiter greeting
+    if (user.role === 'JOBSEEKER' && jobseeker) return jobseeker.firstName || 'User'
+    if (user.role === 'RECRUITER') {
+      const recruiter = getRecruiter()
       const company = getCompany(recruiter)
-      if (company?.name) {
-        return company.name
-      }
-      return recruiter.firstName || 'User'
+      if (company?.name) return company.name
+      if (recruiter?.firstName) return recruiter.firstName
     }
-    
     return user.email?.split('@')[0] || 'User'
   }
 
-  // Get user's full name
-  const getUserFullName = () => {
-    if (!user) return 'User'
-    
-    const jobseeker = getJobseeker()
-    if (user.role === 'JOBSEEKER' && jobseeker) {
-      return `${jobseeker.firstName || ''} ${jobseeker.lastName || ''}`.trim()
-    }
-    
-    const recruiter = getRecruiter()
-    if (user.role === 'RECRUITER' && recruiter) {
-      return `${recruiter.firstName || ''} ${recruiter.lastName || ''}`.trim()
-    }
-    
-    return user.email?.split('@')[0] || 'User'
-  }
-
-  // Get user role display
-  const getUserRoleDisplay = () => {
-    if (!user) return ''
-    
-    const roleMap = {
-      'JOBSEEKER': 'Pencari Kerja',
-      'RECRUITER': 'Recruiter',
-      'ADMIN': 'Administrator'
-    }
-    
-    return roleMap[user.role] || user.role
-  }
-
-  // Get user photo
   const getUserPhoto = () => {
     if (!user) return null
-    
     const jobseeker = getJobseeker()
-    if (user.role === 'JOBSEEKER' && jobseeker?.photo) {
-      return jobseeker.photo
+    if (user.role === 'JOBSEEKER' && jobseeker?.photo) return jobseeker.photo
+    if (user.role === 'RECRUITER') {
+      // Check company logo first (API stores at user.company)
+      if (user.company?.logo) return user.company.logo
+      const recruiter = getRecruiter()
+      if (recruiter?.photoUrl) return recruiter.photoUrl
+      const company = getCompany(recruiter)
+      if (company?.logo) return company.logo
     }
-    
-    const recruiter = getRecruiter()
-    if (user.role === 'RECRUITER' && recruiter) {
-        // Prioritize Recruiter Personal Photo
-        if (recruiter.photoUrl) {
-            return recruiter.photoUrl
-        }
-        // Fallback to Company Logo
-        const company = getCompany(recruiter)
-        if (company?.logo) {
-            return company.logo
-        }
-    }
-    
     return null
   }
 
-  return (
-    <header className="bg-white shadow-md sticky top-0 z-50">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2">
-              <svg className="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-              </svg>
-              <span className="text-xl font-bold text-gray-800">JobSeeker</span>
-            </Link>
-          </div>
+  const getRoleDisplay = () => {
+    const map = { 'JOBSEEKER': 'Pencari Kerja', 'RECRUITER': 'Perusahaan', 'ADMIN': 'Admin' }
+    return map[user?.role] || ''
+  }
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/jobs" className="text-gray-600 hover:text-blue-600 transition-colors">
-              Cari Lowongan
+  const getDashboardLink = () => {
+    if (user?.role === 'JOBSEEKER') return '/profile/jobseeker/dashboard'
+    if (user?.role === 'RECRUITER') return '/profile/recruiter/dashboard'
+    return '/'
+  }
+
+  // Styles
+  const headerStyle = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+    background: scrolled ? 'rgba(255,255,255,0.95)' : 'transparent',
+    backdropFilter: scrolled ? 'blur(20px)' : 'none',
+    borderBottom: scrolled ? '1px solid rgba(0,0,0,0.05)' : 'none',
+    transition: 'all 0.3s ease'
+  }
+
+  const containerStyle = {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: '0 5%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    height: '72px'
+  }
+
+  const logoStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    textDecoration: 'none',
+    fontWeight: 700,
+    fontSize: '1.25rem',
+    color: '#111827'
+  }
+
+  const navStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '32px'
+  }
+
+  const navLinkStyle = {
+    color: '#6b7280',
+    textDecoration: 'none',
+    fontSize: '15px',
+    fontWeight: 500,
+    transition: 'color 0.2s'
+  }
+
+  const buttonPrimary = {
+    padding: '10px 20px',
+    background: '#111827',
+    color: 'white',
+    borderRadius: '8px',
+    border: 'none',
+    fontSize: '14px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    textDecoration: 'none',
+    transition: 'all 0.2s'
+  }
+
+  const buttonSecondary = {
+    padding: '10px 20px',
+    background: 'transparent',
+    color: '#111827',
+    borderRadius: '8px',
+    border: '1px solid #e5e7eb',
+    fontSize: '14px',
+    fontWeight: 500,
+    cursor: 'pointer',
+    textDecoration: 'none',
+    transition: 'all 0.2s'
+  }
+
+  const avatarStyle = {
+    width: '36px',
+    height: '36px',
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
+    color: 'white',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '14px',
+    fontWeight: 600,
+    overflow: 'hidden',
+    cursor: 'pointer'
+  }
+
+  const dropdownStyle = {
+    position: 'absolute',
+    top: 'calc(100% + 8px)',
+    right: 0,
+    width: '240px',
+    background: 'white',
+    borderRadius: '12px',
+    boxShadow: '0 10px 40px rgba(0,0,0,0.12)',
+    border: '1px solid #e5e7eb',
+    overflow: 'hidden',
+    zIndex: 200
+  }
+
+  const dropdownItemStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '12px 16px',
+    color: '#374151',
+    textDecoration: 'none',
+    fontSize: '14px',
+    transition: 'background 0.2s'
+  }
+
+  const mobileMenuStyle = {
+    position: 'fixed',
+    top: '72px',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'white',
+    padding: '24px 5%',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    zIndex: 99
+  }
+
+  const hamburgerStyle = {
+    display: 'none',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '8px'
+  }
+
+  return (
+    <>
+      <header style={headerStyle}>
+        <div style={containerStyle}>
+          {/* Logo */}
+          <Link href="/" style={logoStyle}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5">
+              <path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
+              <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+            </svg>
+            <span>JobSeeker</span>
+          </Link>
+
+          {/* Desktop Nav */}
+          <nav style={navStyle} className="desktop-nav">
+            <Link href="/jobs" style={navLinkStyle} 
+              onMouseOver={(e) => e.target.style.color = '#111827'}
+              onMouseOut={(e) => e.target.style.color = '#6b7280'}>
+              Lowongan
             </Link>
-            <Link href="/companies" className="text-gray-600 hover:text-blue-600 transition-colors">
+            <Link href="/companies" style={navLinkStyle}
+              onMouseOver={(e) => e.target.style.color = '#111827'}
+              onMouseOut={(e) => e.target.style.color = '#6b7280'}>
               Perusahaan
             </Link>
-            <Link href="/warning" className="text-gray-600 hover:text-blue-600 transition-colors">
-              Wajib Baca
+            <Link href="/about" style={navLinkStyle}
+              onMouseOver={(e) => e.target.style.color = '#111827'}
+              onMouseOut={(e) => e.target.style.color = '#6b7280'}>
+              Tentang
             </Link>
-            <Link href="/about" className="text-gray-600 hover:text-blue-600 transition-colors">
-              Tentang Kami
+            <Link href="/warning" style={{ ...navLinkStyle, color: '#dc2626' }}
+              onMouseOver={(e) => e.target.style.color = '#b91c1c'}
+              onMouseOut={(e) => e.target.style.color = '#dc2626'}>
+              ⚠️ S&K
             </Link>
           </nav>
 
-          {/* Auth Section - Desktop */}
-          <div className="hidden md:flex items-center space-x-4">
+          {/* Auth Section Desktop */}
+          <div style={{ ...navStyle, gap: '12px' }} className="desktop-auth">
             {!isAuthenticated ? (
               <>
-                {/* Login Dropdown */}
-                <div className="relative">
-                  <button
-                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="text-gray-600 hover:text-blue-600 font-medium transition-colors flex items-center space-x-1"
-                  >
-                    <span>Masuk</span>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-
-                  {isDropdownOpen && (
-                    <>
-                      {/* Overlay untuk close dropdown */}
-                      <div 
-                        className="fixed inset-0 z-10" 
-                        onClick={() => setIsDropdownOpen(false)}
-                      ></div>
-                      
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 border border-gray-100 z-20">
-                        <Link
-                          href="/login?role=jobseeker"
-                          onClick={() => setIsDropdownOpen(false)}
-                          className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
-                        >
-                          👤 Pencari Kerja
-                        </Link>
-                        <Link
-                          href="/login?role=recruiter"
-                          onClick={() => setIsDropdownOpen(false)}
-                          className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
-                        >
-                          🏢 Perusahaan
-                        </Link>
-                        <hr className="my-2 border-gray-100" />
-                        <Link
-                          href="/login?role=admin"
-                          onClick={() => setIsDropdownOpen(false)}
-                          className="block px-4 py-2 text-gray-700 hover:bg-gray-50"
-                        >
-                          ⚙️ Admin
-                        </Link>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {/* Register Button */}
-                <Link 
-                  href="/register" 
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                >
-                  Daftar
+                <Link href="/login" style={buttonSecondary}
+                  onMouseOver={(e) => e.target.style.background = '#f9fafb'}
+                  onMouseOut={(e) => e.target.style.background = 'transparent'}>
+                  Masuk
                 </Link>
-
-                {/* Post Job Button */}
-                <Link 
-                  href="/login?role=recruiter&action=post-job" 
-                  className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium"
-                >
-                  Pasang Lowongan
+                <Link href="/register" style={buttonPrimary}
+                  onMouseOver={(e) => e.target.style.background = '#374151'}
+                  onMouseOut={(e) => e.target.style.background = '#111827'}>
+                  Daftar
                 </Link>
               </>
             ) : (
-              <>
-                {/* Greeting & User Profile Dropdown */}
-                <div className="relative">
-                  <button
-                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="flex items-center space-x-3 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <span className="text-gray-600 text-sm">Hi,</span>
-                      <span className="font-semibold text-gray-900">{getUserName()}</span>
-                    </div>
-                    
-                    {/* Avatar with Photo */}
-                    <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold shadow-md overflow-hidden">
-                      {getUserPhoto() ? (
-                        <img 
-                          src={getUserPhoto()} 
-                          alt={getUserName()}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        getUserName().charAt(0).toUpperCase()
-                      )}
-                    </div>
+              <div style={{ position: 'relative' }}>
+                <div 
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '4px' }}
+                >
+                  <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: 500 }}>
+                    {getUserName()}
+                  </span>
+                  <div style={avatarStyle}>
+                    {getUserPhoto() ? (
+                      <img src={getUserPhoto()} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      getUserName().charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"
+                    style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>
+                    <path d="M6 9l6 6 6-6"/>
+                  </svg>
+                </div>
 
-                    <svg 
-                      className={`w-4 h-4 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-
-                  {isDropdownOpen && (
-                    <>
-                      {/* Overlay untuk close dropdown */}
-                      <div 
-                        className="fixed inset-0 z-10" 
-                        onClick={() => setIsDropdownOpen(false)}
-                      ></div>
-                      
-                      <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl py-2 border border-gray-100 z-20">
-                        {/* User Info Header */}
-                        <div className="px-4 py-3 border-b border-gray-100">
-                          <div className="flex items-center gap-3 mb-2">
-                            {/* Avatar in dropdown */}
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md overflow-hidden flex-shrink-0">
-                              {getUserPhoto() ? (
-                                <img 
-                                  src={getUserPhoto()} 
-                                  alt={getUserName()}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                getUserName().charAt(0).toUpperCase()
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-semibold text-gray-900">{getUserFullName()}</p>
-                              <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                            </div>
+                {isDropdownOpen && (
+                  <>
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 150 }} onClick={() => setIsDropdownOpen(false)} />
+                    <div style={dropdownStyle}>
+                      {/* User Info */}
+                      <div style={{ padding: '16px', borderBottom: '1px solid #f3f4f6', background: '#fafafa' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{ ...avatarStyle, width: '44px', height: '44px', fontSize: '16px' }}>
+                            {getUserPhoto() ? (
+                              <img src={getUserPhoto()} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                              getUserName().charAt(0).toUpperCase()
+                            )}
                           </div>
                           <div>
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              {getUserRoleDisplay()}
-                            </span>
+                            <div style={{ fontWeight: 600, color: '#111827', fontSize: '14px' }}>{getUserName()}</div>
+                            <div style={{ fontSize: '12px', color: '#6b7280' }}>{getRoleDisplay()}</div>
                           </div>
                         </div>
+                      </div>
 
-                        {/* Menu Items */}
-                        <div className="py-1">
-                          {/* Dashboard */}
-                          <Link
-                            href={
-                              user.role === 'JOBSEEKER' 
-                                ? '/profile/jobseeker/dashboard' 
-                                : user.role === 'RECRUITER'
-                                ? '/profile/recruiter/dashboard'
-                                : '/'
-                            }
-                            onClick={() => setIsDropdownOpen(false)}
-                            className="flex items-center px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                          >
-                            <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                      {/* Menu Items */}
+                      <div style={{ padding: '8px 0' }}>
+                        <Link href={getDashboardLink()} onClick={() => setIsDropdownOpen(false)}
+                          style={dropdownItemStyle}
+                          onMouseOver={(e) => e.currentTarget.style.background = '#f9fafb'}
+                          onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+                            <rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+                          </svg>
+                          Dashboard
+                        </Link>
+
+                        {user?.role === 'JOBSEEKER' && (
+                          <Link href="/profile/jobseeker/applications" onClick={() => setIsDropdownOpen(false)}
+                            style={dropdownItemStyle}
+                            onMouseOver={(e) => e.currentTarget.style.background = '#f9fafb'}
+                            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                              <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
                             </svg>
-                            Dashboard
+                            Lamaran Saya
                           </Link>
+                        )}
 
-                          {/* Jobseeker: Riwayat Lamaran */}
-                          {user.role === 'JOBSEEKER' && (
-                            <Link
-                              href="/profile/jobseeker/applications"
-                              onClick={() => setIsDropdownOpen(false)}
-                              className="flex items-center px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                            >
-                              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                              Riwayat Lamaran
-                            </Link>
-                          )}
-
-                          {/* Jobseeker: Interview Saya */}
-                          {user.role === 'JOBSEEKER' && (
-                            <Link
-                              href="/profile/jobseeker/interviews"
-                              onClick={() => setIsDropdownOpen(false)}
-                              className="flex items-center px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                            >
-                              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                              </svg>
-                              Interview Saya
-                            </Link>
-                          )}
-
-                          {/* Recruiter: Pasang Lowongan */}
-                          {user.role === 'RECRUITER' && (
-                            <Link
-                              href="/profile/recruiter/post-job"
-                              onClick={() => setIsDropdownOpen(false)}
-                              className="flex items-center px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                            >
-                              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        {user?.role === 'RECRUITER' && (
+                          <>
+                            <Link href="/profile/recruiter/post-job" onClick={() => setIsDropdownOpen(false)}
+                              style={dropdownItemStyle}
+                              onMouseOver={(e) => e.currentTarget.style.background = '#f9fafb'}
+                              onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M12 5v14M5 12h14"/>
                               </svg>
                               Pasang Lowongan
                             </Link>
-                          )}
-
-                          {/* Recruiter: Applicants */}
-                          {user.role === 'RECRUITER' && (
-                            <Link
-                              href="/recruiter/applications"
-                              onClick={() => setIsDropdownOpen(false)}
-                              className="flex items-center px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                            >
-                              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            <Link href="/recruiter/applications" onClick={() => setIsDropdownOpen(false)}
+                              style={dropdownItemStyle}
+                              onMouseOver={(e) => e.currentTarget.style.background = '#f9fafb'}
+                              onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
                               </svg>
                               Pelamar
                             </Link>
-                          )}
-
-                          {/* Settings */}
-                          <Link
-                            href="/settings"
-                            onClick={() => setIsDropdownOpen(false)}
-                            className="flex items-center px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                          >
-                            <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            Pengaturan
-                          </Link>
-                        </div>
-
-                        {/* Logout */}
-                        <div className="border-t border-gray-100 pt-1">
-                          <button
-                            onClick={handleLogout}
-                            className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50 transition-colors"
-                          >
-                            <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                            </svg>
-                            Keluar
-                          </button>
-                        </div>
+                          </>
+                        )}
                       </div>
-                    </>
-                  )}
-                </div>
-              </>
+
+                      {/* Logout */}
+                      <div style={{ borderTop: '1px solid #f3f4f6', padding: '8px 0' }}>
+                        <button onClick={handleLogout}
+                          style={{ ...dropdownItemStyle, width: '100%', border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer' }}
+                          onMouseOver={(e) => e.currentTarget.style.background = '#fef2f2'}
+                          onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+                          </svg>
+                          Keluar
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
             )}
           </div>
 
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden text-gray-600"
+            style={hamburgerStyle}
+            className="mobile-menu-btn"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111827" strokeWidth="2">
               {isMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path d="M18 6L6 18M6 6l12 12"/>
               ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                <path d="M3 12h18M3 6h18M3 18h18"/>
               )}
             </svg>
           </button>
         </div>
+      </header>
 
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden border-t border-gray-100 py-4">
-            <nav className="flex flex-col space-y-4">
-              <Link href="/jobs" className="text-gray-600 hover:text-blue-600 transition-colors">
-                Cari Lowongan
-              </Link>
-              <Link href="/companies" className="text-gray-600 hover:text-blue-600 transition-colors">
-                Perusahaan
-              </Link>
-              <Link href="/warning" className="text-gray-600 hover:text-blue-600 transition-colors">
-                Wajib Baca
-              </Link>
-              <Link href="/about" className="text-gray-600 hover:text-blue-600 transition-colors">
-                Tentang Kami
-              </Link>
-              <hr className="border-gray-100" />
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div style={mobileMenuStyle} className="mobile-menu">
+          <Link href="/jobs" style={{ ...navLinkStyle, padding: '12px 0', fontSize: '16px' }} onClick={() => setIsMenuOpen(false)}>
+            Lowongan
+          </Link>
+          <Link href="/companies" style={{ ...navLinkStyle, padding: '12px 0', fontSize: '16px' }} onClick={() => setIsMenuOpen(false)}>
+            Perusahaan
+          </Link>
+          <Link href="/about" style={{ ...navLinkStyle, padding: '12px 0', fontSize: '16px' }} onClick={() => setIsMenuOpen(false)}>
+            Tentang
+          </Link>
+          <Link href="/warning" style={{ ...navLinkStyle, padding: '12px 0', fontSize: '16px', color: '#dc2626' }} onClick={() => setIsMenuOpen(false)}>
+            ⚠️ Syarat & Ketentuan
+          </Link>
 
-              {!isAuthenticated ? (
+          <div style={{ height: '1px', background: '#e5e7eb', margin: '12px 0' }} />
+
+          {!isAuthenticated ? (
+            <>
+              <Link href="/login" style={{ ...buttonSecondary, textAlign: 'center', marginTop: '8px' }} onClick={() => setIsMenuOpen(false)}>
+                Masuk
+              </Link>
+              <Link href="/register" style={{ ...buttonPrimary, textAlign: 'center' }} onClick={() => setIsMenuOpen(false)}>
+                Daftar
+              </Link>
+            </>
+          ) : (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 0' }}>
+                <div style={avatarStyle}>
+                  {getUserPhoto() ? (
+                    <img src={getUserPhoto()} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    getUserName().charAt(0).toUpperCase()
+                  )}
+                </div>
+                <div>
+                  <div style={{ fontWeight: 600, color: '#111827' }}>{getUserName()}</div>
+                  <div style={{ fontSize: '13px', color: '#6b7280' }}>{getRoleDisplay()}</div>
+                </div>
+              </div>
+
+              <Link href={getDashboardLink()} style={{ ...navLinkStyle, padding: '12px 0' }} onClick={() => setIsMenuOpen(false)}>
+                Dashboard
+              </Link>
+              {user?.role === 'JOBSEEKER' && (
+                <Link href="/profile/jobseeker/applications" style={{ ...navLinkStyle, padding: '12px 0' }} onClick={() => setIsMenuOpen(false)}>
+                  Lamaran Saya
+                </Link>
+              )}
+              {user?.role === 'RECRUITER' && (
                 <>
-                  <Link
-                    href="/login?role=jobseeker"
-                    className="text-gray-600 hover:text-blue-600 transition-colors"
-                  >
-                    👤 Masuk sebagai Pencari Kerja
-                  </Link>
-                  <Link
-                    href="/login?role=recruiter"
-                    className="text-gray-600 hover:text-blue-600 transition-colors"
-                  >
-                    🏢 Masuk sebagai Perusahaan
-                  </Link>
-                  <Link 
-                    href="/register" 
-                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium text-center"
-                  >
-                    Daftar
-                  </Link>
-                  <Link 
-                    href="/login?role=recruiter&action=post-job" 
-                    className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium text-center"
-                  >
+                  <Link href="/profile/recruiter/post-job" style={{ ...navLinkStyle, padding: '12px 0' }} onClick={() => setIsMenuOpen(false)}>
                     Pasang Lowongan
                   </Link>
-                </>
-              ) : (
-                <>
-                  {/* Mobile User Info */}
-                  <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      {/* Avatar with Photo - Mobile */}
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md overflow-hidden flex-shrink-0">
-                        {getUserPhoto() ? (
-                          <img 
-                            src={getUserPhoto()} 
-                            alt={getUserName()}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          getUserName().charAt(0).toUpperCase()
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">Hi, {getUserName()}!</p>
-                        <p className="text-sm text-gray-600">{getUserRoleDisplay()}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Dashboard */}
-                  <Link 
-                    href={
-                      user.role === 'JOBSEEKER' 
-                        ? '/profile/jobseeker/dashboard' 
-                        : user.role === 'RECRUITER'
-                        ? '/profile/recruiter/dashboard'
-                        : '/dashboard'
-                    }
-                    className="text-gray-700 font-medium hover:text-blue-600 flex items-center"
-                  >
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                    </svg>
-                    Dashboard
+                  <Link href="/recruiter/applications" style={{ ...navLinkStyle, padding: '12px 0' }} onClick={() => setIsMenuOpen(false)}>
+                    Pelamar
                   </Link>
-
-                  {/* Jobseeker: Riwayat Lamaran */}
-                  {user.role === 'JOBSEEKER' && (
-                    <Link 
-                      href="/profile/jobseeker/applications" 
-                      className="text-gray-700 font-medium hover:text-blue-600 flex items-center"
-                    >
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      Riwayat Lamaran
-                    </Link>
-                  )}
-
-                  {/* Jobseeker: Interview Saya */}
-                  {user.role === 'JOBSEEKER' && (
-                    <Link 
-                      href="/profile/jobseeker/interviews" 
-                      className="text-gray-700 font-medium hover:text-blue-600 flex items-center"
-                    >
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                      </svg>
-                      Interview Saya
-                    </Link>
-                  )}
-
-                  {/* Recruiter: Pasang Lowongan */}
-                  {user.role === 'RECRUITER' && (
-                    <Link 
-                      href="/profile/recruiter/post-job" 
-                      className="text-gray-700 font-medium hover:text-blue-600 flex items-center"
-                    >
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      Pasang Lowongan
-                    </Link>
-                  )}
-
-                  {/* Recruiter: Pelamar */}
-                  {user.role === 'RECRUITER' && (
-                    <Link 
-                      href="/profile/recruiter/applications" 
-                      className="text-gray-700 font-medium hover:text-blue-600 flex items-center"
-                    >
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
-                      Pelamar
-                    </Link>
-                  )}
-
-                  {/* Settings */}
-                  <Link 
-                    href="/settings" 
-                    className="text-gray-700 hover:text-blue-600 flex items-center"
-                  >
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    Pengaturan
-                  </Link>
-
-                  {/* Logout */}
-                  <button
-                    onClick={handleLogout}
-                    className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors font-medium text-center flex items-center justify-center"
-                  >
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    Keluar
-                  </button>
                 </>
               )}
-            </nav>
-          </div>
-        )}
-      </div>
-    </header>
+
+              <div style={{ height: '1px', background: '#e5e7eb', margin: '12px 0' }} />
+
+              <button onClick={handleLogout} style={{ ...buttonSecondary, color: '#ef4444', borderColor: '#fecaca', width: '100%' }}>
+                Keluar
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Spacer for fixed header */}
+      <div style={{ height: '72px' }} />
+
+      <style jsx>{`
+        @media (min-width: 769px) {
+          .mobile-menu-btn { display: none !important; }
+          .mobile-menu { display: none !important; }
+        }
+        @media (max-width: 768px) {
+          .desktop-nav { display: none !important; }
+          .desktop-auth { display: none !important; }
+          .mobile-menu-btn { display: block !important; }
+        }
+      `}</style>
+    </>
   )
 }
 

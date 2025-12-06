@@ -82,16 +82,48 @@ export default function JobDetailPage() {
   }
 
   const toggleSave = () => {
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Login Required',
+        text: 'Silakan login terlebih dahulu untuk menyimpan lowongan',
+        showCancelButton: true,
+        confirmButtonText: 'Login',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#2563EB'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          router.push('/login?redirect=/jobs/' + slug)
+        }
+      })
+      return
+    }
+
     const savedJobs = JSON.parse(localStorage.getItem('savedJobs') || '[]')
     
     if (saved) {
       const updated = savedJobs.filter(id => id !== job.id)
       localStorage.setItem('savedJobs', JSON.stringify(updated))
       setSaved(false)
+      Swal.fire({
+        icon: 'success',
+        title: 'Dihapus',
+        text: 'Lowongan dihapus dari simpanan',
+        timer: 1500,
+        showConfirmButton: false
+      })
     } else {
       savedJobs.push(job.id)
       localStorage.setItem('savedJobs', JSON.stringify(savedJobs))
       setSaved(true)
+      Swal.fire({
+        icon: 'success',
+        title: 'Disimpan',
+        text: 'Lowongan berhasil disimpan',
+        timer: 1500,
+        showConfirmButton: false
+      })
     }
   }
 
@@ -127,13 +159,27 @@ export default function JobDetailPage() {
     router.push(`/jobs/${slug}/apply`)
   }
 
-  const handleShare = () => {
+  const [isSharing, setIsSharing] = useState(false)
+
+  const handleShare = async () => {
+    if (isSharing) return // Prevent multiple share attempts
+    
     if (navigator.share) {
-      navigator.share({
-        title: job.title,
-        text: `${job.title} at ${job.company.name}`,
-        url: window.location.href
-      })
+      try {
+        setIsSharing(true)
+        await navigator.share({
+          title: job.title,
+          text: `${job.title} at ${job.company.name}`,
+          url: window.location.href
+        })
+      } catch (error) {
+        // Ignore AbortError (user cancel) and InvalidStateError (share already in progress)
+        if (error.name !== 'AbortError' && error.name !== 'InvalidStateError') {
+          console.error('Share failed:', error)
+        }
+      } finally {
+        setIsSharing(false)
+      }
     } else {
       navigator.clipboard.writeText(window.location.href)
       Swal.fire({

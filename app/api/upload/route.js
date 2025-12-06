@@ -191,7 +191,7 @@ export async function POST(request) {
                 }
             })
 
-        } else if (bucket && (bucket.includes('jobseeker') || bucket.includes('cv') || bucket.includes('diploma') || bucket.includes('certificate'))) {
+        } else if (bucket && (bucket === 'Profile' || bucket.includes('jobseeker') || bucket.includes('cv') || bucket.includes('diploma') || bucket.includes('certificate') || bucket.includes('photo'))) {
             // Jobseeker Uploads (CV, Diploma, Certificate, Photo)
             
             // Get jobseeker ID

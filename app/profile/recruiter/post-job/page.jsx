@@ -165,7 +165,7 @@ export default function PostJobPage() {
 
             console.log('📤 Submitting job:', submitData.title)
 
-            const response = await fetch('/api/jobs/create', {
+            const response = await fetch('/api/profile/recruiter/jobs/create', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
