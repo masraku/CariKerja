@@ -5,7 +5,7 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  // directUrl = env("DIRECT_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model applications {
@@ -309,6 +309,10 @@ model jobseekers {
   availableFrom       DateTime?
   profileCompleted    Boolean            @default(false)
   profileCompleteness Int                @default(0)
+  isEmployed          Boolean            @default(false)
+  isLookingForJob     Boolean            @default(true)
+  employedAt          DateTime?
+  employedCompany     String?
   createdAt           DateTime           @default(now())
   updatedAt           DateTime
   applications        applications[]

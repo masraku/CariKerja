@@ -53,10 +53,30 @@ function LoginContent() {
     }
   }, [searchParams])
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated based on role
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/') // Redirect to home instead of assuming dashboard
+      // Get current user's role from AuthContext
+      const userFromContext = JSON.parse(localStorage.getItem('user') || '{}')
+      const userRole = userFromContext?.role
+      
+      if (userRole === 'ADMIN') {
+        router.push('/admin')
+      } else if (userRole === 'RECRUITER') {
+        if (userFromContext?.recruiter?.isVerified) {
+          router.push('/profile/recruiter/dashboard')
+        } else {
+          router.push('/profile/recruiter')
+        }
+      } else if (userRole === 'JOBSEEKER') {
+        if (userFromContext?.jobseeker?.profileCompleted) {
+          router.push('/profile/jobseeker/dashboard')
+        } else {
+          router.push('/profile/jobseeker')
+        }
+      } else {
+        router.push('/')
+      }
     }
   }, [isAuthenticated, router])
 

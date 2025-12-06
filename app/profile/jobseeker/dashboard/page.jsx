@@ -14,8 +14,11 @@ import {
   Edit,
   Search,
   ArrowRight,
-  View
+  View,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-react'
+import Swal from 'sweetalert2'
 
 const JobseekerDashboard = () => {
   const router = useRouter()
@@ -30,6 +33,15 @@ const JobseekerDashboard = () => {
   const [recentJobs, setRecentJobs] = useState([])
   const [recentApplications, setRecentApplications] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  
+  // Employment status states
+  const [employmentStatus, setEmploymentStatus] = useState({
+    isEmployed: false,
+    isLookingForJob: true,
+    employedCompany: '',
+    employedAt: null
+  })
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
 
   useEffect(() => {
     checkProfile()
@@ -104,12 +116,107 @@ const JobseekerDashboard = () => {
         setRecentApplications(statsData.data.applications.slice(0, 3))
       }
 
+      // Load employment status
+      await loadEmploymentStatus()
+
       // TODO: Fetch recommended jobs based on profile
       // For now, we'll use dummy data or you can implement later
       setRecentJobs([])
 
     } catch (error) {
       console.error('Load dashboard data error:', error)
+    }
+  }
+
+  const loadEmploymentStatus = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch('/api/profile/jobseeker/status', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setEmploymentStatus({
+            isEmployed: data.data.isEmployed || false,
+            isLookingForJob: data.data.isLookingForJob ?? true,
+            employedCompany: data.data.employedCompany || '',
+            employedAt: data.data.employedAt
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Load employment status error:', error)
+    }
+  }
+
+  const updateEmploymentStatus = async (field, value) => {
+    try {
+      setIsUpdatingStatus(true)
+      const token = localStorage.getItem('token')
+
+      const updateData = { [field]: value }
+      
+      // If setting employed to true, ask for company name
+      if (field === 'isEmployed' && value === true) {
+        const { value: companyName } = await Swal.fire({
+          title: 'Selamat! 🎉',
+          text: 'Dimana Anda bekerja sekarang?',
+          input: 'text',
+          inputPlaceholder: 'Nama Perusahaan',
+          showCancelButton: true,
+          confirmButtonColor: '#10b981',
+          cancelButtonColor: '#6b7280',
+          confirmButtonText: 'Simpan',
+          cancelButtonText: 'Batal'
+        })
+
+        if (!companyName) {
+          setIsUpdatingStatus(false)
+          return
+        }
+        updateData.employedCompany = companyName
+      }
+
+      const response = await fetch('/api/profile/jobseeker/status', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updateData)
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setEmploymentStatus({
+          isEmployed: data.data.isEmployed || false,
+          isLookingForJob: data.data.isLookingForJob ?? true,
+          employedCompany: data.data.employedCompany || '',
+          employedAt: data.data.employedAt
+        })
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Status Updated!',
+          text: 'Status pekerjaan Anda berhasil diperbarui',
+          timer: 1500,
+          showConfirmButton: false
+        })
+      }
+    } catch (error) {
+      console.error('Update status error:', error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal',
+        text: 'Gagal memperbarui status'
+      })
+    } finally {
+      setIsUpdatingStatus(false)
     }
   }
 
@@ -176,7 +283,64 @@ const JobseekerDashboard = () => {
                 Lihat Profile
               </button>
             </div>
+          </div>
+        </div>
 
+        {/* Employment Status Card */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Status Pekerjaan</h2>
+          <div className="grid md:grid-cols-2 gap-4">
+            {/* Employed Status */}
+            <div className={`p-4 rounded-lg border-2 transition ${employmentStatus.isEmployed ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-gray-50'}`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-gray-900">Status Pekerjaan</p>
+                  {employmentStatus.isEmployed ? (
+                    <p className="text-sm text-green-600">
+                      Bekerja di {employmentStatus.employedCompany || 'N/A'}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-gray-500">Belum bekerja</p>
+                  )}
+                </div>
+                <button
+                  onClick={() => updateEmploymentStatus('isEmployed', !employmentStatus.isEmployed)}
+                  disabled={isUpdatingStatus}
+                  className={`p-2 rounded-full transition ${isUpdatingStatus ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110'}`}
+                >
+                  {employmentStatus.isEmployed ? (
+                    <ToggleRight className="w-10 h-10 text-green-500" />
+                  ) : (
+                    <ToggleLeft className="w-10 h-10 text-gray-400" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Looking for Job Toggle */}
+            <div className={`p-4 rounded-lg border-2 transition ${employmentStatus.isLookingForJob ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-gray-50'}`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-gray-900">Cari Pekerjaan</p>
+                  {employmentStatus.isLookingForJob ? (
+                    <p className="text-sm text-blue-600">Aktif mencari lowongan</p>
+                  ) : (
+                    <p className="text-sm text-gray-500">Tidak aktif mencari</p>
+                  )}
+                </div>
+                <button
+                  onClick={() => updateEmploymentStatus('isLookingForJob', !employmentStatus.isLookingForJob)}
+                  disabled={isUpdatingStatus}
+                  className={`p-2 rounded-full transition ${isUpdatingStatus ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110'}`}
+                >
+                  {employmentStatus.isLookingForJob ? (
+                    <ToggleRight className="w-10 h-10 text-blue-500" />
+                  ) : (
+                    <ToggleLeft className="w-10 h-10 text-gray-400" />
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 

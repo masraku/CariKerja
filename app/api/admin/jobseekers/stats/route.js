@@ -20,7 +20,9 @@ export async function GET(request) {
             totalApplications,
             acceptedApplications,
             rejectedApplications,
-            pendingApplications
+            pendingApplications,
+            employedCount,
+            lookingForJobCount
         ] = await Promise.all([
             prisma.jobseekers.count(),
             prisma.applications.count(),
@@ -32,54 +34,24 @@ export async function GET(request) {
                         in: ['PENDING', 'REVIEWING', 'SHORTLISTED', 'INTERVIEW_SCHEDULED', 'INTERVIEW_COMPLETED']
                     }
                 }
-            })
+            }),
+            // Count jobseekers who marked themselves as employed
+            prisma.jobseekers.count({ where: { isEmployed: true } }),
+            // Count jobseekers who are still looking for jobs
+            prisma.jobseekers.count({ where: { isLookingForJob: true } })
         ])
 
-        // Get jobseekers with at least one accepted application
-        const employedJobseekers = await prisma.jobseekers.findMany({
-            where: {
-                applications: {
-                    some: {
-                        status: 'ACCEPTED'
-                    }
-                }
-            },
-            select: {
-                id: true
-            }
-        })
-
-        // Get jobseekers with only rejected applications (no accepted, has at least one rejected)
-        const allJobseekers = await prisma.jobseekers.findMany({
-            include: {
-                applications: {
-                    select: {
-                        status: true
-                    }
-                }
-            }
-        })
-
-        const rejectedJobseekers = allJobseekers.filter(js => {
-            const hasAccepted = js.applications.some(app => app.status === 'ACCEPTED')
-            const hasRejected = js.applications.some(app => app.status === 'REJECTED')
-            const hasPending = js.applications.some(app => 
-                ['PENDING', 'REVIEWING', 'SHORTLISTED', 'INTERVIEW_SCHEDULED', 'INTERVIEW_COMPLETED'].includes(app.status)
-            )
-            return !hasAccepted && hasRejected && !hasPending
-        })
-
-        const employedCount = employedJobseekers.length
-        const rejectedCount = rejectedJobseekers.length
-        const activeCount = totalJobseekers - employedCount - rejectedCount
+        const unemployedCount = totalJobseekers - employedCount
+        const notLookingCount = totalJobseekers - lookingForJobCount
 
         return NextResponse.json({
             success: true,
             data: {
                 totalJobseekers,
                 employed: employedCount,
-                rejected: rejectedCount,
-                active: activeCount,
+                unemployed: unemployedCount,
+                lookingForJob: lookingForJobCount,
+                notLooking: notLookingCount,
                 totalApplications,
                 acceptedApplications,
                 rejectedApplications,

@@ -20,7 +20,7 @@ export async function GET(request) {
         // Get all jobseekers with their applications
         const jobseekers = await prisma.jobseekers.findMany({
             include: {
-                user: {
+                users: {
                     select: {
                         id: true,
                         email: true,
@@ -62,8 +62,8 @@ export async function GET(request) {
                 employmentStatus = 'EMPLOYED'
                 const latestAccepted = acceptedApplications[0]
                 acceptedJob = {
-                    title: latestAccepted.job.title,
-                    company: latestAccepted.job.companies.name,
+                    title: latestAccepted.jobs?.title,
+                    company: latestAccepted.jobs?.companies?.name,
                     acceptedAt: latestAccepted.updatedAt
                 }
             } else if (rejectedApplications.length > 0 && pendingApplications.length === 0) {
@@ -75,18 +75,26 @@ export async function GET(request) {
                 userId: jobseeker.userId,
                 firstName: jobseeker.firstName,
                 lastName: jobseeker.lastName,
-                email: jobseeker.user.email,
+                photo: jobseeker.photo,
+                currentTitle: jobseeker.currentTitle,
+                email: jobseeker.users.email,
                 phone: jobseeker.phone,
                 city: jobseeker.city,
                 province: jobseeker.province,
+                isEmployed: jobseeker.isEmployed || false,
+                isLookingForJob: jobseeker.isLookingForJob ?? true,
+                employedCompany: jobseeker.employedCompany,
+                employedAt: jobseeker.employedAt,
                 employmentStatus,
                 acceptedJob,
+                profileCompleted: jobseeker.profileCompleted,
+                profileCompleteness: jobseeker.profileCompleteness,
                 lastApplicationDate: jobseeker.applications[0]?.createdAt || null,
                 totalApplications: jobseeker.applications.length,
                 acceptedCount: acceptedApplications.length,
                 rejectedCount: rejectedApplications.length,
                 pendingCount: pendingApplications.length,
-                joinedAt: jobseeker.user.createdAt
+                joinedAt: jobseeker.users.createdAt
             }
         })
 

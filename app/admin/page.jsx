@@ -71,28 +71,28 @@ export default function AdminDashboard() {
                 {/* Employed */}
                 <StatsCard
                     icon={UserCheck}
-                    label="Employed"
+                    label="Sudah Bekerja"
                     value={stats?.jobseekers?.employed || 0}
                     color="green"
-                    subtitle={`${stats?.jobseekers?.acceptedApplications || 0} accepted applications`}
+                    subtitle={`${stats?.jobseekers?.unemployed || 0} belum bekerja`}
                 />
 
-                {/* Rejected */}
+                {/* Looking for Job */}
                 <StatsCard
-                    icon={Users}
-                    label="Rejected"
-                    value={stats?.jobseekers?.rejected || 0}
-                    color="red"
-                    subtitle={`${stats?.jobseekers?.rejectedApplications || 0} rejected applications`}
-                />
-
-                {/* Active Jobseekers */}
-                <StatsCard
-                    icon={Users}
-                    label="Active Jobseekers"
-                    value={stats?.jobseekers?.active || 0}
+                    icon={Briefcase}
+                    label="Masih Cari Kerja"
+                    value={stats?.jobseekers?.lookingForJob || 0}
                     color="yellow"
-                    subtitle={`${stats?.jobseekers?.pendingApplications || 0} pending applications`}
+                    subtitle={`${stats?.jobseekers?.notLooking || 0} tidak aktif cari`}
+                />
+
+                {/* Applications */}
+                <StatsCard
+                    icon={Users}
+                    label="Total Lamaran"
+                    value={stats?.jobseekers?.totalApplications || 0}
+                    color="indigo"
+                    subtitle={`${stats?.jobseekers?.acceptedApplications || 0} diterima`}
                 />
             </div>
 
@@ -116,17 +116,23 @@ export default function AdminDashboard() {
                     </a>
                 </div>
 
-                {/* Total Applications */}
-                <div className="bg-white border border-gray-200 rounded-xl p-6">
+                {/* Manage Jobseekers */}
+                <div className="bg-white border border-blue-200 rounded-xl p-6">
                     <div className="flex items-center gap-4 mb-4">
                         <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <Briefcase className="w-6 h-6 text-blue-600" />
+                            <Users className="w-6 h-6 text-blue-600" />
                         </div>
                         <div>
-                            <div className="text-2xl font-bold text-gray-900">{stats?.jobseekers?.totalApplications || 0}</div>
-                            <div className="text-gray-600">Total Applications</div>
+                            <div className="text-2xl font-bold text-gray-900">{stats?.jobseekers?.totalJobseekers || 0}</div>
+                            <div className="text-gray-600">Total Jobseekers</div>
                         </div>
                     </div>
+                    <a
+                        href="/admin/jobseekers"
+                        className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+                    >
+                        Kelola Jobseekers →
+                    </a>
                 </div>
             </div>
         </div>
@@ -138,7 +144,8 @@ function StatsCard({ icon: Icon, label, value, color, subtitle }) {
         blue: 'bg-blue-100 text-blue-600',
         green: 'bg-green-100 text-green-600',
         red: 'bg-red-100 text-red-600',
-        yellow: 'bg-yellow-100 text-yellow-600'
+        yellow: 'bg-yellow-100 text-yellow-600',
+        indigo: 'bg-indigo-100 text-indigo-600'
     }
 
     return (
