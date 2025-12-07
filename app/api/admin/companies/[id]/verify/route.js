@@ -45,31 +45,18 @@ export async function PATCH(request, context) {
         }
 
         // Update company verification
+        // Only use fields that exist in the schema
         const updatedCompany = await prisma.companies.update({
             where: { id },
             data: {
                 verified: true,
                 verifiedAt: new Date(),
                 status: 'VERIFIED',
-                rejectionReason: null
+                rejectionReason: null,
+                updatedAt: new Date()
             }
         })
 
-        // Log admin action
-        await prisma.audit_logs.create({
-            data: {
-                userId: admin.id,
-                action: 'VERIFY_COMPANY',
-                targetType: 'COMPANY',
-                targetId: id,
-                changes: {
-                    companyName: company.name,
-                    notes: notes || null
-                }
-            }
-        })
-
-        // TODO: Send email notification to recruiter
         console.log(`✅ Company ${company.name} verified by admin ${admin.email}`)
 
         return NextResponse.json({

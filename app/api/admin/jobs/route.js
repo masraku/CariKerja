@@ -1,0 +1,152 @@
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { verifyToken } from '@/lib/auth'
+
+export async function GET(request) {
+    try {
+        // Verify admin
+        const authHeader = request.headers.get('authorization')
+        if (!authHeader) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
+        const token = authHeader.replace('Bearer ', '')
+        const decoded = verifyToken(token)
+        
+        if (!decoded || decoded.role !== 'ADMIN') {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
+        // Get query params
+        const { searchParams } = new URL(request.url)
+        const search = searchParams.get('search') || ''
+        const status = searchParams.get('status') || 'all'
+        const jobType = searchParams.get('jobType') || 'all'
+
+        // Build where clause
+        let where = {}
+
+        if (search) {
+            where.OR = [
+                { title: { contains: search, mode: 'insensitive' } },
+                { companies: { name: { contains: search, mode: 'insensitive' } } },
+                { city: { contains: search, mode: 'insensitive' } }
+            ]
+        }
+
+        if (status === 'active') {
+            where.isActive = true
+        } else if (status === 'inactive') {
+            where.isActive = false
+        }
+
+        if (jobType !== 'all') {
+            where.jobType = jobType
+        }
+
+        // Get jobs with related data
+        console.log('Admin Jobs API - Where clause:', JSON.stringify(where))
+        
+        const jobs = await prisma.jobs.findMany({
+            where,
+            include: {
+                companies: {
+                    select: {
+                        name: true,
+                        logo: true,
+                        verified: true
+                    }
+                },
+                recruiters: {
+                    select: {
+                        firstName: true,
+                        lastName: true,
+                        users: {
+                            select: {
+                                email: true
+                            }
+                        }
+                    }
+                },
+                _count: {
+                    select: {
+                        applications: true
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        })
+        
+        console.log('Admin Jobs API - Found jobs:', jobs.length)
+
+        // Get stats
+        const totalJobs = await prisma.jobs.count()
+        const activeJobs = await prisma.jobs.count({ where: { isActive: true } })
+        const inactiveJobs = await prisma.jobs.count({ where: { isActive: false } })
+        const totalApplications = await prisma.applications.count()
+
+        // JobType stats
+        const fullTimeJobs = await prisma.jobs.count({ where: { jobType: 'FULL_TIME' } })
+        const partTimeJobs = await prisma.jobs.count({ where: { jobType: 'PART_TIME' } })
+        const contractJobs = await prisma.jobs.count({ where: { jobType: 'CONTRACT' } })
+        const internshipJobs = await prisma.jobs.count({ where: { jobType: 'INTERNSHIP' } })
+
+        // Transform jobs data
+        const transformedJobs = jobs.map(job => ({
+            id: job.id,
+            title: job.title,
+            slug: job.slug,
+            company: {
+                name: job.companies?.name || 'Unknown',
+                logo: job.companies?.logo,
+                verified: job.companies?.verified || false
+            },
+            recruiter: {
+                name: job.recruiters ? `${job.recruiters.firstName || ''} ${job.recruiters.lastName || ''}`.trim() || 'Unknown' : 'Unknown',
+                email: job.recruiters?.users?.email
+            },
+            jobType: job.jobType,
+            level: job.level,
+            city: job.city,
+            province: job.province,
+            isRemote: job.isRemote,
+            isActive: job.isActive,
+            isFeatured: job.isFeatured,
+            salaryMin: job.salaryMin,
+            salaryMax: job.salaryMax,
+            showSalary: job.showSalary,
+            applicationCount: job._count.applications,
+            viewCount: job.viewCount,
+            numberOfPositions: job.numberOfPositions,
+            applicationDeadline: job.applicationDeadline,
+            createdAt: job.createdAt,
+            publishedAt: job.publishedAt
+        }))
+
+        return NextResponse.json({
+            success: true,
+            stats: {
+                total: totalJobs,
+                active: activeJobs,
+                inactive: inactiveJobs,
+                totalApplications,
+                byType: {
+                    fullTime: fullTimeJobs,
+                    partTime: partTimeJobs,
+                    contract: contractJobs,
+                    internship: internshipJobs
+                }
+            },
+            jobs: transformedJobs
+        })
+
+    } catch (error) {
+        console.error('Error fetching admin jobs:', error)
+        return NextResponse.json(
+            { error: 'Internal server error', details: error.message },
+            { status: 500 }
+        )
+    }
+}

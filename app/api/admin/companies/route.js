@@ -31,7 +31,10 @@ export async function GET(request) {
             }
         } else if (statusFilter === 'rejected') {
             whereClause = {
-                status: 'SUSPENDED'
+                OR: [
+                    { status: 'SUSPENDED' },
+                    { status: 'REJECTED' }
+                ]
             }
         }
 

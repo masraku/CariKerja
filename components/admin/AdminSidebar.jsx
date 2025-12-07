@@ -43,8 +43,12 @@ export default function AdminSidebar() {
                 <ul className="space-y-2">
                     {menuItems.map((item) => {
                         const Icon = item.icon
+                        // More precise path matching to avoid false positives
+                        // e.g., /admin/jobs should not match /admin/jobseekers
                         const isActive = pathname === item.href || 
-                                       (item.href !== '/admin' && pathname.startsWith(item.href))
+                                       (item.href !== '/admin' && 
+                                        pathname.startsWith(item.href) && 
+                                        (pathname === item.href || pathname.charAt(item.href.length) === '/'))
                         
                         return (
                             <li key={item.href}>

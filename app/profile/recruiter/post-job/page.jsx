@@ -26,6 +26,93 @@ export default function PostJobPage() {
     const { user } = useAuth()
     const [currentStep, setCurrentStep] = useState(1)
     const [isSaving, setIsSaving] = useState(false)
+    const [isCheckingVerification, setIsCheckingVerification] = useState(true)
+
+    // Check company verification on page load
+    useEffect(() => {
+        checkCompanyVerification()
+    }, [])
+
+    const checkCompanyVerification = async () => {
+        try {
+            const token = localStorage.getItem('token')
+            if (!token) {
+                router.push('/login?role=recruiter')
+                return
+            }
+
+            // Fetch recruiter profile to check company verification status
+            const response = await fetch('/api/profile/recruiter', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal Memuat Profile',
+                    text: 'Silakan coba lagi atau hubungi admin.',
+                    confirmButtonColor: '#2563EB'
+                }).then(() => {
+                    router.push('/profile/recruiter/dashboard')
+                })
+                return
+            }
+
+            // Check if company is verified
+            // API returns { success: true, profile: { companies: { verified: true/false } } }
+            const profile = data.profile
+            console.log('📥 Profile data:', profile)
+            
+            // If no profile exists, redirect to create profile
+            if (!profile) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Profile Belum Lengkap',
+                    text: 'Silakan lengkapi profile perusahaan terlebih dahulu.',
+                    confirmButtonColor: '#2563EB'
+                }).then(() => {
+                    router.push('/profile/recruiter')
+                })
+                return
+            }
+
+            // Check company verification - companies is the relation name from Prisma
+            const company = profile.companies
+            console.log('📥 Company data:', company)
+            
+            if (!company?.verified) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Perusahaan Belum Terverifikasi',
+                    html: `
+                        <p class="mb-2">Anda belum bisa memposting lowongan kerja.</p>
+                        <p class="text-sm text-gray-600">Perusahaan Anda harus terverifikasi terlebih dahulu oleh admin sebelum dapat memposting lowongan.</p>
+                    `,
+                    confirmButtonColor: '#2563EB',
+                    confirmButtonText: 'Kembali ke Dashboard'
+                }).then(() => {
+                    router.push('/profile/recruiter/dashboard')
+                })
+                return
+            }
+
+            // Company is verified, allow access
+            setIsCheckingVerification(false)
+
+        } catch (error) {
+            console.error('Error checking verification:', error)
+            Swal.fire({
+                icon: 'error',
+                title: 'Terjadi Kesalahan',
+                text: 'Gagal memeriksa status verifikasi perusahaan.',
+                confirmButtonColor: '#2563EB'
+            }).then(() => {
+                router.push('/profile/recruiter/dashboard')
+            })
+        }
+    }
 
     const [formData, setFormData] = useState({
         // Basic Info
@@ -64,6 +151,13 @@ export default function PostJobPage() {
         benefits: [],
         numberOfPositions: 1,
         applicationDeadline: '',
+
+        // Job Type Specific
+        contractDuration: '',        // For CONTRACT (in months)
+        partTimeHours: '',           // For PART_TIME (hours per week)
+        internshipDuration: '',      // For INTERNSHIP (in months)
+        hasPocketMoney: false,       // For INTERNSHIP
+        hasCertificate: false,       // For INTERNSHIP
 
         // Skills
         skills: []
@@ -230,14 +324,25 @@ export default function PostJobPage() {
         }
     }
 
-    // Steps configuration
+    // Steps configuration - 4 steps (combined Informasi & Persyaratan)
     const steps = [
-        { number: 1, title: 'Informasi Dasar', icon: Briefcase },
+        { number: 1, title: 'Informasi & Persyaratan', icon: Briefcase },
         { number: 2, title: 'Lokasi & Tipe', icon: MapPin },
         { number: 3, title: 'Gaji & Jadwal', icon: DollarSign },
-        { number: 4, title: 'Persyaratan', icon: Award },
-        { number: 5, title: 'Benefits & Skills', icon: Users }
+        { number: 4, title: 'Benefits & Skills', icon: Users }
     ]
+
+    // Show loading while checking verification
+    if (isCheckingVerification) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Memeriksa status perusahaan...</p>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 py-8">
@@ -402,6 +507,66 @@ export default function PostJobPage() {
                                     </select>
                                 </div>
                             </div>
+
+                            {/* Divider */}
+                            <div className="border-t border-gray-200 pt-6">
+                                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                                    Persyaratan Kandidat
+                                </h3>
+                                
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Pendidikan Minimal
+                                        </label>
+                                        <select
+                                            name="educationLevel"
+                                            value={formData.educationLevel}
+                                            onChange={handleChange}
+                                            className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        >
+                                            <option value="">Tidak ada persyaratan khusus</option>
+                                            <option value="SMA">SMA/SMK</option>
+                                            <option value="D3">Diploma (D3)</option>
+                                            <option value="S1">Sarjana (S1)</option>
+                                            <option value="S2">Magister (S2)</option>
+                                            <option value="S3">Doktor (S3)</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Pengalaman Kerja (Tahun)
+                                        </label>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="text-xs text-gray-600 mb-1 block">Min</label>
+                                                <input
+                                                    type="number"
+                                                    name="minExperience"
+                                                    value={formData.minExperience}
+                                                    onChange={handleChange}
+                                                    min="0"
+                                                    className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                    placeholder="0"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs text-gray-600 mb-1 block">Max</label>
+                                                <input
+                                                    type="number"
+                                                    name="maxExperience"
+                                                    value={formData.maxExperience}
+                                                    onChange={handleChange}
+                                                    min="0"
+                                                    className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                    placeholder="5"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     )}
 
@@ -418,10 +583,10 @@ export default function PostJobPage() {
                                 </label>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-gray-900">
                                     {[
-                                        { value: 'FULL_TIME', label: 'Full Time' },
-                                        { value: 'PART_TIME', label: 'Part Time' },
-                                        { value: 'CONTRACT', label: 'Contract' },
-                                        { value: 'INTERNSHIP', label: 'Magang' }
+                                        { value: 'FULL_TIME', label: 'Full Time', icon: '💼', desc: 'Pegawai tetap' },
+                                        { value: 'PART_TIME', label: 'Part Time', icon: '⏰', desc: 'Paruh waktu' },
+                                        { value: 'CONTRACT', label: 'Kontrak', icon: '📄', desc: 'Durasi tertentu' },
+                                        { value: 'INTERNSHIP', label: 'Magang', icon: '🎓', desc: 'Program magang' }
                                     ].map(type => (
                                         <label
                                             key={type.value}
@@ -438,11 +603,160 @@ export default function PostJobPage() {
                                                 onChange={handleChange}
                                                 className="sr-only"
                                             />
+                                            <div className="text-2xl mb-1">{type.icon}</div>
                                             <div className="font-medium">{type.label}</div>
+                                            <div className="text-xs text-gray-500 mt-1">{type.desc}</div>
                                         </label>
                                     ))}
                                 </div>
                             </div>
+
+                            {/* Contract Specific Options */}
+                            {formData.jobType === 'CONTRACT' && (
+                                <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                                    <h3 className="font-medium text-orange-900 mb-3 flex items-center gap-2">
+                                        📄 Detail Kontrak
+                                    </h3>
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Durasi Kontrak (Bulan) *
+                                            </label>
+                                            <input
+                                                type="number"
+                                                name="contractDuration"
+                                                value={formData.contractDuration}
+                                                onChange={handleChange}
+                                                min="1"
+                                                max="60"
+                                                className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                                placeholder="12"
+                                                required
+                                            />
+                                            <p className="text-xs text-gray-500 mt-1">Contoh: 6 bulan, 12 bulan</p>
+                                        </div>
+                                        <div className="flex items-center">
+                                            <div className="p-3 bg-orange-100 rounded-lg">
+                                                <p className="text-sm text-orange-800">
+                                                    💡 Kontrak dapat diperpanjang sesuai kebutuhan perusahaan dan kinerja karyawan.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Part Time Specific Options */}
+                            {formData.jobType === 'PART_TIME' && (
+                                <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                                    <h3 className="font-medium text-purple-900 mb-3 flex items-center gap-2">
+                                        ⏰ Detail Part Time
+                                    </h3>
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Jam Kerja per Minggu *
+                                            </label>
+                                            <input
+                                                type="number"
+                                                name="partTimeHours"
+                                                value={formData.partTimeHours}
+                                                onChange={handleChange}
+                                                min="1"
+                                                max="35"
+                                                className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                                placeholder="20"
+                                                required
+                                            />
+                                            <p className="text-xs text-gray-500 mt-1">Umumnya 10-25 jam per minggu</p>
+                                        </div>
+                                        <div className="flex items-center">
+                                            <div className="p-3 bg-purple-100 rounded-lg">
+                                                <p className="text-sm text-purple-800">
+                                                    💡 Jam kerja fleksibel dan dapat disesuaikan dengan jadwal pekerja.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Internship Specific Options */}
+                            {formData.jobType === 'INTERNSHIP' && (
+                                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                                    <h3 className="font-medium text-green-900 mb-3 flex items-center gap-2">
+                                        🎓 Detail Program Magang
+                                    </h3>
+                                    <div className="space-y-4">
+                                        <div className="grid md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    Durasi Magang (Bulan) *
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    name="internshipDuration"
+                                                    value={formData.internshipDuration}
+                                                    onChange={handleChange}
+                                                    min="1"
+                                                    max="12"
+                                                    className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                                    placeholder="3"
+                                                    required
+                                                />
+                                                <p className="text-xs text-gray-500 mt-1">Umumnya 3-6 bulan</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="border-t border-green-200 pt-4">
+                                            <label className="block text-sm font-medium text-gray-700 mb-3">
+                                                Fasilitas Magang
+                                            </label>
+                                            <div className="grid md:grid-cols-2 gap-3">
+                                                <label className={`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition ${formData.hasPocketMoney ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}>
+                                                    <input
+                                                        type="checkbox"
+                                                        name="hasPocketMoney"
+                                                        checked={formData.hasPocketMoney}
+                                                        onChange={handleChange}
+                                                        className="w-5 h-5 text-green-600 rounded focus:ring-green-500"
+                                                    />
+                                                    <div>
+                                                        <div className="font-medium text-gray-900">💰 Uang Saku</div>
+                                                        <div className="text-xs text-gray-500">Tersedia tunjangan bulanan</div>
+                                                    </div>
+                                                </label>
+                                                <label className={`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition ${formData.hasCertificate ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}>
+                                                    <input
+                                                        type="checkbox"
+                                                        name="hasCertificate"
+                                                        checked={formData.hasCertificate}
+                                                        onChange={handleChange}
+                                                        className="w-5 h-5 text-green-600 rounded focus:ring-green-500"
+                                                    />
+                                                    <div>
+                                                        <div className="font-medium text-gray-900">📜 Sertifikat</div>
+                                                        <div className="text-xs text-gray-500">Sertifikat setelah selesai</div>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Full Time Info */}
+                            {formData.jobType === 'FULL_TIME' && (
+                                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <h3 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
+                                        💼 Pegawai Tetap / Full Time
+                                    </h3>
+                                    <p className="text-sm text-blue-800">
+                                        Posisi ini adalah untuk karyawan penuh waktu dengan jam kerja standar (40 jam/minggu). 
+                                        Termasuk benefit seperti BPJS, cuti tahunan, dan fasilitas lainnya sesuai kebijakan perusahaan.
+                                    </p>
+                                </div>
+                            )}
 
                             <div>
                                 <label className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-300 transition">
@@ -648,71 +962,9 @@ export default function PostJobPage() {
                         </div>
                     )}
 
-                    {/* Step 4: Requirements */}
-                    {currentStep === 4 && (
-                        <div className="space-y-6">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                                Persyaratan Kandidat
-                            </h2>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Pendidikan Minimal
-                                </label>
-                                <select
-                                    name="educationLevel"
-                                    value={formData.educationLevel}
-                                    onChange={handleChange}
-                                    className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                >
-                                    <option value="">Tidak ada persyaratan khusus</option>
-                                    <option value="SMA">SMA/SMK</option>
-                                    <option value="D3">Diploma (D3)</option>
-                                    <option value="S1">Sarjana (S1)</option>
-                                    <option value="S2">Magister (S2)</option>
-                                    <option value="S3">Doktor (S3)</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Pengalaman Kerja (Tahun)
-                                </label>
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-xs text-gray-600 mb-1 block">Minimal</label>
-                                        <input
-                                            type="number"
-                                            name="minExperience"
-                                            value={formData.minExperience}
-                                            onChange={handleChange}
-                                            min="0"
-                                            className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            placeholder="0"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs text-gray-600 mb-1 block">Maksimal</label>
-                                        <input
-                                            type="number"
-                                            name="maxExperience"
-                                            value={formData.maxExperience}
-                                            onChange={handleChange}
-                                            min="0"
-                                            className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            placeholder="5"
-                                        />
-                                    </div>
-                                </div>
-                                <p className="text-xs text-gray-500 mt-1">
-                                    Kosongkan jika tidak ada persyaratan pengalaman
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
                     {/* Step 5: Benefits & Skills */}
-                    {currentStep === 5 && (
+                    {/* Step 4: Benefits & Skills */}
+                    {currentStep === 4 && (
                         <div className="space-y-6">
                             <h2 className="text-2xl font-bold text-gray-900 mb-4">
                                 Benefits & Skills

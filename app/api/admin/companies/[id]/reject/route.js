@@ -41,33 +41,18 @@ export async function PATCH(request, context) {
         }
 
         // Update company - mark as rejected
+        // Only use fields that exist in the schema
         const updatedCompany = await prisma.companies.update({
             where: { id },
             data: {
                 verified: false,
                 verifiedAt: null,
-                verifiedBy: null,
-                rejectedAt: new Date(),
                 rejectionReason: reason,
-                status: 'SUSPENDED'
+                status: 'REJECTED',
+                updatedAt: new Date()
             }
         })
 
-        // Log admin action
-        await prisma.auditLog.create({
-            data: {
-                userId: admin.id,
-                action: 'REJECT_COMPANY',
-                targetType: 'COMPANY',
-                targetId: id,
-                changes: {
-                    companyName: company.name,
-                    reason
-                }
-            }
-        })
-
-        // TODO: Send rejection email to recruiter
         console.log(`❌ Company ${company.name} rejected by admin ${admin.email}`)
 
         return NextResponse.json({

@@ -42,7 +42,7 @@ export default function CompanyDetailPage() {
     const handleVerify = async () => {
         const result = await Swal.fire({
             title: 'Verify Company?',
-            text: `Verifikasi ${company.name}?`,
+            html: `<p class="text-gray-600">Verifikasi <strong>${company.name}</strong>?</p>`,
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#10b981',
@@ -50,7 +50,12 @@ export default function CompanyDetailPage() {
             confirmButtonText: 'Ya, Verifikasi',
             cancelButtonText: 'Batal',
             input: 'textarea',
-            inputPlaceholder: 'Catatan (opsional)...'
+            inputPlaceholder: 'Catatan (opsional)...',
+            allowOutsideClick: false,
+            allowEscapeKey: true,
+            scrollbarPadding: true,
+            stopKeydownPropagation: true,
+            focusConfirm: false
         })
 
         if (result.isConfirmed) {
@@ -91,7 +96,7 @@ export default function CompanyDetailPage() {
     const handleReject = async () => {
         const result = await Swal.fire({
             title: 'Reject Company?',
-            text: `Mengapa ${company.name} ditolak?`,
+            html: `<p class="text-gray-600">Mengapa ditolak?</p>`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#ef4444',
@@ -102,6 +107,16 @@ export default function CompanyDetailPage() {
             inputPlaceholder: 'Alasan penolakan (wajib)...',
             inputValidator: (value) => {
                 if (!value) return 'Alasan harus diisi!'
+            },
+            allowOutsideClick: false,
+            allowEscapeKey: true,
+            scrollbarPadding: true,
+            stopKeydownPropagation: true,
+            focusConfirm: false,
+            didOpen: () => {
+                // Focus on textarea when modal opens
+                const textarea = Swal.getInput()
+                if (textarea) textarea.focus()
             }
         })
 
