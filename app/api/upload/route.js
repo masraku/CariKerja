@@ -20,13 +20,15 @@ export async function POST(request) {
         const file = formData.get('file')
         const type = formData.get('type')
         const bucket = formData.get('bucket') // 'jobseeker-photos', 'jobseeker-cv', etc.
+        const companyId = formData.get('companyId') // For company gallery uploads
 
         console.log('📂 Upload Request:', {
             fileName: file?.name,
             fileType: file?.type,
             fileSize: file?.size,
             bucket,
-            type
+            type,
+            companyId
         })
 
         if (!file) {

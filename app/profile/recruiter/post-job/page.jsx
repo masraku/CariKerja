@@ -27,6 +27,8 @@ export default function PostJobPage() {
     const [currentStep, setCurrentStep] = useState(1)
     const [isSaving, setIsSaving] = useState(false)
     const [isCheckingVerification, setIsCheckingVerification] = useState(true)
+    const [blockReason, setBlockReason] = useState(null) // 'no_token' | 'no_profile' | 'not_verified' | 'error'
+    const [companyStatus, setCompanyStatus] = useState(null)
 
     // Check company verification on page load
     useEffect(() => {
@@ -37,7 +39,8 @@ export default function PostJobPage() {
         try {
             const token = localStorage.getItem('token')
             if (!token) {
-                router.push('/login?role=recruiter')
+                setBlockReason('no_token')
+                setIsCheckingVerification(false)
                 return
             }
 
@@ -49,14 +52,8 @@ export default function PostJobPage() {
             const data = await response.json()
 
             if (!response.ok) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal Memuat Profile',
-                    text: 'Silakan coba lagi atau hubungi admin.',
-                    confirmButtonColor: '#2563EB'
-                }).then(() => {
-                    router.push('/profile/recruiter/dashboard')
-                })
+                setBlockReason('error')
+                setIsCheckingVerification(false)
                 return
             }
 
@@ -67,14 +64,8 @@ export default function PostJobPage() {
             
             // If no profile exists, redirect to create profile
             if (!profile) {
-                Swal.fire({
-                    icon: 'info',
-                    title: 'Profile Belum Lengkap',
-                    text: 'Silakan lengkapi profile perusahaan terlebih dahulu.',
-                    confirmButtonColor: '#2563EB'
-                }).then(() => {
-                    router.push('/profile/recruiter')
-                })
+                setBlockReason('no_profile')
+                setIsCheckingVerification(false)
                 return
             }
 
@@ -83,34 +74,20 @@ export default function PostJobPage() {
             console.log('📥 Company data:', company)
             
             if (!company?.verified) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Perusahaan Belum Terverifikasi',
-                    html: `
-                        <p class="mb-2">Anda belum bisa memposting lowongan kerja.</p>
-                        <p class="text-sm text-gray-600">Perusahaan Anda harus terverifikasi terlebih dahulu oleh admin sebelum dapat memposting lowongan.</p>
-                    `,
-                    confirmButtonColor: '#2563EB',
-                    confirmButtonText: 'Kembali ke Dashboard'
-                }).then(() => {
-                    router.push('/profile/recruiter/dashboard')
-                })
+                setBlockReason('not_verified')
+                setCompanyStatus(company?.status)
+                setIsCheckingVerification(false)
                 return
             }
 
             // Company is verified, allow access
+            setBlockReason(null)
             setIsCheckingVerification(false)
 
         } catch (error) {
             console.error('Error checking verification:', error)
-            Swal.fire({
-                icon: 'error',
-                title: 'Terjadi Kesalahan',
-                text: 'Gagal memeriksa status verifikasi perusahaan.',
-                confirmButtonColor: '#2563EB'
-            }).then(() => {
-                router.push('/profile/recruiter/dashboard')
-            })
+            setBlockReason('error')
+            setIsCheckingVerification(false)
         }
     }
 
@@ -339,6 +316,71 @@ export default function PostJobPage() {
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
                     <p className="text-gray-600">Memeriksa status perusahaan...</p>
+                </div>
+            </div>
+        )
+    }
+
+    // Show blocked UI if there's a block reason
+    if (blockReason) {
+        const blockConfig = {
+            no_token: {
+                icon: '🔐',
+                title: 'Sesi Berakhir',
+                message: 'Silakan login kembali untuk melanjutkan.',
+                buttonText: 'Login',
+                buttonAction: () => router.push('/login?role=recruiter')
+            },
+            no_profile: {
+                icon: '📝',
+                title: 'Profile Belum Lengkap',
+                message: 'Silakan lengkapi profile perusahaan terlebih dahulu sebelum memposting lowongan.',
+                buttonText: 'Lengkapi Profile',
+                buttonAction: () => router.push('/profile/recruiter')
+            },
+            not_verified: {
+                icon: '⏳',
+                title: 'Menunggu Verifikasi',
+                message: companyStatus === 'REJECTED' 
+                    ? 'Perusahaan Anda ditolak. Silakan edit profile perusahaan dan kirim ulang untuk di-review.' 
+                    : companyStatus === 'PENDING_RESUBMISSION'
+                    ? 'Perusahaan Anda sedang dalam proses review ulang oleh admin.'
+                    : 'Perusahaan Anda harus terverifikasi terlebih dahulu oleh admin sebelum dapat memposting lowongan.',
+                buttonText: companyStatus === 'REJECTED' ? 'Edit Profile Perusahaan' : 'Kembali ke Dashboard',
+                buttonAction: () => router.push(companyStatus === 'REJECTED' ? '/profile/recruiter' : '/profile/recruiter/dashboard')
+            },
+            error: {
+                icon: '❌',
+                title: 'Terjadi Kesalahan',
+                message: 'Gagal memeriksa status verifikasi perusahaan. Silakan coba lagi.',
+                buttonText: 'Kembali ke Dashboard',
+                buttonAction: () => router.push('/profile/recruiter/dashboard')
+            }
+        }
+
+        const config = blockConfig[blockReason] || blockConfig.error
+
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
+                    <div className="text-6xl mb-4">{config.icon}</div>
+                    <h1 className="text-2xl font-bold text-gray-900 mb-2">{config.title}</h1>
+                    <p className="text-gray-600 mb-6">{config.message}</p>
+                    
+                    {companyStatus === 'PENDING_RESUBMISSION' && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                            <p className="text-sm text-blue-700">
+                                ✨ Profile perusahaan Anda sudah dikirim ulang dan sedang menunggu review admin.
+                            </p>
+                        </div>
+                    )}
+                    
+                    <button
+                        onClick={config.buttonAction}
+                        className="w-full py-3 px-6 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
+                    >
+                        {config.buttonText}
+                    </button>
                 </div>
             </div>
         )

@@ -20,9 +20,19 @@ export async function GET(request) {
         let whereClause = {}
         
         if (statusFilter === 'pending') {
+            // Show both new pending and resubmitted companies
             whereClause = {
                 verified: false,
-                status: 'PENDING_VERIFICATION'
+                OR: [
+                    { status: 'PENDING_VERIFICATION' },
+                    { status: 'PENDING_RESUBMISSION' }
+                ]
+            }
+        } else if (statusFilter === 'resubmission') {
+            // Only show resubmitted companies
+            whereClause = {
+                verified: false,
+                status: 'PENDING_RESUBMISSION'
             }
         } else if (statusFilter === 'verified') {
             whereClause = {

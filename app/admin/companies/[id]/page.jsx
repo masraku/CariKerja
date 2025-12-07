@@ -219,6 +219,11 @@ export default function CompanyDetailPage() {
                                         Pending Verification
                                     </span>
                                 )}
+                                {!company.verified && company.status === 'PENDING_RESUBMISSION' && (
+                                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                                        Resubmission - Needs Review
+                                    </span>
+                                )}
                                 {company.verified && (
                                     <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
                                         <CheckCircle className="w-4 h-4" />
@@ -358,7 +363,7 @@ export default function CompanyDetailPage() {
                     </div>
 
                     {/* Actions */}
-                    {!company.verified && company.status === 'PENDING_VERIFICATION' && (
+                    {!company.verified && (company.status === 'PENDING_VERIFICATION' || company.status === 'PENDING_RESUBMISSION') && (
                         <div className="space-y-3">
                             <button
                                 onClick={handleVerify}

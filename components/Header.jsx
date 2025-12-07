@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 
 const Header = () => {
@@ -9,6 +10,7 @@ const Header = () => {
   const [scrolled, setScrolled] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(false)
   const { user, logout, isAuthenticated } = useAuth()
+  const pathname = usePathname()
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10)
@@ -155,6 +157,33 @@ const Header = () => {
     transition: 'color 0.2s'
   }
 
+  // Helper function to check if link is active
+  const isActive = (path) => {
+    if (path === '/') return pathname === '/'
+    return pathname.startsWith(path)
+  }
+
+  // Style for nav link wrapper with underline indicator
+  const getNavLinkWrapperStyle = (path) => ({
+    position: 'relative',
+    display: 'inline-block',
+    paddingBottom: '4px'
+  })
+
+  // Active indicator underline
+  const getActiveIndicatorStyle = (path) => ({
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '2px',
+    background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)',
+    borderRadius: '2px',
+    transform: isActive(path) ? 'scaleX(1)' : 'scaleX(0)',
+    transformOrigin: 'left',
+    transition: 'transform 0.3s ease'
+  })
+
   const buttonPrimary = {
     padding: '10px 20px',
     background: isDarkMode ? '#3b82f6' : '#111827',
@@ -257,26 +286,38 @@ const Header = () => {
 
           {/* Desktop Nav */}
           <nav style={navStyle} className="desktop-nav">
-            <Link href="/jobs" style={navLinkStyle} 
-              onMouseOver={(e) => e.target.style.color = colors.text}
-              onMouseOut={(e) => e.target.style.color = colors.textMuted}>
-              Lowongan
-            </Link>
-            <Link href="/companies" style={navLinkStyle}
-              onMouseOver={(e) => e.target.style.color = colors.text}
-              onMouseOut={(e) => e.target.style.color = colors.textMuted}>
-              Perusahaan
-            </Link>
-            <Link href="/about" style={navLinkStyle}
-              onMouseOver={(e) => e.target.style.color = colors.text}
-              onMouseOut={(e) => e.target.style.color = colors.textMuted}>
-              Tentang
-            </Link>
-            <Link href="/warning" style={{ ...navLinkStyle, color: '#dc2626' }}
-              onMouseOver={(e) => e.target.style.color = '#b91c1c'}
-              onMouseOut={(e) => e.target.style.color = '#dc2626'}>
-              ⚠️ S&K
-            </Link>
+            <div style={getNavLinkWrapperStyle('/jobs')}>
+              <Link href="/jobs" style={{ ...navLinkStyle, color: isActive('/jobs') ? '#3b82f6' : colors.textMuted }} 
+                onMouseOver={(e) => e.target.style.color = isActive('/jobs') ? '#3b82f6' : colors.text}
+                onMouseOut={(e) => e.target.style.color = isActive('/jobs') ? '#3b82f6' : colors.textMuted}>
+                Lowongan
+              </Link>
+              <div style={getActiveIndicatorStyle('/jobs')} />
+            </div>
+            <div style={getNavLinkWrapperStyle('/companies')}>
+              <Link href="/companies" style={{ ...navLinkStyle, color: isActive('/companies') ? '#3b82f6' : colors.textMuted }}
+                onMouseOver={(e) => e.target.style.color = isActive('/companies') ? '#3b82f6' : colors.text}
+                onMouseOut={(e) => e.target.style.color = isActive('/companies') ? '#3b82f6' : colors.textMuted}>
+                Perusahaan
+              </Link>
+              <div style={getActiveIndicatorStyle('/companies')} />
+            </div>
+            <div style={getNavLinkWrapperStyle('/about')}>
+              <Link href="/about" style={{ ...navLinkStyle, color: isActive('/about') ? '#3b82f6' : colors.textMuted }}
+                onMouseOver={(e) => e.target.style.color = isActive('/about') ? '#3b82f6' : colors.text}
+                onMouseOut={(e) => e.target.style.color = isActive('/about') ? '#3b82f6' : colors.textMuted}>
+                Tentang
+              </Link>
+              <div style={getActiveIndicatorStyle('/about')} />
+            </div>
+            <div style={getNavLinkWrapperStyle('/warning')}>
+              <Link href="/warning" style={{ ...navLinkStyle, color: isActive('/warning') ? '#ef4444' : '#dc2626' }}
+                onMouseOver={(e) => e.target.style.color = '#b91c1c'}
+                onMouseOut={(e) => e.target.style.color = isActive('/warning') ? '#ef4444' : '#dc2626'}>
+                ⚠️ S&K
+              </Link>
+              <div style={{ ...getActiveIndicatorStyle('/warning'), background: 'linear-gradient(90deg, #ef4444, #dc2626)' }} />
+            </div>
           </nav>
 
           {/* Auth Section Desktop */}
@@ -427,16 +468,48 @@ const Header = () => {
       {/* Mobile Menu */}
       {isMenuOpen && (
         <div style={mobileMenuStyle} className="mobile-menu">
-          <Link href="/jobs" style={{ ...navLinkStyle, padding: '12px 0', fontSize: '16px' }} onClick={() => setIsMenuOpen(false)}>
+          <Link href="/jobs" style={{ 
+            ...navLinkStyle, 
+            padding: '12px 0', 
+            fontSize: '16px',
+            color: isActive('/jobs') ? '#3b82f6' : colors.textMuted,
+            borderLeft: isActive('/jobs') ? '3px solid #3b82f6' : '3px solid transparent',
+            paddingLeft: '12px',
+            marginLeft: '-12px'
+          }} onClick={() => setIsMenuOpen(false)}>
             Lowongan
           </Link>
-          <Link href="/companies" style={{ ...navLinkStyle, padding: '12px 0', fontSize: '16px' }} onClick={() => setIsMenuOpen(false)}>
+          <Link href="/companies" style={{ 
+            ...navLinkStyle, 
+            padding: '12px 0', 
+            fontSize: '16px',
+            color: isActive('/companies') ? '#3b82f6' : colors.textMuted,
+            borderLeft: isActive('/companies') ? '3px solid #3b82f6' : '3px solid transparent',
+            paddingLeft: '12px',
+            marginLeft: '-12px'
+          }} onClick={() => setIsMenuOpen(false)}>
             Perusahaan
           </Link>
-          <Link href="/about" style={{ ...navLinkStyle, padding: '12px 0', fontSize: '16px' }} onClick={() => setIsMenuOpen(false)}>
+          <Link href="/about" style={{ 
+            ...navLinkStyle, 
+            padding: '12px 0', 
+            fontSize: '16px',
+            color: isActive('/about') ? '#3b82f6' : colors.textMuted,
+            borderLeft: isActive('/about') ? '3px solid #3b82f6' : '3px solid transparent',
+            paddingLeft: '12px',
+            marginLeft: '-12px'
+          }} onClick={() => setIsMenuOpen(false)}>
             Tentang
           </Link>
-          <Link href="/warning" style={{ ...navLinkStyle, padding: '12px 0', fontSize: '16px', color: '#dc2626' }} onClick={() => setIsMenuOpen(false)}>
+          <Link href="/warning" style={{ 
+            ...navLinkStyle, 
+            padding: '12px 0', 
+            fontSize: '16px', 
+            color: isActive('/warning') ? '#ef4444' : '#dc2626',
+            borderLeft: isActive('/warning') ? '3px solid #ef4444' : '3px solid transparent',
+            paddingLeft: '12px',
+            marginLeft: '-12px'
+          }} onClick={() => setIsMenuOpen(false)}>
             ⚠️ Syarat & Ketentuan
           </Link>
 

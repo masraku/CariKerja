@@ -14,6 +14,8 @@ export default function RecruiterProfilePage() {
     const [isLoading, setIsLoading] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
     const [isEditMode, setIsEditMode] = useState(false)
+    const [companyStatus, setCompanyStatus] = useState(null) // PENDING_VERIFICATION, REJECTED, PENDING_RESUBMISSION, VERIFIED
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     // Form data
     const [formData, setFormData] = useState({
@@ -146,6 +148,58 @@ export default function RecruiterProfilePage() {
         }
     }
 
+    // Submit for admin validation
+    const handleSubmitForValidation = async () => {
+        try {
+            setIsSubmitting(true)
+            
+            const response = await fetch('/api/profile/recruiter/submit-validation', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+
+            const data = await response.json()
+
+            if (response.ok) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    html: `
+                        <p>Perusahaan Anda telah disubmit untuk validasi.</p>
+                        <p class="text-sm text-gray-600 mt-2">Admin akan mereview dan memverifikasi perusahaan Anda dalam waktu 1-2 hari kerja.</p>
+                    `,
+                    confirmButtonColor: '#2563EB'
+                })
+                
+                // Update local status
+                setCompanyStatus('PENDING_RESUBMISSION')
+                
+                // Redirect to dashboard
+                router.push('/profile/recruiter/dashboard')
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: data.error || 'Gagal mengsubmit validasi',
+                    confirmButtonColor: '#2563EB'
+                })
+            }
+        } catch (error) {
+            console.error('Submit validation error:', error)
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: 'Terjadi kesalahan saat submit validasi',
+                confirmButtonColor: '#2563EB'
+            })
+        } finally {
+            setIsSubmitting(false)
+        }
+    }
+
 
     const loadProfile = async () => {
         try {
@@ -186,33 +240,36 @@ export default function RecruiterProfilePage() {
                         bio: data.profile.bio || '',
                         
                         companyId: data.profile.companyId || '',
-                        companyName: data.profile.company?.name || '',
-                        companySlug: data.profile.company?.slug || '',
-                        companyLogo: data.profile.company?.logo || '',
-                        tagline: data.profile.company?.tagline || '',
-                        description: data.profile.company?.description || '',
-                        industry: data.profile.company?.industry || '',
-                        companySize: data.profile.company?.companySize || '',
-                        foundedYear: data.profile.company?.foundedYear || '',
+                        companyName: data.profile.companies?.name || '',
+                        companySlug: data.profile.companies?.slug || '',
+                        companyLogo: data.profile.companies?.logo || '',
+                        tagline: data.profile.companies?.tagline || '',
+                        description: data.profile.companies?.description || '',
+                        industry: data.profile.companies?.industry || '',
+                        companySize: data.profile.companies?.companySize || '',
+                        foundedYear: data.profile.companies?.foundedYear || '',
 
-                        companyEmail: data.profile.company?.email || '',
-                        companyPhone: data.profile.company?.phone || '',
-                        website: data.profile.company?.website || '',
+                        companyEmail: data.profile.companies?.email || '',
+                        companyPhone: data.profile.companies?.phone || '',
+                        website: data.profile.companies?.website || '',
 
-                        address: data.profile.company?.address || '',
-                        city: data.profile.company?.city || '',
-                        province: data.profile.company?.province || '',
-                        postalCode: data.profile.company?.postalCode || '',
+                        address: data.profile.companies?.address || '',
+                        city: data.profile.companies?.city || '',
+                        province: data.profile.companies?.province || '',
+                        postalCode: data.profile.companies?.postalCode || '',
 
-                        linkedinUrl: data.profile.company?.linkedinUrl || '',
-                        facebookUrl: data.profile.company?.facebookUrl || '',
-                        twitterUrl: data.profile.company?.twitterUrl || '',
-                        instagramUrl: data.profile.company?.instagramUrl || '',
+                        linkedinUrl: data.profile.companies?.linkedinUrl || '',
+                        facebookUrl: data.profile.companies?.facebookUrl || '',
+                        twitterUrl: data.profile.companies?.twitterUrl || '',
+                        instagramUrl: data.profile.companies?.instagramUrl || '',
 
-                        culture: data.profile.company?.culture || '',
-                        benefits: data.profile.company?.benefits || [],
-                        gallery: data.profile.company?.gallery || []
+                        culture: data.profile.companies?.culture || '',
+                        benefits: data.profile.companies?.benefits || [],
+                        gallery: data.profile.companies?.gallery || []
                     })
+                    
+                    // Set company status for resubmit button
+                    setCompanyStatus(data.profile.companies?.status || null)
                 }
             }
         } catch (error) {
@@ -465,6 +522,11 @@ export default function RecruiterProfilePage() {
                                         placeholder="PT. Tech Innovate Indonesia"
                                         required
                                     />
+                                    {formData.companyId && formData.companyName && (
+                                        <p className="text-xs text-green-600 mt-1">
+                                            ✓ Terisi dari data registrasi. Anda dapat mengedit jika ada kesalahan.
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div>
@@ -889,42 +951,96 @@ export default function RecruiterProfilePage() {
                             Sebelumnya
                         </button>
 
-                        {currentStep < steps.length ? (
-                            <button
-                                type="button"
-                                onClick={() => setCurrentStep(prev => prev + 1)}
-                                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                            >
-                                Selanjutnya
-                                <ArrowRight className="w-5 h-5" />
-                            </button>
-                        ) : (
-                            <button
-                                type="button"
-                                onClick={handleSave}
-                                disabled={isSaving}
-                                className={`flex items-center gap-2 px-6 py-3 rounded-lg transition ${isSaving
-                                        ? 'bg-gray-400 cursor-not-allowed'
-                                        : 'bg-green-600 text-white hover:bg-green-700'
-                                    }`}
-                            >
-                                {isSaving ? (
-                                    <>
-                                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                        </svg>
-                                        Menyimpan...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Save className="w-5 h-5" />
-                                        {isEditMode ? 'Update Profile' : 'Simpan Profile'}
-                                    </>
-                                )}
-                            </button>
-                        )}
+                        <div className="flex gap-3">
+                            {currentStep < steps.length ? (
+                                <button
+                                    type="button"
+                                    onClick={() => setCurrentStep(prev => prev + 1)}
+                                    className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                >
+                                    Selanjutnya
+                                    <ArrowRight className="w-5 h-5" />
+                                </button>
+                            ) : (
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={handleSave}
+                                        disabled={isSaving}
+                                        className={`flex items-center gap-2 px-6 py-3 rounded-lg transition ${isSaving
+                                                ? 'bg-gray-400 cursor-not-allowed'
+                                                : 'bg-green-600 text-white hover:bg-green-700'
+                                            }`}
+                                    >
+                                        {isSaving ? (
+                                            <>
+                                                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                                </svg>
+                                                Menyimpan...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Save className="w-5 h-5" />
+                                                {isEditMode ? 'Update Profile' : 'Simpan Profile'}
+                                            </>
+                                        )}
+                                    </button>
+
+                                    {/* Submit for Validation Button */}
+                                    {isEditMode && companyStatus && companyStatus !== 'VERIFIED' && companyStatus !== 'PENDING_RESUBMISSION' && (
+                                        <button
+                                            type="button"
+                                            onClick={handleSubmitForValidation}
+                                            disabled={isSubmitting}
+                                            className={`flex items-center gap-2 px-6 py-3 rounded-lg transition ${isSubmitting
+                                                    ? 'bg-gray-400 cursor-not-allowed'
+                                                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                                                }`}
+                                        >
+                                            {isSubmitting ? (
+                                                <>
+                                                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                                    </svg>
+                                                    Mengirim...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Check className="w-5 h-5" />
+                                                    Submit untuk Validasi
+                                                </>
+                                            )}
+                                        </button>
+                                    )}
+                                </>
+                            )}
+                        </div>
                     </div>
+
+                    {/* Status Indicator */}
+                    {isEditMode && companyStatus && (
+                        <div className={`mt-4 p-4 rounded-lg ${
+                            companyStatus === 'VERIFIED' ? 'bg-green-50 border border-green-200' :
+                            companyStatus === 'PENDING_RESUBMISSION' ? 'bg-blue-50 border border-blue-200' :
+                            companyStatus === 'REJECTED' ? 'bg-red-50 border border-red-200' :
+                            'bg-orange-50 border border-orange-200'
+                        }`}>
+                            <p className={`text-sm font-medium ${
+                                companyStatus === 'VERIFIED' ? 'text-green-700' :
+                                companyStatus === 'PENDING_RESUBMISSION' ? 'text-blue-700' :
+                                companyStatus === 'REJECTED' ? 'text-red-700' :
+                                'text-orange-700'
+                            }`}>
+                                {companyStatus === 'VERIFIED' && '✓ Perusahaan sudah terverifikasi'}
+                                {companyStatus === 'PENDING_VERIFICATION' && '⏳ Menunggu verifikasi awal dari admin'}
+                                {companyStatus === 'PENDING_RESUBMISSION' && '🔄 Perusahaan sedang direview ulang oleh admin'}
+                                {companyStatus === 'REJECTED' && '❌ Perusahaan ditolak. Silakan perbaiki dan submit ulang.'}
+                            </p>
+                        </div>
+                    )}
                 </form>
             </div>
         </div>

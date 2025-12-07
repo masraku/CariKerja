@@ -139,6 +139,17 @@ export async function POST(request) {
                 }
             } else {
                 // Update existing company
+                // First, get current company to check status
+                const currentCompany = await prisma.companies.findUnique({
+                    where: { id: recruiter.companyId },
+                    select: { status: true }
+                })
+
+                // If company was REJECTED, change to PENDING_RESUBMISSION for re-review
+                const newStatus = currentCompany?.status === 'REJECTED' 
+                    ? 'PENDING_RESUBMISSION' 
+                    : currentCompany?.status
+
                 company = await prisma.companies.update({
                     where: { id: recruiter.companyId },
                     data: {
@@ -163,7 +174,11 @@ export async function POST(request) {
                         twitterUrl,
                         instagramUrl,
                         culture,
-                        benefits: benefits || []
+                        benefits: benefits || [],
+                        // Update status if it was REJECTED
+                        status: newStatus,
+                        // Clear rejection reason when resubmitting
+                        rejectionReason: currentCompany?.status === 'REJECTED' ? null : undefined
                     }
                 })
             }

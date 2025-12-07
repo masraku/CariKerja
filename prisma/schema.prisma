@@ -554,6 +554,7 @@ enum ApplicationStatus {
 
 enum CompanyStatus {
   PENDING_VERIFICATION
+  PENDING_RESUBMISSION
   VERIFIED
   REJECTED
   SUSPENDED
