@@ -218,13 +218,14 @@ export default function RecruiterProfilePage() {
                     hasProfile: !!data.profile,
                     isVerified: data.profile?.isVerified,
                     companyId: data.profile?.companyId,
-                    companyName: data.profile?.company?.name
+                    companyVerified: data.profile?.companies?.verified,
+                    companyStatus: data.profile?.companies?.status
                 })
                 
                 if (data.profile) {
-                    // Check if recruiter is already verified and has company
-                    if (data.profile.isVerified === true && data.profile.companyId) {
-                        console.log('✅ Recruiter verified with company, redirecting to dashboard')
+                    // Check if company is already VERIFIED - redirect to dashboard
+                    if (data.profile.companies?.verified === true) {
+                        console.log('✅ Company is verified, redirecting to dashboard')
                         router.push('/profile/recruiter/dashboard')
                         return
                     }

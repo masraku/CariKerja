@@ -44,7 +44,7 @@ export async function POST(request) {
 
         const company = recruiter.companies
 
-        // Only allow resubmission for REJECTED or PENDING_VERIFICATION companies
+        // Only reject if company is already verified
         if (company.verified) {
             return NextResponse.json(
                 { error: 'Company is already verified' },
@@ -52,19 +52,14 @@ export async function POST(request) {
             )
         }
 
-        if (company.status === 'PENDING_RESUBMISSION') {
-            return NextResponse.json(
-                { error: 'Company is already pending resubmission' },
-                { status: 400 }
-            )
-        }
-
+        // Allow resubmission even if already pending (just refresh the timestamp)
         // Update company status to PENDING_RESUBMISSION
         await prisma.companies.update({
             where: { id: company.id },
             data: {
                 status: 'PENDING_RESUBMISSION',
-                rejectionReason: null // Clear previous rejection reason
+                rejectionReason: null, // Clear previous rejection reason
+                updatedAt: new Date()
             }
         })
 
