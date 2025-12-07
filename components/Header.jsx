@@ -7,12 +7,24 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(false)
   const { user, logout, isAuthenticated } = useAuth()
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10)
     window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
+    
+    // Detect dark mode
+    const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    setIsDarkMode(darkModeQuery.matches)
+    
+    const handleDarkModeChange = (e) => setIsDarkMode(e.matches)
+    darkModeQuery.addEventListener('change', handleDarkModeChange)
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      darkModeQuery.removeEventListener('change', handleDarkModeChange)
+    }
   }, [])
 
   const handleLogout = () => {
@@ -83,6 +95,19 @@ const Header = () => {
     return '/'
   }
 
+  // Dynamic colors based on dark mode
+  const colors = {
+    text: isDarkMode ? '#f9fafb' : '#111827',
+    textMuted: isDarkMode ? '#9ca3af' : '#6b7280',
+    bg: isDarkMode ? 'rgba(17,24,39,0.95)' : 'rgba(255,255,255,0.95)',
+    bgSolid: isDarkMode ? '#111827' : 'white',
+    border: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+    borderSolid: isDarkMode ? '#374151' : '#e5e7eb',
+    dropdownBg: isDarkMode ? '#1f2937' : 'white',
+    dropdownHover: isDarkMode ? '#374151' : '#f9fafb',
+    dropdownInfoBg: isDarkMode ? '#111827' : '#fafafa'
+  }
+
   // Styles
   const headerStyle = {
     position: 'fixed',
@@ -90,9 +115,9 @@ const Header = () => {
     left: 0,
     right: 0,
     zIndex: 100,
-    background: scrolled ? 'rgba(255,255,255,0.95)' : 'transparent',
+    background: scrolled ? colors.bg : 'transparent',
     backdropFilter: scrolled ? 'blur(20px)' : 'none',
-    borderBottom: scrolled ? '1px solid rgba(0,0,0,0.05)' : 'none',
+    borderBottom: scrolled ? `1px solid ${colors.border}` : 'none',
     transition: 'all 0.3s ease'
   }
 
@@ -113,7 +138,7 @@ const Header = () => {
     textDecoration: 'none',
     fontWeight: 700,
     fontSize: '1.25rem',
-    color: '#111827'
+    color: colors.text
   }
 
   const navStyle = {
@@ -123,7 +148,7 @@ const Header = () => {
   }
 
   const navLinkStyle = {
-    color: '#6b7280',
+    color: colors.textMuted,
     textDecoration: 'none',
     fontSize: '15px',
     fontWeight: 500,
@@ -132,7 +157,7 @@ const Header = () => {
 
   const buttonPrimary = {
     padding: '10px 20px',
-    background: '#111827',
+    background: isDarkMode ? '#3b82f6' : '#111827',
     color: 'white',
     borderRadius: '8px',
     border: 'none',
@@ -146,9 +171,9 @@ const Header = () => {
   const buttonSecondary = {
     padding: '10px 20px',
     background: 'transparent',
-    color: '#111827',
+    color: colors.text,
     borderRadius: '8px',
-    border: '1px solid #e5e7eb',
+    border: `1px solid ${colors.borderSolid}`,
     fontSize: '14px',
     fontWeight: 500,
     cursor: 'pointer',
@@ -176,10 +201,10 @@ const Header = () => {
     top: 'calc(100% + 8px)',
     right: 0,
     width: '240px',
-    background: 'white',
+    background: colors.dropdownBg,
     borderRadius: '12px',
-    boxShadow: '0 10px 40px rgba(0,0,0,0.12)',
-    border: '1px solid #e5e7eb',
+    boxShadow: isDarkMode ? '0 10px 40px rgba(0,0,0,0.4)' : '0 10px 40px rgba(0,0,0,0.12)',
+    border: `1px solid ${colors.borderSolid}`,
     overflow: 'hidden',
     zIndex: 200
   }
@@ -189,7 +214,7 @@ const Header = () => {
     alignItems: 'center',
     gap: '12px',
     padding: '12px 16px',
-    color: '#374151',
+    color: colors.text,
     textDecoration: 'none',
     fontSize: '14px',
     transition: 'background 0.2s'
@@ -201,7 +226,7 @@ const Header = () => {
     left: 0,
     right: 0,
     bottom: 0,
-    background: 'white',
+    background: colors.bgSolid,
     padding: '24px 5%',
     display: 'flex',
     flexDirection: 'column',
@@ -233,18 +258,18 @@ const Header = () => {
           {/* Desktop Nav */}
           <nav style={navStyle} className="desktop-nav">
             <Link href="/jobs" style={navLinkStyle} 
-              onMouseOver={(e) => e.target.style.color = '#111827'}
-              onMouseOut={(e) => e.target.style.color = '#6b7280'}>
+              onMouseOver={(e) => e.target.style.color = colors.text}
+              onMouseOut={(e) => e.target.style.color = colors.textMuted}>
               Lowongan
             </Link>
             <Link href="/companies" style={navLinkStyle}
-              onMouseOver={(e) => e.target.style.color = '#111827'}
-              onMouseOut={(e) => e.target.style.color = '#6b7280'}>
+              onMouseOver={(e) => e.target.style.color = colors.text}
+              onMouseOut={(e) => e.target.style.color = colors.textMuted}>
               Perusahaan
             </Link>
             <Link href="/about" style={navLinkStyle}
-              onMouseOver={(e) => e.target.style.color = '#111827'}
-              onMouseOut={(e) => e.target.style.color = '#6b7280'}>
+              onMouseOver={(e) => e.target.style.color = colors.text}
+              onMouseOut={(e) => e.target.style.color = colors.textMuted}>
               Tentang
             </Link>
             <Link href="/warning" style={{ ...navLinkStyle, color: '#dc2626' }}
@@ -259,13 +284,13 @@ const Header = () => {
             {!isAuthenticated ? (
               <>
                 <Link href="/login" style={buttonSecondary}
-                  onMouseOver={(e) => e.target.style.background = '#f9fafb'}
+                  onMouseOver={(e) => e.target.style.background = colors.dropdownHover}
                   onMouseOut={(e) => e.target.style.background = 'transparent'}>
                   Masuk
                 </Link>
                 <Link href="/register" style={buttonPrimary}
-                  onMouseOver={(e) => e.target.style.background = '#374151'}
-                  onMouseOut={(e) => e.target.style.background = '#111827'}>
+                  onMouseOver={(e) => e.target.style.background = isDarkMode ? '#2563eb' : '#374151'}
+                  onMouseOut={(e) => e.target.style.background = isDarkMode ? '#3b82f6' : '#111827'}>
                   Daftar
                 </Link>
               </>
@@ -275,7 +300,7 @@ const Header = () => {
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '4px' }}
                 >
-                  <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: 500 }}>
+                  <span style={{ fontSize: '14px', color: colors.textMuted, fontWeight: 500 }}>
                     {getUserName()}
                   </span>
                   <div style={avatarStyle}>
@@ -285,7 +310,7 @@ const Header = () => {
                       getUserName().charAt(0).toUpperCase()
                     )}
                   </div>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={colors.textMuted} strokeWidth="2"
                     style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>
                     <path d="M6 9l6 6 6-6"/>
                   </svg>
@@ -296,7 +321,7 @@ const Header = () => {
                     <div style={{ position: 'fixed', inset: 0, zIndex: 150 }} onClick={() => setIsDropdownOpen(false)} />
                     <div style={dropdownStyle}>
                       {/* User Info */}
-                      <div style={{ padding: '16px', borderBottom: '1px solid #f3f4f6', background: '#fafafa' }}>
+                      <div style={{ padding: '16px', borderBottom: `1px solid ${colors.borderSolid}`, background: colors.dropdownInfoBg }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                           <div style={{ ...avatarStyle, width: '44px', height: '44px', fontSize: '16px' }}>
                             {getUserPhoto() ? (
@@ -306,8 +331,8 @@ const Header = () => {
                             )}
                           </div>
                           <div>
-                            <div style={{ fontWeight: 600, color: '#111827', fontSize: '14px' }}>{getUserName()}</div>
-                            <div style={{ fontSize: '12px', color: '#6b7280' }}>{getRoleDisplay()}</div>
+                            <div style={{ fontWeight: 600, color: colors.text, fontSize: '14px' }}>{getUserName()}</div>
+                            <div style={{ fontSize: '12px', color: colors.textMuted }}>{getRoleDisplay()}</div>
                           </div>
                         </div>
                       </div>
@@ -316,7 +341,7 @@ const Header = () => {
                       <div style={{ padding: '8px 0' }}>
                         <Link href={getDashboardLink()} onClick={() => setIsDropdownOpen(false)}
                           style={dropdownItemStyle}
-                          onMouseOver={(e) => e.currentTarget.style.background = '#f9fafb'}
+                          onMouseOver={(e) => e.currentTarget.style.background = colors.dropdownHover}
                           onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
@@ -328,8 +353,8 @@ const Header = () => {
                         {user?.role === 'JOBSEEKER' && (
                           <Link href="/profile/jobseeker/applications" onClick={() => setIsDropdownOpen(false)}
                             style={dropdownItemStyle}
-                            onMouseOver={(e) => e.currentTarget.style.background = '#f9fafb'}
-                            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
+                          onMouseOver={(e) => e.currentTarget.style.background = colors.dropdownHover}
+                          onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                               <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                               <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
@@ -342,7 +367,7 @@ const Header = () => {
                           <>
                             <Link href="/profile/recruiter/post-job" onClick={() => setIsDropdownOpen(false)}
                               style={dropdownItemStyle}
-                              onMouseOver={(e) => e.currentTarget.style.background = '#f9fafb'}
+                              onMouseOver={(e) => e.currentTarget.style.background = colors.dropdownHover}
                               onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
                               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M12 5v14M5 12h14"/>
@@ -351,7 +376,7 @@ const Header = () => {
                             </Link>
                             <Link href="/recruiter/applications" onClick={() => setIsDropdownOpen(false)}
                               style={dropdownItemStyle}
-                              onMouseOver={(e) => e.currentTarget.style.background = '#f9fafb'}
+                              onMouseOver={(e) => e.currentTarget.style.background = colors.dropdownHover}
                               onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
                               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
@@ -364,7 +389,7 @@ const Header = () => {
                       </div>
 
                       {/* Logout */}
-                      <div style={{ borderTop: '1px solid #f3f4f6', padding: '8px 0' }}>
+                      <div style={{ borderTop: `1px solid ${colors.borderSolid}`, padding: '8px 0' }}>
                         <button onClick={handleLogout}
                           style={{ ...dropdownItemStyle, width: '100%', border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer' }}
                           onMouseOver={(e) => e.currentTarget.style.background = '#fef2f2'}
@@ -388,7 +413,7 @@ const Header = () => {
             style={hamburgerStyle}
             className="mobile-menu-btn"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111827" strokeWidth="2">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={colors.text} strokeWidth="2">
               {isMenuOpen ? (
                 <path d="M18 6L6 18M6 6l12 12"/>
               ) : (
@@ -437,8 +462,8 @@ const Header = () => {
                   )}
                 </div>
                 <div>
-                  <div style={{ fontWeight: 600, color: '#111827' }}>{getUserName()}</div>
-                  <div style={{ fontSize: '13px', color: '#6b7280' }}>{getRoleDisplay()}</div>
+                  <div style={{ fontWeight: 600, color: colors.text }}>{getUserName()}</div>
+                  <div style={{ fontSize: '13px', color: colors.textMuted }}>{getRoleDisplay()}</div>
                 </div>
               </div>
 
@@ -461,7 +486,7 @@ const Header = () => {
                 </>
               )}
 
-              <div style={{ height: '1px', background: '#e5e7eb', margin: '12px 0' }} />
+              <div style={{ height: '1px', background: colors.borderSolid, margin: '12px 0' }} />
 
               <button onClick={handleLogout} style={{ ...buttonSecondary, color: '#ef4444', borderColor: '#fecaca', width: '100%' }}>
                 Keluar

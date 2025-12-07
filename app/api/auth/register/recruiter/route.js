@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { v4 as uuidv4 } from 'uuid'
 
 export async function POST(request) {
   try {
@@ -131,6 +132,7 @@ export async function POST(request) {
     // ✅ Buat company dengan field yang required saja
     const company = await prisma.companies.create({
       data: {
+        id: uuidv4(),
         name: companyName,
         slug: slug,
         email: companyEmail.toLowerCase(),
@@ -142,7 +144,8 @@ export async function POST(request) {
         industry: 'Belum dilengkapi',
         companySize: 'Belum dilengkapi',
         status: 'PENDING_VERIFICATION',
-        verified: false
+        verified: false,
+        updatedAt: new Date()
       }
     })
 
@@ -153,25 +156,29 @@ export async function POST(request) {
 
     const user = await prisma.users.create({
       data: {
+        id: uuidv4(),
         email: companyEmail.toLowerCase(),
         password: hashedPassword,
         role: 'RECRUITER',
         emailVerified: false,
+        updatedAt: new Date(),
         recruiters: {
           create: {
+            id: uuidv4(),
             firstName,
             lastName,
             position: 'HR Manager', // Default, bisa diupdate saat profile completion
             phone: contactPersonPhone,
             companyId: company.id,
-            isVerified: false
+            isVerified: false,
+            updatedAt: new Date()
           }
         }
       },
       include: {
         recruiters: {
           include: {
-            company: true
+            companies: true
           }
         }
       }
