@@ -13,6 +13,10 @@ export async function GET(request) {
     // Build where clause
     const where = {
       AND: [
+        // Only show verified companies
+        {
+          verified: true
+        },
         // Only show companies with at least one recruiter
         {
           recruiters: {
