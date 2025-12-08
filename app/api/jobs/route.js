@@ -45,29 +45,43 @@ export async function GET(request) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
 
-    // Build where clause
+    // Build where clause with AND for proper filtering
     const where = {
-      isActive: true,
-      publishedAt: { not: null }
+      AND: [
+        { isActive: true },
+        { publishedAt: { not: null } },
+        // Only show jobs that haven't passed their deadline
+        // Either no deadline set (null) OR deadline is in the future
+        {
+          OR: [
+            { applicationDeadline: null },
+            { applicationDeadline: { gte: new Date() } }
+          ]
+        }
+      ]
     }
 
     // Search filter (search in title, description, or company name)
     if (search) {
-      where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-        { category: { contains: search, mode: 'insensitive' } },
-        { companies: { name: { contains: search, mode: 'insensitive' } } }
-      ]
+      where.AND.push({
+        OR: [
+          { title: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } },
+          { category: { contains: search, mode: 'insensitive' } },
+          { companies: { name: { contains: search, mode: 'insensitive' } } }
+        ]
+      })
     }
 
     // Location filter
     if (location) {
-      where.OR = [
-        { city: { contains: location, mode: 'insensitive' } },
-        { location: { contains: location, mode: 'insensitive' } },
-        { province: { contains: location, mode: 'insensitive' } }
-      ]
+      where.AND.push({
+        OR: [
+          { city: { contains: location, mode: 'insensitive' } },
+          { location: { contains: location, mode: 'insensitive' } },
+          { province: { contains: location, mode: 'insensitive' } }
+        ]
+      })
     }
 
     // Job type filter

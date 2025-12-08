@@ -4,7 +4,10 @@ import { getCurrentUser } from '@/lib/authHelper'
 
 export async function POST(request) {
     try {
+        console.log('📥 Submit validation request received')
+        
         const auth = await getCurrentUser(request)
+        console.log('🔐 Auth result:', { error: auth.error, status: auth.status, hasUser: !!auth.user })
         
         if (auth.error) {
             return NextResponse.json(
@@ -14,6 +17,7 @@ export async function POST(request) {
         }
 
         const { user } = auth
+        console.log('👤 User:', { id: user.id, role: user.role })
 
         if (user.role !== 'RECRUITER') {
             return NextResponse.json(
@@ -27,6 +31,7 @@ export async function POST(request) {
             where: { userId: user.id },
             include: { companies: true }
         })
+        console.log('🏢 Recruiter:', { found: !!recruiter, companyId: recruiter?.companyId })
 
         if (!recruiter) {
             return NextResponse.json(
@@ -43,6 +48,7 @@ export async function POST(request) {
         }
 
         const company = recruiter.companies
+        console.log('🏢 Company:', { id: company?.id, status: company?.status, verified: company?.verified })
 
         // Only reject if company is already verified
         if (company.verified) {

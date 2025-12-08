@@ -11,7 +11,7 @@ export default function RecruiterProfilePage() {
     const router = useRouter()
     const { user, refreshUser } = useAuth()
     const [currentStep, setCurrentStep] = useState(1)
-    const [isLoading, setIsLoading] = useState(false)
+    const [isLoading, setIsLoading] = useState(true) // Start with true to show loading until redirect check completes
     const [isSaving, setIsSaving] = useState(false)
     const [isEditMode, setIsEditMode] = useState(false)
     const [companyStatus, setCompanyStatus] = useState(null) // PENDING_VERIFICATION, REJECTED, PENDING_RESUBMISSION, VERIFIED
@@ -153,15 +153,31 @@ export default function RecruiterProfilePage() {
         try {
             setIsSubmitting(true)
             
+            const token = localStorage.getItem('token')
+            console.log('🔐 Token exists:', !!token)
+            
+            if (!token) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sesi Berakhir',
+                    text: 'Silakan login kembali untuk melanjutkan.',
+                    confirmButtonColor: '#2563EB'
+                })
+                router.push('/login?role=recruiter')
+                return
+            }
+            
             const response = await fetch('/api/profile/recruiter/submit-validation', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 }
             })
 
+            console.log('📥 Submit validation response:', response.status)
             const data = await response.json()
+            console.log('📥 Submit validation data:', data)
 
             if (response.ok) {
                 await Swal.fire({
@@ -179,6 +195,15 @@ export default function RecruiterProfilePage() {
                 
                 // Redirect to dashboard
                 router.push('/profile/recruiter/dashboard')
+            } else if (response.status === 401) {
+                // Token expired or invalid
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sesi Berakhir',
+                    text: 'Token tidak valid atau sudah expired. Silakan login kembali.',
+                    confirmButtonColor: '#2563EB'
+                })
+                // Don't auto-logout, let user decide
             } else {
                 Swal.fire({
                     icon: 'error',
@@ -192,7 +217,7 @@ export default function RecruiterProfilePage() {
             Swal.fire({
                 icon: 'error',
                 title: 'Error!',
-                text: 'Terjadi kesalahan saat submit validasi',
+                text: 'Terjadi kesalahan saat submit validasi: ' + error.message,
                 confirmButtonColor: '#2563EB'
             })
         } finally {
@@ -494,7 +519,7 @@ export default function RecruiterProfilePage() {
                                 <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
                                     <CompanyGallery
                                         gallery={formData.gallery}
-                                        companyId={user?.recruiter?.companyId}
+                                        companyId={formData.companyId}
                                         onGalleryUpdate={(newGallery) => setFormData(prev => ({ ...prev, gallery: newGallery }))}
                                     />
                                 </div>
@@ -660,10 +685,10 @@ export default function RecruiterProfilePage() {
                                 {/* Company Gallery Section */}
                                 <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 mt-6">
                                     <h3 className="text-lg font-medium text-gray-900 mb-4">Galeri Perusahaan</h3>
-                                    {isEditMode && (user?.recruiter?.companyId || formData.companyId) ? (
+                                    {isEditMode && formData.companyId ? (
                                         <CompanyGallery
                                             gallery={formData.gallery}
-                                            companyId={user?.recruiter?.companyId || formData.companyId}
+                                            companyId={formData.companyId}
                                             onGalleryUpdate={(newGallery) => setFormData(prev => ({ ...prev, gallery: newGallery }))}
                                         />
                                     ) : (

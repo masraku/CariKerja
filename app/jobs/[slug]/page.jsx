@@ -217,6 +217,12 @@ export default function JobDetailPage() {
     return `${days} hari yang lalu`
   }
 
+  // Check if deadline has expired
+  const isDeadlineExpired = () => {
+    if (!job?.applicationDeadline) return false
+    return new Date(job.applicationDeadline) < new Date()
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -349,7 +355,15 @@ export default function JobDetailPage() {
 
               {/* Action Buttons */}
               <div className="flex gap-4 pt-6 border-t border-gray-200">
-                {hasApplied ? (
+                {isDeadlineExpired() ? (
+                  // Show expired message if deadline passed
+                  <div className="flex-1 bg-gradient-to-r from-gray-50 to-gray-100 border-2 border-gray-200 py-4 px-6 rounded-xl">
+                    <div className="flex items-center justify-center gap-2 text-gray-500 font-semibold">
+                      <AlertCircle className="w-5 h-5" />
+                      Lowongan Ditutup - Deadline Sudah Lewat
+                    </div>
+                  </div>
+                ) : hasApplied ? (
                   // Show application status if already applied
                   <div className="flex-1 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 py-4 px-6 rounded-xl">
                     <div className="flex items-center justify-between">
@@ -552,12 +566,24 @@ export default function JobDetailPage() {
 
             {/* Deadline Alert */}
             {job.applicationDeadline && (
-              <div className="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl p-4 mb-6">
+              <div className={`border-2 rounded-xl p-4 mb-6 ${
+                isDeadlineExpired() 
+                  ? 'bg-gradient-to-r from-gray-100 to-gray-200 border-gray-300'
+                  : 'bg-gradient-to-r from-red-50 to-orange-50 border-red-200'
+              }`}>
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <AlertCircle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                    isDeadlineExpired() ? 'text-gray-500' : 'text-red-600'
+                  }`} />
                   <div>
-                    <h4 className="font-bold text-red-900 mb-1">Deadline Lamaran</h4>
-                    <p className="text-sm text-red-700">
+                    <h4 className={`font-bold mb-1 ${
+                      isDeadlineExpired() ? 'text-gray-700' : 'text-red-900'
+                    }`}>
+                      {isDeadlineExpired() ? 'Lowongan Sudah Ditutup' : 'Deadline Lamaran'}
+                    </h4>
+                    <p className={`text-sm ${
+                      isDeadlineExpired() ? 'text-gray-600' : 'text-red-700'
+                    }`}>
                       {new Date(job.applicationDeadline).toLocaleDateString('id-ID', {
                         weekday: 'long',
                         year: 'numeric',

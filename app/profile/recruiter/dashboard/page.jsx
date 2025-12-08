@@ -45,8 +45,18 @@ export default function RecruiterDashboard() {
       if (response.ok) {
         const data = await response.json()
         setDashboardData(data.data)
+      } else if (response.status === 404) {
+        // Recruiter profile not found - redirect to create profile
+        console.log('❌ Profile not found, redirecting to profile setup')
+        router.push('/profile/recruiter')
+        return
+      } else if (response.status === 401) {
+        // Not authenticated
+        console.log('❌ Not authenticated, redirecting to login')
+        router.push('/login?role=recruiter')
+        return
       } else {
-        console.error('Failed to load dashboard')
+        console.error('Failed to load dashboard:', response.status)
       }
     } catch (error) {
       console.error('Load dashboard error:', error)

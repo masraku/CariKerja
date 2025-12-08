@@ -50,10 +50,10 @@ export async function POST(request) {
       )
     }
 
-    // ✅ Check if recruiter is verified
-    if (!recruiter.isVerified) {
+    // ✅ Check if COMPANY is verified (not recruiter)
+    if (!recruiter.companies?.verified) {
       return NextResponse.json(
-        { error: 'Akun Anda belum diverifikasi oleh admin. Silakan tunggu verifikasi untuk dapat memposting lowongan.' },
+        { error: 'Perusahaan Anda belum diverifikasi oleh admin. Silakan tunggu verifikasi untuk dapat memposting lowongan.' },
         { status: 403 }
       )
     }

@@ -63,17 +63,11 @@ function LoginContent() {
       if (userRole === 'ADMIN') {
         router.push('/admin')
       } else if (userRole === 'RECRUITER') {
-        if (userFromContext?.recruiter?.isVerified) {
-          router.push('/profile/recruiter/dashboard')
-        } else {
-          router.push('/profile/recruiter')
-        }
+        // Always go to dashboard - it will redirect to profile if needed
+        router.push('/profile/recruiter/dashboard')
       } else if (userRole === 'JOBSEEKER') {
-        if (userFromContext?.jobseeker?.profileCompleted) {
-          router.push('/profile/jobseeker/dashboard')
-        } else {
-          router.push('/profile/jobseeker')
-        }
+        // Always go to dashboard - it will redirect to profile if needed
+        router.push('/profile/jobseeker/dashboard')
       } else {
         router.push('/')
       }
@@ -140,25 +134,13 @@ function LoginContent() {
 
       // Redirect based on role
       if (data.user.role === 'JOBSEEKER') {
-        const completed = data.user.jobseeker?.profileCompleted
-        console.log('✅ JOBSEEKER - profileCompleted:', completed)
-        
-        // Use explicit boolean check to avoid undefined issues
-        if (completed === true) {
-          router.push('/profile/jobseeker/dashboard')
-        } else {
-          router.push('/profile/jobseeker')
-        }
+        // Always redirect to dashboard - dashboard will redirect to profile if needed
+        console.log('✅ JOBSEEKER - redirecting to dashboard')
+        router.push('/profile/jobseeker/dashboard')
       } else if (data.user.role === 'RECRUITER') {
-        const verified = data.user.recruiter?.isVerified
-        console.log('✅ RECRUITER - isVerified:', verified)
-        
-        // Use explicit boolean check
-        if (verified === true) {
-          router.push('/profile/recruiter/dashboard')
-        } else {
-          router.push('/profile/recruiter')
-        }
+        // Always redirect to dashboard - dashboard will redirect to profile if needed
+        console.log('✅ RECRUITER - redirecting to dashboard')
+        router.push('/profile/recruiter/dashboard')
       } else if (data.user.role === 'ADMIN') {
         router.push('/admin')
       } else {

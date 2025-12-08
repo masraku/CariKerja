@@ -72,19 +72,31 @@ export async function GET(request) {
             }
         })
 
-        // Transform data
+        // Transform data - include all company fields for detail view
         const transformedCompanies = companies.map(company => ({
             id: company.id,
             name: company.name,
             slug: company.slug,
             logo: company.logo,
+            tagline: company.tagline,
+            description: company.description,
             industry: company.industry,
+            address: company.address,
             city: company.city,
             province: company.province,
+            postalCode: company.postalCode,
             companySize: company.companySize,
+            foundedYear: company.foundedYear,
             email: company.email,
             phone: company.phone,
             website: company.website,
+            linkedinUrl: company.linkedinUrl,
+            facebookUrl: company.facebookUrl,
+            instagramUrl: company.instagramUrl,
+            twitterUrl: company.twitterUrl,
+            culture: company.culture,
+            benefits: company.benefits,
+            gallery: company.gallery,
             verified: company.verified,
             verifiedAt: company.verifiedAt,
             verifiedBy: company.verifiedBy,
@@ -93,6 +105,9 @@ export async function GET(request) {
             status: company.status,
             jobsCount: company._count.jobs,
             recruiterEmail: company.recruiters[0]?.users?.email || null,
+            recruiterPhone: company.recruiters[0]?.phone || null,
+            recruiterFirstName: company.recruiters[0]?.firstName || null,
+            recruiterLastName: company.recruiters[0]?.lastName || null,
             createdAt: company.createdAt,
             updatedAt: company.updatedAt
         }))
