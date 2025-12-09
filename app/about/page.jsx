@@ -1,310 +1,341 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { Shield, Target, Eye, Users, Briefcase, TrendingUp, Award, CheckCircle, Heart, Globe, Zap, Building2, UserCheck, FileCheck, Star, ArrowRight, Mail, Phone, MapPin } from 'lucide-react'
+import { 
+    Shield, Target, Eye, Users, Briefcase, Award, CheckCircle, Heart, 
+    Globe, Zap, Building2, UserCheck, FileCheck, Star, ArrowRight, 
+    Mail, Phone, MapPin 
+} from 'lucide-react'
 
 const AboutPage = () => {
-  const [activeYear, setActiveYear] = useState(2024)
+    const [activeYear, setActiveYear] = useState(2024)
 
-  const stats = [
-    { icon: Users, value: '100K+', label: 'Pencari Kerja', color: '#3b82f6' },
-    { icon: Building2, value: '5K+', label: 'Perusahaan', color: '#10b981' },
-    { icon: Briefcase, value: '50K+', label: 'Lowongan', color: '#8b5cf6' },
-    { icon: UserCheck, value: '75K+', label: 'Diterima Kerja', color: '#f59e0b' }
-  ]
+    const stats = [
+        { icon: Users, value: '100K+', label: 'Pencari Kerja', color: 'bg-blue-500' },
+        { icon: Building2, value: '5K+', label: 'Perusahaan', color: 'bg-emerald-500' },
+        { icon: Briefcase, value: '50K+', label: 'Lowongan', color: 'bg-purple-500' },
+        { icon: UserCheck, value: '75K+', label: 'Diterima Kerja', color: 'bg-amber-500' }
+    ]
 
-  const features = [
-    { icon: Shield, title: 'Platform Resmi Pemerintah', desc: 'Dikelola langsung oleh Disnaker dan Kominfo', color: '#3b82f6' },
-    { icon: FileCheck, title: 'Verifikasi Perusahaan', desc: 'Semua perusahaan diverifikasi legalitasnya', color: '#10b981' },
-    { icon: Globe, title: 'Akses Gratis', desc: '100% gratis untuk pencari kerja', color: '#8b5cf6' },
-    { icon: Zap, title: 'Proses Cepat', desc: 'Sistem matching otomatis yang akurat', color: '#f59e0b' },
-    { icon: Award, title: 'Standar Profesional', desc: 'Menjunjung tinggi profesionalitas', color: '#ec4899' },
-    { icon: Heart, title: 'Dukungan 24/7', desc: 'Tim support siap membantu kapan saja', color: '#6366f1' }
-  ]
+    const features = [
+        { icon: Shield, title: 'Platform Resmi Pemerintah', desc: 'Dikelola langsung oleh Disnaker dan Kominfo', color: 'bg-blue-500', bgColor: 'bg-blue-50' },
+        { icon: FileCheck, title: 'Verifikasi Perusahaan', desc: 'Semua perusahaan diverifikasi legalitasnya', color: 'bg-emerald-500', bgColor: 'bg-emerald-50' },
+        { icon: Globe, title: 'Akses Gratis', desc: '100% gratis untuk pencari kerja', color: 'bg-purple-500', bgColor: 'bg-purple-50' },
+        { icon: Zap, title: 'Proses Cepat', desc: 'Sistem matching otomatis yang akurat', color: 'bg-amber-500', bgColor: 'bg-amber-50' },
+        { icon: Award, title: 'Standar Profesional', desc: 'Menjunjung tinggi profesionalitas', color: 'bg-pink-500', bgColor: 'bg-pink-50' },
+        { icon: Heart, title: 'Dukungan 24/7', desc: 'Tim support siap membantu kapan saja', color: 'bg-indigo-500', bgColor: 'bg-indigo-50' }
+    ]
 
-  const timeline = [
-    { year: 2021, title: 'Inisiasi Program', achievements: ['Studi kelayakan platform', 'Pembentukan tim', 'Riset kebutuhan pasar'] },
-    { year: 2022, title: 'Pengembangan', achievements: ['Development sistem', 'Testing 100 perusahaan pilot', 'Peluncuran beta'] },
-    { year: 2023, title: 'Peluncuran Resmi', achievements: ['10K+ pengguna dalam 3 bulan', '500+ perusahaan terverifikasi', 'Ekspansi 20 kota'] },
-    { year: 2024, title: 'Ekspansi & Inovasi', achievements: ['100K+ pengguna aktif', 'AI-powered matching', 'Partnership 50+ universitas'] }
-  ]
+    const timeline = [
+        { year: 2021, title: 'Inisiasi Program', achievements: ['Studi kelayakan platform', 'Pembentukan tim', 'Riset kebutuhan pasar'] },
+        { year: 2022, title: 'Pengembangan', achievements: ['Development sistem', 'Testing 100 perusahaan pilot', 'Peluncuran beta'] },
+        { year: 2023, title: 'Peluncuran Resmi', achievements: ['10K+ pengguna dalam 3 bulan', '500+ perusahaan terverifikasi', 'Ekspansi 20 kota'] },
+        { year: 2024, title: 'Ekspansi & Inovasi', achievements: ['100K+ pengguna aktif', 'AI-powered matching', 'Partnership 50+ universitas'] }
+    ]
 
-  const testimonials = [
-    { name: 'Rina Kusuma', role: 'Frontend Developer', company: 'Tech Startup', text: 'Platform ini sangat membantu saya menemukan pekerjaan impian.' },
-    { name: 'Ahmad Fauzi', role: 'HR Manager', company: 'Manufacturing', text: 'Sistem matching yang akurat membantu kami menemukan kandidat berkualitas.' },
-    { name: 'Siti Nurhaliza', role: 'Fresh Graduate', company: 'Marketing Agency', text: 'Sebagai fresh graduate, platform ini sangat membantu. Recommended!' }
-  ]
+    const testimonials = [
+        { name: 'Rina Kusuma', role: 'Frontend Developer', company: 'Tech Startup', text: 'Platform ini sangat membantu saya menemukan pekerjaan impian.' },
+        { name: 'Ahmad Fauzi', role: 'HR Manager', company: 'Manufacturing', text: 'Sistem matching yang akurat membantu kami menemukan kandidat berkualitas.' },
+        { name: 'Siti Nurhaliza', role: 'Fresh Graduate', company: 'Marketing Agency', text: 'Sebagai fresh graduate, platform ini sangat membantu. Recommended!' }
+    ]
 
-  // Styles
-  const containerStyle = { minHeight: '100vh', background: '#f8fafc' }
-  const sectionStyle = { padding: 'clamp(40px, 8%, 80px) 5%' }
-  const maxWidthStyle = { maxWidth: '1200px', margin: '0 auto' }
-  const headingStyle = { fontSize: 'clamp(1.5rem, 4vw, 2.25rem)', fontWeight: 700, color: '#111827', textAlign: 'center', marginBottom: '16px' }
-  const subheadingStyle = { color: '#6b7280', textAlign: 'center', maxWidth: '600px', margin: '0 auto 48px', fontSize: 'clamp(14px, 2vw, 16px)' }
-  const cardStyle = { background: 'white', borderRadius: '20px', padding: 'clamp(24px, 4%, 32px)', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }
-  const buttonPrimary = {
-    background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
-    color: 'white',
-    padding: '16px 32px',
-    borderRadius: '14px',
-    border: 'none',
-    fontWeight: 600,
-    cursor: 'pointer',
-    fontSize: '16px',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '8px',
-    textDecoration: 'none'
-  }
+    return (
+        <div className="min-h-screen bg-slate-50">
+            {/* Hero */}
+            <div className="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 px-4 lg:px-8 py-16 lg:py-24 relative overflow-hidden">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-30">
+                    <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl"></div>
+                    <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+                </div>
 
-  return (
-    <div style={containerStyle}>
-      {/* Hero */}
-      <div style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%)', padding: 'clamp(60px, 10%, 100px) 5%', color: 'white', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ ...maxWidthStyle, textAlign: 'center', position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '12px', background: 'rgba(255,255,255,0.15)', padding: '12px 24px', borderRadius: '100px', marginBottom: '24px' }}>
-            <span style={{ fontSize: '24px' }}>🇮🇩</span>
-            <div style={{ textAlign: 'left' }}>
-              <div style={{ fontSize: '12px', opacity: 0.8 }}>Platform Resmi Pemerintah</div>
-              <div style={{ fontWeight: 600 }}>Disnaker & Kominfo RI</div>
+                <div className="max-w-5xl mx-auto text-center relative z-10">
+                    {/* Badge */}
+                    <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-sm px-5 py-3 rounded-full mb-8 border border-white/20">
+                        <span className="text-2xl">🇮🇩</span>
+                        <div className="text-left">
+                            <div className="text-xs text-white/80">Platform Resmi Pemerintah</div>
+                            <div className="text-white font-semibold">Disnaker & Kominfo RI</div>
+                        </div>
+                    </div>
+
+                    <h1 className="text-3xl lg:text-5xl font-bold text-white mb-4 leading-tight">
+                        Membangun Masa Depan
+                        <br />
+                        <span className="text-slate-300">Ketenagakerjaan Indonesia</span>
+                    </h1>
+                    <p className="text-slate-300 max-w-2xl mx-auto mb-12 text-lg">
+                        Platform digital terpercaya yang menghubungkan talenta terbaik Indonesia dengan perusahaan berkualitas
+                    </p>
+
+                    {/* Stats */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+                        {stats.map((stat, i) => {
+                            const Icon = stat.icon
+                            return (
+                                <div key={i} className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 text-center">
+                                    <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center mx-auto mb-3`}>
+                                        <Icon className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
+                                    <div className="text-sm text-slate-400">{stat.label}</div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
             </div>
-          </div>
 
-          <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 700, marginBottom: '16px', lineHeight: 1.2 }}>
-            Membangun Masa Depan<br />
-            <span style={{ opacity: 0.9 }}>Ketenagakerjaan Indonesia</span>
-          </h1>
-          <p style={{ fontSize: 'clamp(14px, 2vw, 18px)', opacity: 0.9, maxWidth: '700px', margin: '0 auto 48px', lineHeight: 1.7 }}>
-            Platform digital terpercaya yang menghubungkan talenta terbaik Indonesia dengan perusahaan berkualitas
-          </p>
-
-          {/* Stats */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px', maxWidth: '700px', margin: '0 auto' }}>
-            {stats.map((stat, i) => {
-              const Icon = stat.icon
-              return (
-                <div key={i} style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', borderRadius: '16px', padding: '24px 16px', textAlign: 'center' }}>
-                  <div style={{ width: '48px', height: '48px', background: stat.color, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-                    <Icon size={24} color="white" />
-                  </div>
-                  <div style={{ fontSize: '24px', fontWeight: 700, marginBottom: '4px' }}>{stat.value}</div>
-                  <div style={{ fontSize: '13px', opacity: 0.8 }}>{stat.label}</div>
+            {/* Vision & Mission */}
+            <div className="px-4 lg:px-8 py-16 lg:py-20 bg-white">
+                <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6">
+                    <div className="bg-slate-50 rounded-2xl p-8 border-t-4 border-blue-500">
+                        <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-5">
+                            <Eye className="w-7 h-7 text-blue-600" />
+                        </div>
+                        <h2 className="text-xl font-bold text-slate-800 mb-3">Visi Kami</h2>
+                        <p className="text-slate-600 leading-relaxed">
+                            Menjadi platform ketenagakerjaan digital nomor satu di Indonesia yang terpercaya, transparan, dan inklusif.
+                        </p>
+                    </div>
+                    <div className="bg-slate-50 rounded-2xl p-8 border-t-4 border-emerald-500">
+                        <div className="w-14 h-14 bg-emerald-100 rounded-xl flex items-center justify-center mb-5">
+                            <Target className="w-7 h-7 text-emerald-600" />
+                        </div>
+                        <h2 className="text-xl font-bold text-slate-800 mb-3">Misi Kami</h2>
+                        <ul className="text-slate-600 leading-relaxed space-y-2">
+                            <li className="flex items-start gap-2">
+                                <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                                Menyediakan akses kerja yang mudah dan merata
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                                Memastikan keamanan dan transparansi
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                                Meningkatkan kualitas SDM Indonesia
+                            </li>
+                        </ul>
+                    </div>
                 </div>
-              )
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Vision & Mission */}
-      <div style={{ ...sectionStyle, background: 'white' }}>
-        <div style={maxWidthStyle}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
-            <div style={{ ...cardStyle, borderTop: '4px solid #3b82f6' }}>
-              <div style={{ width: '56px', height: '56px', background: '#dbeafe', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
-                <Eye size={28} color="#3b82f6" />
-              </div>
-              <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', marginBottom: '12px' }}>Visi Kami</h2>
-              <p style={{ color: '#4b5563', lineHeight: 1.7 }}>
-                Menjadi platform ketenagakerjaan digital nomor satu di Indonesia yang terpercaya, transparan, dan inklusif.
-              </p>
             </div>
-            <div style={{ ...cardStyle, borderTop: '4px solid #10b981' }}>
-              <div style={{ width: '56px', height: '56px', background: '#d1fae5', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
-                <Target size={28} color="#10b981" />
-              </div>
-              <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', marginBottom: '12px' }}>Misi Kami</h2>
-              <ul style={{ color: '#4b5563', lineHeight: 1.8, paddingLeft: '20px' }}>
-                <li>Menyediakan akses kerja yang mudah dan merata</li>
-                <li>Memastikan keamanan dan transparansi</li>
-                <li>Meningkatkan kualitas SDM Indonesia</li>
-              </ul>
+
+            {/* Features */}
+            <div className="px-4 lg:px-8 py-16 lg:py-20 bg-slate-50">
+                <div className="max-w-5xl mx-auto">
+                    <div className="text-center mb-12">
+                        <span className="text-blue-600 font-semibold text-sm">KEUNGGULAN PLATFORM</span>
+                        <h2 className="text-2xl lg:text-3xl font-bold text-slate-800 mt-2 mb-3">Mengapa Memilih Kami?</h2>
+                        <p className="text-slate-500 max-w-xl mx-auto">
+                            Platform dengan standar pemerintah untuk keamanan dan kredibilitas maksimal
+                        </p>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {features.map((f, i) => {
+                            const Icon = f.icon
+                            return (
+                                <div key={i} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-lg transition text-center">
+                                    <div className={`w-16 h-16 ${f.bgColor} rounded-2xl flex items-center justify-center mx-auto mb-4`}>
+                                        <Icon className={`w-8 h-8 ${f.color.replace('bg-', 'text-')}`} />
+                                    </div>
+                                    <h3 className="text-lg font-semibold text-slate-800 mb-2">{f.title}</h3>
+                                    <p className="text-slate-500 text-sm">{f.desc}</p>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Features */}
-      <div style={{ ...sectionStyle, background: '#f8fafc' }}>
-        <div style={maxWidthStyle}>
-          <p style={{ color: '#4f46e5', fontWeight: 600, textAlign: 'center', fontSize: '14px', marginBottom: '8px' }}>KEUNGGULAN PLATFORM</p>
-          <h2 style={headingStyle}>Mengapa Memilih Kami?</h2>
-          <p style={subheadingStyle}>Platform dengan standar pemerintah untuk keamanan dan kredibilitas maksimal</p>
+            {/* Timeline */}
+            <div className="px-4 lg:px-8 py-16 lg:py-20 bg-white">
+                <div className="max-w-4xl mx-auto">
+                    <div className="text-center mb-12">
+                        <span className="text-purple-600 font-semibold text-sm">PERJALANAN KAMI</span>
+                        <h2 className="text-2xl lg:text-3xl font-bold text-slate-800 mt-2 mb-3">Milestone & Pencapaian</h2>
+                        <p className="text-slate-500 max-w-xl mx-auto">
+                            Dari ide hingga menjadi platform ketenagakerjaan terbesar di Indonesia
+                        </p>
+                    </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
-            {features.map((f, i) => {
-              const Icon = f.icon
-              return (
-                <div key={i} style={{ ...cardStyle, textAlign: 'center' }}>
-                  <div style={{ width: '64px', height: '64px', background: `${f.color}15`, borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-                    <Icon size={32} color={f.color} />
-                  </div>
-                  <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#111827', marginBottom: '8px' }}>{f.title}</h3>
-                  <p style={{ color: '#6b7280', fontSize: '14px' }}>{f.desc}</p>
+                    {/* Year Buttons */}
+                    <div className="flex flex-wrap justify-center gap-3 mb-10">
+                        {timeline.map(item => (
+                            <button
+                                key={item.year}
+                                onClick={() => setActiveYear(item.year)}
+                                className={`px-6 py-3 rounded-xl font-semibold transition ${
+                                    activeYear === item.year
+                                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
+                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
+                            >
+                                {item.year}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Active Year Content */}
+                    {timeline.filter(t => t.year === activeYear).map(item => (
+                        <div key={item.year} className="bg-slate-50 rounded-2xl p-6 lg:p-8">
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className="w-16 h-16 bg-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
+                                    {item.year}
+                                </div>
+                                <h3 className="text-2xl font-bold text-slate-800">{item.title}</h3>
+                            </div>
+                            <div className="space-y-3">
+                                {item.achievements.map((a, i) => (
+                                    <div key={i} className="flex items-center gap-3 p-4 bg-white rounded-xl">
+                                        <CheckCircle className="w-5 h-5 text-purple-600 flex-shrink-0" />
+                                        <span className="text-slate-700">{a}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
                 </div>
-              )
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Timeline */}
-      <div style={{ ...sectionStyle, background: 'white' }}>
-        <div style={maxWidthStyle}>
-          <p style={{ color: '#8b5cf6', fontWeight: 600, textAlign: 'center', fontSize: '14px', marginBottom: '8px' }}>PERJALANAN KAMI</p>
-          <h2 style={headingStyle}>Milestone & Pencapaian</h2>
-          <p style={subheadingStyle}>Dari ide hingga menjadi platform ketenagakerjaan terbesar di Indonesia</p>
-
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '40px', flexWrap: 'wrap' }}>
-            {timeline.map(item => (
-              <button
-                key={item.year}
-                onClick={() => setActiveYear(item.year)}
-                style={{
-                  padding: '14px 28px',
-                  borderRadius: '12px',
-                  border: 'none',
-                  fontWeight: 600,
-                  fontSize: '16px',
-                  cursor: 'pointer',
-                  background: activeYear === item.year ? 'linear-gradient(135deg, #8b5cf6, #a855f7)' : '#f3f4f6',
-                  color: activeYear === item.year ? 'white' : '#6b7280',
-                  boxShadow: activeYear === item.year ? '0 8px 24px rgba(139,92,246,0.3)' : 'none',
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                {item.year}
-              </button>
-            ))}
-          </div>
-
-          {timeline.filter(t => t.year === activeYear).map(item => (
-            <div key={item.year} style={{ ...cardStyle, maxWidth: '700px', margin: '0 auto' }}>
-              <div style={{ display: 'flex', gap: '20px', marginBottom: '20px', flexWrap: 'wrap' }}>
-                <div style={{ width: '72px', height: '72px', background: 'linear-gradient(135deg, #8b5cf6, #a855f7)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '20px', flexShrink: 0 }}>
-                  {item.year}
-                </div>
-                <div>
-                  <h3 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginBottom: '4px' }}>{item.title}</h3>
-                </div>
-              </div>
-              <div style={{ display: 'grid', gap: '12px' }}>
-                {item.achievements.map((a, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px', background: '#faf5ff', borderRadius: '12px' }}>
-                    <CheckCircle size={20} color="#8b5cf6" />
-                    <span style={{ color: '#374151' }}>{a}</span>
-                  </div>
-                ))}
-              </div>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Testimonials */}
-      <div style={{ ...sectionStyle, background: '#f8fafc' }}>
-        <div style={maxWidthStyle}>
-          <p style={{ color: '#10b981', fontWeight: 600, textAlign: 'center', fontSize: '14px', marginBottom: '8px' }}>TESTIMONI</p>
-          <h2 style={headingStyle}>Apa Kata Mereka?</h2>
-          <p style={subheadingStyle}>Kisah sukses dari pengguna platform kami</p>
+            {/* Testimonials */}
+            <div className="px-4 lg:px-8 py-16 lg:py-20 bg-slate-50">
+                <div className="max-w-5xl mx-auto">
+                    <div className="text-center mb-12">
+                        <span className="text-emerald-600 font-semibold text-sm">TESTIMONI</span>
+                        <h2 className="text-2xl lg:text-3xl font-bold text-slate-800 mt-2 mb-3">Apa Kata Mereka?</h2>
+                        <p className="text-slate-500 max-w-xl mx-auto">
+                            Kisah sukses dari pengguna platform kami
+                        </p>
+                    </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
-            {testimonials.map((t, i) => (
-              <div key={i} style={cardStyle}>
-                <div style={{ display: 'flex', marginBottom: '16px' }}>
-                  {[...Array(5)].map((_, j) => <Star key={j} size={18} color="#facc15" fill="#facc15" />)}
+                    <div className="grid md:grid-cols-3 gap-5">
+                        {testimonials.map((t, i) => (
+                            <div key={i} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                                <div className="flex gap-1 mb-4">
+                                    {[...Array(5)].map((_, j) => (
+                                        <Star key={j} className="w-5 h-5 text-amber-400 fill-amber-400" />
+                                    ))}
+                                </div>
+                                <p className="text-slate-600 leading-relaxed mb-5 italic">"{t.text}"</p>
+                                <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
+                                    <div className="w-11 h-11 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                                        {t.name.charAt(0)}
+                                    </div>
+                                    <div>
+                                        <div className="font-semibold text-slate-800">{t.name}</div>
+                                        <div className="text-sm text-slate-500">{t.role} • {t.company}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-                <p style={{ color: '#4b5563', lineHeight: 1.7, marginBottom: '20px', fontStyle: 'italic' }}>"{t.text}"</p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingTop: '16px', borderTop: '1px solid #f1f5f9' }}>
-                  <div style={{ width: '44px', height: '44px', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 600 }}>
-                    {t.name.charAt(0)}
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 600, color: '#111827' }}>{t.name}</div>
-                    <div style={{ fontSize: '13px', color: '#6b7280' }}>{t.role} • {t.company}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* CTA */}
-      <div style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', padding: 'clamp(60px, 10%, 100px) 5%', color: 'white', textAlign: 'center' }}>
-        <div style={maxWidthStyle}>
-          <h2 style={{ fontSize: 'clamp(1.5rem, 4vw, 2.5rem)', fontWeight: 700, marginBottom: '16px' }}>
-            Siap Memulai Perjalanan Karir?
-          </h2>
-          <p style={{ fontSize: '16px', opacity: 0.9, maxWidth: '500px', margin: '0 auto 40px' }}>
-            Bergabunglah dengan ribuan profesional yang telah menemukan pekerjaan impian mereka
-          </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'center' }}>
-            <Link href="/register/jobseeker" style={{ ...buttonPrimary, background: 'white', color: '#4f46e5' }}>
-              <Users size={20} />
-              Daftar Sebagai Jobseeker
-              <ArrowRight size={18} />
-            </Link>
-            <Link href="/register/recruiter" style={{ ...buttonPrimary, background: 'transparent', border: '2px solid white' }}>
-              <Building2 size={20} />
-              Daftar Sebagai Recruiter
-              <ArrowRight size={18} />
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* Contact */}
-      <div style={sectionStyle}>
-        <div style={{ ...maxWidthStyle, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0', overflow: 'hidden', borderRadius: '24px', boxShadow: '0 8px 40px rgba(0,0,0,0.1)' }}>
-          <div style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)', padding: 'clamp(32px, 5%, 48px)', color: 'white' }}>
-            <h3 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '16px' }}>Hubungi Kami</h3>
-            <p style={{ opacity: 0.9, marginBottom: '32px', lineHeight: 1.7 }}>Punya pertanyaan? Tim kami siap membantu.</p>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-                <div style={{ width: '44px', height: '44px', background: 'rgba(255,255,255,0.2)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Mail size={20} />
-                </div>
-                <div>
-                  <div style={{ fontWeight: 600, marginBottom: '4px' }}>Email</div>
-                  <div style={{ opacity: 0.9, fontSize: '14px' }}>support@jobseeker.id</div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-                <div style={{ width: '44px', height: '44px', background: 'rgba(255,255,255,0.2)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Phone size={20} />
-                </div>
-                <div>
-                  <div style={{ fontWeight: 600, marginBottom: '4px' }}>Telepon</div>
-                  <div style={{ opacity: 0.9, fontSize: '14px' }}>+62 21 1234 5678</div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-                <div style={{ width: '44px', height: '44px', background: 'rgba(255,255,255,0.2)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <MapPin size={20} />
-                </div>
-                <div>
-                  <div style={{ fontWeight: 600, marginBottom: '4px' }}>Alamat</div>
-                  <div style={{ opacity: 0.9, fontSize: '14px' }}>Jakarta Pusat, Indonesia</div>
-                </div>
-              </div>
             </div>
-          </div>
 
-          <div style={{ background: 'white', padding: 'clamp(32px, 5%, 48px)' }}>
-            <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', marginBottom: '24px' }}>Kirim Pesan</h3>
-            <form style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <input type="text" placeholder="Nama Anda" style={{ padding: '14px 16px', border: '2px solid #e5e7eb', borderRadius: '12px', fontSize: '15px', outline: 'none', color: '#111827' }} />
-              <input type="email" placeholder="Email Anda" style={{ padding: '14px 16px', border: '2px solid #e5e7eb', borderRadius: '12px', fontSize: '15px', outline: 'none', color: '#111827' }} />
-              <textarea rows="4" placeholder="Pesan Anda..." style={{ padding: '14px 16px', border: '2px solid #e5e7eb', borderRadius: '12px', fontSize: '15px', outline: 'none', resize: 'vertical', color: '#111827' }}></textarea>
-              <button type="submit" style={{ ...buttonPrimary, justifyContent: 'center' }}>Kirim Pesan</button>
-            </form>
-          </div>
+            {/* CTA */}
+            <div className="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 px-4 lg:px-8 py-16 lg:py-20 text-center">
+                <div className="max-w-3xl mx-auto">
+                    <h2 className="text-2xl lg:text-3xl font-bold text-white mb-4">
+                        Siap Memulai Perjalanan Karir?
+                    </h2>
+                    <p className="text-slate-300 mb-8 max-w-lg mx-auto">
+                        Bergabunglah dengan ribuan profesional yang telah menemukan pekerjaan impian mereka
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-4">
+                        <Link
+                            href="/register/jobseeker"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-slate-800 font-semibold rounded-xl hover:bg-slate-100 transition shadow-lg"
+                        >
+                            <Users className="w-5 h-5" />
+                            Daftar Sebagai Jobseeker
+                            <ArrowRight className="w-5 h-5" />
+                        </Link>
+                        <Link
+                            href="/register/recruiter"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white font-semibold rounded-xl hover:bg-white/20 transition border border-white/20"
+                        >
+                            <Building2 className="w-5 h-5" />
+                            Daftar Sebagai Recruiter
+                            <ArrowRight className="w-5 h-5" />
+                        </Link>
+                    </div>
+                </div>
+            </div>
+
+            {/* Contact */}
+            <div className="px-4 lg:px-8 py-16 lg:py-20">
+                <div className="max-w-5xl mx-auto">
+                    <div className="grid md:grid-cols-2 rounded-2xl overflow-hidden shadow-xl">
+                        {/* Contact Info */}
+                        <div className="bg-gradient-to-br from-slate-700 to-slate-800 p-8 lg:p-10 text-white">
+                            <h3 className="text-2xl font-bold mb-3">Hubungi Kami</h3>
+                            <p className="text-slate-300 mb-8">Punya pertanyaan? Tim kami siap membantu.</p>
+
+                            <div className="space-y-6">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-11 h-11 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <Mail className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <div className="font-semibold mb-1">Email</div>
+                                        <div className="text-slate-300 text-sm">support@jobseeker.id</div>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-4">
+                                    <div className="w-11 h-11 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <Phone className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <div className="font-semibold mb-1">Telepon</div>
+                                        <div className="text-slate-300 text-sm">+62 21 1234 5678</div>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-4">
+                                    <div className="w-11 h-11 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <MapPin className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <div className="font-semibold mb-1">Alamat</div>
+                                        <div className="text-slate-300 text-sm">Jakarta Pusat, Indonesia</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Contact Form */}
+                        <div className="bg-white p-8 lg:p-10">
+                            <h3 className="text-xl font-bold text-slate-800 mb-6">Kirim Pesan</h3>
+                            <form className="space-y-4">
+                                <input
+                                    type="text"
+                                    placeholder="Nama Anda"
+                                    className="w-full px-4 py-3 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-400"
+                                />
+                                <input
+                                    type="email"
+                                    placeholder="Email Anda"
+                                    className="w-full px-4 py-3 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-400"
+                                />
+                                <textarea
+                                    rows="4"
+                                    placeholder="Pesan Anda..."
+                                    className="w-full px-4 py-3 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-400 resize-none"
+                                ></textarea>
+                                <button
+                                    type="submit"
+                                    className="w-full px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition"
+                                >
+                                    Kirim Pesan
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  )
+    )
 }
 
 export default AboutPage

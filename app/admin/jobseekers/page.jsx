@@ -2,9 +2,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
-    Users, Search, Filter, UserCheck, UserX, Briefcase, 
-    Mail, Phone, MapPin, Calendar, ArrowLeft, Eye,
-    ToggleLeft, ToggleRight, Building2
+    Users, Search, UserCheck, UserX, Briefcase, 
+    Mail, Phone, MapPin, Calendar, Building2
 } from 'lucide-react'
 
 export default function AdminJobseekersPage() {
@@ -30,6 +29,7 @@ export default function AdminJobseekersPage() {
     }, [jobseekers, searchQuery, statusFilter])
 
     const loadJobseekers = async () => {
+        setLoading(true)
         try {
             const token = localStorage.getItem('token')
             const response = await fetch('/api/admin/jobseekers', {
@@ -61,7 +61,6 @@ export default function AdminJobseekersPage() {
     const filterJobseekers = () => {
         let filtered = [...jobseekers]
 
-        // Apply search filter
         if (searchQuery) {
             const query = searchQuery.toLowerCase()
             filtered = filtered.filter(js => 
@@ -73,7 +72,6 @@ export default function AdminJobseekersPage() {
             )
         }
 
-        // Apply status filter
         if (statusFilter === 'employed') {
             filtered = filtered.filter(js => js.isEmployed)
         } else if (statusFilter === 'unemployed') {
@@ -90,257 +88,240 @@ export default function AdminJobseekersPage() {
     const formatDate = (dateString) => {
         if (!dateString) return '-'
         return new Date(dateString).toLocaleDateString('id-ID', {
-            year: 'numeric',
+            day: 'numeric',
             month: 'short',
-            day: 'numeric'
+            year: 'numeric'
         })
     }
 
-    if (loading) {
-        return (
-            <div className="p-8">
-                <div className="animate-pulse space-y-4">
-                    <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-                    <div className="h-64 bg-gray-200 rounded"></div>
-                </div>
-            </div>
-        )
-    }
-
     return (
-        <div className="p-8">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={() => router.push('/admin')}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition"
-                    >
-                        <ArrowLeft className="w-5 h-5 text-gray-600" />
-                    </button>
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Manajemen Jobseekers</h1>
-                        <p className="text-gray-600">Monitor semua pencari kerja yang terdaftar</p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div className="bg-white border border-gray-200 rounded-xl p-6">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <Users className="w-6 h-6 text-blue-600" />
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+            {/* Header - Always visible */}
+            <div className="bg-gradient-to-r from-slate-800 to-slate-700 px-6 lg:px-8 py-8">
+                <div className="max-w-7xl mx-auto">
+                    <h1 className="text-2xl lg:text-3xl font-bold text-white mb-2">Manajemen Jobseeker</h1>
+                    <p className="text-slate-300 text-sm">Monitor semua pencari kerja yang terdaftar</p>
+                    
+                    {/* Quick Stats in Header */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                            <div className="text-3xl font-bold text-white">{stats.total}</div>
+                            <div className="text-slate-300 text-xs mt-1">Total Jobseeker</div>
                         </div>
-                        <div>
-                            <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-                            <div className="text-gray-600 text-sm">Total Jobseekers</div>
+                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                            <div className="text-3xl font-bold text-emerald-400">{stats.employed}</div>
+                            <div className="text-slate-300 text-xs mt-1">Sudah Bekerja</div>
                         </div>
-                    </div>
-                </div>
-
-                <div className="bg-white border border-green-200 rounded-xl p-6">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                            <UserCheck className="w-6 h-6 text-green-600" />
+                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                            <div className="text-3xl font-bold text-amber-400">{stats.lookingForJob}</div>
+                            <div className="text-slate-300 text-xs mt-1">Mencari Kerja</div>
                         </div>
-                        <div>
-                            <div className="text-2xl font-bold text-gray-900">{stats.employed}</div>
-                            <div className="text-gray-600 text-sm">Sudah Bekerja</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white border border-yellow-200 rounded-xl p-6">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                            <Briefcase className="w-6 h-6 text-yellow-600" />
-                        </div>
-                        <div>
-                            <div className="text-2xl font-bold text-gray-900">{stats.lookingForJob}</div>
-                            <div className="text-gray-600 text-sm">Masih Cari Kerja</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white border border-purple-200 rounded-xl p-6">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <UserCheck className="w-6 h-6 text-purple-600" />
-                        </div>
-                        <div>
-                            <div className="text-2xl font-bold text-gray-900">{stats.profileCompleted}</div>
-                            <div className="text-gray-600 text-sm">Profile Lengkap</div>
+                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                            <div className="text-3xl font-bold text-purple-400">{stats.profileCompleted}</div>
+                            <div className="text-slate-300 text-xs mt-1">Profil Lengkap</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Filters */}
-            <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-                <div className="flex flex-col md:flex-row gap-4">
-                    {/* Search */}
-                    <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                        <input
-                            type="text"
-                            placeholder="Cari nama, email, kota, atau posisi..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                        />
-                    </div>
+            {/* Main Content */}
+            <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6">
+                {/* Filters */}
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-6">
+                    <div className="flex flex-col lg:flex-row gap-4">
+                        {/* Search */}
+                        <div className="flex-1 relative">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="Cari nama, email, kota, atau posisi..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-12 pr-4 py-3 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-400"
+                            />
+                        </div>
 
-                    {/* Status Filter */}
-                    <div className="flex items-center gap-2">
-                        <Filter className="w-5 h-5 text-gray-400" />
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                        >
-                            <option value="all">Semua Status</option>
-                            <option value="employed">Sudah Bekerja</option>
-                            <option value="unemployed">Belum Bekerja</option>
-                            <option value="looking">Aktif Cari Kerja</option>
-                            <option value="not-looking">Tidak Aktif Cari</option>
-                        </select>
+                        {/* Status Filter */}
+                        <div className="flex flex-wrap gap-2">
+                            <button
+                                onClick={() => setStatusFilter('all')}
+                                className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
+                                    statusFilter === 'all' 
+                                        ? 'bg-slate-800 text-white' 
+                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
+                            >
+                                Semua
+                            </button>
+                            <button
+                                onClick={() => setStatusFilter('employed')}
+                                className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
+                                    statusFilter === 'employed' 
+                                        ? 'bg-emerald-500 text-white' 
+                                        : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                                }`}
+                            >
+                                Bekerja
+                            </button>
+                            <button
+                                onClick={() => setStatusFilter('unemployed')}
+                                className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
+                                    statusFilter === 'unemployed' 
+                                        ? 'bg-slate-500 text-white' 
+                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
+                            >
+                                Belum Bekerja
+                            </button>
+                            <button
+                                onClick={() => setStatusFilter('looking')}
+                                className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
+                                    statusFilter === 'looking' 
+                                        ? 'bg-amber-500 text-white' 
+                                        : 'bg-amber-50 text-amber-600 hover:bg-amber-100'
+                                }`}
+                            >
+                                Aktif Cari
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Jobseekers Table */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Jobseeker</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Kontak</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Status Kerja</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Cari Kerja</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Lamaran</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Bergabung</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                            {filteredJobseekers.map((js) => (
-                                <tr key={js.id} className="hover:bg-gray-50 transition">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            {js.photo ? (
-                                                <img 
-                                                    src={js.photo} 
-                                                    alt={js.firstName}
-                                                    className="w-10 h-10 rounded-full object-cover"
-                                                />
-                                            ) : (
-                                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-                                                    {js.firstName?.charAt(0) || 'U'}
-                                                </div>
-                                            )}
-                                            <div>
-                                                <div className="font-medium text-gray-900">
-                                                    {js.firstName} {js.lastName}
-                                                </div>
-                                                <div className="text-sm text-gray-500">
-                                                    {js.currentTitle || 'No title'}
-                                                </div>
+                {/* Results Count */}
+                <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm text-slate-500">
+                        Menampilkan <span className="font-semibold text-slate-700">{loading ? '...' : filteredJobseekers.length}</span> dari {jobseekers.length} jobseeker
+                    </p>
+                </div>
+
+                {/* Loading State - Skeleton cards */}
+                {loading ? (
+                    <div className="grid gap-4">
+                        {[1, 2, 3, 4, 5].map(i => (
+                            <div key={i} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 animate-pulse">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-14 h-14 rounded-xl bg-slate-200"></div>
+                                    <div className="flex-1">
+                                        <div className="h-4 bg-slate-200 rounded w-1/3 mb-2"></div>
+                                        <div className="h-3 bg-slate-200 rounded w-1/4 mb-2"></div>
+                                        <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+                                    </div>
+                                    <div className="hidden md:flex gap-4">
+                                        <div className="h-6 w-20 bg-slate-200 rounded-full"></div>
+                                        <div className="h-6 w-16 bg-slate-200 rounded-full"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : filteredJobseekers.length === 0 ? (
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center">
+                        <Users className="w-16 h-16 text-slate-200 mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold text-slate-800 mb-2">Tidak ada jobseeker</h3>
+                        <p className="text-slate-500">Coba ubah filter atau kata kunci pencarian</p>
+                    </div>
+                ) : (
+                    <div className="grid gap-4">
+                        {filteredJobseekers.map((js) => (
+                            <div 
+                                key={js.id} 
+                                className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 hover:shadow-md transition"
+                            >
+                                <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                                    {/* Photo & Info */}
+                                    <div className="flex items-center gap-4 flex-1">
+                                        {js.photo ? (
+                                            <img 
+                                                src={js.photo} 
+                                                alt={js.firstName}
+                                                className="w-14 h-14 rounded-xl object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                                                {js.firstName?.charAt(0) || 'U'}
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="space-y-1">
-                                            <div className="flex items-center gap-1 text-sm text-gray-600">
-                                                <Mail className="w-4 h-4" />
-                                                <span className="truncate max-w-[180px]">{js.email}</span>
-                                            </div>
-                                            {js.phone && (
-                                                <div className="flex items-center gap-1 text-sm text-gray-600">
-                                                    <Phone className="w-4 h-4" />
-                                                    <span>{js.phone}</span>
-                                                </div>
-                                            )}
-                                            {js.city && (
-                                                <div className="flex items-center gap-1 text-sm text-gray-600">
-                                                    <MapPin className="w-4 h-4" />
-                                                    <span>{js.city}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        {js.isEmployed ? (
-                                            <div>
-                                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                                                    <UserCheck className="w-3 h-3" />
-                                                    Bekerja
-                                                </span>
-                                                {js.employedCompany && (
-                                                    <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
-                                                        <Building2 className="w-3 h-3" />
-                                                        {js.employedCompany}
-                                                    </div>
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-semibold text-slate-800 truncate">
+                                                {js.firstName} {js.lastName}
+                                            </h3>
+                                            <p className="text-sm text-slate-500 truncate">
+                                                {js.currentTitle || 'Belum ada posisi'}
+                                            </p>
+                                            <div className="flex flex-wrap items-center gap-3 mt-2">
+                                                {js.city && (
+                                                    <span className="inline-flex items-center gap-1 text-xs text-slate-500">
+                                                        <MapPin className="w-3.5 h-3.5" />
+                                                        {js.city}
+                                                    </span>
                                                 )}
-                                            </div>
-                                        ) : (
-                                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">
-                                                <UserX className="w-3 h-3" />
-                                                Belum Bekerja
-                                            </span>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        {js.isLookingForJob ? (
-                                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                                                <ToggleRight className="w-3 h-3" />
-                                                Aktif
-                                            </span>
-                                        ) : (
-                                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">
-                                                <ToggleLeft className="w-3 h-3" />
-                                                Tidak Aktif
-                                            </span>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="text-sm">
-                                            <div className="font-medium text-gray-900">{js.totalApplications} lamaran</div>
-                                            <div className="text-xs text-gray-500">
-                                                <span className="text-green-600">{js.acceptedCount} diterima</span>
-                                                {' • '}
-                                                <span className="text-yellow-600">{js.pendingCount} pending</span>
+                                                <span className="inline-flex items-center gap-1 text-xs text-slate-500">
+                                                    <Mail className="w-3.5 h-3.5" />
+                                                    {js.email}
+                                                </span>
                                             </div>
                                         </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-1 text-sm text-gray-600">
-                                            <Calendar className="w-4 h-4" />
-                                            {formatDate(js.joinedAt)}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                                    </div>
 
-                {filteredJobseekers.length === 0 && (
-                    <div className="text-center py-12">
-                        <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">Tidak ada jobseeker</h3>
-                        <p className="text-gray-600">
-                            {searchQuery || statusFilter !== 'all' 
-                                ? 'Coba ubah filter pencarian'
-                                : 'Belum ada pencari kerja yang terdaftar'}
-                        </p>
+                                    {/* Stats & Status */}
+                                    <div className="flex items-center gap-6 lg:gap-8">
+                                        {/* Work Status */}
+                                        <div>
+                                            {js.isEmployed ? (
+                                                <div>
+                                                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">
+                                                        <UserCheck className="w-3.5 h-3.5" />
+                                                        Bekerja
+                                                    </span>
+                                                    {js.employedCompany && (
+                                                        <div className="flex items-center gap-1 text-xs text-slate-500 mt-1">
+                                                            <Building2 className="w-3 h-3" />
+                                                            {js.employedCompany}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-600 text-xs font-medium rounded-full">
+                                                    <UserX className="w-3.5 h-3.5" />
+                                                    Belum Bekerja
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* Looking Status */}
+                                        <div>
+                                            {js.isLookingForJob ? (
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
+                                                    <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
+                                                    Aktif Cari
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-500 text-xs font-medium rounded-full">
+                                                    Tidak Aktif
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* Application Stats */}
+                                        <div className="text-center hidden md:block">
+                                            <div className="text-lg font-bold text-slate-800">{js.totalApplications}</div>
+                                            <div className="text-xs text-slate-400">Lamaran</div>
+                                        </div>
+
+                                        {/* Join Date */}
+                                        <div className="hidden lg:block text-right">
+                                            <div className="flex items-center gap-1 text-sm text-slate-600">
+                                                <Calendar className="w-4 h-4 text-slate-400" />
+                                                {formatDate(js.joinedAt)}
+                                            </div>
+                                            <div className="text-xs text-slate-400">Bergabung</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
-            </div>
-
-            {/* Showing count */}
-            <div className="mt-4 text-sm text-gray-600">
-                Menampilkan {filteredJobseekers.length} dari {jobseekers.length} jobseekers
             </div>
         </div>
     )

@@ -60,7 +60,8 @@ export async function POST(request) {
 
         // Allow resubmission even if already pending (just refresh the timestamp)
         // Update company status to PENDING_RESUBMISSION
-        await prisma.companies.update({
+        console.log('📝 Updating company status to PENDING_RESUBMISSION...')
+        const updatedCompany = await prisma.companies.update({
             where: { id: company.id },
             data: {
                 status: 'PENDING_RESUBMISSION',
@@ -68,6 +69,7 @@ export async function POST(request) {
                 updatedAt: new Date()
             }
         })
+        console.log('✅ Company updated:', { id: updatedCompany.id, status: updatedCompany.status })
 
         return NextResponse.json({
             success: true,
@@ -75,9 +77,13 @@ export async function POST(request) {
         })
 
     } catch (error) {
-        console.error('Submit validation error:', error)
+        console.error('❌ Submit validation error:', error.message)
+        console.error('Stack:', error.stack)
         return NextResponse.json(
-            { error: 'Failed to submit for validation' },
+            { 
+                error: 'Failed to submit for validation',
+                details: error.message 
+            },
             { status: 500 }
         )
     }

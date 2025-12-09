@@ -36,7 +36,7 @@ export async function POST(request, context) {
     // Get user and check role
     const user = await prisma.users.findUnique({
       where: { id: userId },
-      include: { jobseeker: true }
+      include: { jobseekers: true }
     })
 
     if (!user || user.role !== 'JOBSEEKER') {
@@ -46,7 +46,7 @@ export async function POST(request, context) {
       )
     }
 
-    if (!user.jobseeker) {
+    if (!user.jobseekers) {
       return NextResponse.json(
         { error: 'Please complete your profile first' },
         { status: 400 }
@@ -55,17 +55,21 @@ export async function POST(request, context) {
 
     // Get job
     const job = await prisma.jobs.findFirst({
-      where: {
-        slug,
-        isActive: true,
-        publishedAt: { not: null }
-      }
+      where: { slug }
     })
 
     if (!job) {
       return NextResponse.json(
-        { error: 'Job not found' },
+        { error: 'Lowongan tidak ditemukan' },
         { status: 404 }
+      )
+    }
+
+    // Check if job is still active
+    if (!job.isActive) {
+      return NextResponse.json(
+        { error: 'Lowongan sudah ditutup' },
+        { status: 400 }
       )
     }
 
@@ -98,17 +102,19 @@ export async function POST(request, context) {
     // Create application
     const application = await prisma.applications.create({
       data: {
+        id: `app_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         jobId: job.id,
         jobseekerId: user.jobseekers.id,
         coverLetter,
         resumeUrl: resumeUrl || user.jobseekers.cvUrl,
         portfolioUrl,
-        status: 'PENDING'
+        status: 'PENDING',
+        updatedAt: new Date()
       },
       include: {
         jobs: {
           include: {
-            company: true
+            companies: true
           }
         }
       }

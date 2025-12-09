@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { Briefcase, Building2, MapPin, Calendar, Clock, Filter, Search, Eye, XCircle, CheckCircle, AlertCircle, TrendingUp, FileText, ExternalLink } from 'lucide-react'
+import Swal from 'sweetalert2'
 
 export default function JobseekerApplicationsPage() {
     const [applications, setApplications] = useState([])
@@ -54,11 +55,29 @@ export default function JobseekerApplicationsPage() {
         }
     }
 
-    // Withdraw application
+    // Withdraw application with SweetAlert
     const handleWithdraw = async (applicationId) => {
-        if (!confirm('Apakah Anda yakin ingin menarik lamaran ini?')) return
+        const result = await Swal.fire({
+            title: 'Tarik Lamaran?',
+            text: 'Apakah Anda yakin ingin menarik lamaran ini? Tindakan ini tidak dapat dibatalkan.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Tarik Lamaran',
+            cancelButtonText: 'Batal'
+        })
+
+        if (!result.isConfirmed) return
 
         try {
+            Swal.fire({
+                title: 'Memproses...',
+                text: 'Sedang menarik lamaran',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            })
+
             const response = await fetch(
                 `/api/applications/${applicationId}/withdraw`,
                 {
@@ -67,17 +86,32 @@ export default function JobseekerApplicationsPage() {
                 }
             )
 
-            const result = await response.json()
+            const data = await response.json()
 
-            if (result.success) {
-                alert('Lamaran berhasil ditarik')
+            if (data.success) {
+                await Swal.fire({
+                    title: 'Berhasil!',
+                    text: 'Lamaran berhasil ditarik',
+                    icon: 'success',
+                    confirmButtonColor: '#3b82f6'
+                })
                 fetchApplications()
             } else {
-                alert(result.error || 'Gagal menarik lamaran')
+                await Swal.fire({
+                    title: 'Gagal!',
+                    text: data.error || 'Gagal menarik lamaran',
+                    icon: 'error',
+                    confirmButtonColor: '#3b82f6'
+                })
             }
         } catch (error) {
             console.error('Error withdrawing application:', error)
-            alert('Terjadi kesalahan')
+            await Swal.fire({
+                title: 'Error!',
+                text: 'Terjadi kesalahan saat menarik lamaran',
+                icon: 'error',
+                confirmButtonColor: '#3b82f6'
+            })
         }
     }
 

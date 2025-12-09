@@ -5,8 +5,33 @@ import jwt from 'jsonwebtoken'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 
+// Auto-deactivate expired jobs (runs in background, non-blocking)
+async function autoDeactivateExpiredJobs() {
+    try {
+        const now = new Date()
+        await prisma.jobs.updateMany({
+            where: {
+                isActive: true,
+                applicationDeadline: {
+                    lt: now,
+                    not: null
+                }
+            },
+            data: {
+                isActive: false,
+                closedAt: now
+            }
+        })
+    } catch (error) {
+        console.error('Auto-deactivate error:', error)
+    }
+}
+
 export async function GET(request) {
   try {
+    // Run auto-deactivation in background (non-blocking)
+    autoDeactivateExpiredJobs()
+    
     const { searchParams } = new URL(request.url)
     
     // Check if user is authenticated

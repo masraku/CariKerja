@@ -1,412 +1,550 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Search, MapPin, Briefcase, DollarSign, Clock, Building2, Filter, X, Star, Bookmark, BookmarkCheck, Calendar, Users, Loader2, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react'
+import { 
+    Search, MapPin, Briefcase, Clock, Building2, Filter, X, 
+    Bookmark, BookmarkCheck, Calendar, Users, ChevronLeft, ChevronRight,
+    Banknote, Zap, CheckCircle, ArrowRight
+} from 'lucide-react'
 
 const JobsPage = () => {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [location, setLocation] = useState('')
-  const [showFilters, setShowFilters] = useState(false)
-  const [selectedJob, setSelectedJob] = useState(null)
-  const [savedJobs, setSavedJobs] = useState([])
-  const [sortBy, setSortBy] = useState('latest')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [loading, setLoading] = useState(true)
-  const [jobs, setJobs] = useState([])
-  const [isDesktop, setIsDesktop] = useState(true)
-  const [pagination, setPagination] = useState({
-    page: 1, limit: 10, totalCount: 0, totalPages: 0
-  })
-  
-  const [filters, setFilters] = useState({
-    jobType: [], experience: [], salary: '', category: []
-  })
-
-  const jobTypes = ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'FREELANCE', 'INTERNSHIP']
-  const experienceLevels = ['0-1 tahun', '1-3 tahun', '3-5 tahun', '5+ tahun']
-  const categories = ['Teknologi', 'Desain', 'Marketing', 'Data', 'Management', 'Sales', 'HR']
-
-  const fetchJobs = async () => {
-    try {
-      setLoading(true)
-      const params = new URLSearchParams()
-      if (searchQuery) params.append('search', searchQuery)
-      if (location) params.append('location', location)
-      if (filters.jobType.length > 0) params.append('jobType', filters.jobType.join(','))
-      if (filters.category.length > 0) params.append('category', filters.category.join(','))
-      if (filters.experience.length > 0) params.append('experience', filters.experience.join(','))
-      if (sortBy) params.append('sortBy', sortBy)
-      params.append('page', currentPage.toString())
-      params.append('limit', '10')
-
-      const response = await fetch(`/api/jobs?${params.toString()}`, { credentials: 'include' })
-      const data = await response.json()
-      if (data.success) {
-        setJobs(data.data)
-        setPagination(data.pagination)
-      }
-    } catch (error) {
-      console.error('Error fetching jobs:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => { fetchJobs() }, [searchQuery, location, filters, sortBy, currentPage])
-  useEffect(() => {
-    const saved = localStorage.getItem('savedJobs')
-    if (saved) setSavedJobs(JSON.parse(saved))
-  }, [])
-  useEffect(() => { localStorage.setItem('savedJobs', JSON.stringify(savedJobs)) }, [savedJobs])
-  useEffect(() => {
-    const checkWidth = () => setIsDesktop(window.innerWidth >= 1024)
-    checkWidth()
-    window.addEventListener('resize', checkWidth)
-    return () => window.removeEventListener('resize', checkWidth)
-  }, [])
-
-  const handleFilterChange = (type, value) => {
-    setFilters(prev => {
-      const currentValues = prev[type]
-      if (Array.isArray(currentValues)) {
-        return currentValues.includes(value)
-          ? { ...prev, [type]: currentValues.filter(v => v !== value) }
-          : { ...prev, [type]: [...currentValues, value] }
-      }
-      return { ...prev, [type]: value }
+    const [searchQuery, setSearchQuery] = useState('')
+    const [location, setLocation] = useState('')
+    const [showFilters, setShowFilters] = useState(false)
+    const [savedJobs, setSavedJobs] = useState([])
+    const [sortBy, setSortBy] = useState('latest')
+    const [currentPage, setCurrentPage] = useState(1)
+    const [loading, setLoading] = useState(true)
+    const [jobs, setJobs] = useState([])
+    const [selectedJob, setSelectedJob] = useState(null)
+    const [pagination, setPagination] = useState({
+        page: 1, limit: 10, totalCount: 0, totalPages: 0
     })
-    setCurrentPage(1)
-  }
+    
+    const [filters, setFilters] = useState({
+        jobType: [], experience: [], salary: '', category: []
+    })
 
-  const clearFilters = () => {
-    setFilters({ jobType: [], experience: [], salary: '', category: [] })
-    setSearchQuery('')
-    setLocation('')
-    setCurrentPage(1)
-  }
+    const jobTypes = ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'FREELANCE', 'INTERNSHIP']
+    const experienceLevels = ['0-1 tahun', '1-3 tahun', '3-5 tahun', '5+ tahun']
 
-  const toggleSaveJob = (jobId) => {
-    setSavedJobs(prev => prev.includes(jobId) ? prev.filter(id => id !== jobId) : [...prev, jobId])
-  }
+    const fetchJobs = async () => {
+        try {
+            setLoading(true)
+            const params = new URLSearchParams()
+            if (searchQuery) params.append('search', searchQuery)
+            if (location) params.append('location', location)
+            if (filters.jobType.length > 0) params.append('jobType', filters.jobType.join(','))
+            if (filters.experience.length > 0) params.append('experience', filters.experience.join(','))
+            if (sortBy) params.append('sortBy', sortBy)
+            params.append('page', currentPage.toString())
+            params.append('limit', '20')
 
-  const getTimeSince = (date) => {
-    const days = Math.floor((new Date() - new Date(date)) / (1000 * 60 * 60 * 24))
-    if (days === 0) return 'Hari ini'
-    if (days === 1) return 'Kemarin'
-    return `${days} hari lalu`
-  }
+            const response = await fetch(`/api/jobs?${params.toString()}`, { credentials: 'include' })
+            const data = await response.json()
+            if (data.success) {
+                setJobs(data.data)
+                setPagination(data.pagination)
+                // Auto-select first job
+                if (data.data.length > 0 && !selectedJob) {
+                    setSelectedJob(data.data[0])
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching jobs:', error)
+        } finally {
+            setLoading(false)
+        }
+    }
 
-  const formatJobType = (type) => {
-    const map = { 'FULL_TIME': 'Full Time', 'PART_TIME': 'Part Time', 'CONTRACT': 'Contract', 'FREELANCE': 'Freelance', 'INTERNSHIP': 'Internship' }
-    return map[type] || type
-  }
+    useEffect(() => { fetchJobs() }, [searchQuery, location, filters, sortBy, currentPage])
+    useEffect(() => {
+        const saved = localStorage.getItem('savedJobs')
+        if (saved) setSavedJobs(JSON.parse(saved))
+    }, [])
+    useEffect(() => { localStorage.setItem('savedJobs', JSON.stringify(savedJobs)) }, [savedJobs])
 
-  // Styles
-  const containerStyle = { minHeight: '100vh', background: '#f8fafc' }
-  const heroStyle = {
-    background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-    padding: 'clamp(40px, 8%, 80px) 5%',
-    color: 'white'
-  }
-  const searchBoxStyle = {
-    background: 'white',
-    borderRadius: '16px',
-    padding: 'clamp(16px, 3%, 24px)',
-    boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-    maxWidth: '900px',
-    margin: '0 auto'
-  }
-  const inputStyle = {
-    width: '100%',
-    padding: '14px 14px 14px 48px',
-    border: '2px solid #e5e7eb',
-    borderRadius: '12px',
-    fontSize: '15px',
-    outline: 'none',
-    color: '#111827'
-  }
-  const buttonStyle = {
-    background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
-    color: 'white',
-    padding: '14px 32px',
-    borderRadius: '12px',
-    border: 'none',
-    fontWeight: 600,
-    cursor: 'pointer',
-    fontSize: '15px'
-  }
-  const cardStyle = {
-    background: 'white',
-    borderRadius: '16px',
-    padding: 'clamp(16px, 3%, 24px)',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-    marginBottom: '16px',
-    border: '1px solid #f1f5f9'
-  }
-  const badgeStyle = (bg, color) => ({
-    display: 'inline-block',
-    padding: '6px 12px',
-    background: bg,
-    color: color,
-    borderRadius: '100px',
-    fontSize: '12px',
-    fontWeight: 500,
-    marginRight: '8px',
-    marginBottom: '8px'
-  })
-  const sidebarStyle = {
-    background: 'white',
-    borderRadius: '16px',
-    padding: '24px',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-    position: 'sticky',
-    top: '100px'
-  }
-  const filterGroupStyle = { marginBottom: '24px' }
-  const filterTitleStyle = { fontSize: '15px', fontWeight: 600, color: '#111827', marginBottom: '12px' }
-  const checkboxLabelStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    padding: '8px 0',
-    cursor: 'pointer',
-    fontSize: '14px',
-    color: '#4b5563'
-  }
+    const handleFilterChange = (type, value) => {
+        setFilters(prev => {
+            const currentValues = prev[type]
+            if (Array.isArray(currentValues)) {
+                return currentValues.includes(value)
+                    ? { ...prev, [type]: currentValues.filter(v => v !== value) }
+                    : { ...prev, [type]: [...currentValues, value] }
+            }
+            return { ...prev, [type]: value }
+        })
+        setCurrentPage(1)
+    }
 
-  return (
-    <div style={containerStyle}>
-      {/* Hero Search */}
-      <div style={heroStyle}>
-        <h1 style={{ fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', fontWeight: 700, textAlign: 'center', marginBottom: '8px' }}>
-          Temukan Pekerjaan Impian
-        </h1>
-        <p style={{ textAlign: 'center', opacity: 0.9, marginBottom: '32px', fontSize: 'clamp(14px, 2vw, 16px)' }}>
-          {pagination.totalCount} lowongan tersedia
-        </p>
-        
-        <div style={searchBoxStyle}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-            <div style={{ flex: '1 1 250px', position: 'relative' }}>
-              <Search size={20} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
-              <input type="text" placeholder="Posisi, skill, perusahaan..." style={inputStyle} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-            </div>
-            <div style={{ flex: '1 1 200px', position: 'relative' }}>
-              <MapPin size={20} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
-              <input type="text" placeholder="Lokasi..." style={inputStyle} value={location} onChange={(e) => setLocation(e.target.value)} />
-            </div>
-            <button style={buttonStyle} onClick={() => fetchJobs()}>Cari</button>
-          </div>
-        </div>
+    const clearFilters = () => {
+        setFilters({ jobType: [], experience: [], salary: '', category: [] })
+        setSearchQuery('')
+        setLocation('')
+        setCurrentPage(1)
+    }
 
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', marginTop: '32px' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '24px', fontWeight: 700 }}>{pagination.totalCount}</div>
-            <div style={{ fontSize: '14px', opacity: 0.8 }}>Lowongan</div>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '24px', fontWeight: 700 }}>{savedJobs.length}</div>
-            <div style={{ fontSize: '14px', opacity: 0.8 }}>Tersimpan</div>
-          </div>
-        </div>
-      </div>
+    const toggleSaveJob = (jobId) => {
+        setSavedJobs(prev => prev.includes(jobId) ? prev.filter(id => id !== jobId) : [...prev, jobId])
+    }
 
-      {/* Main Content */}
-      <div style={{ padding: '40px 5%', maxWidth: '1400px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}>
-          
-          {/* Sidebar Filters - Desktop */}
-          {isDesktop && (
-            <div style={{ ...sidebarStyle, flex: '0 0 280px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Filter size={20} /> Filter
-                </h3>
-                {(filters.jobType.length > 0 || filters.category.length > 0) && (
-                  <button onClick={clearFilters} style={{ background: 'none', border: 'none', color: '#4f46e5', fontSize: '14px', cursor: 'pointer', fontWeight: 500 }}>Reset</button>
-                )}
-              </div>
+    const getTimeSince = (date) => {
+        const days = Math.floor((new Date() - new Date(date)) / (1000 * 60 * 60 * 24))
+        if (days === 0) return 'Hari ini'
+        if (days === 1) return 'Kemarin'
+        return `${days} hari lalu`
+    }
 
-              <div style={filterGroupStyle}>
-                <h4 style={filterTitleStyle}>Tipe Pekerjaan</h4>
-                {jobTypes.map(type => (
-                  <label key={type} style={checkboxLabelStyle}>
-                    <input type="checkbox" checked={filters.jobType.includes(type)} onChange={() => handleFilterChange('jobType', type)} style={{ width: '18px', height: '18px', accentColor: '#4f46e5' }} />
-                    {formatJobType(type)}
-                  </label>
-                ))}
-              </div>
+    const formatJobType = (type) => {
+        const map = { 'FULL_TIME': 'Full Time', 'PART_TIME': 'Part Time', 'CONTRACT': 'Contract', 'FREELANCE': 'Freelance', 'INTERNSHIP': 'Internship' }
+        return map[type] || type
+    }
 
-              <div style={filterGroupStyle}>
-                <h4 style={filterTitleStyle}>Pengalaman</h4>
-                {experienceLevels.map(level => (
-                  <label key={level} style={checkboxLabelStyle}>
-                    <input type="checkbox" checked={filters.experience.includes(level)} onChange={() => handleFilterChange('experience', level)} style={{ width: '18px', height: '18px', accentColor: '#4f46e5' }} />
-                    {level}
-                  </label>
-                ))}
-              </div>
+    const formatSalary = (min, max) => {
+        const format = (num) => {
+            if (!num) return null
+            if (num >= 1000000) return `${(num / 1000000).toFixed(0)} jt`
+            if (num >= 1000) return `${(num / 1000).toFixed(0)} rb`
+            return num
+        }
+        if (min && max) return `Rp ${format(min)} - ${format(max)}`
+        if (min) return `Rp ${format(min)}+`
+        return 'Nego'
+    }
 
-              <div style={filterGroupStyle}>
-                <h4 style={filterTitleStyle}>Kategori</h4>
-                {categories.map(cat => (
-                  <label key={cat} style={checkboxLabelStyle}>
-                    <input type="checkbox" checked={filters.category.includes(cat)} onChange={() => handleFilterChange('category', cat)} style={{ width: '18px', height: '18px', accentColor: '#4f46e5' }} />
-                    {cat}
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
+    const getJobTypeBadgeClass = (type) => {
+        const classes = {
+            'FULL_TIME': 'bg-blue-100 text-blue-700',
+            'PART_TIME': 'bg-purple-100 text-purple-700',
+            'CONTRACT': 'bg-orange-100 text-orange-700',
+            'FREELANCE': 'bg-teal-100 text-teal-700',
+            'INTERNSHIP': 'bg-pink-100 text-pink-700'
+        }
+        return classes[type] || 'bg-slate-100 text-slate-700'
+    }
 
-          {/* Mobile Filter Button */}
-          {!isDesktop && (
-            <button onClick={() => setShowFilters(true)} style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 50, background: '#4f46e5', color: 'white', padding: '16px', borderRadius: '50%', border: 'none', boxShadow: '0 8px 24px rgba(79,70,229,0.4)', cursor: 'pointer' }}>
-              <Filter size={24} />
-            </button>
-          )}
+    const activeFiltersCount = filters.jobType.length + filters.experience.length
 
-          {/* Jobs List */}
-          <div style={{ flex: 1, minWidth: '300px' }}>
-            {/* Sort Bar */}
-            <div style={{ ...cardStyle, display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-              <span style={{ color: '#6b7280', fontSize: '14px' }}>{pagination.totalCount} lowongan ditemukan</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ color: '#6b7280', fontSize: '14px' }}>Urutkan:</span>
-                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} style={{ padding: '10px 16px', border: '2px solid #e5e7eb', borderRadius: '10px', fontSize: '14px', color: '#111827', outline: 'none' }}>
-                  <option value="latest">Terbaru</option>
-                  <option value="salary">Gaji Tertinggi</option>
-                  <option value="popular">Terpopuler</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Loading */}
-            {loading ? (
-              <div style={{ ...cardStyle, textAlign: 'center', padding: '60px' }}>
-                <Loader2 size={40} style={{ color: '#4f46e5', margin: '0 auto 16px' }} />
-                <p style={{ color: '#6b7280' }}>Memuat lowongan...</p>
-              </div>
-            ) : jobs.length === 0 ? (
-              <div style={{ ...cardStyle, textAlign: 'center', padding: '60px' }}>
-                <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
-                <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#111827', marginBottom: '8px' }}>Tidak ada lowongan</h3>
-                <p style={{ color: '#6b7280', marginBottom: '24px' }}>Coba ubah filter pencarian Anda</p>
-                <button onClick={clearFilters} style={{ ...buttonStyle, padding: '12px 24px' }}>Reset Filter</button>
-              </div>
-            ) : (
-              <>
-                {jobs.map((job) => (
-                  <div key={job.id} style={cardStyle}>
-                    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                      <div style={{ width: '60px', height: '60px', background: 'linear-gradient(135deg, #4f46e5, #7c3aed)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', flexShrink: 0, overflow: 'hidden' }}>
-                        {job.logo?.startsWith('http') ? <img src={job.logo} alt={job.company} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span>{job.logo}</span>}
-                      </div>
-                      <div style={{ flex: 1, minWidth: '200px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                          <div>
-                            <Link href={`/jobs/${job.slug}`}><h3 style={{ fontSize: '18px', fontWeight: 600, color: '#111827', marginBottom: '4px', cursor: 'pointer' }}>{job.title}</h3></Link>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#6b7280', fontSize: '14px' }}><Building2 size={16} /><span>{job.company}</span></div>
-                          </div>
-                          <button onClick={() => toggleSaveJob(job.id)} style={{ background: savedJobs.includes(job.id) ? '#eef2ff' : '#f3f4f6', color: savedJobs.includes(job.id) ? '#4f46e5' : '#6b7280', padding: '10px', borderRadius: '10px', border: 'none', cursor: 'pointer' }}>
-                            {savedJobs.includes(job.id) ? <BookmarkCheck size={20} /> : <Bookmark size={20} />}
-                          </button>
+    return (
+        <div className="min-h-screen bg-slate-50">
+            {/* Top Filter Bar */}
+            <div className="bg-white border-b border-slate-200 sticky top-0 z-30">
+                <div className="max-w-7xl mx-auto px-4 lg:px-6 py-4">
+                    <div className="flex flex-col lg:flex-row gap-4">
+                        {/* Search */}
+                        <div className="flex-1 flex gap-3">
+                            <div className="flex-1 relative">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Posisi, skill, atau perusahaan..."
+                                    className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 placeholder-slate-400"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                            <div className="w-48 relative hidden md:block">
+                                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Lokasi..."
+                                    className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 placeholder-slate-400"
+                                    value={location}
+                                    onChange={(e) => setLocation(e.target.value)}
+                                />
+                            </div>
                         </div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '12px', fontSize: '13px', color: '#6b7280' }}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><MapPin size={14} /> {job.location}</span>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Briefcase size={14} /> {formatJobType(job.type)}</span>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={14} /> {job.experience}</span>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#16a34a', fontWeight: 600 }}><DollarSign size={14} /> {job.salary}</span>
+
+                        {/* Filter Buttons */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                            {/* Job Type Filters */}
+                            {jobTypes.slice(0, 3).map(type => (
+                                <button
+                                    key={type}
+                                    onClick={() => handleFilterChange('jobType', type)}
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                                        filters.jobType.includes(type)
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                    }`}
+                                >
+                                    {formatJobType(type)}
+                                </button>
+                            ))}
+                            
+                            {/* More Filters */}
+                            <button
+                                onClick={() => setShowFilters(true)}
+                                className="px-4 py-2 rounded-lg text-sm font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition flex items-center gap-2"
+                            >
+                                <Filter className="w-4 h-4" />
+                                Filter
+                                {activeFiltersCount > 0 && (
+                                    <span className="w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center">
+                                        {activeFiltersCount}
+                                    </span>
+                                )}
+                            </button>
+
+                            {/* Sort */}
+                            <select
+                                value={sortBy}
+                                onChange={(e) => setSortBy(e.target.value)}
+                                className="px-4 py-2.5 bg-slate-100 border-0 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="latest">Terbaru</option>
+                                <option value="salary">Gaji Tertinggi</option>
+                                <option value="popular">Terpopuler</option>
+                            </select>
+
+                            {activeFiltersCount > 0 && (
+                                <button
+                                    onClick={clearFilters}
+                                    className="text-sm text-red-600 hover:text-red-700 font-medium"
+                                >
+                                    Reset
+                                </button>
+                            )}
                         </div>
-                        <div style={{ marginBottom: '16px' }}>
-                          <span style={badgeStyle('#eef2ff', '#4f46e5')}>{job.category}</span>
-                          {job.remote && <span style={badgeStyle('#dcfce7', '#16a34a')}>Remote</span>}
-                          {job.urgent && <span style={badgeStyle('#fee2e2', '#dc2626')}>Featured</span>}
-                          {job.hasApplied && <span style={badgeStyle('#ccfbf1', '#0d9488')}>✓ Sudah Melamar</span>}
-                        </div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', borderTop: '1px solid #f1f5f9' }}>
-                          <div style={{ display: 'flex', gap: '16px', fontSize: '13px', color: '#9ca3af' }}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={14} /> {getTimeSince(job.postedDate)}</span>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Users size={14} /> {job.applicants} pelamar</span>
-                          </div>
-                          <div style={{ display: 'flex', gap: '12px' }}>
-                            <button onClick={() => setSelectedJob(job)} style={{ padding: '10px 20px', border: '2px solid #e5e7eb', background: 'white', borderRadius: '10px', fontSize: '14px', fontWeight: 500, cursor: 'pointer', color: '#374151' }}>Detail</button>
-                            <Link href={`/jobs/${job.slug}`}><button style={{ ...buttonStyle, padding: '10px 20px', fontSize: '14px' }}>Lamar</button></Link>
-                          </div>
-                        </div>
-                      </div>
                     </div>
-                  </div>
-                ))}
-
-                {pagination.totalPages > 1 && (
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '32px' }}>
-                    <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={!pagination.hasPrevPage} style={{ padding: '10px 16px', border: '2px solid #e5e7eb', background: 'white', borderRadius: '10px', cursor: pagination.hasPrevPage ? 'pointer' : 'not-allowed', opacity: pagination.hasPrevPage ? 1 : 0.5 }}><ChevronLeft size={20} /></button>
-                    {[...Array(Math.min(5, pagination.totalPages))].map((_, i) => (
-                      <button key={i + 1} onClick={() => setCurrentPage(i + 1)} style={{ padding: '10px 16px', border: '2px solid #e5e7eb', background: currentPage === i + 1 ? '#4f46e5' : 'white', color: currentPage === i + 1 ? 'white' : '#374151', borderRadius: '10px', cursor: 'pointer', fontWeight: 600 }}>{i + 1}</button>
-                    ))}
-                    <button onClick={() => setCurrentPage(p => Math.min(pagination.totalPages, p + 1))} disabled={!pagination.hasNextPage} style={{ padding: '10px 16px', border: '2px solid #e5e7eb', background: 'white', borderRadius: '10px', cursor: pagination.hasNextPage ? 'pointer' : 'not-allowed', opacity: pagination.hasNextPage ? 1 : 0.5 }}><ChevronRight size={20} /></button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Job Detail Modal */}
-      {selectedJob && (
-        <div onClick={() => setSelectedJob(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', zIndex: 100, overflowY: 'auto' }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: 'white', borderRadius: '20px', maxWidth: '800px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9', position: 'sticky', top: 0, background: 'white', zIndex: 10 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div style={{ display: 'flex', gap: '16px' }}>
-                  <div style={{ width: '60px', height: '60px', background: 'linear-gradient(135deg, #4f46e5, #7c3aed)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', overflow: 'hidden' }}>
-                    {selectedJob.logo?.startsWith('http') ? <img src={selectedJob.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : selectedJob.logo}
-                  </div>
-                  <div><h2 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', marginBottom: '4px' }}>{selectedJob.title}</h2><p style={{ color: '#6b7280' }}>{selectedJob.company}</p></div>
                 </div>
-                <button onClick={() => setSelectedJob(null)} style={{ background: '#f3f4f6', border: 'none', padding: '10px', borderRadius: '10px', cursor: 'pointer' }}><X size={20} /></button>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', marginTop: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><MapPin size={18} color="#9ca3af" /><div><div style={{ fontSize: '11px', color: '#9ca3af' }}>Lokasi</div><div style={{ fontWeight: 600, color: '#111827', fontSize: '14px' }}>{selectedJob.location}</div></div></div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Briefcase size={18} color="#9ca3af" /><div><div style={{ fontSize: '11px', color: '#9ca3af' }}>Tipe</div><div style={{ fontWeight: 600, color: '#111827', fontSize: '14px' }}>{formatJobType(selectedJob.type)}</div></div></div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Clock size={18} color="#9ca3af" /><div><div style={{ fontSize: '11px', color: '#9ca3af' }}>Pengalaman</div><div style={{ fontWeight: 600, color: '#111827', fontSize: '14px' }}>{selectedJob.experience}</div></div></div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><DollarSign size={18} color="#9ca3af" /><div><div style={{ fontSize: '11px', color: '#9ca3af' }}>Gaji</div><div style={{ fontWeight: 600, color: '#16a34a', fontSize: '14px' }}>{selectedJob.salary}</div></div></div>
-              </div>
-              <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
-                <Link href={`/jobs/${selectedJob.slug}`} style={{ flex: 1 }}><button style={{ ...buttonStyle, width: '100%', padding: '14px' }}>Lamar Sekarang</button></Link>
-                <button onClick={() => toggleSaveJob(selectedJob.id)} style={{ padding: '14px 24px', background: savedJobs.includes(selectedJob.id) ? '#eef2ff' : '#f3f4f6', color: savedJobs.includes(selectedJob.id) ? '#4f46e5' : '#374151', border: 'none', borderRadius: '12px', fontWeight: 600, cursor: 'pointer' }}>{savedJobs.includes(selectedJob.id) ? 'Tersimpan' : 'Simpan'}</button>
-              </div>
             </div>
-            <div style={{ padding: '24px' }}>
-              {selectedJob.description && <div style={{ marginBottom: '24px' }}><h3 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', marginBottom: '12px' }}>Deskripsi</h3><p style={{ color: '#4b5563', lineHeight: 1.7, whiteSpace: 'pre-line' }}>{selectedJob.description}</p></div>}
-              {selectedJob.requirements && <div style={{ marginBottom: '24px' }}><h3 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', marginBottom: '12px' }}>Persyaratan</h3><div style={{ color: '#4b5563', lineHeight: 1.7, whiteSpace: 'pre-line' }}>{selectedJob.requirements}</div></div>}
-              {selectedJob.benefits?.length > 0 && <div style={{ marginBottom: '24px' }}><h3 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', marginBottom: '12px' }}>Benefit</h3><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>{selectedJob.benefits.map((b, i) => <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px', background: '#f0fdf4', borderRadius: '10px' }}><Star size={16} color="#16a34a" fill="#16a34a" /><span style={{ color: '#374151', fontSize: '14px' }}>{b}</span></div>)}</div></div>}
-              {selectedJob.skills?.length > 0 && <div><h3 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', marginBottom: '12px' }}>Skills</h3><div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>{selectedJob.skills.map((s, i) => <span key={i} style={badgeStyle('#eef2ff', '#4f46e5')}>{s}</span>)}</div></div>}
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Mobile Filter Modal */}
-      {showFilters && (
-        <div style={{ position: 'fixed', inset: 0, background: 'white', zIndex: 100, overflowY: 'auto', padding: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#111827' }}>Filter</h3>
-            <button onClick={() => setShowFilters(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} /></button>
-          </div>
-          <div style={filterGroupStyle}><h4 style={filterTitleStyle}>Tipe Pekerjaan</h4>{jobTypes.map(type => <label key={type} style={checkboxLabelStyle}><input type="checkbox" checked={filters.jobType.includes(type)} onChange={() => handleFilterChange('jobType', type)} style={{ width: '20px', height: '20px', accentColor: '#4f46e5' }} />{formatJobType(type)}</label>)}</div>
-          <div style={filterGroupStyle}><h4 style={filterTitleStyle}>Pengalaman</h4>{experienceLevels.map(level => <label key={level} style={checkboxLabelStyle}><input type="checkbox" checked={filters.experience.includes(level)} onChange={() => handleFilterChange('experience', level)} style={{ width: '20px', height: '20px', accentColor: '#4f46e5' }} />{level}</label>)}</div>
-          <div style={filterGroupStyle}><h4 style={filterTitleStyle}>Kategori</h4>{categories.map(cat => <label key={cat} style={checkboxLabelStyle}><input type="checkbox" checked={filters.category.includes(cat)} onChange={() => handleFilterChange('category', cat)} style={{ width: '20px', height: '20px', accentColor: '#4f46e5' }} />{cat}</label>)}</div>
-          <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
-            <button onClick={clearFilters} style={{ flex: 1, padding: '14px', background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: '12px', fontWeight: 600, cursor: 'pointer' }}>Reset</button>
-            <button onClick={() => setShowFilters(false)} style={{ ...buttonStyle, flex: 1, padding: '14px' }}>Terapkan</button>
-          </div>
+            {/* Main Content - Split View */}
+            <div className="max-w-7xl mx-auto px-4 lg:px-6 py-4">
+                <div className="flex gap-4" style={{ height: 'calc(100vh - 140px)' }}>
+                    
+                    {/* Left Panel - Job List (Scrollable) */}
+                    <div className="w-96 flex-shrink-0 overflow-y-auto pr-2 scrollbar-thin">
+                        <div className="text-sm text-slate-500 mb-3">
+                            {pagination.totalCount.toLocaleString()} lowongan ditemukan
+                        </div>
+
+                        {loading ? (
+                            <div className="space-y-3">
+                                {[1, 2, 3, 4, 5].map(i => (
+                                    <div key={i} className="bg-white rounded-xl p-4 animate-pulse border border-slate-100">
+                                        <div className="flex gap-3">
+                                            <div className="w-12 h-12 bg-slate-200 rounded-lg flex-shrink-0"></div>
+                                            <div className="flex-1">
+                                                <div className="h-4 bg-slate-200 rounded w-3/4 mb-2"></div>
+                                                <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : jobs.length === 0 ? (
+                            <div className="bg-white rounded-xl p-8 text-center border border-slate-100">
+                                <Briefcase className="w-12 h-12 text-slate-200 mx-auto mb-3" />
+                                <h3 className="font-semibold text-slate-800 mb-1">Tidak ada lowongan</h3>
+                                <p className="text-sm text-slate-500">Coba ubah filter pencarian</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                {jobs.map((job) => (
+                                    <div
+                                        key={job.id}
+                                        onClick={() => setSelectedJob(job)}
+                                        className={`bg-white rounded-xl p-4 cursor-pointer transition border-2 ${
+                                            selectedJob?.id === job.id
+                                                ? 'border-blue-500 shadow-md'
+                                                : 'border-transparent hover:border-slate-200'
+                                        }`}
+                                    >
+                                        <div className="flex gap-3">
+                                            <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                                                {job.logo?.startsWith('http') ? (
+                                                    <img src={job.logo} alt={job.company} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <Building2 className="w-6 h-6 text-slate-400" />
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="font-semibold text-slate-800 text-sm truncate">
+                                                    {job.title}
+                                                </h3>
+                                                <div className="flex items-center gap-1 text-slate-500 text-xs mt-0.5">
+                                                    <span className="truncate">{job.company}</span>
+                                                    {job.companyVerified && (
+                                                        <CheckCircle className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center gap-2 text-xs text-slate-400 mt-1">
+                                                    <span className="flex items-center gap-1">
+                                                        <MapPin className="w-3 h-3" />
+                                                        {job.location}
+                                                    </span>
+                                                    <span>•</span>
+                                                    <span>{getTimeSince(job.postedDate)}</span>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); toggleSaveJob(job.id) }}
+                                                className={`p-1.5 rounded-lg transition flex-shrink-0 ${
+                                                    savedJobs.includes(job.id) ? 'text-blue-600' : 'text-slate-300 hover:text-slate-400'
+                                                }`}
+                                            >
+                                                {savedJobs.includes(job.id) ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {/* Pagination */}
+                                {pagination.totalPages > 1 && (
+                                    <div className="flex items-center justify-center gap-2 py-4">
+                                        <button
+                                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                            disabled={!pagination.hasPrevPage}
+                                            className="p-2 rounded-lg border border-slate-200 bg-white disabled:opacity-50"
+                                        >
+                                            <ChevronLeft className="w-4 h-4" />
+                                        </button>
+                                        <span className="text-sm text-slate-600">
+                                            {currentPage} / {pagination.totalPages}
+                                        </span>
+                                        <button
+                                            onClick={() => setCurrentPage(p => Math.min(pagination.totalPages, p + 1))}
+                                            disabled={!pagination.hasNextPage}
+                                            className="p-2 rounded-lg border border-slate-200 bg-white disabled:opacity-50"
+                                        >
+                                            <ChevronRight className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Right Panel - Job Detail */}
+                    <div className="flex-1 bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                        {selectedJob ? (
+                            <div className="h-full overflow-y-auto">
+                                {/* Header */}
+                                <div className="p-6 border-b border-slate-100">
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-16 h-16 rounded-xl bg-slate-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                                            {selectedJob.logo?.startsWith('http') ? (
+                                                <img src={selectedJob.logo} alt={selectedJob.company} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <Building2 className="w-8 h-8 text-slate-400" />
+                                            )}
+                                        </div>
+                                        <div className="flex-1">
+                                            <h1 className="text-xl font-bold text-slate-800">{selectedJob.title}</h1>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className="text-slate-600">{selectedJob.company}</span>
+                                                {selectedJob.companyVerified && (
+                                                    <CheckCircle className="w-4 h-4 text-blue-500" />
+                                                )}
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => toggleSaveJob(selectedJob.id)}
+                                            className={`p-2.5 rounded-xl transition ${
+                                                savedJobs.includes(selectedJob.id)
+                                                    ? 'bg-blue-100 text-blue-600'
+                                                    : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                                            }`}
+                                        >
+                                            {savedJobs.includes(selectedJob.id) ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
+                                        </button>
+                                    </div>
+
+                                    {/* Quick Info */}
+                                    <div className="flex flex-wrap gap-3 mt-4">
+                                        <span className={`px-3 py-1.5 text-sm font-medium rounded-lg ${getJobTypeBadgeClass(selectedJob.type)}`}>
+                                            {formatJobType(selectedJob.type)}
+                                        </span>
+                                        <span className="px-3 py-1.5 text-sm bg-slate-100 text-slate-600 rounded-lg flex items-center gap-1.5">
+                                            <MapPin className="w-4 h-4" />
+                                            {selectedJob.location}
+                                        </span>
+                                        {selectedJob.remote && (
+                                            <span className="px-3 py-1.5 text-sm bg-emerald-100 text-emerald-700 rounded-lg">
+                                                Remote
+                                            </span>
+                                        )}
+                                        {selectedJob.salary && (
+                                            <span className="px-3 py-1.5 text-sm bg-emerald-50 text-emerald-700 rounded-lg flex items-center gap-1.5 font-medium">
+                                                <Banknote className="w-4 h-4" />
+                                                {selectedJob.salary}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* Meta Info */}
+                                    <div className="flex items-center gap-4 mt-4 text-sm text-slate-500">
+                                        <span className="flex items-center gap-1">
+                                            <Calendar className="w-4 h-4" />
+                                            {getTimeSince(selectedJob.postedDate)}
+                                        </span>
+                                        <span className="flex items-center gap-1">
+                                            <Users className="w-4 h-4" />
+                                            {selectedJob.applicants || 0} pelamar
+                                        </span>
+                                        {selectedJob.experience && (
+                                            <span className="flex items-center gap-1">
+                                                <Briefcase className="w-4 h-4" />
+                                                {selectedJob.experience}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="flex gap-3 mt-6">
+                                        <Link
+                                            href={`/jobs/${selectedJob.slug}`}
+                                            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition"
+                                        >
+                                            Lamar Sekarang
+                                            <ArrowRight className="w-5 h-5" />
+                                        </Link>
+                                        <Link
+                                            href={`/jobs/${selectedJob.slug}`}
+                                            className="px-6 py-3 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition"
+                                        >
+                                            Detail Lengkap
+                                        </Link>
+                                    </div>
+                                </div>
+
+                                {/* Content */}
+                                <div className="p-6">
+                                    {/* Description */}
+                                    {selectedJob.description && (
+                                        <div className="mb-6">
+                                            <h2 className="text-lg font-semibold text-slate-800 mb-3">Deskripsi Pekerjaan</h2>
+                                            <div className="text-slate-600 leading-relaxed whitespace-pre-line">
+                                                {selectedJob.description}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Requirements */}
+                                    {selectedJob.requirements && (
+                                        <div className="mb-6">
+                                            <h2 className="text-lg font-semibold text-slate-800 mb-3">Persyaratan</h2>
+                                            <div className="text-slate-600 leading-relaxed whitespace-pre-line">
+                                                {selectedJob.requirements}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Benefits */}
+                                    {selectedJob.benefits?.length > 0 && (
+                                        <div className="mb-6">
+                                            <h2 className="text-lg font-semibold text-slate-800 mb-3">Benefit</h2>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {selectedJob.benefits.map((benefit, i) => (
+                                                    <div key={i} className="flex items-center gap-2 p-3 bg-emerald-50 rounded-lg">
+                                                        <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                                                        <span className="text-sm text-slate-700">{benefit}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Skills */}
+                                    {selectedJob.skills?.length > 0 && (
+                                        <div>
+                                            <h2 className="text-lg font-semibold text-slate-800 mb-3">Skills</h2>
+                                            <div className="flex flex-wrap gap-2">
+                                                {selectedJob.skills.map((skill, i) => (
+                                                    <span key={i} className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm">
+                                                        {skill}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="h-full flex items-center justify-center">
+                                <div className="text-center">
+                                    <Briefcase className="w-16 h-16 text-slate-200 mx-auto mb-4" />
+                                    <h3 className="text-lg font-semibold text-slate-800 mb-1">Pilih Lowongan</h3>
+                                    <p className="text-slate-500">Klik lowongan di sebelah kiri untuk melihat detail</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Mobile Filter Modal */}
+            {showFilters && (
+                <div className="fixed inset-0 z-50">
+                    <div className="absolute inset-0 bg-black/50" onClick={() => setShowFilters(false)}></div>
+                    <div className="absolute inset-y-0 right-0 w-full max-w-sm bg-white shadow-2xl overflow-y-auto">
+                        <div className="p-6">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-lg font-semibold text-slate-800">Filter</h3>
+                                <button onClick={() => setShowFilters(false)} className="p-2 rounded-xl hover:bg-slate-100">
+                                    <X className="w-5 h-5 text-slate-500" />
+                                </button>
+                            </div>
+
+                            {/* Job Type */}
+                            <div className="mb-6">
+                                <h4 className="text-sm font-semibold text-slate-800 mb-3">Tipe Pekerjaan</h4>
+                                <div className="space-y-2">
+                                    {jobTypes.map(type => (
+                                        <label key={type} className="flex items-center gap-3 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={filters.jobType.includes(type)}
+                                                onChange={() => handleFilterChange('jobType', type)}
+                                                className="w-5 h-5 rounded border-slate-300 text-blue-600"
+                                            />
+                                            <span className="text-slate-600">{formatJobType(type)}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Experience */}
+                            <div className="mb-8">
+                                <h4 className="text-sm font-semibold text-slate-800 mb-3">Pengalaman</h4>
+                                <div className="space-y-2">
+                                    {experienceLevels.map(level => (
+                                        <label key={level} className="flex items-center gap-3 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={filters.experience.includes(level)}
+                                                onChange={() => handleFilterChange('experience', level)}
+                                                className="w-5 h-5 rounded border-slate-300 text-blue-600"
+                                            />
+                                            <span className="text-slate-600">{level}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={clearFilters}
+                                    className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 font-medium rounded-xl hover:bg-slate-200 transition"
+                                >
+                                    Reset
+                                </button>
+                                <button
+                                    onClick={() => setShowFilters(false)}
+                                    className="flex-1 px-4 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition"
+                                >
+                                    Terapkan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
-      )}
-    </div>
-  )
+    )
 }
 
 export default JobsPage

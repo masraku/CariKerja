@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
     Search, Briefcase, Building2, MapPin, ArrowRight, 
-    ChevronRight, Sparkles
+    ChevronRight, Sparkles, Users, CheckCircle, TrendingUp,
+    Banknote, Clock
 } from 'lucide-react'
 
 export default function LandingPage() {
@@ -23,7 +24,7 @@ export default function LandingPage() {
         try {
             const [statsRes, jobsRes, companiesRes] = await Promise.all([
                 fetch('/api/homepage/stats'),
-                fetch('/api/homepage/featured-jobs?limit=4'),
+                fetch('/api/homepage/featured-jobs?limit=3'),
                 fetch('/api/homepage/top-companies?limit=6')
             ])
 
@@ -62,355 +63,166 @@ export default function LandingPage() {
         return 'Nego'
     }
 
+    const formatJobType = (type) => {
+        const map = { 'FULL_TIME': 'Full Time', 'PART_TIME': 'Part Time', 'CONTRACT': 'Contract', 'FREELANCE': 'Freelance', 'INTERNSHIP': 'Internship' }
+        return map[type] || type
+    }
+
     return (
-        <div className="min-h-screen bg-white" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+        <div className="min-h-screen bg-white">
             
-            {/* Hero Section - Gradient Indigo-Purple */}
-            <section style={{ 
-                position: 'relative',
-                padding: '10% 5%',
-                minHeight: '90vh',
-                display: 'flex',
-                alignItems: 'center',
-                background: 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 25%, #f5f3ff 50%, #ede9fe 75%, #faf5ff 100%)',
-                overflow: 'hidden'
-            }}>
-                {/* Subtle animated gradient overlay */}
-                <div style={{
-                    position: 'absolute',
-                    inset: 0,
-                    background: 'radial-gradient(ellipse at 30% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(168, 85, 247, 0.06) 0%, transparent 50%)',
-                    pointerEvents: 'none'
-                }} />
+            {/* Hero Section */}
+            <section className="relative bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 px-4 lg:px-8 py-20 lg:py-28 overflow-hidden">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-30">
+                    <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl"></div>
+                    <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+                </div>
                 
-                <div style={{ 
-                    width: '100%',
-                    maxWidth: '1200px',
-                    margin: '0 auto',
-                    position: 'relative',
-                    zIndex: 1
-                }}>
+                <div className="max-w-5xl mx-auto relative z-10">
                     {/* Badge */}
-                    <div style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '8px 16px',
-                        background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(168, 85, 247, 0.1))',
-                        borderRadius: '100px',
-                        marginBottom: '32px',
-                        border: '1px solid rgba(79, 70, 229, 0.15)'
-                    }}>
-                        <Sparkles size={16} style={{ color: '#7c3aed' }} />
-                        <span style={{ fontSize: '14px', color: '#6d28d9', fontWeight: 500 }}>
-                            Platform Kerja #1 Indonesia
-                        </span>
+                    <div className="flex justify-center mb-8">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
+                            <Sparkles className="w-4 h-4 text-blue-400" />
+                            <span className="text-sm text-white/90 font-medium">Platform Kerja #1 Indonesia</span>
+                        </div>
                     </div>
 
                     {/* Main Heading */}
-                    <h1 style={{
-                        fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
-                        fontWeight: 700,
-                        lineHeight: 1.1,
-                        color: '#1e1b4b',
-                        marginBottom: '24px',
-                        maxWidth: '800px'
-                    }}>
+                    <h1 className="text-4xl lg:text-6xl font-bold text-center mb-6 text-white">
                         Temukan Karir
                         <br />
-                        <span style={{ 
-                            background: 'linear-gradient(135deg, #4f46e5, #7c3aed, #a855f7)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text'
-                        }}>Impianmu</span>
+                        <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                            Impianmu
+                        </span>
                     </h1>
 
-                    <p style={{
-                        fontSize: 'clamp(1rem, 2vw, 1.25rem)',
-                        color: '#6366f1',
-                        marginBottom: '40px',
-                        maxWidth: '500px',
-                        lineHeight: 1.6,
-                        opacity: 0.85
-                    }}>
+                    <p className="text-lg text-slate-300 text-center mb-10 max-w-xl mx-auto">
                         Ribuan lowongan dari perusahaan terpercaya menunggu Anda
                     </p>
 
-                    {/* Search Bar - Enhanced with gradient shadow */}
-                    <form onSubmit={handleSearch} style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: '12px',
-                        maxWidth: '600px',
-                        marginBottom: '48px'
-                    }}>
-                        <div style={{
-                            flex: '1 1 300px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            background: 'white',
-                            borderRadius: '12px',
-                            padding: '16px 20px',
-                            boxShadow: '0 4px 24px rgba(79, 70, 229, 0.12)',
-                            border: '1px solid rgba(79, 70, 229, 0.1)'
-                        }}>
-                            <Search size={20} style={{ color: '#7c3aed', marginRight: '12px' }} />
-                            <input
-                                type="text"
-                                placeholder="Cari pekerjaan..."
-                                value={searchKeyword}
-                                onChange={(e) => setSearchKeyword(e.target.value)}
-                                style={{
-                                    flex: 1,
-                                    border: 'none',
-                                    outline: 'none',
-                                    fontSize: '16px',
-                                    color: '#1e1b4b',
-                                    background: 'transparent'
-                                }}
-                            />
+                    {/* Search Bar */}
+                    <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-12">
+                        <div className="bg-white rounded-2xl p-2 shadow-2xl shadow-black/20 flex flex-col sm:flex-row gap-2">
+                            <div className="flex-1 relative">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Cari pekerjaan, perusahaan..."
+                                    value={searchKeyword}
+                                    onChange={(e) => setSearchKeyword(e.target.value)}
+                                    className="w-full pl-12 pr-4 py-4 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-400"
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30"
+                            >
+                                Cari
+                                <ArrowRight className="w-5 h-5" />
+                            </button>
                         </div>
-                        <button
-                            type="submit"
-                            style={{
-                                padding: '16px 32px',
-                                background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
-                                color: 'white',
-                                borderRadius: '12px',
-                                border: 'none',
-                                fontWeight: 600,
-                                fontSize: '16px',
-                                cursor: 'pointer',
-                                transition: 'all 0.3s',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                boxShadow: '0 4px 16px rgba(124, 58, 237, 0.3)'
-                            }}
-                            onMouseOver={(e) => {
-                                e.target.style.background = 'linear-gradient(135deg, #4338ca, #6d28d9)';
-                                e.target.style.transform = 'translateY(-2px)';
-                                e.target.style.boxShadow = '0 6px 20px rgba(124, 58, 237, 0.4)';
-                            }}
-                            onMouseOut={(e) => {
-                                e.target.style.background = 'linear-gradient(135deg, #4f46e5, #7c3aed)';
-                                e.target.style.transform = 'translateY(0)';
-                                e.target.style.boxShadow = '0 4px 16px rgba(124, 58, 237, 0.3)';
-                            }}
-                        >
-                            Cari
-                            <ArrowRight size={18} />
-                        </button>
                     </form>
 
-                    {/* Stats - Minimal */}
+                    {/* Stats */}
                     {!loading && stats && (
-                        <div style={{
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: '40px'
-                        }}>
-                            {[
-                                { value: stats.totalJobs?.toLocaleString() || '0', label: 'Lowongan' },
-                                { value: stats.totalCompanies?.toLocaleString() || '0', label: 'Perusahaan' },
-                                { value: stats.totalHires?.toLocaleString() || '0', label: 'Diterima' }
-                            ].map((stat, i) => (
-                                <div key={i}>
-                                    <div style={{ fontSize: '2rem', fontWeight: 700, color: '#111827' }}>
-                                        {stat.value}+
-                                    </div>
-                                    <div style={{ fontSize: '14px', color: '#6b7280' }}>
-                                        {stat.label}
-                                    </div>
-                                </div>
-                            ))}
+                        <div className="flex flex-wrap justify-center gap-8 lg:gap-16">
+                            <div className="text-center">
+                                <div className="text-3xl lg:text-4xl font-bold text-white">{stats.totalJobs?.toLocaleString() || '0'}+</div>
+                                <div className="text-sm text-slate-400">Lowongan</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-3xl lg:text-4xl font-bold text-blue-400">{stats.totalCompanies?.toLocaleString() || '0'}+</div>
+                                <div className="text-sm text-slate-400">Perusahaan</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-3xl lg:text-4xl font-bold text-emerald-400">{stats.totalHires?.toLocaleString() || '0'}+</div>
+                                <div className="text-sm text-slate-400">Diterima</div>
+                            </div>
                         </div>
                     )}
                 </div>
             </section>
 
-            {/* Featured Jobs - Gradient Background */}
-            <section style={{
-                padding: '8% 5%',
-                background: 'linear-gradient(180deg, #ffffff 0%, #f5f3ff 50%, #ede9fe 100%)',
-                position: 'relative'
-            }}>
-                {/* Decorative elements */}
-                <div style={{
-                    position: 'absolute',
-                    top: '10%',
-                    right: '5%',
-                    width: '200px',
-                    height: '200px',
-                    background: 'radial-gradient(circle, rgba(124, 58, 237, 0.08) 0%, transparent 70%)',
-                    borderRadius: '50%',
-                    pointerEvents: 'none'
-                }} />
-                <div style={{
-                    position: 'absolute',
-                    bottom: '15%',
-                    left: '3%',
-                    width: '150px',
-                    height: '150px',
-                    background: 'radial-gradient(circle, rgba(79, 70, 229, 0.06) 0%, transparent 70%)',
-                    borderRadius: '50%',
-                    pointerEvents: 'none'
-                }} />
-                <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
+            {/* Featured Jobs Section */}
+            <section className="px-4 lg:px-8 py-16 lg:py-20 bg-slate-50">
+                <div className="max-w-6xl mx-auto">
                     {/* Section Header */}
-                    <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        marginBottom: '40px',
-                        flexWrap: 'wrap',
-                        gap: '16px'
-                    }}>
+                    <div className="flex flex-wrap items-center justify-between gap-4 mb-10">
                         <div>
-                            <h2 style={{ 
-                                fontSize: '1.75rem', 
-                                fontWeight: 700, 
-                                color: '#1e1b4b', 
-                                marginBottom: '8px',
-                                background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                backgroundClip: 'text'
-                            }}>
+                            <h2 className="text-2xl lg:text-3xl font-bold text-slate-800 mb-2">
                                 Lowongan Terbaru
                             </h2>
-                            <p style={{ color: '#6366f1' }}>Peluang terbaik untuk Anda</p>
+                            <p className="text-slate-500">Peluang terbaik untuk Anda</p>
                         </div>
-                        <Link href="/jobs" style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            color: '#7c3aed',
-                            fontWeight: 600,
-                            textDecoration: 'none',
-                            padding: '10px 20px',
-                            background: 'rgba(124, 58, 237, 0.1)',
-                            borderRadius: '100px',
-                            transition: 'all 0.3s'
-                        }}
-                        onMouseOver={(e) => {
-                            e.currentTarget.style.background = 'rgba(124, 58, 237, 0.2)';
-                            e.currentTarget.style.transform = 'translateX(4px)';
-                        }}
-                        onMouseOut={(e) => {
-                            e.currentTarget.style.background = 'rgba(124, 58, 237, 0.1)';
-                            e.currentTarget.style.transform = 'translateX(0)';
-                        }}
+                        <Link 
+                            href="/jobs"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-50 text-blue-600 hover:bg-blue-100 font-medium rounded-full transition"
                         >
-                            Lihat Semua <ChevronRight size={18} />
+                            Lihat Semua
+                            <ChevronRight className="w-4 h-4" />
                         </Link>
                     </div>
 
                     {/* Jobs Grid */}
                     {loading ? (
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                            gap: '20px'
-                        }}>
-                            {[1, 2, 3, 4].map(i => (
-                                <div key={i} style={{
-                                    height: '200px',
-                                    background: '#f3f4f6',
-                                    borderRadius: '16px',
-                                    animation: 'pulse 2s infinite'
-                                }} />
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+                            {[1, 2, 3].map(i => (
+                                <div key={i} className="bg-white rounded-2xl p-5 animate-pulse">
+                                    <div className="w-12 h-12 bg-slate-200 rounded-xl mb-4"></div>
+                                    <div className="h-5 bg-slate-200 rounded w-3/4 mb-2"></div>
+                                    <div className="h-4 bg-slate-200 rounded w-1/2 mb-4"></div>
+                                    <div className="flex gap-2">
+                                        <div className="h-6 bg-slate-200 rounded-full w-20"></div>
+                                        <div className="h-6 bg-slate-200 rounded-full w-24"></div>
+                                    </div>
+                                </div>
                             ))}
                         </div>
                     ) : (
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                            gap: '20px'
-                        }}>
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
                             {featuredJobs.map(job => (
                                 <Link
                                     key={job.id}
                                     href={`/jobs/${job.slug}`}
-                                    style={{
-                                        display: 'block',
-                                        padding: '24px',
-                                        background: 'white',
-                                        borderRadius: '20px',
-                                        textDecoration: 'none',
-                                        transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                                        border: '1px solid rgba(124, 58, 237, 0.1)',
-                                        position: 'relative',
-                                        overflow: 'hidden'
-                                    }}
-                                    onMouseOver={(e) => {
-                                        e.currentTarget.style.background = 'linear-gradient(135deg, #ffffff, #faf5ff)';
-                                        e.currentTarget.style.boxShadow = '0 20px 40px rgba(124, 58, 237, 0.15), 0 0 0 1px rgba(124, 58, 237, 0.2)';
-                                        e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
-                                        e.currentTarget.style.borderColor = 'rgba(124, 58, 237, 0.3)';
-                                    }}
-                                    onMouseOut={(e) => {
-                                        e.currentTarget.style.background = 'white';
-                                        e.currentTarget.style.boxShadow = 'none';
-                                        e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                                        e.currentTarget.style.borderColor = 'rgba(124, 58, 237, 0.1)';
-                                    }}
+                                    className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-lg hover:border-blue-100 transition group"
                                 >
                                     {/* Company Logo */}
-                                    <div style={{
-                                        width: '48px',
-                                        height: '48px',
-                                        background: job.companies?.logo ? 'white' : 'linear-gradient(135deg, #4f46e5, #7c3aed)',
-                                        borderRadius: '12px',
-                                        marginBottom: '16px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        overflow: 'hidden'
-                                    }}>
+                                    <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center overflow-hidden mb-4">
                                         {job.companies?.logo ? (
-                                            <img src={job.companies.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            <img src={job.companies.logo} alt="" className="w-full h-full object-cover" />
                                         ) : (
-                                            <span style={{ color: 'white', fontWeight: 700 }}>{job.companies?.name?.charAt(0) || 'C'}</span>
+                                            <Building2 className="w-6 h-6 text-slate-400" />
                                         )}
                                     </div>
 
                                     {/* Job Details */}
-                                    <h3 style={{ 
-                                        fontSize: '1rem', 
-                                        fontWeight: 600, 
-                                        color: '#111827',
-                                        marginBottom: '6px'
-                                    }}>
+                                    <h3 className="text-lg font-semibold text-slate-800 group-hover:text-blue-600 transition mb-1 line-clamp-1">
                                         {job.title}
                                     </h3>
-                                    <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '12px' }}>
-                                        {job.companies?.name}
-                                    </p>
+                                    <div className="flex items-center gap-1.5 text-slate-500 text-sm mb-3">
+                                        <span>{job.companies?.name}</span>
+                                        {job.companies?.verified && (
+                                            <CheckCircle className="w-3.5 h-3.5 text-blue-500" />
+                                        )}
+                                    </div>
 
                                     {/* Meta */}
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '13px', color: '#9ca3af' }}>
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                            <MapPin size={14} /> {job.location}
+                                    <div className="flex flex-wrap gap-2 text-xs mb-3">
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full">
+                                            <MapPin className="w-3 h-3" />
+                                            {job.location || job.city}
                                         </span>
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                            <Briefcase size={14} /> {job.jobType}
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-600 rounded-full">
+                                            <Briefcase className="w-3 h-3" />
+                                            {formatJobType(job.jobType)}
                                         </span>
                                     </div>
 
                                     {/* Salary */}
                                     {(job.salaryMin || job.salaryMax) && (
-                                        <div style={{
-                                            marginTop: '16px',
-                                            padding: '8px 12px',
-                                            background: 'rgba(16, 185, 129, 0.1)',
-                                            borderRadius: '8px',
-                                            display: 'inline-block',
-                                            fontSize: '13px',
-                                            fontWeight: 500,
-                                            color: '#059669'
-                                        }}>
+                                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-sm font-medium">
+                                            <Banknote className="w-4 h-4" />
                                             Rp {formatSalary(job.salaryMin, job.salaryMax)}
                                         </div>
                                     )}
@@ -421,129 +233,46 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* Top Companies - Gradient Background */}
-            <section style={{
-                padding: '8% 5%',
-                background: 'linear-gradient(180deg, #ede9fe 0%, #e0e7ff 50%, #eef2ff 100%)',
-                position: 'relative',
-                overflow: 'hidden'
-            }}>
-                {/* Decorative elements */}
-                <div style={{
-                    position: 'absolute',
-                    top: '20%',
-                    left: '10%',
-                    width: '300px',
-                    height: '300px',
-                    background: 'radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%)',
-                    borderRadius: '50%',
-                    pointerEvents: 'none'
-                }} />
-                <div style={{
-                    position: 'absolute',
-                    bottom: '10%',
-                    right: '5%',
-                    width: '250px',
-                    height: '250px',
-                    background: 'radial-gradient(circle, rgba(79, 70, 229, 0.08) 0%, transparent 70%)',
-                    borderRadius: '50%',
-                    pointerEvents: 'none'
-                }} />
-                
-                <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
-                    <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-                        <h2 style={{ 
-                            fontSize: '1.75rem', 
-                            fontWeight: 700, 
-                            marginBottom: '8px',
-                            background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text'
-                        }}>
+            {/* Top Companies Section */}
+            <section className="px-4 lg:px-8 py-16 lg:py-20 bg-white">
+                <div className="max-w-6xl mx-auto">
+                    <div className="text-center mb-12">
+                        <h2 className="text-2xl lg:text-3xl font-bold text-slate-800 mb-2">
                             Perusahaan Terpercaya
                         </h2>
-                        <p style={{ color: '#6366f1' }}>Bergabung dengan yang terbaik</p>
+                        <p className="text-slate-500">Bergabung dengan yang terbaik</p>
                     </div>
 
                     {/* Companies Grid */}
                     {loading ? (
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-                            gap: '20px'
-                        }}>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                             {[1, 2, 3, 4, 5, 6].map(i => (
-                                <div key={i} style={{
-                                    height: '140px',
-                                    background: '#e5e7eb',
-                                    borderRadius: '16px'
-                                }} />
+                                <div key={i} className="bg-slate-50 rounded-2xl p-6 animate-pulse">
+                                    <div className="w-14 h-14 bg-slate-200 rounded-xl mx-auto mb-3"></div>
+                                    <div className="h-4 bg-slate-200 rounded w-3/4 mx-auto mb-2"></div>
+                                    <div className="h-3 bg-slate-200 rounded w-1/2 mx-auto"></div>
+                                </div>
                             ))}
                         </div>
                     ) : (
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-                            gap: '20px'
-                        }}>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                             {topCompanies.map(company => (
                                 <Link
                                     key={company.id}
-                                    href={`/companies/${company.id}`}
-                                    style={{
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        padding: '28px 20px',
-                                        background: 'white',
-                                        borderRadius: '20px',
-                                        textDecoration: 'none',
-                                        transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                                        border: '2px solid transparent',
-                                        position: 'relative'
-                                    }}
-                                    onMouseOver={(e) => {
-                                        e.currentTarget.style.background = 'linear-gradient(135deg, #ffffff, #faf5ff)';
-                                        e.currentTarget.style.boxShadow = '0 20px 50px rgba(124, 58, 237, 0.2)';
-                                        e.currentTarget.style.transform = 'translateY(-10px) scale(1.05)';
-                                        e.currentTarget.style.borderColor = '#a855f7';
-                                    }}
-                                    onMouseOut={(e) => {
-                                        e.currentTarget.style.background = 'white';
-                                        e.currentTarget.style.boxShadow = 'none';
-                                        e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                                        e.currentTarget.style.borderColor = 'transparent';
-                                    }}
+                                    href={`/companies/${company.slug || company.id}`}
+                                    className="bg-slate-50 hover:bg-white rounded-2xl p-6 text-center border-2 border-transparent hover:border-blue-100 hover:shadow-lg transition group"
                                 >
-                                    <div style={{
-                                        width: '56px',
-                                        height: '56px',
-                                        background: company.logo ? 'white' : 'linear-gradient(135deg, #4f46e5, #7c3aed)',
-                                        borderRadius: '12px',
-                                        marginBottom: '12px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        overflow: 'hidden',
-                                        border: company.logo ? '1px solid #e5e7eb' : 'none'
-                                    }}>
+                                    <div className="w-14 h-14 rounded-xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden mx-auto mb-3 group-hover:border-blue-200 transition">
                                         {company.logo ? (
-                                            <img src={company.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            <img src={company.logo} alt="" className="w-full h-full object-cover" />
                                         ) : (
-                                            <span style={{ color: 'white', fontWeight: 700, fontSize: '1.25rem' }}>{company.name?.charAt(0)}</span>
+                                            <Building2 className="w-7 h-7 text-slate-400" />
                                         )}
                                     </div>
-                                    <span style={{
-                                        fontWeight: 600,
-                                        color: '#111827',
-                                        fontSize: '14px',
-                                        textAlign: 'center',
-                                        marginBottom: '4px'
-                                    }}>
-                                        {company.name?.length > 15 ? company.name.slice(0, 15) + '...' : company.name}
-                                    </span>
-                                    <span style={{ fontSize: '12px', color: '#7c3aed' }}>
+                                    <h3 className="font-semibold text-slate-800 text-sm mb-1 line-clamp-1">
+                                        {company.name}
+                                    </h3>
+                                    <span className="text-xs text-blue-600 font-medium">
                                         {company.activeJobsCount} lowongan
                                     </span>
                                 </Link>
@@ -551,108 +280,92 @@ export default function LandingPage() {
                         </div>
                     )}
 
-                    <div style={{ textAlign: 'center', marginTop: '40px' }}>
-                        <Link href="/companies" style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '14px 28px',
-                            background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
-                            color: 'white',
-                            borderRadius: '100px',
-                            textDecoration: 'none',
-                            fontWeight: 600,
-                            boxShadow: '0 4px 16px rgba(124, 58, 237, 0.3)',
-                            transition: 'all 0.3s'
-                        }}
-                        onMouseOver={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-3px)';
-                            e.currentTarget.style.boxShadow = '0 8px 24px rgba(124, 58, 237, 0.4)';
-                        }}
-                        onMouseOut={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = '0 4px 16px rgba(124, 58, 237, 0.3)';
-                        }}
+                    <div className="text-center mt-10">
+                        <Link
+                            href="/companies"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-xl transition shadow-lg shadow-slate-800/20"
                         >
-                            Lihat Semua Perusahaan <ChevronRight size={18} />
+                            Lihat Semua Perusahaan
+                            <ChevronRight className="w-5 h-5" />
                         </Link>
                     </div>
                 </div>
             </section>
 
-            {/* CTA Section - Gradient Indigo-Purple */}
-            <section style={{
-                padding: '8% 5%',
-                background: 'linear-gradient(135deg, #312e81 0%, #4c1d95 50%, #581c87 100%)'
-            }}>
-                <div style={{ 
-                    maxWidth: '1000px', 
-                    margin: '0 auto',
-                    textAlign: 'center'
-                }}>
-                    <h2 style={{
-                        fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
-                        fontWeight: 700,
-                        color: 'white',
-                        marginBottom: '16px'
-                    }}>
+            {/* How It Works Section */}
+            <section className="px-4 lg:px-8 py-16 lg:py-20 bg-slate-50">
+                <div className="max-w-5xl mx-auto">
+                    <div className="text-center mb-12">
+                        <h2 className="text-2xl lg:text-3xl font-bold text-slate-800 mb-2">
+                            Cara Kerja
+                        </h2>
+                        <p className="text-slate-500">Mulai karir baru dalam 3 langkah mudah</p>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-8">
+                        {[
+                            { 
+                                icon: Users, 
+                                title: 'Buat Profil', 
+                                desc: 'Daftar dan lengkapi profil Anda dengan skill dan pengalaman',
+                                color: 'bg-blue-500'
+                            },
+                            { 
+                                icon: Search, 
+                                title: 'Cari Lowongan', 
+                                desc: 'Temukan pekerjaan yang sesuai dengan keahlian Anda',
+                                color: 'bg-purple-500'
+                            },
+                            { 
+                                icon: Briefcase, 
+                                title: 'Lamar & Diterima', 
+                                desc: 'Kirim lamaran dan mulai karir impian Anda',
+                                color: 'bg-emerald-500'
+                            }
+                        ].map((step, i) => {
+                            const Icon = step.icon
+                            return (
+                                <div key={i} className="text-center">
+                                    <div className={`w-16 h-16 ${step.color} rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg`}>
+                                        <Icon className="w-8 h-8 text-white" />
+                                    </div>
+                                    <div className="text-sm text-slate-400 font-medium mb-2">Langkah {i + 1}</div>
+                                    <h3 className="text-lg font-semibold text-slate-800 mb-2">{step.title}</h3>
+                                    <p className="text-slate-500 text-sm">{step.desc}</p>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+            </section>
+
+            {/* CTA Section */}
+            <section className="px-4 lg:px-8 py-16 lg:py-20 bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800">
+                <div className="max-w-3xl mx-auto text-center">
+                    <h2 className="text-2xl lg:text-3xl font-bold text-white mb-4">
                         Siap Memulai Karir Baru?
                     </h2>
-                    <p style={{
-                        color: 'rgba(255,255,255,0.7)',
-                        marginBottom: '32px',
-                        maxWidth: '500px',
-                        margin: '0 auto 32px'
-                    }}>
-                        Daftar sekarang dan akses ribuan peluang kerja
+                    <p className="text-slate-300 mb-8 max-w-lg mx-auto">
+                        Daftar sekarang dan akses ribuan peluang kerja dari perusahaan terpercaya
                     </p>
-                    <div style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        justifyContent: 'center',
-                        gap: '16px'
-                    }}>
-                        <Link href="/register/jobseeker" style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '14px 28px',
-                            background: 'linear-gradient(135deg, #a855f7, #c084fc)',
-                            color: 'white',
-                            borderRadius: '12px',
-                            textDecoration: 'none',
-                            fontWeight: 600,
-                            transition: 'all 0.3s',
-                            boxShadow: '0 4px 16px rgba(168, 85, 247, 0.4)'
-                        }}>
-                            Cari Kerja <ArrowRight size={18} />
+                    <div className="flex flex-wrap justify-center gap-4">
+                        <Link
+                            href="/register/jobseeker"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition shadow-lg shadow-blue-600/30"
+                        >
+                            Cari Kerja
+                            <ArrowRight className="w-5 h-5" />
                         </Link>
-                        <Link href="/register/recruiter" style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '14px 28px',
-                            background: 'rgba(255,255,255,0.1)',
-                            color: 'white',
-                            borderRadius: '12px',
-                            textDecoration: 'none',
-                            fontWeight: 600,
-                            border: '1px solid rgba(255,255,255,0.2)',
-                            transition: 'all 0.2s'
-                        }}>
-                            <Building2 size={18} /> Pasang Lowongan
+                        <Link
+                            href="/register/recruiter"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl transition border border-white/20"
+                        >
+                            <Building2 className="w-5 h-5" />
+                            Pasang Lowongan
                         </Link>
                     </div>
                 </div>
             </section>
-
-
-            <style jsx>{`
-                @keyframes pulse {
-                    0%, 100% { opacity: 1; }
-                    50% { opacity: 0.5; }
-                }
-            `}</style>
         </div>
     )
 }

@@ -19,6 +19,7 @@ export default function AdminJobsPage() {
     }, [search, statusFilter, jobTypeFilter])
 
     const fetchJobs = async () => {
+        setLoading(true)
         try {
             const token = localStorage.getItem('token')
             const params = new URLSearchParams()
@@ -31,13 +32,10 @@ export default function AdminJobsPage() {
             })
             const data = await response.json()
             
-            console.log('Admin Jobs API response:', data)
-            
             if (data.success) {
                 setJobs(data.jobs || [])
                 setStats(data.stats || null)
             } else {
-                console.error('API returned error:', data.error)
                 setJobs([])
                 setStats(null)
             }
@@ -69,10 +67,10 @@ export default function AdminJobsPage() {
 
     const getJobTypeBadge = (type) => {
         const styles = {
-            FULL_TIME: 'bg-blue-100 text-blue-800',
-            PART_TIME: 'bg-purple-100 text-purple-800',
-            CONTRACT: 'bg-orange-100 text-orange-800',
-            INTERNSHIP: 'bg-green-100 text-green-800'
+            FULL_TIME: 'bg-blue-100 text-blue-700',
+            PART_TIME: 'bg-purple-100 text-purple-700',
+            CONTRACT: 'bg-orange-100 text-orange-700',
+            INTERNSHIP: 'bg-emerald-100 text-emerald-700'
         }
         const labels = {
             FULL_TIME: 'Full Time',
@@ -81,292 +79,255 @@ export default function AdminJobsPage() {
             INTERNSHIP: 'Magang'
         }
         return (
-            <span className={`px-2 py-1 text-xs font-medium rounded-full ${styles[type] || 'bg-gray-100 text-gray-800'}`}>
+            <span className={`px-3 py-1 text-xs font-medium rounded-full ${styles[type] || 'bg-slate-100 text-slate-700'}`}>
                 {labels[type] || type}
             </span>
         )
     }
 
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading jobs...</p>
-                </div>
-            </div>
-        )
-    }
-
     return (
-        <div className="p-8">
-            {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Manajemen Lowongan</h1>
-                <p className="text-gray-600 mt-1">Kelola semua lowongan pekerjaan yang terdaftar</p>
-            </div>
-
-            {/* Stats Cards */}
-            {stats && (
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
-                    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-100 rounded-lg">
-                                <Briefcase className="w-5 h-5 text-blue-600" />
-                            </div>
-                            <div>
-                                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-                                <p className="text-xs text-gray-500">Total Lowongan</p>
-                            </div>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+            {/* Header - Always visible */}
+            <div className="bg-gradient-to-r from-slate-800 to-slate-700 px-6 lg:px-8 py-8">
+                <div className="max-w-7xl mx-auto">
+                    <h1 className="text-2xl lg:text-3xl font-bold text-white mb-2">Manajemen Lowongan</h1>
+                    <p className="text-slate-300 text-sm">Kelola semua lowongan pekerjaan yang terdaftar</p>
+                    
+                    {/* Quick Stats in Header */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                            <div className="text-3xl font-bold text-white">{stats?.total || 0}</div>
+                            <div className="text-slate-300 text-xs mt-1">Total Lowongan</div>
                         </div>
-                    </div>
-                    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-green-100 rounded-lg">
-                                <CheckCircle className="w-5 h-5 text-green-600" />
-                            </div>
-                            <div>
-                                <p className="text-2xl font-bold text-gray-900">{stats.active}</p>
-                                <p className="text-xs text-gray-500">Aktif</p>
-                            </div>
+                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                            <div className="text-3xl font-bold text-emerald-400">{stats?.active || 0}</div>
+                            <div className="text-slate-300 text-xs mt-1">Aktif</div>
                         </div>
-                    </div>
-                    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-red-100 rounded-lg">
-                                <XCircle className="w-5 h-5 text-red-600" />
-                            </div>
-                            <div>
-                                <p className="text-2xl font-bold text-gray-900">{stats.inactive}</p>
-                                <p className="text-xs text-gray-500">Nonaktif</p>
-                            </div>
+                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                            <div className="text-3xl font-bold text-amber-400">{stats?.totalApplications || 0}</div>
+                            <div className="text-slate-300 text-xs mt-1">Total Lamaran</div>
                         </div>
-                    </div>
-                    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-purple-100 rounded-lg">
-                                <Users className="w-5 h-5 text-purple-600" />
-                            </div>
-                            <div>
-                                <p className="text-2xl font-bold text-gray-900">{stats.totalApplications}</p>
-                                <p className="text-xs text-gray-500">Total Lamaran</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-100 rounded-lg">
-                                <TrendingUp className="w-5 h-5 text-blue-600" />
-                            </div>
-                            <div>
-                                <p className="text-2xl font-bold text-gray-900">{stats.byType?.fullTime || 0}</p>
-                                <p className="text-xs text-gray-500">Full Time</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-green-100 rounded-lg">
-                                <Clock className="w-5 h-5 text-green-600" />
-                            </div>
-                            <div>
-                                <p className="text-2xl font-bold text-gray-900">{stats.byType?.internship || 0}</p>
-                                <p className="text-xs text-gray-500">Magang</p>
-                            </div>
+                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                            <div className="text-3xl font-bold text-blue-400">{stats?.byType?.fullTime || 0}</div>
+                            <div className="text-slate-300 text-xs mt-1">Full Time</div>
                         </div>
                     </div>
                 </div>
-            )}
-
-            {/* Filters */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
-                <div className="flex flex-col md:flex-row gap-4">
-                    {/* Search */}
-                    <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder="Cari judul, perusahaan, atau kota..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                        />
-                    </div>
-
-                    {/* Status Filter */}
-                    <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                    >
-                        <option value="all">Semua Status</option>
-                        <option value="active">Aktif</option>
-                        <option value="inactive">Nonaktif</option>
-                    </select>
-
-                    {/* Job Type Filter */}
-                    <select
-                        value={jobTypeFilter}
-                        onChange={(e) => setJobTypeFilter(e.target.value)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                    >
-                        <option value="all">Semua Tipe</option>
-                        <option value="FULL_TIME">Full Time</option>
-                        <option value="PART_TIME">Part Time</option>
-                        <option value="CONTRACT">Kontrak</option>
-                        <option value="INTERNSHIP">Magang</option>
-                    </select>
-                </div>
             </div>
 
-            {/* Jobs Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th className="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Lowongan
-                                </th>
-                                <th className="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Perusahaan
-                                </th>
-                                <th className="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Tipe
-                                </th>
-                                <th className="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Lokasi
-                                </th>
-                                <th className="text-center px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Lamaran
-                                </th>
-                                <th className="text-center px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Views
-                                </th>
-                                <th className="text-center px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Status
-                                </th>
-                                <th className="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Dibuat
-                                </th>
-                                <th className="text-center px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Aksi
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {jobs.length === 0 ? (
-                                <tr>
-                                    <td colSpan={9} className="px-6 py-12 text-center">
-                                        <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                                        <p className="text-gray-500">Tidak ada lowongan ditemukan</p>
-                                    </td>
-                                </tr>
-                            ) : (
-                                jobs.map((job) => (
-                                    <tr key={job.id} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div>
-                                                <p className="font-medium text-gray-900">{job.title}</p>
-                                                <p className="text-xs text-gray-500 mt-1">
-                                                    {job.level} • {job.numberOfPositions} posisi
-                                                </p>
-                                                {job.showSalary && job.salaryMin && job.salaryMax && (
-                                                    <p className="text-xs text-green-600 mt-1">
-                                                        {formatCurrency(job.salaryMin)} - {formatCurrency(job.salaryMax)}
-                                                    </p>
+            {/* Main Content */}
+            <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6">
+                {/* Filters */}
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-6">
+                    <div className="flex flex-col lg:flex-row gap-4">
+                        {/* Search */}
+                        <div className="flex-1 relative">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="Cari lowongan, perusahaan, atau lokasi..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="w-full pl-12 pr-4 py-3 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-400"
+                            />
+                        </div>
+
+                        {/* Status Filter */}
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setStatusFilter('all')}
+                                className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
+                                    statusFilter === 'all' 
+                                        ? 'bg-slate-800 text-white' 
+                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
+                            >
+                                Semua
+                            </button>
+                            <button
+                                onClick={() => setStatusFilter('active')}
+                                className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
+                                    statusFilter === 'active' 
+                                        ? 'bg-emerald-500 text-white' 
+                                        : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                                }`}
+                            >
+                                Aktif
+                            </button>
+                            <button
+                                onClick={() => setStatusFilter('inactive')}
+                                className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
+                                    statusFilter === 'inactive' 
+                                        ? 'bg-red-500 text-white' 
+                                        : 'bg-red-50 text-red-600 hover:bg-red-100'
+                                }`}
+                            >
+                                Nonaktif
+                            </button>
+                        </div>
+
+                        {/* Job Type Filter */}
+                        <select
+                            value={jobTypeFilter}
+                            onChange={(e) => setJobTypeFilter(e.target.value)}
+                            className="px-4 py-3 bg-slate-50 border-0 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="all">Semua Tipe</option>
+                            <option value="FULL_TIME">Full Time</option>
+                            <option value="PART_TIME">Part Time</option>
+                            <option value="CONTRACT">Kontrak</option>
+                            <option value="INTERNSHIP">Magang</option>
+                        </select>
+                    </div>
+                </div>
+
+                {/* Results Count */}
+                <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm text-slate-500">
+                        Menampilkan <span className="font-semibold text-slate-700">{loading ? '...' : jobs.length}</span> lowongan
+                    </p>
+                </div>
+
+                {/* Loading State - Skeleton cards */}
+                {loading ? (
+                    <div className="grid gap-4">
+                        {[1, 2, 3, 4].map(i => (
+                            <div key={i} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 animate-pulse">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-14 h-14 rounded-xl bg-slate-200"></div>
+                                    <div className="flex-1">
+                                        <div className="h-4 bg-slate-200 rounded w-1/3 mb-2"></div>
+                                        <div className="h-3 bg-slate-200 rounded w-1/4 mb-2"></div>
+                                        <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+                                    </div>
+                                    <div className="hidden md:flex gap-4">
+                                        <div className="h-6 w-20 bg-slate-200 rounded-full"></div>
+                                        <div className="h-6 w-16 bg-slate-200 rounded-full"></div>
+                                    </div>
+                                    <div className="h-10 w-24 bg-slate-200 rounded-xl"></div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : jobs.length === 0 ? (
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center">
+                        <Briefcase className="w-16 h-16 text-slate-200 mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold text-slate-800 mb-2">Tidak ada lowongan</h3>
+                        <p className="text-slate-500">Coba ubah filter atau kata kunci pencarian</p>
+                    </div>
+                ) : (
+                    <div className="grid gap-4">
+                        {jobs.map((job) => (
+                            <div 
+                                key={job.id} 
+                                className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 hover:shadow-md transition group"
+                            >
+                                <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                                    {/* Company Logo & Job Info */}
+                                    <div className="flex items-start gap-4 flex-1">
+                                        <div className="w-14 h-14 rounded-xl bg-slate-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                                            {job.company?.logo ? (
+                                                <img 
+                                                    src={job.company.logo} 
+                                                    alt={job.company.name}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <Building2 className="w-7 h-7 text-slate-400" />
+                                            )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-semibold text-slate-800 group-hover:text-blue-600 transition truncate">
+                                                {job.title}
+                                            </h3>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className="text-sm text-slate-600">{job.company?.name}</span>
+                                                {job.company?.verified && (
+                                                    <CheckCircle className="w-4 h-4 text-blue-500" />
                                                 )}
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2">
-                                                {job.company.logo ? (
-                                                    <img 
-                                                        src={job.company.logo} 
-                                                        alt={job.company.name}
-                                                        className="w-8 h-8 rounded-lg object-cover"
-                                                    />
-                                                ) : (
-                                                    <div className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center">
-                                                        <Building2 className="w-4 h-4 text-gray-400" />
-                                                    </div>
-                                                )}
-                                                <div>
-                                                    <p className="text-sm font-medium text-gray-900">{job.company.name}</p>
-                                                    {job.company.verified && (
-                                                        <span className="text-xs text-blue-600 flex items-center gap-1">
-                                                            <CheckCircle className="w-3 h-3" /> Verified
-                                                        </span>
+                                            <div className="flex flex-wrap items-center gap-3 mt-2">
+                                                <span className="inline-flex items-center gap-1 text-xs text-slate-500">
+                                                    <MapPin className="w-3.5 h-3.5" />
+                                                    {job.city}
+                                                    {job.isRemote && (
+                                                        <span className="ml-1 px-1.5 py-0.5 bg-blue-100 text-blue-600 rounded text-xs">Remote</span>
                                                     )}
-                                                </div>
+                                                </span>
+                                                <span className="text-xs text-slate-400">•</span>
+                                                <span className="text-xs text-slate-500">{job.level}</span>
+                                                <span className="text-xs text-slate-400">•</span>
+                                                <span className="text-xs text-slate-500">{job.numberOfPositions} posisi</span>
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-4">
+                                            {job.showSalary && job.salaryMin && job.salaryMax && (
+                                                <p className="text-sm text-emerald-600 font-medium mt-2">
+                                                    {formatCurrency(job.salaryMin)} - {formatCurrency(job.salaryMax)}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Stats & Actions */}
+                                    <div className="flex items-center gap-6 lg:gap-8">
+                                        {/* Job Type Badge */}
+                                        <div className="hidden md:block">
                                             {getJobTypeBadge(job.jobType)}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-1 text-sm text-gray-600">
-                                                <MapPin className="w-4 h-4 text-gray-400" />
-                                                <span>{job.city}</span>
-                                                {job.isRemote && (
-                                                    <span className="ml-1 px-2 py-0.5 bg-blue-50 text-blue-600 text-xs rounded">
-                                                        Remote
-                                                    </span>
-                                                )}
+                                        </div>
+                                        
+                                        {/* Metrics */}
+                                        <div className="flex items-center gap-6">
+                                            <div className="text-center">
+                                                <div className="flex items-center gap-1 text-slate-800 font-semibold">
+                                                    <Users className="w-4 h-4 text-purple-500" />
+                                                    {job.applicationCount}
+                                                </div>
+                                                <div className="text-xs text-slate-400">Lamaran</div>
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className="inline-flex items-center gap-1 text-sm font-medium text-gray-900">
-                                                <Users className="w-4 h-4 text-gray-400" />
-                                                {job.applicationCount}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className="inline-flex items-center gap-1 text-sm text-gray-600">
-                                                <Eye className="w-4 h-4 text-gray-400" />
-                                                {job.viewCount}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
+                                            <div className="text-center">
+                                                <div className="flex items-center gap-1 text-slate-800 font-semibold">
+                                                    <Eye className="w-4 h-4 text-blue-500" />
+                                                    {job.viewCount}
+                                                </div>
+                                                <div className="text-xs text-slate-400">Views</div>
+                                            </div>
+                                        </div>
+
+                                        {/* Status */}
+                                        <div>
                                             {job.isActive ? (
-                                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                                                    <CheckCircle className="w-3 h-3" />
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">
+                                                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
                                                     Aktif
                                                 </span>
                                             ) : (
-                                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
-                                                    <XCircle className="w-3 h-3" />
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-100 text-red-700 text-xs font-medium rounded-full">
+                                                    <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />
                                                     Nonaktif
                                                 </span>
                                             )}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-1 text-sm text-gray-600">
-                                                <Calendar className="w-4 h-4 text-gray-400" />
-                                                {formatDate(job.createdAt)}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <Link 
-                                                href={`/jobs/${job.slug}`}
-                                                target="_blank"
-                                                className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 text-sm font-medium rounded-lg hover:bg-blue-100 transition-colors"
-                                            >
-                                                <ExternalLink className="w-4 h-4" />
-                                                Lihat
-                                            </Link>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                                        </div>
 
-            {/* Summary */}
-            <div className="mt-4 text-sm text-gray-500 text-center">
-                Menampilkan {jobs.length} lowongan
+                                        {/* Date */}
+                                        <div className="hidden lg:block text-right">
+                                            <div className="text-sm text-slate-600">{formatDate(job.createdAt)}</div>
+                                            <div className="text-xs text-slate-400">Dibuat</div>
+                                        </div>
+
+                                        {/* Action */}
+                                        <Link 
+                                            href={`/jobs/${job.slug}`}
+                                            target="_blank"
+                                            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 text-white text-sm font-medium rounded-xl hover:bg-slate-700 transition"
+                                        >
+                                            <ExternalLink className="w-4 h-4" />
+                                            Lihat
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     )
