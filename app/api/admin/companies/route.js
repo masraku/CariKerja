@@ -32,7 +32,7 @@ export async function GET(request) {
             whereClause = { status: { in: ['SUSPENDED', 'REJECTED'] } }
         }
 
-        // Single optimized query - minimal fields for listing
+        // Full query with all fields needed for detail view
         const companies = await prisma.companies.findMany({
             where: whereClause,
             select: {
@@ -40,41 +40,97 @@ export async function GET(request) {
                 name: true,
                 slug: true,
                 logo: true,
+                tagline: true,
+                description: true,
                 industry: true,
+                address: true,
                 city: true,
+                province: true,
+                postalCode: true,
+                companySize: true,
+                foundedYear: true,
+                email: true,
+                phone: true,
+                website: true,
+                linkedinUrl: true,
+                facebookUrl: true,
+                instagramUrl: true,
+                twitterUrl: true,
+                culture: true,
+                benefits: true,
+                gallery: true,
+                bio: true,
+                npwp: true,
+                aktaPendirian: true,
+                siup: true,
+                domisili: true,
                 verified: true,
-                status: true,
+                verifiedAt: true,
                 rejectionReason: true,
+                status: true,
+                totalEmployees: true,
                 createdAt: true,
+                updatedAt: true,
                 recruiters: {
                     take: 1,
                     select: {
                         firstName: true,
                         lastName: true,
+                        phone: true,
+                        position: true,
                         users: { select: { email: true } }
                     }
                 },
                 _count: { select: { jobs: true } }
             },
             orderBy: { createdAt: 'desc' },
-            take: 20 // Reduced limit for faster response
+            take: 50
         })
 
-        // Minimal transform
+        // Transform data with all fields
         const data = companies.map(c => ({
             id: c.id,
             name: c.name,
             slug: c.slug,
             logo: c.logo,
+            tagline: c.tagline,
+            description: c.description,
             industry: c.industry,
+            address: c.address,
             city: c.city,
+            province: c.province,
+            postalCode: c.postalCode,
+            companySize: c.companySize,
+            foundedYear: c.foundedYear,
+            email: c.email,
+            phone: c.phone,
+            website: c.website,
+            linkedinUrl: c.linkedinUrl,
+            facebookUrl: c.facebookUrl,
+            instagramUrl: c.instagramUrl,
+            twitterUrl: c.twitterUrl,
+            culture: c.culture,
+            benefits: c.benefits,
+            gallery: c.gallery,
+            bio: c.bio,
+            npwp: c.npwp,
+            aktaPendirian: c.aktaPendirian,
+            siup: c.siup,
+            domisili: c.domisili,
             verified: c.verified,
-            status: c.status,
+            verifiedAt: c.verifiedAt,
             rejectionReason: c.rejectionReason,
+            status: c.status,
+            totalEmployees: c.totalEmployees,
             jobsCount: c._count.jobs,
             recruiterName: c.recruiters[0] ? `${c.recruiters[0].firstName} ${c.recruiters[0].lastName}` : null,
             recruiterEmail: c.recruiters[0]?.users?.email || null,
-            createdAt: c.createdAt
+            recruiterPhone: c.recruiters[0]?.phone || null,
+            recruiterPosition: c.recruiters[0]?.position || null,
+            recruiterFirstName: c.recruiters[0]?.firstName || null,
+            recruiterLastName: c.recruiters[0]?.lastName || null,
+            createdAt: c.createdAt,
+            updatedAt: c.updatedAt
         }))
 
         return NextResponse.json({
@@ -85,7 +141,7 @@ export async function GET(request) {
     } catch (error) {
         console.error('Admin companies error:', error.message)
         return NextResponse.json(
-            { error: 'Failed to fetch companies' },
+            { error: 'Failed to fetch companies', details: error.message },
             { status: 500 }
         )
     }
