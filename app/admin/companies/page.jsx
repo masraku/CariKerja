@@ -20,10 +20,12 @@ export default function AdminCompaniesPage() {
 
     const loadCompanies = async () => {
         setLoading(true)
+        setCompanies([]) // Clear old data immediately
         try {
             const token = localStorage.getItem('token')
             const response = await fetch(`/api/admin/companies?status=${filter}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: { 'Authorization': `Bearer ${token}` },
+                cache: 'no-store' // Prevent caching
             })
 
             const data = await response.json()
