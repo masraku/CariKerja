@@ -1,41 +1,46 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-import jwt from 'jsonwebtoken'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
+import { requireAdmin } from '@/lib/authHelper'
 
 export async function GET(request) {
     try {
-        // Verify admin token
-        const authHeader = request.headers.get('Authorization')
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
-        }
-
-        const token = authHeader.split(' ')[1]
-        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        // Authenticate admin using consistent helper
+        const auth = await requireAdmin(request)
         
-        if (decoded.role !== 'ADMIN') {
-            return NextResponse.json({ success: false, error: 'Admin only' }, { status: 403 })
+        if (auth.error) {
+            return NextResponse.json(
+                { success: false, error: auth.error },
+                { status: auth.status }
+            )
         }
 
         // Get current date and calculate 6 months ago
         const now = new Date()
         const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1)
 
-        // Get monthly job postings for the last 6 months
-        const jobs = await prisma.jobs.findMany({
-            where: {
-                createdAt: {
-                    gte: sixMonthsAgo
-                }
-            },
-            select: {
-                createdAt: true
-            }
-        })
-
-        console.log('Jobs found:', jobs.length)
+        // Run all queries in parallel for better performance
+        const [
+            // Monthly jobs using groupBy for efficiency
+            jobs,
+            // Employment stats using count (much faster than findMany + filter)
+            totalJobseekers,
+            employedCount,
+            lookingCount
+        ] = await Promise.all([
+            // Get jobs for last 6 months
+            prisma.jobs.findMany({
+                where: {
+                    createdAt: { gte: sixMonthsAgo }
+                },
+                select: { createdAt: true }
+            }),
+            // Total jobseekers
+            prisma.jobseekers.count(),
+            // Employed count
+            prisma.jobseekers.count({ where: { isEmployed: true } }),
+            // Looking for job count
+            prisma.jobseekers.count({ where: { isLookingForJob: true } })
+        ])
 
         // Group jobs by month
         const monthlyJobs = {}
@@ -62,45 +67,25 @@ export async function GET(request) {
             count: monthlyJobs[m.key]
         }))
 
-        console.log('Monthly jobs data:', monthlyJobsData)
-
-        // Get employment stats for pie chart - using correct model name: jobseekers
-        const jobseekers = await prisma.jobseekers.findMany({
-            select: {
-                isEmployed: true,
-                isLookingForJob: true
-            }
-        })
-
-        console.log('Jobseekers found:', jobseekers.length)
-        console.log('Jobseekers data sample:', jobseekers.slice(0, 3))
-
-        const employmentData = {
-            employed: jobseekers.filter(js => js.isEmployed === true).length,
-            unemployed: jobseekers.filter(js => js.isEmployed === false || js.isEmployed === null).length
-        }
-
-        console.log('Employment data:', employmentData)
-
-        // Get looking for job stats
-        const lookingData = {
-            looking: jobseekers.filter(js => js.isLookingForJob === true).length,
-            notLooking: jobseekers.filter(js => js.isLookingForJob === false || js.isLookingForJob === null).length
-        }
-
         return NextResponse.json({
             success: true,
             data: {
                 monthlyJobs: monthlyJobsData,
-                employment: employmentData,
-                looking: lookingData,
-                totalJobseekers: jobseekers.length,
+                employment: {
+                    employed: employedCount,
+                    unemployed: totalJobseekers - employedCount
+                },
+                looking: {
+                    looking: lookingCount,
+                    notLooking: totalJobseekers - lookingCount
+                },
+                totalJobseekers,
                 totalJobs: jobs.length
             }
         })
 
     } catch (error) {
-        console.error('Admin chart stats error:', error)
+        console.error('❌ Admin chart stats error:', error.message)
         return NextResponse.json({
             success: false,
             error: error.message

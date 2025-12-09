@@ -4,14 +4,10 @@ import { verifyToken } from '@/lib/auth'
 
 export async function GET(request) {
   try {
-    console.log('🔍 /api/auth/me called')
-    
     // Get token from Authorization header
     const authHeader = request.headers.get('authorization')
-    console.log('🔑 Auth header:', authHeader ? 'EXISTS' : 'MISSING')
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.log('❌ No token provided')
       return NextResponse.json(
         { error: 'No token provided' },
         { status: 401 }
@@ -19,22 +15,18 @@ export async function GET(request) {
     }
 
     const token = authHeader.substring(7)
-    console.log('🔓 Token extracted, verifying...')
     
     // Verify token
     const decoded = verifyToken(token)
-    console.log('✅ Token decoded:', decoded)
     
     if (!decoded) {
-      console.log('❌ Invalid token')
       return NextResponse.json(
         { error: 'Invalid or expired token' },
         { status: 401 }
       )
     }
 
-    console.log('📡 Fetching user from database...')
-    // Get user from database with profile data
+    // Get user from database with minimal profile data
     const user = await prisma.users.findUnique({
       where: { id: decoded.userId },
       select: {
@@ -66,7 +58,9 @@ export async function GET(request) {
               select: {
                 id: true,
                 name: true,
-                logo: true
+                logo: true,
+                status: true,
+                verified: true
               }
             }
           }
@@ -74,10 +68,7 @@ export async function GET(request) {
       }
     })
 
-    console.log('👤 User found:', user ? 'YES' : 'NO')
-
     if (!user) {
-      console.log('❌ User not found in database')
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -85,7 +76,6 @@ export async function GET(request) {
     }
 
     if (user.status !== 'ACTIVE') {
-      console.log('❌ User account not active')
       return NextResponse.json(
         { error: 'Account is not active' },
         { status: 403 }
@@ -132,14 +122,13 @@ export async function GET(request) {
       userData.company = recruiter.companies
     }
 
-    console.log('✅ Returning user data:', userData)
     return NextResponse.json({
       success: true,
       user: userData
     })
 
   } catch (error) {
-    console.error('❌ Get current user error:', error)
+    console.error('Get current user error:', error.message)
     return NextResponse.json(
       { error: 'Failed to get user data' },
       { status: 500 }
