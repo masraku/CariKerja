@@ -178,7 +178,8 @@ export async function POST(request) {
                         // Update status if it was REJECTED
                         status: newStatus,
                         // Clear rejection reason when resubmitting
-                        rejectionReason: currentCompany?.status === 'REJECTED' ? null : undefined
+                        rejectionReason: currentCompany?.status === 'REJECTED' ? null : undefined,
+                        updatedAt: new Date()
                     }
                 })
             }
@@ -197,7 +198,8 @@ export async function POST(request) {
                     department,
                     photoUrl,
                     companyId: companyId || recruiter.companyId,
-                    isVerified: false // Will be verified by admin
+                    isVerified: false, // Will be verified by admin
+                    updatedAt: new Date()
                 },
                 include: { companies: true }
             })
@@ -222,6 +224,7 @@ export async function POST(request) {
                 // Create new company
                 company = await prisma.companies.create({
                     data: {
+                        id: `comp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                         name: companyName,
                         slug: companySlug,
                         logo: companyLogo,
@@ -245,7 +248,8 @@ export async function POST(request) {
                         culture,
                         benefits: benefits || [],
                         status: 'PENDING_VERIFICATION',
-                        verified: false
+                        verified: false,
+                        updatedAt: new Date()
                     }
                 })
             }
@@ -256,6 +260,7 @@ export async function POST(request) {
             // Create recruiter profile
             recruiter = await prisma.recruiters.create({
                 data: {
+                    id: `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                     userId: user.id,
                     companyId: company.id,
                     firstName,
@@ -264,7 +269,8 @@ export async function POST(request) {
                     phone,
                     department,
                     photoUrl,
-                    isVerified: false // Will be verified by admin
+                    isVerified: false, // Will be verified by admin
+                    updatedAt: new Date()
                 },
                 include: { companies: true }
             })
