@@ -61,34 +61,47 @@ function ScheduleInterviewContent() {
       setLoading(true)
       const token = localStorage.getItem('token')
 
-      // Load job details
-      const jobResponse = await fetch(`/api/jobs/${jobId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      console.log('📋 Loading interview data - jobId:', jobId, 'applicantIds:', applicantIds)
 
-      if (jobResponse.ok) {
-        const jobData = await jobResponse.json()
-        setJob(jobData.job)
-        
-        // Set default interview title
-        setFormData(prev => ({
-          ...prev,
-          title: `Interview for ${jobData.job.title}`
-        }))
-      }
-
-      // Load applicants
+      // Load applicants first - this includes job data
       const applicantResponse = await fetch(`/api/applications/batch?ids=${applicantIds}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
 
+      console.log('📋 Applicant response status:', applicantResponse.status)
+
       if (applicantResponse.ok) {
         const applicantData = await applicantResponse.json()
-        setApplicants(applicantData.applications)
+        console.log('📋 Applicant data received:', applicantData)
+        setApplicants(applicantData.applications || [])
+        
+        // Get job info from first application (all should be same job)
+        // API returns 'job' (singular) not 'jobs'
+        if (applicantData.applications && applicantData.applications.length > 0) {
+          const jobInfo = applicantData.applications[0].job
+          if (jobInfo) {
+            setJob(jobInfo)
+            // Set default interview title
+            setFormData(prev => ({
+              ...prev,
+              title: `Interview untuk posisi ${jobInfo.title || 'Unknown'}`
+            }))
+            console.log('📋 Job info extracted from application:', jobInfo)
+          } else {
+            console.error('No job info in application')
+          }
+        }
+      } else {
+        const errorText = await applicantResponse.text()
+        console.error('Failed to load applicants:', errorText)
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal Memuat Data',
+          text: 'Silakan coba lagi atau kembali ke halaman sebelumnya',
+          confirmButtonColor: '#2563EB'
+        })
       }
 
     } catch (error) {
@@ -112,22 +125,6 @@ function ScheduleInterviewContent() {
     }))
   }
 
-  const generateGoogleMeetLink = () => {
-    // This will be a placeholder - actual Google Meet link generation requires OAuth
-    const meetLink = `https://meet.google.com/${Math.random().toString(36).substr(2, 10)}`
-    setFormData(prev => ({
-      ...prev,
-      meetingUrl: meetLink
-    }))
-    
-    Swal.fire({
-      icon: 'info',
-      title: 'Google Meet Link',
-      text: 'In production, this will integrate with Google Calendar API to create actual meeting',
-      confirmButtonColor: '#2563EB'
-    })
-  }
-
   const handleSubmit = async (e) => {
     e.preventDefault()
 
@@ -135,18 +132,18 @@ function ScheduleInterviewContent() {
     if (!formData.date || !formData.time) {
       Swal.fire({
         icon: 'warning',
-        title: 'Invalid Input',
-        text: 'Please set date and time for the interview',
+        title: 'Input Tidak Valid',
+        text: 'Silakan tentukan tanggal dan waktu interview',
         confirmButtonColor: '#2563EB'
       })
       return
     }
 
-    if (formData.meetingType === 'GOOGLE_MEET' && !formData.meetingUrl) {
+    if ((formData.meetingType === 'GOOGLE_MEET' || formData.meetingType === 'ZOOM') && !formData.meetingUrl) {
       Swal.fire({
         icon: 'warning',
-        title: 'Missing Meeting Link',
-        text: 'Please generate or enter a Google Meet link',
+        title: 'Link Meeting Belum Diisi',
+        text: 'Silakan masukkan link meeting',
         confirmButtonColor: '#2563EB'
       })
       return
@@ -155,8 +152,28 @@ function ScheduleInterviewContent() {
     if (formData.meetingType === 'IN_PERSON' && !formData.location) {
       Swal.fire({
         icon: 'warning',
-        title: 'Missing Location',
-        text: 'Please enter the interview location',
+        title: 'Lokasi Belum Diisi',
+        text: 'Silakan masukkan lokasi interview',
+        confirmButtonColor: '#2563EB'
+      })
+      return
+    }
+
+    if (!job?.id) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Data lowongan belum dimuat. Silakan refresh halaman.',
+        confirmButtonColor: '#2563EB'
+      })
+      return
+    }
+
+    if (!applicants || applicants.length === 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Data kandidat belum dimuat. Silakan refresh halaman.',
         confirmButtonColor: '#2563EB'
       })
       return
@@ -184,16 +201,16 @@ function ScheduleInterviewContent() {
       if (response.ok) {
         await Swal.fire({
           icon: 'success',
-          title: 'Interview Scheduled!',
-          text: `Interview has been scheduled for ${applicants.length} candidate(s)`,
+          title: 'Interview Dijadwalkan!',
+          text: `Interview telah dijadwalkan untuk ${applicants.length} kandidat`,
           confirmButtonColor: '#2563EB'
         })
-        router.push('/recruiter/interviews')
+        router.push('/profile/recruiter/dashboard/applications')
       } else {
         Swal.fire({
           icon: 'error',
-          title: 'Failed',
-          text: data.error || 'Failed to schedule interview',
+          title: 'Gagal',
+          text: data.error || 'Gagal menjadwalkan interview',
           confirmButtonColor: '#2563EB'
         })
       }
@@ -249,10 +266,13 @@ function ScheduleInterviewContent() {
           </button>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              Schedule Interview
+              Jadwalkan Interview
             </h1>
             <p className="text-gray-600">
-              Set up interview for {applicants.length} candidate(s)
+              {applicants.length > 1 
+                ? `Undang ${applicants.length} kandidat untuk interview bersama`
+                : `Jadwalkan interview untuk kandidat`
+              }
             </p>
           </div>
         </div>
@@ -264,16 +284,16 @@ function ScheduleInterviewContent() {
               {/* Job Info */}
               {job && (
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm text-blue-600 font-medium mb-1">Position</p>
+                  <p className="text-sm text-blue-600 font-medium mb-1">Posisi</p>
                   <h3 className="text-lg font-bold text-gray-900">{job.title}</h3>
-                  <p className="text-sm text-gray-600">{job.company.name}</p>
+                  <p className="text-sm text-gray-600">{job.company?.name}</p>
                 </div>
               )}
 
               {/* Interview Title */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Interview Title *
+                  Judul Interview *
                 </label>
                 <input
                   type="text"
@@ -281,7 +301,7 @@ function ScheduleInterviewContent() {
                   value={formData.title}
                   onChange={handleChange}
                   className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., Technical Interview - Frontend Developer"
+                  placeholder="Contoh: Interview Tahap 1 - Frontend Developer"
                   required
                 />
               </div>
@@ -290,7 +310,7 @@ function ScheduleInterviewContent() {
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Date *
+                    Tanggal *
                   </label>
                   <input
                     type="date"
@@ -305,7 +325,7 @@ function ScheduleInterviewContent() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Time *
+                    Waktu *
                   </label>
                   <input
                     type="time"
@@ -321,7 +341,7 @@ function ScheduleInterviewContent() {
               {/* Duration */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Duration (minutes)
+                  Durasi
                 </label>
                 <select
                   name="duration"
@@ -329,24 +349,24 @@ function ScheduleInterviewContent() {
                   onChange={handleChange}
                   className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value={30}>30 minutes</option>
-                  <option value={45}>45 minutes</option>
-                  <option value={60}>1 hour</option>
-                  <option value={90}>1.5 hours</option>
-                  <option value={120}>2 hours</option>
+                  <option value={30}>30 menit</option>
+                  <option value={45}>45 menit</option>
+                  <option value={60}>1 jam</option>
+                  <option value={90}>1.5 jam</option>
+                  <option value={120}>2 jam</option>
                 </select>
               </div>
 
               {/* Meeting Type */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Meeting Type *
+                  Tipe Meeting *
                 </label>
                 <div className="grid md:grid-cols-3 gap-4">
                   {[
                     { value: 'GOOGLE_MEET', label: 'Google Meet', icon: Video },
                     { value: 'ZOOM', label: 'Zoom', icon: Video },
-                    { value: 'IN_PERSON', label: 'In Person', icon: MapPin }
+                    { value: 'IN_PERSON', label: 'Tatap Muka', icon: MapPin }
                   ].map(type => (
                     <label
                       key={type.value}
@@ -377,32 +397,21 @@ function ScheduleInterviewContent() {
               {(formData.meetingType === 'GOOGLE_MEET' || formData.meetingType === 'ZOOM') && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Meeting Link *
+                    Link Meeting *
                   </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="url"
-                      name="meetingUrl"
-                      value={formData.meetingUrl}
-                      onChange={handleChange}
-                      className="flex-1 text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="https://meet.google.com/xxx-xxxx-xxx"
-                      required
-                    />
-                    {formData.meetingType === 'GOOGLE_MEET' && (
-                      <button
-                        type="button"
-                        onClick={generateGoogleMeetLink}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition whitespace-nowrap"
-                      >
-                        Generate Link
-                      </button>
-                    )}
-                  </div>
+                  <input
+                    type="url"
+                    name="meetingUrl"
+                    value={formData.meetingUrl}
+                    onChange={handleChange}
+                    className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder={formData.meetingType === 'GOOGLE_MEET' ? "https://meet.google.com/xxx-xxxx-xxx" : "https://zoom.us/j/xxxxxxxxx"}
+                    required
+                  />
                   <p className="text-xs text-gray-500 mt-1">
                     {formData.meetingType === 'GOOGLE_MEET' 
-                      ? 'Google Meet link will be generated automatically or you can paste one'
-                      : 'Enter your Zoom meeting link'}
+                      ? 'Masukkan link Google Meet yang sudah Anda buat'
+                      : 'Masukkan link Zoom meeting Anda'}
                   </p>
                 </div>
               )}
@@ -411,7 +420,7 @@ function ScheduleInterviewContent() {
               {formData.meetingType === 'IN_PERSON' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Location *
+                    Lokasi *
                   </label>
                   <textarea
                     name="location"
@@ -419,7 +428,7 @@ function ScheduleInterviewContent() {
                     onChange={handleChange}
                     rows={3}
                     className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter the interview location address"
+                    placeholder="Masukkan alamat lengkap lokasi interview"
                     required
                   />
                 </div>
@@ -428,7 +437,7 @@ function ScheduleInterviewContent() {
               {/* Description */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
+                  Deskripsi
                 </label>
                 <textarea
                   name="description"
@@ -436,14 +445,14 @@ function ScheduleInterviewContent() {
                   onChange={handleChange}
                   rows={4}
                   className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Add any additional information about the interview..."
+                  placeholder="Tambahkan informasi tambahan tentang interview..."
                 />
               </div>
 
               {/* Internal Notes */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Internal Notes (Private)
+                  Catatan Internal (Privat)
                 </label>
                 <textarea
                   name="notes"
@@ -451,7 +460,7 @@ function ScheduleInterviewContent() {
                   onChange={handleChange}
                   rows={3}
                   className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Add internal notes (will not be shared with candidates)"
+                  placeholder="Tambahkan catatan internal (tidak akan dibagikan ke kandidat)"
                 />
               </div>
 
@@ -462,7 +471,7 @@ function ScheduleInterviewContent() {
                   onClick={() => router.back()}
                   className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
                 >
-                  Cancel
+                  Batal
                 </button>
                 <button
                   type="submit"
@@ -476,12 +485,12 @@ function ScheduleInterviewContent() {
                   {saving ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white"></div>
-                      Scheduling...
+                      Menjadwalkan...
                     </>
                   ) : (
                     <>
                       <Send className="w-5 h-5" />
-                      Schedule Interview
+                      Jadwalkan Interview
                     </>
                   )}
                 </button>
@@ -494,7 +503,7 @@ function ScheduleInterviewContent() {
             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-6">
               <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <Users className="w-5 h-5" />
-                Selected Candidates ({applicants.length})
+                Kandidat Terpilih ({applicants.length})
               </h3>
 
               <div className="space-y-3">
@@ -506,29 +515,29 @@ function ScheduleInterviewContent() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-3 flex-1">
                         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold overflow-hidden flex-shrink-0">
-                          {application.jobseeker.photo ? (
+                          {application.jobseeker?.photo ? (
                             <img
                               src={application.jobseeker.photo}
                               alt={application.jobseeker.firstName}
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            application.jobseeker.firstName?.charAt(0) || 'U'
+                            application.jobseeker?.firstName?.charAt(0) || 'U'
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-medium text-gray-900 text-sm truncate">
-                            {application.jobseeker.firstName} {application.jobseeker.lastName}
+                            {application.jobseeker?.firstName} {application.jobseeker?.lastName}
                           </h4>
                           <p className="text-xs text-gray-600 truncate">
-                            {application.jobseeker.currentTitle || 'Job Seeker'}
+                            {application.jobseeker?.currentTitle || 'Job Seeker'}
                           </p>
                         </div>
                       </div>
                       <button
                         onClick={() => removeApplicant(application.id)}
                         className="p-1 hover:bg-red-50 rounded transition"
-                        title="Remove"
+                        title="Hapus"
                       >
                         <X className="w-4 h-4 text-red-600" />
                       </button>
@@ -542,9 +551,9 @@ function ScheduleInterviewContent() {
                 <div className="flex items-start gap-2">
                   <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                   <div className="text-sm text-blue-900">
-                    <p className="font-medium mb-1">Email Notification</p>
+                    <p className="font-medium mb-1">Notifikasi Email</p>
                     <p className="text-blue-700">
-                      All selected candidates will receive an email with interview details.
+                      Semua kandidat yang dipilih akan menerima email dengan detail interview.
                     </p>
                   </div>
                 </div>

@@ -6,28 +6,25 @@ import {
     Users,
     Search,
     Filter,
-    FileText,
     CheckCircle,
     XCircle,
     Clock,
-    UserCheck,
     Calendar,
-    Download,
     Eye,
-    MessageSquare,
-    ChevronDown,
-    TrendingUp,
     MapPin,
     Briefcase,
     Mail,
     Phone,
-    Award,
-    GraduationCap,
-    Star
+    Video,
+    CheckSquare,
+    Square,
+    UserPlus,
+    Trash2,
+    ExternalLink
 } from 'lucide-react'
 import Swal from 'sweetalert2'
 
-export default function JobApplicationsPage() {
+export default function JobDetailPage() {
     const router = useRouter()
     const params = useParams()
     const [loading, setLoading] = useState(true)
@@ -37,6 +34,10 @@ export default function JobApplicationsPage() {
     const [searchQuery, setSearchQuery] = useState('')
     const [statusFilter, setStatusFilter] = useState('all')
     const [filteredApplications, setFilteredApplications] = useState([])
+    const [currentPage, setCurrentPage] = useState(1)
+    const [selectedApplications, setSelectedApplications] = useState([])
+    const [selectMode, setSelectMode] = useState(false)
+    const itemsPerPage = 10
 
     useEffect(() => {
         loadApplications()
@@ -45,6 +46,10 @@ export default function JobApplicationsPage() {
     useEffect(() => {
         filterApplications()
     }, [applications, searchQuery, statusFilter])
+
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [filteredApplications.length])
 
     const loadApplications = async () => {
         try {
@@ -59,18 +64,19 @@ export default function JobApplicationsPage() {
 
             if (response.ok) {
                 const data = await response.json()
-                setApplications(data.applications)
+                setApplications(data.applications || [])
                 setJob(data.job)
                 setStats(data.stats)
             } else {
-                throw new Error('Failed to load applications')
+                const errorData = await response.json()
+                throw new Error(errorData.error || 'Failed to load applications')
             }
         } catch (error) {
             console.error('Load applications error:', error)
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'Failed to load applications'
+                text: error.message || 'Failed to load applications'
             })
         } finally {
             setLoading(false)
@@ -80,16 +86,14 @@ export default function JobApplicationsPage() {
     const filterApplications = () => {
         let filtered = applications
 
-        // Filter by status
         if (statusFilter !== 'all') {
             filtered = filtered.filter(app => app.status === statusFilter)
         }
 
-        // Search by name or email
         if (searchQuery) {
             filtered = filtered.filter(app => {
-                const fullName = `${app.jobseeker.firstName} ${app.jobseeker.lastName}`.toLowerCase()
-                const email = app.jobseeker.email?.toLowerCase() || ''
+                const fullName = `${app.jobseekers?.firstName || ''} ${app.jobseekers?.lastName || ''}`.toLowerCase()
+                const email = app.jobseekers?.email?.toLowerCase() || ''
                 const query = searchQuery.toLowerCase()
                 return fullName.includes(query) || email.includes(query)
             })
@@ -102,17 +106,15 @@ export default function JobApplicationsPage() {
         const statusConfig = {
             PENDING: { label: 'Pending', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
             REVIEWING: { label: 'Reviewing', color: 'bg-blue-100 text-blue-700', icon: Eye },
-            SHORTLISTED: { label: 'Shortlisted', color: 'bg-purple-100 text-purple-700', icon: Star },
             INTERVIEW_SCHEDULED: { label: 'Interview', color: 'bg-indigo-100 text-indigo-700', icon: Calendar },
-            ACCEPTED: { label: 'Accepted', color: 'bg-green-100 text-green-700', icon: CheckCircle },
-            REJECTED: { label: 'Rejected', color: 'bg-red-100 text-red-700', icon: XCircle }
+            INTERVIEW_COMPLETED: { label: 'Selesai Interview', color: 'bg-teal-100 text-teal-700', icon: CheckCircle },
+            ACCEPTED: { label: 'Diterima', color: 'bg-green-100 text-green-700', icon: CheckCircle },
+            REJECTED: { label: 'Ditolak', color: 'bg-red-100 text-red-700', icon: XCircle }
         }
-
         const config = statusConfig[status] || statusConfig.PENDING
         const Icon = config.icon
-
         return (
-            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${config.color}`}>
+            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${config.color}`}>
                 <Icon className="w-3 h-3" />
                 {config.label}
             </span>
@@ -127,58 +129,415 @@ export default function JobApplicationsPage() {
         })
     }
 
-    const handleQuickAction = async (applicationId, newStatus) => {
-        const statusLabels = {
-            REVIEWING: 'Review',
-            SHORTLISTED: 'Shortlist',
-            INTERVIEW_SCHEDULED: 'Schedule Interview',
-            ACCEPTED: 'Accept',
-            REJECTED: 'Reject'
+    // Toggle select mode
+    const toggleSelectMode = () => {
+        setSelectMode(!selectMode)
+        setSelectedApplications([])
+    }
+
+    // Handle checkbox toggle
+    const handleSelectApplication = (applicationId) => {
+        setSelectedApplications(prev => {
+            if (prev.includes(applicationId)) {
+                return prev.filter(id => id !== applicationId)
+            } else {
+                return [...prev, applicationId]
+            }
+        })
+    }
+
+    // Handle invite multiple to interview
+    const handleInviteMultipleInterview = () => {
+        if (!job?.id) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Data lowongan belum dimuat. Silakan refresh halaman.'
+            })
+            return
+        }
+
+        const selectedApps = filteredApplications.filter(app => selectedApplications.includes(app.id))
+        const invalidApps = selectedApps.filter(app => app.status !== 'REVIEWING')
+        if (invalidApps.length > 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Status Tidak Valid',
+                text: 'Hanya kandidat dengan status "Reviewing" yang bisa diundang interview.',
+                confirmButtonColor: '#3b82f6'
+            })
+            return
+        }
+
+        router.push(`/profile/recruiter/dashboard/interview?job=${job.id}&applicants=${selectedApplications.join(',')}`)
+    }
+
+    // Handle view application
+    const handleViewApplication = async (application) => {
+        if (application.status === 'PENDING') {
+            try {
+                const token = localStorage.getItem('token')
+                await fetch(`/api/profile/recruiter/applications/${application.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: 'REVIEWING' })
+                })
+            } catch (error) {
+                console.error('Error updating status:', error)
+            }
+        }
+        router.push(`/profile/recruiter/dashboard/jobs/${params.slug}/applications/${application.id}`)
+    }
+
+    // Handle invite single to interview
+    const handleInviteInterview = (application) => {
+        if (!job?.id) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Data lowongan belum dimuat. Silakan refresh halaman.'
+            })
+            return
+        }
+        router.push(`/profile/recruiter/dashboard/interview?job=${job.id}&applicants=${application.id}`)
+    }
+
+    // Handle accept candidate
+    const handleAcceptCandidate = async (application) => {
+        if (application.status !== 'INTERVIEW_COMPLETED') {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Belum Bisa Diterima',
+                text: 'Kandidat hanya bisa diterima setelah interview selesai.',
+                confirmButtonColor: '#3b82f6'
+            })
+            return
         }
 
         const result = await Swal.fire({
-            title: `${statusLabels[newStatus]} Pelamar?`,
-            text: `Ubah status menjadi ${statusLabels[newStatus]}?`,
+            title: 'Terima Kandidat?',
+            html: `
+                <p class="mb-4">Apakah Anda yakin ingin menerima <strong>${application.jobseekers?.firstName} ${application.jobseekers?.lastName}</strong>?</p>
+                <textarea 
+                    id="accept-message" 
+                    class="swal2-input" 
+                    placeholder="Pesan untuk kandidat (opsional)"
+                    rows="4"
+                    style="width: 90%; height: 100px; resize: vertical;"
+                ></textarea>
+            `,
             icon: 'question',
             showCancelButton: true,
-            confirmButtonText: 'Ya, Ubah',
-            cancelButtonText: 'Batal'
+            confirmButtonText: 'Ya, Terima',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#10b981',
+            preConfirm: () => {
+                return document.getElementById('accept-message').value
+            }
         })
 
         if (!result.isConfirmed) return
 
         try {
             const token = localStorage.getItem('token')
-            // Use new cleaner API endpoint
-            const response = await fetch(`/api/profile/recruiter/applications/${applicationId}`, {
+            const response = await fetch(`/api/profile/recruiter/applications/${application.id}`, {
                 method: 'PATCH',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ status: newStatus })
+                body: JSON.stringify({
+                    status: 'ACCEPTED',
+                    recruiterNotes: result.value || ''
+                })
             })
 
             if (response.ok) {
                 Swal.fire({
                     icon: 'success',
-                    title: 'Berhasil!',
-                    text: 'Status berhasil diubah',
+                    title: 'Kandidat Diterima!',
+                    text: 'Email notifikasi telah dikirim ke kandidat.',
                     timer: 2000,
                     showConfirmButton: false
                 })
                 loadApplications()
-            } else {
-                throw new Error('Failed to update status')
             }
         } catch (error) {
-            console.error('Update status error:', error)
+            console.error('Accept error:', error)
             Swal.fire({
                 icon: 'error',
                 title: 'Gagal',
-                text: 'Gagal mengubah status'
+                text: 'Gagal menerima kandidat'
             })
         }
+    }
+
+    // Handle delete application
+    const handleDeleteApplication = async (applicationId, applicantName) => {
+        const result = await Swal.fire({
+            title: 'Hapus Lamaran?',
+            html: `<p>Apakah Anda yakin ingin menghapus lamaran dari <strong>${applicantName}</strong>?</p>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Hapus',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#ef4444'
+        })
+
+        if (!result.isConfirmed) return
+
+        try {
+            const token = localStorage.getItem('token')
+            const response = await fetch(`/api/profile/recruiter/applications/${applicationId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+
+            if (response.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Lamaran Dihapus',
+                    timer: 1500,
+                    showConfirmButton: false
+                })
+                loadApplications()
+            }
+        } catch (error) {
+            console.error('Delete error:', error)
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: 'Gagal menghapus lamaran'
+            })
+        }
+    }
+
+    const totalPages = Math.max(1, Math.ceil(filteredApplications.length / itemsPerPage))
+
+    const renderApplicationCard = (application) => {
+        const skills = application.jobseekers?.skills || []
+        const displaySkills = skills.slice(0, 3)
+        const remainingSkills = skills.length - 3
+        const isSelected = selectedApplications.includes(application.id)
+        const canSelect = selectMode && application.status === 'REVIEWING'
+
+        return (
+            <div
+                key={application.id}
+                onClick={() => canSelect && handleSelectApplication(application.id)}
+                className={`group bg-white rounded-2xl border p-5 transition-all duration-300 ${
+                    isSelected 
+                        ? 'border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/30' 
+                        : 'border-gray-100 hover:shadow-xl hover:border-blue-100'
+                } ${canSelect ? 'cursor-pointer' : ''}`}
+            >
+                {/* Header with Avatar and Status */}
+                <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-4">
+                        {/* Checkbox for select mode */}
+                        {selectMode && (
+                            <div 
+                                className={`flex-shrink-0 ${application.status !== 'REVIEWING' ? 'opacity-30' : ''}`}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    if (application.status === 'REVIEWING') {
+                                        handleSelectApplication(application.id)
+                                    }
+                                }}
+                            >
+                                {isSelected ? (
+                                    <CheckSquare className="w-6 h-6 text-indigo-600" />
+                                ) : (
+                                    <Square className={`w-6 h-6 ${application.status === 'REVIEWING' ? 'text-gray-400 hover:text-indigo-500' : 'text-gray-300'}`} />
+                                )}
+                            </div>
+                        )}
+                        <div className="relative">
+                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-lg font-semibold overflow-hidden">
+                                {application.jobseekers?.photo ? (
+                                    <img
+                                        src={application.jobseekers.photo}
+                                        alt={application.jobseekers.firstName}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    application.jobseekers?.firstName?.charAt(0) || 'U'
+                                )}
+                            </div>
+                            <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${application.profileCompleteness >= 80 ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                        </div>
+                        <div>
+                            <h3 className="text-base font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                                {application.jobseekers?.firstName} {application.jobseekers?.lastName}
+                            </h3>
+                            <p className="text-sm text-gray-500">{application.jobseekers?.currentTitle || 'Job Seeker'}</p>
+                        </div>
+                    </div>
+                    {getStatusBadge(application.status)}
+                </div>
+
+                {/* Skills */}
+                {skills.length > 0 && (
+                    <div className="mb-4">
+                        <div className="flex flex-wrap gap-1.5">
+                            {displaySkills.map((skill, index) => (
+                                <span key={index} className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs font-medium">
+                                    {skill}
+                                </span>
+                            ))}
+                            {remainingSkills > 0 && (
+                                <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-md text-xs font-medium">
+                                    +{remainingSkills} lainnya
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Contact & Meta Info */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-4 text-xs text-gray-500">
+                    <div className="flex items-center gap-1">
+                        <Mail className="w-3.5 h-3.5" />
+                        <span className="truncate max-w-[150px]">{application.jobseekers?.email}</span>
+                    </div>
+                    {application.jobseekers?.phone && (
+                        <div className="flex items-center gap-1">
+                            <Phone className="w-3.5 h-3.5" />
+                            {application.jobseekers.phone}
+                        </div>
+                    )}
+                    <div className="flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5" />
+                        {formatDate(application.appliedAt)}
+                    </div>
+                </div>
+
+                {/* Action Buttons - Dynamic based on status */}
+                <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
+                    {application.status === 'PENDING' ? (
+                        <>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handleViewApplication(application) }}
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition text-sm font-medium"
+                            >
+                                <Eye className="w-4 h-4" />
+                                Lihat
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handleDeleteApplication(application.id, `${application.jobseekers?.firstName} ${application.jobseekers?.lastName}`) }}
+                                className="flex items-center justify-center px-3 py-2 border border-gray-200 text-gray-500 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </>
+                    ) : application.status === 'REVIEWING' ? (
+                        <>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); router.push(`/profile/recruiter/dashboard/jobs/${params.slug}/applications/${application.id}`) }}
+                                className="flex items-center justify-center gap-1.5 px-3 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition text-sm"
+                            >
+                                <Eye className="w-4 h-4" />
+                                Detail
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handleInviteInterview(application) }}
+                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition text-sm font-medium"
+                            >
+                                <Video className="w-4 h-4" />
+                                Undang Interview
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handleDeleteApplication(application.id, `${application.jobseekers?.firstName} ${application.jobseekers?.lastName}`) }}
+                                className="flex items-center justify-center px-3 py-2 border border-gray-200 text-gray-500 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </>
+                    ) : application.status === 'INTERVIEW_SCHEDULED' ? (
+                        <>
+                            {application.interview?.meetingUrl && (
+                                <a
+                                    href={application.interview.meetingUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition text-sm font-medium shadow-lg"
+                                >
+                                    <Video className="w-4 h-4" />
+                                    Masuk Interview
+                                    <ExternalLink className="w-3 h-3" />
+                                </a>
+                            )}
+                            <button
+                                onClick={(e) => { e.stopPropagation(); router.push(`/profile/recruiter/dashboard/jobs/${params.slug}/applications/${application.id}`) }}
+                                className="flex items-center justify-center gap-1.5 px-3 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition text-sm"
+                            >
+                                <Eye className="w-4 h-4" />
+                                Detail
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handleDeleteApplication(application.id, `${application.jobseekers?.firstName} ${application.jobseekers?.lastName}`) }}
+                                className="flex items-center justify-center px-3 py-2 border border-gray-200 text-gray-500 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </>
+                    ) : application.status === 'INTERVIEW_COMPLETED' ? (
+                        <>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); router.push(`/profile/recruiter/dashboard/jobs/${params.slug}/applications/${application.id}`) }}
+                                className="flex items-center justify-center gap-1.5 px-3 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition text-sm"
+                            >
+                                <Eye className="w-4 h-4" />
+                                Detail
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handleAcceptCandidate(application) }}
+                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition text-sm font-medium"
+                            >
+                                <CheckCircle className="w-4 h-4" />
+                                Terima
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handleDeleteApplication(application.id, `${application.jobseekers?.firstName} ${application.jobseekers?.lastName}`) }}
+                                className="flex items-center justify-center px-3 py-2 border border-gray-200 text-gray-500 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </>
+                    ) : application.status === 'ACCEPTED' ? (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); router.push(`/profile/recruiter/dashboard/jobs/${params.slug}/applications/${application.id}`) }}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition text-sm font-medium"
+                        >
+                            <CheckCircle className="w-4 h-4" />
+                            Lihat Detail
+                        </button>
+                    ) : (
+                        <>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); router.push(`/profile/recruiter/dashboard/jobs/${params.slug}/applications/${application.id}`) }}
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition text-sm font-medium"
+                            >
+                                <Eye className="w-4 h-4" />
+                                Lihat Detail
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handleDeleteApplication(application.id, `${application.jobseekers?.firstName} ${application.jobseekers?.lastName}`) }}
+                                className="flex items-center justify-center px-3 py-2 border border-gray-200 text-gray-500 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </>
+                    )}
+                </div>
+            </div>
+        )
     }
 
     if (loading) {
@@ -206,7 +565,7 @@ export default function JobApplicationsPage() {
                     </button>
 
                     {job && (
-                        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
                             <h1 className="text-3xl font-bold text-gray-900 mb-2">
                                 {job.title}
                             </h1>
@@ -219,46 +578,69 @@ export default function JobApplicationsPage() {
                                     <Briefcase className="w-4 h-4" />
                                     {job.jobType}
                                 </div>
-                                <div className="flex items-center gap-1">
-                                    <TrendingUp className="w-4 h-4" />
-                                    {job.level}
-                                </div>
                             </div>
                         </div>
                     )}
                 </div>
 
-                {/* Stats Cards */}
+                {/* Stats Cards - Clickable Filters */}
                 {stats && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
-                        <div className="bg-white rounded-lg shadow-sm p-4">
-                            <p className="text-sm text-gray-600 mb-1">Total</p>
-                            <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
-                        </div>
-                        <div className="bg-yellow-50 rounded-lg shadow-sm p-4">
-                            <p className="text-sm text-yellow-700 mb-1">Pending</p>
-                            <p className="text-3xl font-bold text-yellow-900">{stats.pending}</p>
-                        </div>
-                        <div className="bg-blue-50 rounded-lg shadow-sm p-4">
-                            <p className="text-sm text-blue-700 mb-1">Reviewing</p>
-                            <p className="text-3xl font-bold text-blue-900">{stats.reviewing}</p>
-                        </div>
-                        <div className="bg-purple-50 rounded-lg shadow-sm p-4">
-                            <p className="text-sm text-purple-700 mb-1">Shortlisted</p>
-                            <p className="text-3xl font-bold text-purple-900">{stats.shortlisted}</p>
-                        </div>
-                        <div className="bg-indigo-50 rounded-lg shadow-sm p-4">
-                            <p className="text-sm text-indigo-700 mb-1">Interview</p>
-                            <p className="text-3xl font-bold text-indigo-900">{stats.interview}</p>
-                        </div>
-                        <div className="bg-green-50 rounded-lg shadow-sm p-4">
-                            <p className="text-sm text-green-700 mb-1">Accepted</p>
-                            <p className="text-3xl font-bold text-green-900">{stats.accepted}</p>
-                        </div>
-                        <div className="bg-red-50 rounded-lg shadow-sm p-4">
-                            <p className="text-sm text-red-700 mb-1">Rejected</p>
-                            <p className="text-3xl font-bold text-red-900">{stats.rejected}</p>
-                        </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+                        <button
+                            onClick={() => setStatusFilter('all')}
+                            className={`text-left rounded-xl p-4 transition-all ${
+                                statusFilter === 'all'
+                                    ? 'bg-gray-900 text-white ring-2 ring-gray-900 ring-offset-2'
+                                    : 'bg-white hover:bg-gray-50 border border-gray-200'
+                            }`}
+                        >
+                            <p className={`text-sm mb-1 ${statusFilter === 'all' ? 'text-gray-300' : 'text-gray-600'}`}>Total</p>
+                            <p className={`text-3xl font-bold ${statusFilter === 'all' ? 'text-white' : 'text-gray-900'}`}>{stats.total}</p>
+                        </button>
+                        <button
+                            onClick={() => setStatusFilter('PENDING')}
+                            className={`text-left rounded-xl p-4 transition-all ${
+                                statusFilter === 'PENDING'
+                                    ? 'bg-yellow-500 text-white ring-2 ring-yellow-500 ring-offset-2'
+                                    : 'bg-yellow-50 hover:bg-yellow-100 border border-yellow-200'
+                            }`}
+                        >
+                            <p className={`text-sm mb-1 ${statusFilter === 'PENDING' ? 'text-yellow-100' : 'text-yellow-700'}`}>Pending</p>
+                            <p className={`text-3xl font-bold ${statusFilter === 'PENDING' ? 'text-white' : 'text-yellow-900'}`}>{stats.pending}</p>
+                        </button>
+                        <button
+                            onClick={() => setStatusFilter('REVIEWING')}
+                            className={`text-left rounded-xl p-4 transition-all ${
+                                statusFilter === 'REVIEWING'
+                                    ? 'bg-blue-500 text-white ring-2 ring-blue-500 ring-offset-2'
+                                    : 'bg-blue-50 hover:bg-blue-100 border border-blue-200'
+                            }`}
+                        >
+                            <p className={`text-sm mb-1 ${statusFilter === 'REVIEWING' ? 'text-blue-100' : 'text-blue-700'}`}>Reviewing</p>
+                            <p className={`text-3xl font-bold ${statusFilter === 'REVIEWING' ? 'text-white' : 'text-blue-900'}`}>{stats.reviewing}</p>
+                        </button>
+                        <button
+                            onClick={() => setStatusFilter('INTERVIEW_SCHEDULED')}
+                            className={`text-left rounded-xl p-4 transition-all ${
+                                statusFilter === 'INTERVIEW_SCHEDULED'
+                                    ? 'bg-indigo-500 text-white ring-2 ring-indigo-500 ring-offset-2'
+                                    : 'bg-indigo-50 hover:bg-indigo-100 border border-indigo-200'
+                            }`}
+                        >
+                            <p className={`text-sm mb-1 ${statusFilter === 'INTERVIEW_SCHEDULED' ? 'text-indigo-100' : 'text-indigo-700'}`}>Interview</p>
+                            <p className={`text-3xl font-bold ${statusFilter === 'INTERVIEW_SCHEDULED' ? 'text-white' : 'text-indigo-900'}`}>{stats.interview}</p>
+                        </button>
+                        <button
+                            onClick={() => setStatusFilter('ACCEPTED')}
+                            className={`text-left rounded-xl p-4 transition-all ${
+                                statusFilter === 'ACCEPTED'
+                                    ? 'bg-green-500 text-white ring-2 ring-green-500 ring-offset-2'
+                                    : 'bg-green-50 hover:bg-green-100 border border-green-200'
+                            }`}
+                        >
+                            <p className={`text-sm mb-1 ${statusFilter === 'ACCEPTED' ? 'text-green-100' : 'text-green-700'}`}>Accepted</p>
+                            <p className={`text-3xl font-bold ${statusFilter === 'ACCEPTED' ? 'text-white' : 'text-green-900'}`}>{stats.accepted}</p>
+                        </button>
                     </div>
                 )}
 
@@ -278,17 +660,16 @@ export default function JobApplicationsPage() {
                             <option value="all">Semua Status</option>
                             <option value="PENDING">Pending</option>
                             <option value="REVIEWING">Reviewing</option>
-                            <option value="SHORTLISTED">Shortlisted</option>
                             <option value="INTERVIEW_SCHEDULED">Interview</option>
-                            <option value="ACCEPTED">Accepted</option>
-                            <option value="REJECTED">Rejected</option>
+                            <option value="INTERVIEW_COMPLETED">Selesai Interview</option>
+                            <option value="ACCEPTED">Diterima</option>
                         </select>
 
                         <div className="flex-1 relative">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                             <input
                                 type="text"
-                                placeholder="Cari nama atau email pelamar..."
+                                placeholder="Cari nama atau email..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
@@ -306,7 +687,32 @@ export default function JobApplicationsPage() {
                                 Reset Filter
                             </button>
                         )}
+
+                        {/* Select Mode Toggle */}
+                        <button
+                            onClick={toggleSelectMode}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${
+                                selectMode
+                                    ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                    : 'border border-indigo-300 text-indigo-600 hover:bg-indigo-50'
+                            }`}
+                        >
+                            <UserPlus className="w-4 h-4" />
+                            {selectMode ? 'Batal Pilih' : 'Pilih Kandidat'}
+                        </button>
                     </div>
+
+                    {/* Selection Info Bar */}
+                    {selectMode && (
+                        <div className="mt-4 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                            <p className="text-sm text-indigo-700">
+                                <span className="font-semibold">Mode Pilih Aktif</span> - Klik checkbox pada kandidat berstatus "Reviewing" untuk memilih beberapa kandidat sekaligus untuk interview bersama.
+                                {selectedApplications.length > 0 && (
+                                    <span className="ml-2 font-bold">{selectedApplications.length} kandidat terpilih</span>
+                                )}
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Applications List */}
@@ -325,177 +731,91 @@ export default function JobApplicationsPage() {
                         </p>
                     </div>
                 ) : (
-                    <div className="space-y-4">
-                        {filteredApplications.map((application) => (
-                            <div
-                                key={application.id}
-                                className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition"
-                            >
-                                <div className="flex items-start gap-6">
-                                    {/* Avatar */}
-                                    <div className="flex-shrink-0">
-                                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
-                                            {application.jobseeker.photo ? (
-                                                <img
-                                                    src={application.jobseeker.photo}
-                                                    alt={application.jobseeker.firstName}
-                                                    className="w-full h-full object-cover rounded-full"
-                                                />
-                                            ) : (
-                                                application.jobseeker.firstName?.charAt(0) || 'U'
-                                            )}
+                    (() => {
+                        const start = (currentPage - 1) * itemsPerPage
+                        const pageItems = filteredApplications.slice(start, start + itemsPerPage)
+                        const half = Math.ceil(pageItems.length / 2)
+                        const left = pageItems.slice(0, half)
+                        const right = pageItems.slice(half)
+
+                        return (
+                            <>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-4">
+                                        {left.map((app) => renderApplicationCard(app))}
+                                    </div>
+                                    <div className="space-y-4">
+                                        {right.map((app) => renderApplicationCard(app))}
+                                    </div>
+                                </div>
+
+                                {totalPages > 1 && (
+                                    <div className="flex items-center justify-between mt-4">
+                                        <div className="text-sm text-gray-600">
+                                            Menampilkan {Math.min(filteredApplications.length, itemsPerPage)} dari {filteredApplications.length} pelamar
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                                disabled={currentPage === 1}
+                                                className={`px-3 py-1 rounded-md border ${currentPage === 1 ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                                            >
+                                                Prev
+                                            </button>
+                                            <div className="px-3 py-1 bg-white border rounded-md text-sm">
+                                                {currentPage} / {totalPages}
+                                            </div>
+                                            <button
+                                                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                                disabled={currentPage === totalPages}
+                                                className={`px-3 py-1 rounded-md border ${currentPage === totalPages ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                                            >
+                                                Next
+                                            </button>
                                         </div>
                                     </div>
+                                )}
+                            </>
+                        )
+                    })()
+                )}
+            </div>
 
-                                    {/* Info */}
-                                    <div className="flex-1">
-                                        <div className="flex items-start justify-between mb-3">
-                                            <div>
-                                                <h3 className="text-xl font-bold text-gray-900 mb-1">
-                                                    {application.jobseeker.firstName} {application.jobseeker.lastName}
-                                                </h3>
-                                                <p className="text-gray-600 mb-2">
-                                                    {application.jobseeker.currentTitle || 'Job Seeker'}
-                                                </p>
-                                                <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
-                                                    {application.jobseeker.email && (
-                                                        <div className="flex items-center gap-1">
-                                                            <Mail className="w-4 h-4" />
-                                                            {application.jobseeker.email}
-                                                        </div>
-                                                    )}
-                                                    {application.jobseeker.phone && (
-                                                        <div className="flex items-center gap-1">
-                                                            <Phone className="w-4 h-4" />
-                                                            {application.jobseeker.phone}
-                                                        </div>
-                                                    )}
-                                                    {application.jobseeker.city && (
-                                                        <div className="flex items-center gap-1">
-                                                            <MapPin className="w-4 h-4" />
-                                                            {application.jobseeker.city}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-center gap-2">
-                                                {getStatusBadge(application.status)}
-                                            </div>
-                                        </div>
-
-                                        {/* Quick Stats */}
-                                        <div className="flex flex-wrap items-center gap-4 mb-4 text-sm">
-                                            <div className="flex items-center gap-1 text-gray-600">
-                                                <Calendar className="w-4 h-4" />
-                                                Applied: {formatDate(application.appliedAt)}
-                                            </div>
-                                            <div className="flex items-center gap-1">
-                                                <div className={`w-2 h-2 rounded-full ${application.profileCompleteness >= 80 ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                                                Profile {application.profileCompleteness}%
-                                            </div>
-                                            {application.hasCV && (
-                                                <div className="flex items-center gap-1 text-green-600">
-                                                    <FileText className="w-4 h-4" />
-                                                    CV Uploaded
-                                                </div>
-                                            )}
-                                            {application.skillsCount > 0 && (
-                                                <div className="flex items-center gap-1 text-blue-600">
-                                                    <Award className="w-4 h-4" />
-                                                    {application.skillsCount} Skills
-                                                </div>
-                                            )}
-                                            {application.hasExperience && (
-                                                <div className="flex items-center gap-1 text-purple-600">
-                                                    <Briefcase className="w-4 h-4" />
-                                                    Experience
-                                                </div>
-                                            )}
-                                            {application.hasEducation && (
-                                                <div className="flex items-center gap-1 text-indigo-600">
-                                                    <GraduationCap className="w-4 h-4" />
-                                                    Education
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Cover Letter Preview */}
-                                        {application.coverLetter && (
-                                            <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                                                <p className="text-sm text-gray-600 line-clamp-2">
-                                                    "{application.coverLetter}"
-                                                </p>
-                                            </div>
-                                        )}
-
-                                        {/* Actions */}
-                                        <div className="flex flex-wrap items-center gap-3">
-                                            <button
-                                                onClick={() => router.push(`/profile/recruiter/dashboard/jobs/${params.slug}/applications/${application.id}`)}
-                                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
-                                            >
-                                                <Eye className="w-4 h-4" />
-                                                Lihat Detail
-                                            </button>
-
-                                            {application.status === 'PENDING' && (
-                                                <button
-                                                    onClick={() => handleQuickAction(application.id, 'REVIEWING')}
-                                                    className="flex items-center gap-2 px-4 py-2 border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition text-sm"
-                                                >
-                                                    <Eye className="w-4 h-4" />
-                                                    Review
-                                                </button>
-                                            )}
-
-                                            {['PENDING', 'REVIEWING'].includes(application.status) && (
-                                                <button
-                                                    onClick={() => handleQuickAction(application.id, 'SHORTLISTED')}
-                                                    className="flex items-center gap-2 px-4 py-2 border border-purple-300 text-purple-700 rounded-lg hover:bg-purple-50 transition text-sm"
-                                                >
-                                                    <Star className="w-4 h-4" />
-                                                    Shortlist
-                                                </button>
-                                            )}
-
-                                            {['SHORTLISTED'].includes(application.status) && (
-                                                <button
-                                                    onClick={() => handleQuickAction(application.id, 'INTERVIEW_SCHEDULED')}
-                                                    className="flex items-center gap-2 px-4 py-2 border border-indigo-300 text-indigo-700 rounded-lg hover:bg-indigo-50 transition text-sm"
-                                                >
-                                                    <Calendar className="w-4 h-4" />
-                                                    Schedule Interview
-                                                </button>
-                                            )}
-
-                                            {!['ACCEPTED', 'REJECTED'].includes(application.status) && (
-                                                <>
-                                                    <button
-                                                        onClick={() => handleQuickAction(application.id, 'ACCEPTED')}
-                                                        className="flex items-center gap-2 px-4 py-2 border border-green-300 text-green-700 rounded-lg hover:bg-green-50 transition text-sm"
-                                                    >
-                                                        <CheckCircle className="w-4 h-4" />
-                                                        Accept
-                                                    </button>
-
-                                                    <button
-                                                        onClick={() => handleQuickAction(application.id, 'REJECTED')}
-                                                        className="flex items-center gap-2 px-4 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition text-sm"
-                                                    >
-                                                        <XCircle className="w-4 h-4" />
-                                                        Reject
-                                                    </button>
-                                                </>
-                                            )}
-                                        </div>
+            {/* Floating Action Bar */}
+            {selectedApplications.length > 0 && (
+                <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
+                    <div className="container mx-auto px-4 max-w-7xl">
+                        <div className="flex items-center justify-between py-4">
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                                        <Users className="w-5 h-5 text-indigo-600" />
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-gray-900">{selectedApplications.length} Kandidat Terpilih</p>
+                                        <p className="text-xs text-gray-500">Siap diundang interview bersama</p>
                                     </div>
                                 </div>
                             </div>
-                        ))}
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => setSelectedApplications([])}
+                                    className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    onClick={handleInviteMultipleInterview}
+                                    className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition font-medium shadow-lg shadow-indigo-500/30"
+                                >
+                                    <Video className="w-5 h-5" />
+                                    Undang Interview Bersama
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     )
 }

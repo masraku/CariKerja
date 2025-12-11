@@ -17,16 +17,16 @@ export async function PATCH(request, context) {
         const { recruiter } = auth
 
         // Get interview with participants
-        const interview = await prisma.interview.findUnique({
+        const interview = await prisma.interviews.findUnique({
             where: { id },
             include: {
-                participants: {
+                interview_participants: {
                     include: {
-                        application: {
+                        applications: {
                             include: {
                                 jobseekers: {
                                     include: {
-                                        user: true
+                                        users: true
                                     }
                                 }
                             }
@@ -75,7 +75,7 @@ export async function PATCH(request, context) {
         }
 
         // Update interview status
-        const updatedInterview = await prisma.interview.update({
+        const updatedInterview = await prisma.interviews.update({
             where: { id },
             data: {
                 status: 'COMPLETED'
@@ -83,7 +83,7 @@ export async function PATCH(request, context) {
         })
 
         // Update all participants to COMPLETED status (only those who were ACCEPTED)
-        await prisma.interviewParticipant.updateMany({
+        await prisma.interview_participants.updateMany({
             where: {
                 interviewId: id,
                 status: 'ACCEPTED' // Only update accepted participants
@@ -94,7 +94,7 @@ export async function PATCH(request, context) {
         })
 
         // Update application statuses to INTERVIEW_COMPLETED
-        const acceptedParticipants = interview.participants.filter(p => p.status === 'ACCEPTED')
+        const acceptedParticipants = interview.interview_participants.filter(p => p.status === 'ACCEPTED')
         const applicationIds = acceptedParticipants.map(p => p.applicationId)
 
         await prisma.applications.updateMany({

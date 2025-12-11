@@ -9,11 +9,11 @@ async function fixProfileCompleted() {
     console.log('🔍 Finding jobseekers with profiles...')
     
     // Get all jobseekers
-    const jobseekers = await prisma.jobseeker.findMany({
+    const jobseekers = await prisma.jobseekers.findMany({
       include: {
         educations: true,
-        workExperiences: true,
-        jobseekerSkills: true,
+        work_experiences: true,
+        jobseeker_skills: true,
         certifications: true,
       }
     })
@@ -37,8 +37,8 @@ async function fixProfileCompleted() {
       if (jobseeker.summary) filledFields++
       if (jobseeker.cvUrl) filledFields++
       if (jobseeker.educations && jobseeker.educations.length > 0) filledFields++
-      if (jobseeker.workExperiences && jobseeker.workExperiences.length > 0) filledFields++
-      if (jobseeker.jobseekerSkills && jobseeker.jobseekerSkills.length > 0) filledFields++
+      if (jobseeker.work_experiences && jobseeker.work_experiences.length > 0) filledFields++
+      if (jobseeker.jobseeker_skills && jobseeker.jobseeker_skills.length > 0) filledFields++
       if (jobseeker.desiredJobTitle) filledFields++
       if (jobseeker.desiredSalaryMin && jobseeker.desiredSalaryMax) filledFields++
       if (jobseeker.preferredJobType) filledFields++
@@ -48,7 +48,7 @@ async function fixProfileCompleted() {
 
       // Update if needed
       if (jobseeker.profileCompleted !== shouldBeCompleted || jobseeker.profileCompleteness !== completeness) {
-        await prisma.jobseeker.update({
+        await prisma.jobseekers.update({
           where: { id: jobseeker.id },
           data: {
             profileCompleted: shouldBeCompleted,
@@ -67,7 +67,7 @@ async function fixProfileCompleted() {
     
     // Do the same for recruiters
     console.log('\n🔍 Finding recruiters...')
-    const recruiters = await prisma.recruiter.findMany()
+    const recruiters = await prisma.recruiters.findMany()
     
     console.log(`Found ${recruiters.length} recruiters`)
     

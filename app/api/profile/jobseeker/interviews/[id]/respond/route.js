@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireJobseeker } from '@/lib/authHelper'
 
-// PATCH - Respond to interview (Accept/Decline)
+// PATCH - Respond to interview (Accept/Decline/Request Reschedule)
 export async function PATCH(request, context) {
     try {
         // Authenticate
@@ -15,35 +15,43 @@ export async function PATCH(request, context) {
         const params = await context.params
         const { id: participantId } = params
         const body = await request.json()
-        const { status, message } = body // status: ACCEPTED or DECLINED
+        const { status, message } = body // status: ACCEPTED, DECLINED, or RESCHEDULE_REQUESTED
 
         // Validate status
-        if (!['ACCEPTED', 'DECLINED'].includes(status)) {
+        if (!['ACCEPTED', 'DECLINED', 'RESCHEDULE_REQUESTED'].includes(status)) {
             return NextResponse.json(
-                { error: 'Invalid status. Must be ACCEPTED or DECLINED' },
+                { error: 'Invalid status. Must be ACCEPTED, DECLINED, or RESCHEDULE_REQUESTED' },
+                { status: 400 }
+            )
+        }
+
+        // Validate reschedule must have message
+        if (status === 'RESCHEDULE_REQUESTED' && (!message || message.trim().length < 10)) {
+            return NextResponse.json(
+                { error: 'Reschedule request must include a reason (min 10 characters)' },
                 { status: 400 }
             )
         }
 
         // Get participant with interview details
-        const participant = await prisma.interviewParticipant.findUnique({
+        const participant = await prisma.interview_participants.findUnique({
             where: { id: participantId },
             include: {
-                interview: {
+                interviews: {
                     include: {
                         recruiters: {
                             include: {
-                                user: true
+                                users: true
                             }
                         }
                     }
                 },
-                application: {
+                applications: {
                     include: {
-                        jobseeker: true,
+                        jobseekers: true,
                         jobs: {
                             include: {
-                                company: true
+                                companies: true
                             }
                         }
                     }
@@ -59,7 +67,7 @@ export async function PATCH(request, context) {
         }
 
         // Verify ownership
-        if (participant.application.jobseekerId !== jobseeker.id) {
+        if (participant.applications.jobseekerId !== jobseeker.id) {
             return NextResponse.json(
                 { error: 'Unauthorized' },
                 { status: 403 }
@@ -75,28 +83,39 @@ export async function PATCH(request, context) {
         }
 
         // Update participant status
-        const updated = await prisma.interviewParticipant.update({
+        const updated = await prisma.interview_participants.update({
             where: { id: participantId },
             data: {
                 status: status,
+                responseMessage: message || null,
                 respondedAt: new Date()
             }
         })
 
         // TODO: Send email to recruiter
-        console.log('📧 Should send email to recruiter:', participant.interview.recruiters.user.email)
+        console.log('📧 Should send email to recruiter:', participant.interviews.recruiters.users.email)
         console.log('Jobseeker response:', {
-            jobseeker: `${participant.application.jobseeker.firstName} ${participant.application.jobseeker.lastName}`,
+            jobseeker: `${participant.applications.jobseekers.firstName} ${participant.applications.jobseekers.lastName}`,
             status: status,
-            interview: participant.interview.title,
-            scheduledAt: participant.interview.scheduledAt
+            interview: participant.interviews.title,
+            scheduledAt: participant.interviews.scheduledAt,
+            message: message || null
         })
+
+        let responseMessage = ''
+        if (status === 'ACCEPTED') {
+            responseMessage = 'Interview accepted successfully'
+        } else if (status === 'DECLINED') {
+            responseMessage = 'Interview declined successfully'
+        } else if (status === 'RESCHEDULE_REQUESTED') {
+            responseMessage = 'Reschedule request sent successfully'
+        }
 
         return NextResponse.json({
             success: true,
             data: {
                 participant: updated,
-                message: `Interview ${status.toLowerCase()} successfully`
+                message: responseMessage
             }
         })
 

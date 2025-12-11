@@ -21,7 +21,7 @@ export async function GET(request, context) {
     const { recruiter } = auth
 
     // Fetch interview with all details
-    const interview = await prisma.interview.findUnique({
+    const interview = await prisma.interviews.findUnique({
       where: { id },
       include: {
         jobs: {
@@ -36,9 +36,9 @@ export async function GET(request, context) {
             }
           }
         },
-        participants: {
+        interview_participants: {
           include: {
-            application: {
+            applications: {
               include: {
                 jobseekers: {
                   select: {
@@ -49,7 +49,7 @@ export async function GET(request, context) {
                     currentTitle: true,
                     city: true,
                     phone: true,
-                    user: {
+                    users: {
                       select: {
                         email: true
                       }
@@ -82,22 +82,22 @@ export async function GET(request, context) {
     }
 
     // Transform participants data
-    const participants = interview.participants.map(p => ({
+    const participants = interview.interview_participants.map(p => ({
       id: p.id,
       status: p.status,
       invitedAt: p.invitedAt,
       respondedAt: p.respondedAt,
       applicationId: p.applicationId,
       candidate: {
-        id: p.application.jobseeker.id,
-        name: `${p.application.jobseeker.firstName} ${p.application.jobseeker.lastName}`,
-        firstName: p.application.jobseeker.firstName,
-        lastName: p.application.jobseeker.lastName,
-        photo: p.application.jobseeker.photo,
-        currentTitle: p.application.jobseeker.currentTitle,
-        city: p.application.jobseeker.city,
-        phone: p.application.jobseeker.phone,
-        email: p.application.jobseeker.user.email
+        id: p.applications.jobseekers.id,
+        name: `${p.applications.jobseekers.firstName} ${p.applications.jobseekers.lastName}`,
+        firstName: p.applications.jobseekers.firstName,
+        lastName: p.applications.jobseekers.lastName,
+        photo: p.applications.jobseekers.photo,
+        currentTitle: p.applications.jobseekers.currentTitle,
+        city: p.applications.jobseekers.city,
+        phone: p.applications.jobseekers.phone,
+        email: p.applications.jobseekers.users.email
       }
     }))
 
@@ -129,11 +129,11 @@ export async function GET(request, context) {
           updatedAt: interview.updatedAt
         },
         jobs: {
-          id: interview.job.id,
-          title: interview.job.title,
-          slug: interview.job.slug
+          id: interview.jobs?.id,
+          title: interview.jobs?.title,
+          slug: interview.jobs?.slug
         },
-        company: interview.job.company,
+        company: interview.jobs?.companies,
         participants,
         stats
       }
@@ -144,6 +144,94 @@ export async function GET(request, context) {
     return NextResponse.json(
       { 
         error: 'Failed to fetch interview details',
+        details: error.message
+      },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE - Delete interview and auto-reject applications
+export async function DELETE(request, context) {
+  try {
+    const params = await context.params
+    const { id } = params
+    
+    // Authenticate recruiter
+    const auth = await requireRecruiter(request)
+    
+    if (auth.error) {
+      return NextResponse.json(
+        { error: auth.error },
+        { status: auth.status }
+      )
+    }
+
+    const { recruiter } = auth
+
+    // Get interview with participants
+    const interview = await prisma.interviews.findUnique({
+      where: { id },
+      include: {
+        interview_participants: {
+          include: {
+            applications: true
+          }
+        }
+      }
+    })
+
+    if (!interview) {
+      return NextResponse.json(
+        { error: 'Interview not found' },
+        { status: 404 }
+      )
+    }
+
+    // Check ownership
+    if (interview.recruiterId !== recruiter.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 403 }
+      )
+    }
+
+    // Update all related applications to REJECTED
+    const applicationIds = interview.interview_participants.map(p => p.applicationId)
+    
+    if (applicationIds.length > 0) {
+      await prisma.applications.updateMany({
+        where: {
+          id: { in: applicationIds }
+        },
+        data: {
+          status: 'REJECTED',
+          recruiterNotes: 'Interview dibatalkan oleh recruiter'
+        }
+      })
+    }
+
+    // Update interview status to CANCELLED
+    await prisma.interviews.update({
+      where: { id },
+      data: {
+        status: 'CANCELLED'
+      }
+    })
+
+    console.log(`✅ Interview ${id} cancelled, ${applicationIds.length} applications rejected`)
+
+    return NextResponse.json({
+      success: true,
+      message: 'Interview deleted and applications rejected',
+      rejectedCount: applicationIds.length
+    })
+
+  } catch (error) {
+    console.error('❌ Delete interview error:', error)
+    return NextResponse.json(
+      { 
+        error: 'Failed to delete interview',
         details: error.message
       },
       { status: 500 }

@@ -54,13 +54,18 @@ export async function GET(request, { params }) {
             certifications: true
           }
         },
-        // Include interview participant to get interview ID
+        // Include interview participant to get interview details including meeting URL
         interview_participants: {
           include: {
             interviews: {
               select: {
                 id: true,
+                title: true,
                 scheduledAt: true,
+                duration: true,
+                meetingUrl: true,
+                meetingType: true,
+                location: true,
                 status: true
               }
             }
@@ -147,7 +152,7 @@ export async function GET(request, { params }) {
 
     return NextResponse.json({
       success: true,
-      jobs: {
+      job: {
         id: job.id,
         slug: job.slug,
         title: job.title,

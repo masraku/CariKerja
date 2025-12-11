@@ -10,30 +10,53 @@ export async function GET(request, context) {
     const params = await context.params
     const { slug } = params
 
-    console.log('🔍 Fetching job with slug:', slug)
+    console.log('🔍 Fetching job with slug/id:', slug)
 
-    // Check if user is authenticated
+    // Check if user is authenticated - also check Authorization header
     let userId = null
     let userRole = null
     try {
+      // First try cookies
       const cookieStore = await cookies()
-      const token = cookieStore.get('token')
+      const cookieToken = cookieStore.get('token')
+      
+      // Also check Authorization header (for API calls from frontend)
+      const authHeader = request.headers.get('authorization')
+      const headerToken = authHeader?.replace('Bearer ', '')
+      
+      const token = cookieToken?.value || headerToken
+      
       if (token) {
-        const decoded = jwt.verify(token.value, JWT_SECRET)
+        const decoded = jwt.verify(token, JWT_SECRET)
         userId = decoded.userId
         userRole = decoded.role
+        console.log('🔐 Authenticated user:', userId, 'role:', userRole)
       }
     } catch (error) {
+      console.log('⚠️ Auth check failed:', error.message)
       // Not authenticated, continue without user info
     }
 
-    // Fetch job by slug with all related data
+    // Check if slug is actually an ID (numeric)
+    const isNumericId = /^\d+$/.test(slug)
+    
+    // For authenticated recruiters, allow viewing any job (even inactive)
+    // For public access, only show active published jobs
+    const isRecruiter = userRole === 'RECRUITER'
+    
+    // Fetch job by slug or ID with all related data
     const job = await prisma.jobs.findFirst({
-      where: { 
-        slug,
-        isActive: true,
-        publishedAt: { not: null }
-      },
+      where: isNumericId 
+        ? { 
+            id: parseInt(slug)
+          }
+        : isRecruiter
+          ? { slug } // Recruiter can see any job by slug
+          : { 
+              slug,
+              isActive: true,
+              publishedAt: { not: null }
+            },
       include: {
         companies: {
           select: {

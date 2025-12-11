@@ -56,6 +56,28 @@ export async function GET(request, context) {
             },
             certifications: {
               orderBy: { issueDate: 'desc' }
+            },
+            jobseeker_skills: {
+              include: {
+                skills: true
+              }
+            }
+          }
+        },
+        // Include interview data
+        interview_participants: {
+          include: {
+            interviews: {
+              select: {
+                id: true,
+                title: true,
+                scheduledAt: true,
+                duration: true,
+                meetingUrl: true,
+                meetingType: true,
+                location: true,
+                status: true
+              }
             }
           }
         }
@@ -86,9 +108,20 @@ export async function GET(request, context) {
     
     completenessScore = Math.round((fields.filter(f => f).length / fields.length) * 100)
 
-    // Add profile completeness to response
+    // Extract skill names from jobseeker_skills
+    const skills = jobseeker.jobseeker_skills?.map(js => js.skills?.name).filter(Boolean) || []
+
+    // Get interview data if exists
+    const interview = application.interview_participants?.[0]?.interviews || null
+
+    // Add profile completeness and skills to response
     const responseData = {
       ...application,
+      jobseekers: {
+        ...jobseeker,
+        skills
+      },
+      interview, // Add interview data
       profileCompleteness: completenessScore
     }
 
@@ -112,10 +145,13 @@ export async function PATCH(request, context) {
     const params = await context.params
     const { id } = params
 
+    console.log('📝 PATCH application - ID:', id)
+
     // Authenticate user
     const auth = await requireRecruiter(request)
     
     if (auth.error) {
+      console.log('❌ Auth error:', auth.error)
       return NextResponse.json(
         { error: auth.error },
         { status: auth.status }
@@ -123,16 +159,19 @@ export async function PATCH(request, context) {
     }
 
     const { recruiter } = auth
+    console.log('✅ Recruiter authenticated:', recruiter.id, 'Company:', recruiter.companyId)
 
-    // Verify application exists and belongs to recruiter's job
+    // Verify application exists and belongs to recruiter's company
     const application = await prisma.applications.findFirst({
       where: {
         id,
         jobs: {
-          recruiterId: recruiter.id
+          companyId: recruiter.companyId
         }
       }
     })
+
+    console.log('🔍 Found application:', application ? 'Yes' : 'No')
 
     if (!application) {
       return NextResponse.json(
@@ -143,6 +182,8 @@ export async function PATCH(request, context) {
 
     const body = await request.json()
     const { status, recruiterNotes } = body
+
+    console.log('📋 Update request - New status:', status, 'Current status:', application.status)
 
     // Validate interview completion before accepting/rejecting
     if (status === 'ACCEPTED' || status === 'REJECTED') {
@@ -159,13 +200,19 @@ export async function PATCH(request, context) {
     }
 
     // Update application
+    const updateData = {
+      status,
+      reviewedAt: status !== 'PENDING' && !application.reviewedAt ? new Date() : application.reviewedAt
+    }
+    
+    // Only include recruiterNotes if provided
+    if (recruiterNotes !== undefined) {
+      updateData.recruiterNotes = recruiterNotes
+    }
+
     const updatedApplication = await prisma.applications.update({
       where: { id },
-      data: {
-        status,
-        recruiterNotes,
-        reviewedAt: status !== 'PENDING' && !application.reviewedAt ? new Date() : application.reviewedAt
-      },
+      data: updateData,
       include: {
         jobs: {
           select: {
@@ -185,7 +232,7 @@ export async function PATCH(request, context) {
             firstName: true,
             lastName: true,
             email: true,
-            user: {
+            users: {
               select: {
                 email: true
               }
@@ -195,21 +242,23 @@ export async function PATCH(request, context) {
       }
     })
 
+    console.log('✅ Application updated successfully - New status:', updatedApplication.status)
+
     // Send email notification for final decisions
     if (status === 'ACCEPTED' || status === 'REJECTED') {
       try {
         await sendApplicationDecision({
-          to: updatedApplication.jobseeker.user?.email || updatedApplication.jobseeker.email,
-          jobseekerName: `${updatedApplication.jobseeker.firstName} ${updatedApplication.jobseeker.lastName}`,
-          jobTitle: updatedApplication.job.title,
-          companyName: updatedApplication.job.companies.name,
+          to: updatedApplication.jobseekers.users?.email || updatedApplication.jobseekers.email,
+          jobseekerName: `${updatedApplication.jobseekers.firstName} ${updatedApplication.jobseekers.lastName}`,
+          jobTitle: updatedApplication.jobs.title,
+          companyName: updatedApplication.jobs.companies.name,
           decision: status,
           message: recruiterNotes || '',
           nextSteps: status === 'ACCEPTED' ? 
             'Tim kami akan segera menghubungi Anda untuk proses selanjutnya. Harap periksa email dan telepon Anda secara berkala.' : 
             ''
         })
-        console.log(`📧 Application decision email sent to ${updatedApplication.jobseeker.firstName}`)
+        console.log(`📧 Application decision email sent to ${updatedApplication.jobseekers.firstName}`)
       } catch (emailError) {
         console.error('Failed to send decision email:', emailError)
         // Don't fail the request if email fails
@@ -224,8 +273,83 @@ export async function PATCH(request, context) {
 
   } catch (error) {
     console.error('Error updating application:', error)
+    console.error('Error stack:', error.stack)
     return NextResponse.json(
-      { error: 'Failed to update application' },
+      { error: 'Failed to update application', details: error.message },
+      { status: 500 }
+    )
+  }
+}
+
+// Delete application
+export async function DELETE(request, context) {
+  try {
+    const params = await context.params
+    const { id } = params
+
+    // Authenticate user
+    const auth = await requireRecruiter(request)
+    
+    if (auth.error) {
+      return NextResponse.json(
+        { error: auth.error },
+        { status: auth.status }
+      )
+    }
+
+    const { recruiter } = auth
+
+    // Verify application exists and belongs to recruiter's company
+    const application = await prisma.applications.findFirst({
+      where: {
+        id,
+        jobs: {
+          companyId: recruiter.companyId
+        }
+      },
+      include: {
+        jobseekers: {
+          select: {
+            firstName: true,
+            lastName: true
+          }
+        },
+        jobs: {
+          select: {
+            title: true
+          }
+        }
+      }
+    })
+
+    if (!application) {
+      return NextResponse.json(
+        { error: 'Application not found or you do not have permission to delete it' },
+        { status: 404 }
+      )
+    }
+
+    // Delete related interview participants first
+    await prisma.interview_participants.deleteMany({
+      where: { applicationId: id }
+    })
+
+    // Delete the application
+    await prisma.applications.delete({
+      where: { id }
+    })
+
+    console.log(`🗑️ Application deleted: ${application.jobseekers.firstName} ${application.jobseekers.lastName} - ${application.jobs.title}`)
+
+    return NextResponse.json({
+      success: true,
+      message: 'Lamaran berhasil dihapus'
+    })
+
+  } catch (error) {
+    console.error('Error deleting application:', error)
+    return NextResponse.json(
+      { error: 'Failed to delete application' },
       { status: 500 }
     )
   }

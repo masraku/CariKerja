@@ -58,7 +58,7 @@ export async function GET(request) {
       include: {
         jobseekers: {
           include: {
-            user: {
+            users: {
               select: {
                 email: true
               }
@@ -67,8 +67,8 @@ export async function GET(request) {
         },
         jobs: {
           include: {
-            recruiter: true,
-            company: true
+            recruiters: true,
+            companies: true
           }
         }
       }

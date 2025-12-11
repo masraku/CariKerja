@@ -4,12 +4,12 @@
 // Check if applications exist
 const applications = await prisma.applications.findMany({
   include: {
-    jobseeker: {
+    jobseekers: {
       include: {
-        user: true
+        users: true
       }
     },
-    job: true
+    jobs: true
   },
   orderBy: {
     createdAt: 'desc'
@@ -21,16 +21,16 @@ console.log('Total applications:', applications.length)
 console.log('Applications:', JSON.stringify(applications, null, 2))
 
 // Check specific jobseeker
-const jobseeker = await prisma.jobSeeker.findFirst({
+const jobseeker = await prisma.jobseekers.findFirst({
   where: {
-    user: {
+    users: {
       email: 'masendra0303@gmail.com' // dari log
     }
   },
   include: {
     applications: {
       include: {
-        job: true
+        jobs: true
       }
     }
   }
@@ -39,15 +39,15 @@ const jobseeker = await prisma.jobSeeker.findFirst({
 console.log('Jobseeker applications:', jobseeker?.applications?.length || 0)
 
 // Check if interview exists
-const interviews = await prisma.interview.findMany({
+const interviews = await prisma.interviews.findMany({
   include: {
-    participants: {
+    interview_participants: {
       include: {
-        application: {
+        applications: {
           include: {
-            jobseeker: {
+            jobseekers: {
               include: {
-                user: true
+                users: true
               }
             }
           }

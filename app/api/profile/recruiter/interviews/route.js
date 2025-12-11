@@ -36,12 +36,12 @@ export async function POST(request) {
             include: {
                 jobseekers: {
                     include: {
-                        user: true
+                        users: true
                     }
                 },
                 jobs: {
                     include: {
-                        company: true
+                        companies: true
                     }
                 }
             }
@@ -55,39 +55,39 @@ export async function POST(request) {
         }
 
         // Get job title from first application (all should be same job)
-        const jobTitle = applications[0].job.title
-        const companyName = applications[0].job.companies.name
+        const jobTitle = applications[0].jobs.title
+        const companyName = applications[0].jobs.companies.name
 
         // Check for existing active interviews for these applications
-        const existingParticipants = await prisma.interviewParticipant.findMany({
+        const existingParticipants = await prisma.interview_participants.findMany({
             where: {
                 applicationId: { in: appIds },
-                interview: {
+                interviews: {
                     status: { in: ['SCHEDULED', 'RESCHEDULED'] } // Only check active interviews
                 }
             },
             include: {
-                application: {
+                applications: {
                     include: {
-                        jobseeker: true
+                        jobseekers: true
                     }
                 },
-                interview: true
+                interviews: true
             }
         })
 
         if (existingParticipants.length > 0) {
             const duplicateNames = existingParticipants.map(p => 
-                `${p.application.jobseeker.firstName} ${p.application.jobseeker.lastName}`
+                `${p.applications.jobseekers.firstName} ${p.applications.jobseekers.lastName}`
             ).join(', ')
             
             return NextResponse.json(
                 { 
                     error: `Interview already scheduled for: ${duplicateNames}. Please cancel or reschedule the existing interview first.`,
                     duplicates: existingParticipants.map(p => ({
-                        candidateName: `${p.application.jobseeker.firstName} ${p.application.jobseeker.lastName}`,
+                        candidateName: `${p.applications.jobseekers.firstName} ${p.applications.jobseekers.lastName}`,
                         interviewId: p.interviewId,
-                        scheduledAt: p.interview.scheduledAt
+                        scheduledAt: p.interviews.scheduledAt
                     }))
                 },
                 { status: 409 } // Conflict
@@ -95,7 +95,7 @@ export async function POST(request) {
         }
 
         // Create single interview for all candidates (group interview)
-        const interview = await prisma.interview.create({
+        const interview = await prisma.interviews.create({
             data: {
                 recruiterId: recruiter.id,
                 jobId: jobId,
@@ -116,7 +116,7 @@ export async function POST(request) {
         for (const application of applications) {
             // Create participant
             participantPromises.push(
-                prisma.interviewParticipant.create({
+                prisma.interview_participants.create({
                     data: {
                         interviewId: interview.id,
                         applicationId: application.id,
@@ -136,8 +136,8 @@ export async function POST(request) {
             // Send email invitation
             emailPromises.push(
                 sendInterviewInvitation({
-                    to: application.jobseeker.user.email,
-                    jobseekerName: `${application.jobseeker.firstName} ${application.jobseeker.lastName}`,
+                    to: application.jobseekers.users.email,
+                    jobseekerName: `${application.jobseekers.firstName} ${application.jobseekers.lastName}`,
                     jobTitle: jobTitle,
                     companyName: companyName,
                     scheduledAt: scheduledAt,
@@ -146,8 +146,8 @@ export async function POST(request) {
                     description: description,
                     interviewId: interview.id
                 }).catch(error => {
-                    console.error(`Failed to send email to ${application.jobseeker.user.email}:`, error)
-                    return { success: false, email: application.jobseeker.user.email, error }
+                    console.error(`Failed to send email to ${application.jobseekers.users.email}:`, error)
+                    return { success: false, email: application.jobseekers.users.email, error }
                 })
             )
         }

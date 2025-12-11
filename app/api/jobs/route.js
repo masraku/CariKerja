@@ -51,9 +51,9 @@ export async function GET(request) {
         if (userRole === 'JOBSEEKER') {
           const user = await prisma.users.findUnique({
             where: { id: userId },
-            include: { jobseeker: true }
+            include: { jobseekers: true }
           })
-          jobseekerId = user?.jobseeker?.id
+          jobseekerId = user?.jobseekers?.id
         }
       }
     } catch (error) {

@@ -546,19 +546,19 @@ export async function DELETE(request) {
     }
 
     // Delete all related data (cascade should handle this, but explicit is better)
-    await prisma.education.deleteMany({
+    await prisma.educations.deleteMany({
       where: { jobseekerId: jobseeker.id }
     })
     
-    await prisma.workExperience.deleteMany({
+    await prisma.work_experiences.deleteMany({
       where: { jobseekerId: jobseeker.id }
     })
     
-    await prisma.jobseekerSkill.deleteMany({
+    await prisma.jobseeker_skills.deleteMany({
       where: { jobseekerId: jobseeker.id }
     })
     
-    await prisma.certification.deleteMany({
+    await prisma.certifications.deleteMany({
       where: { jobseekerId: jobseeker.id }
     })
 

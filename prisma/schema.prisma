@@ -143,19 +143,20 @@ model educations {
 }
 
 model interview_participants {
-  id            String       @id
-  interviewId   String
-  applicationId String
-  invitedAt     DateTime     @default(now())
-  respondedAt   DateTime?
-  status        String       @default("PENDING")
-  feedback      String?
-  rating        Int?
-  notes         String?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime
-  applications  applications @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  interviews    interviews   @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  id              String       @id
+  interviewId     String
+  applicationId   String
+  invitedAt       DateTime     @default(now())
+  respondedAt     DateTime?
+  status          String       @default("PENDING") // PENDING, ACCEPTED, DECLINED, RESCHEDULE_REQUESTED
+  responseMessage String?      // Reason for reschedule or decline
+  feedback        String?
+  rating          Int?
+  notes           String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime
+  applications    applications @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  interviews      interviews   @relation(fields: [interviewId], references: [id], onDelete: Cascade)
 
   @@unique([interviewId, applicationId])
   @@index([applicationId])

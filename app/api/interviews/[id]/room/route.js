@@ -16,21 +16,21 @@ export async function GET(request, context) {
         const { id: interviewId } = params
 
         // Get interview with participant details
-        const interview = await prisma.interview.findUnique({
+        const interview = await prisma.interviews.findUnique({
             where: { id: interviewId },
             include: {
-                participants: {
+                interview_participants: {
                     where: {
-                        application: {
+                        applications: {
                             jobseekerId: jobseeker.id
                         }
                     },
                     include: {
-                        application: {
+                        applications: {
                             include: {
                                 jobs: {
                                     include: {
-                                        company: true
+                                        companies: true
                                     }
                                 }
                             }
@@ -56,14 +56,14 @@ export async function GET(request, context) {
         }
 
         // Check if jobseeker is participant
-        if (interview.participants.length === 0) {
+        if (interview.interview_participants.length === 0) {
             return NextResponse.json(
                 { error: 'You are not a participant in this interview' },
                 { status: 403 }
             )
         }
 
-        const participant = interview.participants[0]
+        const participant = interview.interview_participants[0]
 
         // Check if participant accepted
         if (participant.status !== 'ACCEPTED') {
@@ -95,11 +95,11 @@ export async function GET(request, context) {
                     status: interview.status
                 },
                 jobs: {
-                    id: participant.application.jobs.id,
-                    title: participant.application.jobs.title,
-                    company: participant.application.jobs.company
+                    id: participant.applications.jobs.id,
+                    title: participant.applications.jobs.title,
+                    company: participant.applications.jobs.companies
                 },
-                recruiter: interview.recruiter,
+                recruiter: interview.recruiters,
                 participant: {
                     id: participant.id,
                     status: participant.status,
@@ -146,10 +146,10 @@ export async function PATCH(request, context) {
         }
 
         // Verify participant
-        const participant = await prisma.interviewParticipant.findFirst({
+        const participant = await prisma.interview_participants.findFirst({
             where: {
                 interviewId: interviewId,
-                application: {
+                applications: {
                     jobseekerId: jobseeker.id
                 }
             }
@@ -163,7 +163,7 @@ export async function PATCH(request, context) {
         }
 
         // Update participant status to COMPLETED
-        await prisma.interviewParticipant.update({
+        await prisma.interview_participants.update({
             where: { id: participant.id },
             data: {
                 status: 'COMPLETED'

@@ -58,7 +58,7 @@ export async function PATCH(request, { params }) {
       include: {
         jobs: {
           include: {
-            company: true
+            companies: true
           }
         }
       }

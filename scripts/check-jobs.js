@@ -4,14 +4,14 @@ const prisma = new PrismaClient()
 async function checkJobs() {
   try {
     // Check all jobs
-    const allJobs = await prisma.job.findMany({
+    const allJobs = await prisma.jobs.findMany({
       select: {
         id: true,
         title: true,
         slug: true,
         publishedAt: true,
         isActive: true,
-        company: {
+        companies: {
           select: {
             name: true
           }
@@ -25,7 +25,7 @@ async function checkJobs() {
     console.log(JSON.stringify(allJobs, null, 2))
 
     // Check published jobs
-    const publishedJobs = await prisma.job.findMany({
+    const publishedJobs = await prisma.jobs.findMany({
       where: {
         isActive: true,
         publishedAt: { not: null }
@@ -35,7 +35,7 @@ async function checkJobs() {
         title: true,
         slug: true,
         publishedAt: true,
-        company: {
+        companies: {
           select: {
             name: true
           }

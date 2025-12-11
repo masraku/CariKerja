@@ -34,16 +34,16 @@ export async function PATCH(request, context) {
     }
 
     // Check if interview exists and belongs to recruiter
-    const interview = await prisma.interview.findUnique({
+    const interview = await prisma.interviews.findUnique({
       where: { id },
       include: {
-        participants: {
+        interview_participants: {
           include: {
-            application: {
+            applications: {
               include: {
                 jobseekers: {
                   include: {
-                    user: {
+                    users: {
                       select: {
                         email: true
                       }
@@ -103,7 +103,7 @@ export async function PATCH(request, context) {
     const oldScheduledAt = interview.scheduledAt
 
     // Update interview
-    const updatedInterview = await prisma.interview.update({
+    const updatedInterview = await prisma.interviews.update({
       where: { id },
       data: {
         scheduledAt: new Date(scheduledAt),
@@ -113,32 +113,32 @@ export async function PATCH(request, context) {
         status: 'RESCHEDULED'
       },
       include: {
-        participants: {
+        interview_participants: {
           include: {
-            application: {
+            applications: {
               include: {
-                jobseeker: true,
-                job: true
+                jobseekers: true,
+                jobs: true
               }
             }
           }
         },
         jobs: {
           include: {
-            company: true
+            companies: true
           }
         }
       }
     })
 
     // Send reschedule notification to all participants
-    const emailPromises = interview.participants.map(async (participant) => {
+    const emailPromises = interview.interview_participants.map(async (participant) => {
       try {
         await sendRescheduleNotification({
-          to: participant.application.jobseeker.user.email,
-          candidateName: `${participant.application.jobseeker.firstName} ${participant.application.jobseeker.lastName}`,
-          jobTitle: interview.job.title,
-          companyName: interview.job.companies.name,
+          to: participant.applications.jobseekers.users.email,
+          candidateName: `${participant.applications.jobseekers.firstName} ${participant.applications.jobseekers.lastName}`,
+          jobTitle: interview.jobs.title,
+          companyName: interview.jobs.companies.name,
           oldScheduledAt: oldScheduledAt,
           newScheduledAt: new Date(scheduledAt),
           duration: duration || interview.duration,
@@ -147,7 +147,7 @@ export async function PATCH(request, context) {
           interviewId: id
         })
       } catch (emailError) {
-        console.error(`Failed to send reschedule email to ${participant.application.jobseeker.user.email}:`, emailError)
+        console.error(`Failed to send reschedule email to ${participant.applications.jobseekers.users.email}:`, emailError)
         // Don't fail the whole request if email fails
       }
     })
@@ -166,7 +166,7 @@ export async function PATCH(request, context) {
           meetingUrl: updatedInterview.meetingUrl,
           description: updatedInterview.description,
           status: updatedInterview.status,
-          participantCount: updatedInterview.participants.length
+          participantCount: updatedInterview.interview_participants.length
         }
       }
     })

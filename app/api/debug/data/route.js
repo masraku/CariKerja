@@ -12,7 +12,7 @@ export async function GET(request) {
             include: {
                 jobseekers: {
                     include: {
-                        user: {
+                        users: {
                             select: {
                                 email: true
                             }
@@ -33,18 +33,18 @@ export async function GET(request) {
         })
 
         // Count interviews
-        const interviewCount = await prisma.interview.count()
+        const interviewCount = await prisma.interviews.count()
         
         // Get all interviews
-        const interviews = await prisma.interview.findMany({
+        const interviews = await prisma.interviews.findMany({
             include: {
-                participants: {
+                interview_participants: {
                     include: {
-                        application: {
+                        applications: {
                             include: {
                                 jobseekers: {
                                     include: {
-                                        user: {
+                                        users: {
                                             select: {
                                                 email: true
                                             }
@@ -60,7 +60,7 @@ export async function GET(request) {
         })
 
         // Count jobseekers
-        const jobseekerCount = await prisma.jobSeeker.count()
+        const jobseekerCount = await prisma.jobseekers.count()
 
         return NextResponse.json({
             success: true,
@@ -73,7 +73,7 @@ export async function GET(request) {
                 applications: applications.map(app => ({
                     id: app.id,
                     status: app.status,
-                    jobseeker: app.jobseeker.user.email,
+                    jobseeker: app.jobseekers.users.email,
                     job: app.jobs.title,
                     createdAt: app.createdAt
                 })),
@@ -81,7 +81,7 @@ export async function GET(request) {
                     id: int.id,
                     title: int.title,
                     scheduledAt: int.scheduledAt,
-                    participants: int.participants.length,
+                    participants: int.interview_participants.length,
                     status: int.status
                 }))
             }

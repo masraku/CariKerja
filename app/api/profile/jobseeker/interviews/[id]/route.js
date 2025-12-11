@@ -5,7 +5,7 @@ import { requireJobseeker } from '@/lib/authHelper'
 // GET - Fetch interview details for jobseeker
 export async function GET(request, { params }) {
   try {
-    const { id } = params
+    const { id } = await params
     
     // Authenticate jobseeker
     const auth = await requireJobseeker(request)
@@ -20,7 +20,7 @@ export async function GET(request, { params }) {
     const { jobseeker } = auth
 
     // Fetch interview with participant info for this jobseeker
-    const interview = await prisma.interview.findUnique({
+    const interview = await prisma.interviews.findUnique({
       where: { id },
       include: {
         jobs: {
@@ -43,21 +43,21 @@ export async function GET(request, { params }) {
             firstName: true,
             lastName: true,
             position: true,
-            user: {
+            users: {
               select: {
                 email: true
               }
             }
           }
         },
-        participants: {
+        interview_participants: {
           where: {
-            application: {
+            applications: {
               jobseekerId: jobseeker.id
             }
           },
           include: {
-            application: {
+            applications: {
               select: {
                 id: true,
                 status: true
@@ -76,14 +76,14 @@ export async function GET(request, { params }) {
     }
 
     // Check if jobseeker is a participant
-    if (interview.participants.length === 0) {
+    if (interview.interview_participants.length === 0) {
       return NextResponse.json(
         { error: 'You are not a participant in this interview' },
         { status: 403 }
       )
     }
 
-    const myParticipation = interview.participants[0]
+    const myParticipation = interview.interview_participants[0]
 
     // Calculate time until interview
     const now = new Date()
@@ -106,27 +106,27 @@ export async function GET(request, { params }) {
           status: interview.status,
           createdAt: interview.createdAt
         },
-        jobs: {
-          id: interview.job.id,
-          title: interview.job.title,
-          slug: interview.job.slug,
-          type: interview.job.type,
-          level: interview.job.level,
-          location: interview.job.location
+        job: {
+          id: interview.jobs.id,
+          title: interview.jobs.title,
+          slug: interview.jobs.slug,
+          type: interview.jobs.jobType,
+          level: interview.jobs.level,
+          location: interview.jobs.location
         },
-        company: interview.job.company,
-        recruiters: {
+        company: interview.jobs.companies,
+        recruiter: {
           name: `${interview.recruiters.firstName} ${interview.recruiters.lastName}`,
           position: interview.recruiters.position,
-          email: interview.recruiters.user.email
+          email: interview.recruiters.users.email
         },
         myParticipation: {
           id: myParticipation.id,
           status: myParticipation.status,
           invitedAt: myParticipation.invitedAt,
           respondedAt: myParticipation.respondedAt,
-          applicationId: myParticipation.application.id,
-          applicationStatus: myParticipation.application.status
+          applicationId: myParticipation.applications.id,
+          applicationStatus: myParticipation.applications.status
         },
         timing: {
           canJoin,

@@ -54,7 +54,7 @@ export async function PATCH(request, { params }) {
       include: {
         jobs: {
           include: {
-            recruiter: true
+            recruiters: true
           }
         }
       }

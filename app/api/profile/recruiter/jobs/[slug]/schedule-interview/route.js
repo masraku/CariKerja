@@ -67,10 +67,10 @@ export async function POST(request, { params }) {
       })
 
       // Then create interview record
-      const interview = await prisma.interview.create({
+      const interview = await prisma.interviews.create({
         data: {
-          applicationId: appId,
           recruiterId: recruiter.id,
+          jobId: job.id,
           title: title || `Interview for ${job.title}`,
           scheduledAt: interviewDateTime,
           duration: parseInt(duration) || 60,

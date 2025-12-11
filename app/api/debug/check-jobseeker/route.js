@@ -23,7 +23,7 @@ export async function GET(request) {
         })
 
         // Get all jobseekers for this user
-        const jobseekers = await prisma.jobSeeker.findMany({
+        const jobseekers = await prisma.jobseekers.findMany({
             where: { userId: user.id }
         })
 
@@ -53,7 +53,7 @@ export async function GET(request) {
 
         // Filter applications by user
         const userApplications = allApplications.filter(app => 
-            app.jobseeker.userId === user.id
+            app.jobseekers.userId === user.id
         )
 
         return NextResponse.json({
@@ -78,7 +78,7 @@ export async function GET(request) {
                     jobTitle: app.jobs.title,
                     status: app.status,
                     appliedAt: app.appliedAt,
-                    jobseekerInfo: app.jobseeker
+                    jobseekerInfo: app.jobseekers
                 })),
                 totalApplications: userApplications.length,
                 problem: jobseekers.length > 1 ? 'MULTIPLE_JOBSEEKER_RECORDS' : null

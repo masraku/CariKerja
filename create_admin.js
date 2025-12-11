@@ -6,7 +6,7 @@ const prisma = new PrismaClient()
 async function createAdmin() {
   try {
     // Check if admin already exists
-    const existingAdmin = await prisma.user.findFirst({
+    const existingAdmin = await prisma.users.findFirst({
       where: { role: 'ADMIN' }
     })
 
@@ -18,12 +18,14 @@ async function createAdmin() {
     // Create admin user
     const hashedPassword = await bcrypt.hash('admin123', 10)
     
-    const admin = await prisma.user.create({
+    const admin = await prisma.users.create({
       data: {
+        id: require('crypto').randomUUID(),
         email: 'admin@jobseeker.com',
         password: hashedPassword,
         role: 'ADMIN',
-        status: 'ACTIVE'
+        status: 'ACTIVE',
+        updatedAt: new Date()
       }
     })
 

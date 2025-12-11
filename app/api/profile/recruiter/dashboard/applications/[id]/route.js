@@ -61,10 +61,10 @@ export async function GET(request, { params }) {
       )
     }
 
-    console.log('✅ Application found for:', application.jobseeker.firstName)
+    console.log('✅ Application found for:', application.jobseekers.firstName)
 
     // Calculate profile completeness
-    const jobseeker = application.jobseeker
+    const jobseeker = application.jobseekers
     let completeness = 0
     let totalFields = 13
 

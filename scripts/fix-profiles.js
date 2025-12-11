@@ -9,10 +9,10 @@ async function fixProfiles() {
 
   try {
     // 1. Find users without JobSeeker profile
-    const jobseekersWithoutProfile = await prisma.user.findMany({
+    const jobseekersWithoutProfile = await prisma.users.findMany({
       where: {
         role: 'JOBSEEKER',
-        jobseeker: null
+        jobseekers: null
       }
     })
 
@@ -20,26 +20,28 @@ async function fixProfiles() {
 
     // Create missing profiles
     for (const user of jobseekersWithoutProfile) {
-      await prisma.jobSeeker.create({
+      await prisma.jobseekers.create({
         data: {
+          id: require('crypto').randomUUID(),
           userId: user.id,
           firstName: '',
           lastName: '',
           profileCompleted: false,
-          profileCompleteness: 0
+          profileCompleteness: 0,
+          updatedAt: new Date()
         }
       })
       console.log(`✅ Created jobseeker profile for: ${user.email}`)
     }
 
     // 2. Find users without Recruiter profile
-    const recruitersWithoutProfile = await prisma.user.findMany({
+    const recruitersWithoutProfile = await prisma.users.findMany({
       where: {
         role: 'RECRUITER',
-        recruiter: null
+        recruiters: null
       },
       include: {
-        recruiter: true
+        recruiters: true
       }
     })
 
@@ -67,8 +69,8 @@ async function fixProfiles() {
 
     // 4. Summary
     console.log('\n📊 Summary:')
-    const totalJobseekers = await prisma.jobSeeker.count()
-    const totalRecruiters = await prisma.recruiter.count()
+    const totalJobseekers = await prisma.jobseekers.count()
+    const totalRecruiters = await prisma.recruiters.count()
     const totalApplications = await prisma.applications.count()
     
     console.log(`  JobSeekers: ${totalJobseekers}`)

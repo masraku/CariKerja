@@ -66,7 +66,8 @@ export async function GET(request) {
             duration: participant.interviews.duration,
             meetingUrl: participant.interviews.meetingUrl,
             description: participant.interviews.description,
-            status: participant.status, // PENDING, ACCEPTED, DECLINED
+            status: participant.status, // PENDING, ACCEPTED, DECLINED, RESCHEDULE_REQUESTED
+            responseMessage: participant.responseMessage,
             interviewStatus: participant.interviews.status,
             invitedAt: participant.invitedAt,
             respondedAt: participant.respondedAt,
@@ -95,7 +96,8 @@ export async function GET(request) {
                     total: interviews.length,
                     pending: pending.length,
                     accepted: interviews.filter(i => i.status === 'ACCEPTED').length,
-                    declined: interviews.filter(i => i.status === 'DECLINED').length
+                    declined: interviews.filter(i => i.status === 'DECLINED').length,
+                    reschedule: interviews.filter(i => i.status === 'RESCHEDULE_REQUESTED').length
                 }
             }
         })

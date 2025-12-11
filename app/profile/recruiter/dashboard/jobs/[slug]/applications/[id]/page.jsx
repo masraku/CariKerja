@@ -19,10 +19,12 @@ import {
     Clock,
     CheckCircle,
     XCircle,
-    Star,
     Eye,
-    Edit2,
-    Save
+    Video,
+    Trash2,
+    Star,
+    User,
+    MessageSquare
 } from 'lucide-react'
 import Swal from 'sweetalert2'
 
@@ -31,9 +33,6 @@ export default function ApplicationDetailPage() {
     const params = useParams()
     const [loading, setLoading] = useState(true)
     const [application, setApplication] = useState(null)
-    const [notes, setNotes] = useState('')
-    const [savingNotes, setSavingNotes] = useState(false)
-    const [selectedStatus, setSelectedStatus] = useState('')
 
     useEffect(() => {
         loadApplication()
@@ -44,7 +43,6 @@ export default function ApplicationDetailPage() {
             setLoading(true)
             const token = localStorage.getItem('token')
 
-            // Use new cleaner API endpoint
             const response = await fetch(`/api/profile/recruiter/applications/${params.id}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -55,8 +53,6 @@ export default function ApplicationDetailPage() {
 
             if (response.ok) {
                 setApplication(data.application)
-                setNotes(data.application.recruiterNotes || '')
-                setSelectedStatus(data.application.status)
             } else {
                 console.error('API Error:', data)
                 throw new Error(data.error || data.details || 'Failed to load application')
@@ -74,23 +70,31 @@ export default function ApplicationDetailPage() {
         }
     }
 
-    const handleUpdateStatus = async () => {
-        if (selectedStatus === application.status) {
-            Swal.fire({
-                icon: 'info',
-                title: 'Info',
-                text: 'Status belum berubah'
-            })
-            return
-        }
-
+    const handleAcceptCandidate = async () => {
         const result = await Swal.fire({
-            title: 'Update Status?',
-            text: 'Apakah Anda yakin ingin mengubah status pelamar?',
+            title: '🎉 Terima Kandidat?',
+            html: `
+                <p class="text-gray-600 mb-4">Kandidat akan menerima notifikasi bahwa mereka diterima untuk posisi ini.</p>
+                <textarea 
+                    id="accept-message" 
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" 
+                    placeholder="Pesan untuk kandidat (opsional)&#10;Contoh: Selamat! Silakan hubungi HR kami untuk proses selanjutnya..."
+                    rows="4"
+                ></textarea>
+            `,
             icon: 'question',
             showCancelButton: true,
-            confirmButtonText: 'Ya, Update',
-            cancelButtonText: 'Batal'
+            confirmButtonText: '✓ Ya, Terima Kandidat',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#10b981',
+            customClass: {
+                popup: 'rounded-2xl',
+                confirmButton: 'rounded-xl px-6',
+                cancelButton: 'rounded-xl px-6'
+            },
+            preConfirm: () => {
+                return document.getElementById('accept-message').value
+            }
         })
 
         if (!result.isConfirmed) return
@@ -104,38 +108,64 @@ export default function ApplicationDetailPage() {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    status: selectedStatus,
-                    recruiterNotes: notes
+                    status: 'ACCEPTED',
+                    recruiterNotes: result.value
                 })
             })
 
             if (response.ok) {
                 Swal.fire({
                     icon: 'success',
-                    title: 'Berhasil!',
-                    text: 'Status berhasil diupdate',
-                    timer: 2000,
+                    title: 'Berhasil! 🎉',
+                    text: 'Kandidat berhasil diterima. Email notifikasi akan dikirim.',
+                    timer: 2500,
                     showConfirmButton: false
                 })
                 loadApplication()
             } else {
-                throw new Error('Failed to update status')
+                throw new Error('Failed to accept candidate')
             }
         } catch (error) {
-            console.error('Update status error:', error)
+            console.error('Accept candidate error:', error)
             Swal.fire({
                 icon: 'error',
                 title: 'Gagal',
-                text: 'Gagal mengupdate status'
+                text: 'Gagal menerima kandidat'
             })
         }
     }
 
-    const handleSaveNotes = async () => {
-        try {
-            setSavingNotes(true)
-            const token = localStorage.getItem('token')
+    const handleRejectCandidate = async () => {
+        const result = await Swal.fire({
+            title: 'Tolak Kandidat?',
+            html: `
+                <p class="text-gray-600 mb-4">Kandidat akan menerima notifikasi bahwa mereka tidak lolos untuk posisi ini.</p>
+                <textarea 
+                    id="reject-reason" 
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" 
+                    placeholder="Alasan penolakan (opsional)&#10;Contoh: Terima kasih atas minat Anda. Sayangnya profil Anda belum sesuai dengan kebutuhan kami saat ini..."
+                    rows="4"
+                ></textarea>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '✗ Ya, Tolak Kandidat',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#ef4444',
+            customClass: {
+                popup: 'rounded-2xl',
+                confirmButton: 'rounded-xl px-6',
+                cancelButton: 'rounded-xl px-6'
+            },
+            preConfirm: () => {
+                return document.getElementById('reject-reason').value
+            }
+        })
 
+        if (!result.isConfirmed) return
+
+        try {
+            const token = localStorage.getItem('token')
             const response = await fetch(`/api/profile/recruiter/applications/${params.id}`, {
                 method: 'PATCH',
                 headers: {
@@ -143,32 +173,74 @@ export default function ApplicationDetailPage() {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    status: application.status,
-                    recruiterNotes: notes
+                    status: 'REJECTED',
+                    recruiterNotes: result.value
                 })
             })
 
             if (response.ok) {
                 Swal.fire({
                     icon: 'success',
-                    title: 'Tersimpan!',
-                    text: 'Catatan berhasil disimpan',
+                    title: 'Kandidat Ditolak',
+                    text: 'Email notifikasi akan dikirim ke kandidat.',
                     timer: 2000,
                     showConfirmButton: false
                 })
                 loadApplication()
             } else {
-                throw new Error('Failed to save notes')
+                throw new Error('Failed to reject candidate')
             }
         } catch (error) {
-            console.error('Save notes error:', error)
+            console.error('Reject candidate error:', error)
             Swal.fire({
                 icon: 'error',
                 title: 'Gagal',
-                text: 'Gagal menyimpan catatan'
+                text: 'Gagal menolak kandidat'
             })
-        } finally {
-            setSavingNotes(false)
+        }
+    }
+
+    const handleDeleteApplication = async () => {
+        const result = await Swal.fire({
+            title: 'Hapus Lamaran?',
+            html: `<p>Apakah Anda yakin ingin menghapus lamaran ini?</p><p class="text-sm text-gray-500 mt-2">Tindakan ini tidak dapat dibatalkan.</p>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Hapus',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#ef4444'
+        })
+
+        if (!result.isConfirmed) return
+
+        try {
+            const token = localStorage.getItem('token')
+            const response = await fetch(`/api/profile/recruiter/applications/${params.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+
+            if (response.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: 'Lamaran berhasil dihapus',
+                    timer: 2000,
+                    showConfirmButton: false
+                })
+                router.push(`/profile/recruiter/dashboard/jobs/${params.slug}/applications`)
+            } else {
+                throw new Error('Failed to delete application')
+            }
+        } catch (error) {
+            console.error('Delete application error:', error)
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: 'Gagal menghapus lamaran'
+            })
         }
     }
 
@@ -181,33 +253,62 @@ export default function ApplicationDetailPage() {
         })
     }
 
-    const getStatusBadge = (status) => {
-        const statusConfig = {
-            PENDING: { label: 'Pending', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
-            REVIEWING: { label: 'Reviewing', color: 'bg-blue-100 text-blue-700', icon: Eye },
-            SHORTLISTED: { label: 'Shortlisted', color: 'bg-purple-100 text-purple-700', icon: Star },
-            INTERVIEW_SCHEDULED: { label: 'Interview', color: 'bg-indigo-100 text-indigo-700', icon: Calendar },
-            ACCEPTED: { label: 'Accepted', color: 'bg-green-100 text-green-700', icon: CheckCircle },
-            REJECTED: { label: 'Rejected', color: 'bg-red-100 text-red-700', icon: XCircle }
+    const formatTime = (date) => {
+        if (!date) return '-'
+        return new Date(date).toLocaleTimeString('id-ID', {
+            hour: '2-digit',
+            minute: '2-digit'
+        })
+    }
+
+    const getStatusConfig = (status) => {
+        const configs = {
+            PENDING: { 
+                label: 'Menunggu Review', 
+                color: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+                bgGradient: 'from-yellow-500 to-orange-500',
+                icon: Clock 
+            },
+            REVIEWING: { 
+                label: 'Sedang Direview', 
+                color: 'bg-blue-100 text-blue-800 border-blue-300',
+                bgGradient: 'from-blue-500 to-indigo-500',
+                icon: Eye 
+            },
+            INTERVIEW_SCHEDULED: { 
+                label: 'Interview Dijadwalkan', 
+                color: 'bg-indigo-100 text-indigo-800 border-indigo-300',
+                bgGradient: 'from-indigo-500 to-purple-500',
+                icon: Calendar 
+            },
+            INTERVIEW_COMPLETED: { 
+                label: 'Interview Selesai', 
+                color: 'bg-purple-100 text-purple-800 border-purple-300',
+                bgGradient: 'from-purple-500 to-pink-500',
+                icon: Video 
+            },
+            ACCEPTED: { 
+                label: 'Diterima 🎉', 
+                color: 'bg-green-100 text-green-800 border-green-300',
+                bgGradient: 'from-green-500 to-emerald-500',
+                icon: CheckCircle 
+            },
+            REJECTED: { 
+                label: 'Ditolak', 
+                color: 'bg-red-100 text-red-800 border-red-300',
+                bgGradient: 'from-red-500 to-pink-500',
+                icon: XCircle 
+            }
         }
-
-        const config = statusConfig[status] || statusConfig.PENDING
-        const Icon = config.icon
-
-        return (
-            <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${config.color}`}>
-                <Icon className="w-4 h-4" />
-                {config.label}
-            </span>
-        )
+        return configs[status] || configs.PENDING
     }
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading application...</p>
+                    <p className="text-gray-600">Memuat data kandidat...</p>
                 </div>
             </div>
         )
@@ -216,271 +317,365 @@ export default function ApplicationDetailPage() {
     if (!application) return null
 
     const jobseeker = application.jobseekers
+    const statusConfig = getStatusConfig(application.status)
+    const StatusIcon = statusConfig.icon
+    const interview = application.interview
+
+    // Check if interview time has passed (can mark as complete)
+    const interviewTimePassed = interview?.scheduledAt ? new Date(interview.scheduledAt) < new Date() : false
+    const canMarkComplete = application.status === 'INTERVIEW_SCHEDULED' && interviewTimePassed
+
+    // Handle mark interview as complete
+    const handleMarkInterviewComplete = async () => {
+        const result = await Swal.fire({
+            title: 'Selesaikan Interview?',
+            html: `
+                <p class="text-gray-600 mb-4">Tandai interview ini sebagai selesai agar bisa memberikan keputusan untuk kandidat.</p>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: '✓ Ya, Interview Selesai',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#8b5cf6',
+            customClass: {
+                popup: 'rounded-2xl'
+            }
+        })
+
+        if (!result.isConfirmed) return
+
+        try {
+            const token = localStorage.getItem('token')
+            const response = await fetch(`/api/profile/recruiter/applications/${params.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    status: 'INTERVIEW_COMPLETED'
+                })
+            })
+
+            if (response.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Interview Ditandai Selesai',
+                    text: 'Anda sekarang dapat memberikan keputusan untuk kandidat ini.',
+                    timer: 2000,
+                    showConfirmButton: false
+                })
+                loadApplication()
+            } else {
+                throw new Error('Failed to mark interview complete')
+            }
+        } catch (error) {
+            console.error('Mark complete error:', error)
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: 'Gagal menandai interview selesai'
+            })
+        }
+    }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8">
-            <div className="container mx-auto px-4 max-w-7xl">
-                {/* Header */}
-                <div className="mb-6">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
+            {/* Header with Gradient */}
+            <div className={`bg-gradient-to-r ${statusConfig.bgGradient} text-white`}>
+                <div className="container mx-auto px-4 max-w-6xl py-6">
                     <button
                         onClick={() => router.push(`/profile/recruiter/dashboard/jobs/${params.slug}/applications`)}
-                        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+                        className="flex items-center gap-2 text-white/80 hover:text-white transition mb-4"
                     >
                         <ArrowLeft className="w-5 h-5" />
                         Kembali ke Daftar Pelamar
                     </button>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left Column - Candidate Profile */}
-                    <div className="lg:col-span-1 space-y-6">
-                        {/* Profile Card */}
-                        <div className="bg-white rounded-lg shadow-sm p-6">
-                            <div className="text-center mb-6">
-                                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-4xl font-bold mx-auto mb-4">
-                                    {jobseeker.photo ? (
-                                        <img
-                                            src={jobseeker.photo}
-                                            alt={jobseeker.firstName}
-                                            className="w-full h-full object-cover rounded-full"
-                                        />
-                                    ) : (
-                                        jobseeker.firstName?.charAt(0) || 'U'
-                                    )}
-                                </div>
-                                <h2 className="text-2xl font-bold text-gray-900 mb-1">
+                    
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            {/* Avatar */}
+                            <div className="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center text-3xl font-bold overflow-hidden border-2 border-white/30">
+                                {jobseeker.photo ? (
+                                    <img src={jobseeker.photo} alt={jobseeker.firstName} className="w-full h-full object-cover" />
+                                ) : (
+                                    jobseeker.firstName?.charAt(0) || 'U'
+                                )}
+                            </div>
+                            <div>
+                                <h1 className="text-2xl md:text-3xl font-bold">
                                     {jobseeker.firstName} {jobseeker.lastName}
-                                </h2>
-                                <p className="text-gray-600 mb-4">
-                                    {jobseeker.currentTitle || 'Job Seeker'}
-                                </p>
-                                {getStatusBadge(application.status)}
+                                </h1>
+                                <p className="text-white/80">{jobseeker.currentTitle || 'Job Seeker'}</p>
                             </div>
+                        </div>
+                        
+                        {/* Status Badge */}
+                        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border-2 ${statusConfig.color} font-semibold`}>
+                            <StatusIcon className="w-5 h-5" />
+                            {statusConfig.label}
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                            {/* Profile Completeness */}
-                            <div className="mb-6">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-sm text-gray-600">Profile Completeness</span>
-                                    <span className="text-sm font-semibold text-gray-900">
-                                        {application.profileCompleteness}%
-                                    </span>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <div
-                                        className={`h-2 rounded-full ${application.profileCompleteness >= 80 ? 'bg-green-500' : 'bg-yellow-500'
-                                            }`}
-                                        style={{ width: `${application.profileCompleteness}%` }}
-                                    ></div>
-                                </div>
+            <div className="container mx-auto px-4 max-w-6xl py-8 -mt-4">
+                {/* Action Cards - Decision After Interview */}
+                {application.status === 'INTERVIEW_COMPLETED' && (
+                    <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-6 mb-6 text-white shadow-xl">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <h2 className="text-xl font-bold mb-1">🎯 Interview Selesai!</h2>
+                                <p className="text-white/80">Silakan berikan keputusan untuk kandidat ini.</p>
                             </div>
-
-                            {/* Contact Info */}
-                            <div className="space-y-3 mb-6">
-                                {jobseeker.email && (
-                                    <div className="flex items-center gap-3 text-gray-700">
-                                        <Mail className="w-5 h-5 text-gray-400" />
-                                        <a href={`mailto:${jobseeker.email}`} className="hover:text-blue-600">
-                                            {jobseeker.email}
-                                        </a>
-                                    </div>
-                                )}
-                                {jobseeker.phone && (
-                                    <div className="flex items-center gap-3 text-gray-700">
-                                        <Phone className="w-5 h-5 text-gray-400" />
-                                        <a href={`tel:${jobseeker.phone}`} className="hover:text-blue-600">
-                                            {jobseeker.phone}
-                                        </a>
-                                    </div>
-                                )}
-                                {jobseeker.city && (
-                                    <div className="flex items-center gap-3 text-gray-700">
-                                        <MapPin className="w-5 h-5 text-gray-400" />
-                                        <span>{jobseeker.city}, {jobseeker.province}</span>
-                                    </div>
-                                )}
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={handleAcceptCandidate}
+                                    className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-semibold transition shadow-lg"
+                                >
+                                    <CheckCircle className="w-5 h-5" />
+                                    Terima Kandidat
+                                </button>
+                                <button
+                                    onClick={handleRejectCandidate}
+                                    className="flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-red-500 text-white rounded-xl font-semibold transition border border-white/30"
+                                >
+                                    <XCircle className="w-5 h-5" />
+                                    Tolak
+                                </button>
                             </div>
+                        </div>
+                    </div>
+                )}
 
-                            {/* Social Links */}
-                            {(jobseeker.linkedinUrl || jobseeker.githubUrl || jobseeker.portfolioUrl || jobseeker.websiteUrl) && (
-                                <div className="border-t pt-6">
-                                    <h3 className="text-sm font-semibold text-gray-900 mb-3">Social Links</h3>
-                                    <div className="space-y-2">
-                                        {jobseeker.linkedinUrl && (
-                                            <a
-                                                href={jobseeker.linkedinUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center gap-2 text-blue-600 hover:text-blue-700"
-                                            >
-                                                <Linkedin className="w-4 h-4" />
-                                                LinkedIn
-                                                <ExternalLink className="w-3 h-3" />
-                                            </a>
-                                        )}
-                                        {jobseeker.githubUrl && (
-                                            <a
-                                                href={jobseeker.githubUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
-                                            >
-                                                <Github className="w-4 h-4" />
-                                                GitHub
-                                                <ExternalLink className="w-3 h-3" />
-                                            </a>
-                                        )}
-                                        {jobseeker.portfolioUrl && (
-                                            <a
-                                                href={jobseeker.portfolioUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center gap-2 text-purple-600 hover:text-purple-700"
-                                            >
-                                                <Globe className="w-4 h-4" />
-                                                Portfolio
-                                                <ExternalLink className="w-3 h-3" />
-                                            </a>
-                                        )}
-                                        {jobseeker.websiteUrl && (
-                                            <a
-                                                href={jobseeker.websiteUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center gap-2 text-indigo-600 hover:text-indigo-700"
-                                            >
-                                                <Globe className="w-4 h-4" />
-                                                Website
-                                                <ExternalLink className="w-3 h-3" />
-                                            </a>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* CV Download */}
-                            {jobseeker.cvUrl && (
-                                <div className="border-t pt-6">
+                {/* Interview Info Card */}
+                {(application.status === 'INTERVIEW_SCHEDULED' || application.status === 'INTERVIEW_COMPLETED') && interview && (
+                    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-6">
+                        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <Video className="w-5 h-5 text-indigo-600" />
+                            Informasi Interview
+                        </h3>
+                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="bg-indigo-50 rounded-xl p-4">
+                                <p className="text-xs text-indigo-600 font-medium mb-1">Judul</p>
+                                <p className="font-semibold text-gray-900">{interview.title}</p>
+                            </div>
+                            <div className="bg-blue-50 rounded-xl p-4">
+                                <p className="text-xs text-blue-600 font-medium mb-1">Tanggal & Waktu</p>
+                                <p className="font-semibold text-gray-900">{formatDate(interview.scheduledAt)}</p>
+                                <p className="text-sm text-gray-600">{formatTime(interview.scheduledAt)} WIB</p>
+                            </div>
+                            <div className="bg-purple-50 rounded-xl p-4">
+                                <p className="text-xs text-purple-600 font-medium mb-1">Durasi</p>
+                                <p className="font-semibold text-gray-900">{interview.duration} menit</p>
+                            </div>
+                            <div className="bg-green-50 rounded-xl p-4">
+                                <p className="text-xs text-green-600 font-medium mb-1">Tipe Meeting</p>
+                                <p className="font-semibold text-gray-900">{interview.meetingType}</p>
+                            </div>
+                        </div>
+                        
+                        {/* Join Meeting Button & Mark Complete */}
+                        {application.status === 'INTERVIEW_SCHEDULED' && (
+                            <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center gap-3">
+                                {interview.meetingUrl && (
                                     <a
-                                        href={jobseeker.cvUrl}
+                                        href={interview.meetingUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                        className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition shadow-lg"
                                     >
-                                        <Download className="w-5 h-5" />
-                                        Download CV
+                                        <Video className="w-5 h-5" />
+                                        Masuk Room Interview
+                                        <ExternalLink className="w-4 h-4" />
                                     </a>
+                                )}
+                                
+                                {/* Mark as Complete Button - Only show if interview time has passed */}
+                                {canMarkComplete ? (
+                                    <button
+                                        onClick={handleMarkInterviewComplete}
+                                        className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition shadow-lg"
+                                    >
+                                        <CheckCircle className="w-5 h-5" />
+                                        Selesaikan Interview
+                                    </button>
+                                ) : (
+                                    <div className="flex items-center gap-2 px-4 py-2 bg-yellow-50 text-yellow-700 rounded-xl text-sm">
+                                        <Clock className="w-4 h-4" />
+                                        Interview belum dimulai. Tunggu hingga waktu interview tiba.
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Quick Info Bar */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6">
+                    <div className="flex flex-wrap items-center gap-6 text-sm">
+                        <div className="flex items-center gap-2">
+                            <Briefcase className="w-4 h-4 text-blue-600" />
+                            <span className="text-gray-500">Melamar:</span>
+                            <span className="font-semibold text-gray-900">{application.jobs.title}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-green-600" />
+                            <span className="text-gray-500">Tanggal Lamar:</span>
+                            <span className="font-semibold text-gray-900">{formatDate(application.appliedAt)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Star className="w-4 h-4 text-yellow-500" />
+                            <span className="text-gray-500">Kelengkapan Profil:</span>
+                            <span className={`font-semibold ${application.profileCompleteness >= 80 ? 'text-green-600' : 'text-yellow-600'}`}>
+                                {application.profileCompleteness}%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Contact & Actions Row */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        {/* Contact Info */}
+                        <div className="flex flex-wrap items-center gap-4">
+                            {jobseeker.email && (
+                                <a href={`mailto:${jobseeker.email}`} className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-xl hover:bg-blue-100 transition text-gray-700 hover:text-blue-700">
+                                    <Mail className="w-4 h-4" />
+                                    <span className="text-sm">{jobseeker.email}</span>
+                                </a>
+                            )}
+                            {jobseeker.phone && (
+                                <a href={`tel:${jobseeker.phone}`} className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-xl hover:bg-green-100 transition text-gray-700 hover:text-green-700">
+                                    <Phone className="w-4 h-4" />
+                                    <span className="text-sm">{jobseeker.phone}</span>
+                                </a>
+                            )}
+                            {jobseeker.city && (
+                                <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-xl text-gray-700">
+                                    <MapPin className="w-4 h-4" />
+                                    <span className="text-sm">{jobseeker.city}{jobseeker.province && `, ${jobseeker.province}`}</span>
                                 </div>
                             )}
                         </div>
 
-                        {/* Status Update Card */}
-                        <div className="bg-white rounded-lg shadow-sm p-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Update Status</h3>
-                            <select
-                                value={selectedStatus}
-                                onChange={(e) => setSelectedStatus(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 mb-4"
-                            >
-                                <option value="PENDING">Pending</option>
-                                <option value="REVIEWING">Reviewing</option>
-                                <option value="SHORTLISTED">Shortlisted</option>
-                                <option value="INTERVIEW_SCHEDULED">Interview Scheduled</option>
-                                <option value="ACCEPTED">Accepted</option>
-                                <option value="REJECTED">Rejected</option>
-                            </select>
-                            <button
-                                onClick={handleUpdateStatus}
-                                disabled={selectedStatus === application.status}
-                                className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition ${selectedStatus === application.status
-                                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                        : 'bg-blue-600 text-white hover:bg-blue-700'
-                                    }`}
-                            >
-                                <Save className="w-5 h-5" />
-                                Update Status
-                            </button>
+                        {/* Action Buttons */}
+                        <div className="flex gap-2">
+                            {jobseeker.cvUrl && (
+                                <a
+                                    href={jobseeker.cvUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition text-sm font-medium"
+                                >
+                                    <Download className="w-4 h-4" />
+                                    Download CV
+                                </a>
+                            )}
+                            {application.status === 'REVIEWING' && (
+                                <button
+                                    onClick={() => router.push(`/profile/recruiter/dashboard/interview?job=${application.jobs.id}&applicants=${params.id}`)}
+                                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition text-sm font-medium"
+                                >
+                                    <Video className="w-4 h-4" />
+                                    Undang Interview
+                                </button>
+                            )}
+                            {!['ACCEPTED', 'REJECTED'].includes(application.status) && (
+                                <button
+                                    onClick={handleDeleteApplication}
+                                    className="flex items-center gap-2 px-4 py-2 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition text-sm font-medium"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            )}
                         </div>
                     </div>
 
-                    {/* Right Column - Details */}
-                    <div className="lg:col-span-2 space-y-6">
-                        {/* Application Info */}
-                        <div className="bg-white rounded-lg shadow-sm p-6">
-                            <h3 className="text-xl font-bold text-gray-900 mb-4">Application Info</h3>
-                            <div className="grid grid-cols-2 gap-4 mb-6">
-                                <div>
-                                    <p className="text-sm text-gray-600 mb-1">Applied For</p>
-                                    <p className="font-semibold text-gray-900">{application.jobs.title}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-gray-600 mb-1">Applied Date</p>
-                                    <p className="font-semibold text-gray-900">{formatDate(application.appliedAt)}</p>
-                                </div>
-                                {application.reviewedAt && (
-                                    <div>
-                                        <p className="text-sm text-gray-600 mb-1">Reviewed Date</p>
-                                        <p className="font-semibold text-gray-900">{formatDate(application.reviewedAt)}</p>
-                                    </div>
-                                )}
-                            </div>
-
-                            {application.coverLetter && (
-                                <div>
-                                    <h4 className="font-semibold text-gray-900 mb-2">Cover Letter</h4>
-                                    <div className="bg-gray-50 rounded-lg p-4">
-                                        <p className="text-gray-700 whitespace-pre-wrap">{application.coverLetter}</p>
-                                    </div>
-                                </div>
+                    {/* Social Links */}
+                    {(jobseeker.linkedinUrl || jobseeker.githubUrl || jobseeker.portfolioUrl || jobseeker.websiteUrl) && (
+                        <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-100">
+                            {jobseeker.linkedinUrl && (
+                                <a href={jobseeker.linkedinUrl} target="_blank" rel="noopener noreferrer"
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm hover:bg-blue-100 transition">
+                                    <Linkedin className="w-4 h-4" /> LinkedIn
+                                </a>
+                            )}
+                            {jobseeker.githubUrl && (
+                                <a href={jobseeker.githubUrl} target="_blank" rel="noopener noreferrer"
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition">
+                                    <Github className="w-4 h-4" /> GitHub
+                                </a>
+                            )}
+                            {jobseeker.portfolioUrl && (
+                                <a href={jobseeker.portfolioUrl} target="_blank" rel="noopener noreferrer"
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-sm hover:bg-purple-100 transition">
+                                    <Globe className="w-4 h-4" /> Portfolio
+                                </a>
+                            )}
+                            {jobseeker.websiteUrl && (
+                                <a href={jobseeker.websiteUrl} target="_blank" rel="noopener noreferrer"
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm hover:bg-indigo-100 transition">
+                                    <Globe className="w-4 h-4" /> Website
+                                </a>
                             )}
                         </div>
+                    )}
+                </div>
 
-                        {/* Professional Summary */}
-                        {jobseeker.summary && (
-                            <div className="bg-white rounded-lg shadow-sm p-6">
-                                <h3 className="text-xl font-bold text-gray-900 mb-4">Professional Summary</h3>
-                                <p className="text-gray-700 whitespace-pre-wrap">{jobseeker.summary}</p>
+                {/* Main Content - 2 Column Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Left Column - Main Content */}
+                    <div className="lg:col-span-2 space-y-6">
+                        {/* Cover Letter */}
+                        {application.coverLetter && (
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <MessageSquare className="w-5 h-5 text-blue-600" />
+                                    Cover Letter
+                                </h3>
+                                <div className="bg-blue-50/50 rounded-xl p-4 border border-blue-100">
+                                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{application.coverLetter}</p>
+                                </div>
                             </div>
                         )}
 
-                        {/* Skills */}
-                        {jobseeker.skills && jobseeker.skills.length > 0 && (
-                            <div className="bg-white rounded-lg shadow-sm p-6">
-                                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <Award className="w-6 h-6" />
-                                    Skills
+                        {/* Professional Summary */}
+                        {jobseeker.summary && (
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <User className="w-5 h-5 text-indigo-600" />
+                                    Ringkasan Profesional
                                 </h3>
-                                <div className="flex flex-wrap gap-2">
-                                    {jobseeker.skills.map((skill, index) => (
-                                        <span
-                                            key={index}
-                                            className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium"
-                                        >
-                                            {skill}
-                                        </span>
-                                    ))}
-                                </div>
+                                <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{jobseeker.summary}</p>
                             </div>
                         )}
 
                         {/* Work Experience */}
                         {jobseeker.workExperiences && jobseeker.workExperiences.length > 0 && (
-                            <div className="bg-white rounded-lg shadow-sm p-6">
-                                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <Briefcase className="w-6 h-6" />
-                                    Work Experience
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <Briefcase className="w-5 h-5 text-blue-600" />
+                                    Pengalaman Kerja
                                 </h3>
-                                <div className="space-y-6">
-                                    {jobseeker.workExperiences.map((exp) => (
-                                        <div key={exp.id} className="border-l-4 border-blue-500 pl-4">
-                                            <h4 className="font-bold text-gray-900">{exp.jobTitle}</h4>
-                                            <p className="text-blue-600 mb-2">{exp.company}</p>
-                                            <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                                                <Calendar className="w-4 h-4" />
-                                                {formatDate(exp.startDate)} - {exp.isCurrentJob ? 'Present' : formatDate(exp.endDate)}
+                                <div className="space-y-4">
+                                    {jobseeker.workExperiences.map((exp, index) => (
+                                        <div key={exp.id} className={`relative pl-6 ${index !== jobseeker.workExperiences.length - 1 ? 'pb-4 border-l-2 border-blue-200' : ''}`}>
+                                            <div className="absolute left-0 top-0 w-3 h-3 bg-blue-500 rounded-full -translate-x-[7px]"></div>
+                                            <div className="bg-gray-50 rounded-xl p-4">
+                                                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+                                                    <div>
+                                                        <h4 className="font-bold text-gray-900">{exp.jobTitle}</h4>
+                                                        <p className="text-blue-600 font-medium">{exp.company}</p>
+                                                    </div>
+                                                    <span className="text-xs text-gray-500 bg-white px-3 py-1 rounded-full border whitespace-nowrap">
+                                                        {formatDate(exp.startDate)} - {exp.isCurrentJob ? 'Sekarang' : formatDate(exp.endDate)}
+                                                    </span>
+                                                </div>
+                                                {exp.description && (
+                                                    <p className="text-gray-600 text-sm whitespace-pre-wrap">{exp.description}</p>
+                                                )}
                                             </div>
-                                            {exp.description && (
-                                                <p className="text-gray-700 whitespace-pre-wrap">{exp.description}</p>
-                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -489,27 +684,45 @@ export default function ApplicationDetailPage() {
 
                         {/* Education */}
                         {jobseeker.educations && jobseeker.educations.length > 0 && (
-                            <div className="bg-white rounded-lg shadow-sm p-6">
-                                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <GraduationCap className="w-6 h-6" />
-                                    Education
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <GraduationCap className="w-5 h-5 text-green-600" />
+                                    Pendidikan
                                 </h3>
-                                <div className="space-y-6">
+                                <div className="space-y-4">
                                     {jobseeker.educations.map((edu) => (
-                                        <div key={edu.id} className="border-l-4 border-green-500 pl-4">
-                                            <h4 className="font-bold text-gray-900">{edu.degree} in {edu.fieldOfStudy}</h4>
-                                            <p className="text-green-600 mb-2">{edu.institution}</p>
-                                            <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                                                <Calendar className="w-4 h-4" />
-                                                {formatDate(edu.startDate)} - {edu.isCurrentlyStudying ? 'Present' : formatDate(edu.endDate)}
+                                        <div key={edu.id} className="bg-green-50/50 rounded-xl p-4 border border-green-100">
+                                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-1">
+                                                <div>
+                                                    <h4 className="font-bold text-gray-900">{edu.degree} {edu.fieldOfStudy && `- ${edu.fieldOfStudy}`}</h4>
+                                                    <p className="text-green-600 font-medium">{edu.institution}</p>
+                                                </div>
+                                                <span className="text-xs text-gray-500 bg-white px-3 py-1 rounded-full border whitespace-nowrap">
+                                                    {formatDate(edu.startDate)} - {edu.isCurrentlyStudying ? 'Sekarang' : formatDate(edu.endDate)}
+                                                </span>
                                             </div>
-                                            {edu.gpa && (
-                                                <p className="text-sm text-gray-700">GPA: {edu.gpa}</p>
-                                            )}
-                                            {edu.description && (
-                                                <p className="text-gray-700 mt-2 whitespace-pre-wrap">{edu.description}</p>
-                                            )}
+                                            {edu.gpa && <p className="text-sm text-gray-600">IPK: {edu.gpa}</p>}
                                         </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Right Column - Sidebar */}
+                    <div className="space-y-6">
+                        {/* Skills */}
+                        {jobseeker.skills && jobseeker.skills.length > 0 && (
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <Award className="w-5 h-5 text-yellow-600" />
+                                    Keahlian
+                                </h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {jobseeker.skills.map((skill, index) => (
+                                        <span key={index} className="px-3 py-1.5 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 rounded-lg text-sm font-medium border border-blue-100">
+                                            {skill}
+                                        </span>
                                     ))}
                                 </div>
                             </div>
@@ -517,30 +730,23 @@ export default function ApplicationDetailPage() {
 
                         {/* Certifications */}
                         {jobseeker.certifications && jobseeker.certifications.length > 0 && (
-                            <div className="bg-white rounded-lg shadow-sm p-6">
-                                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <Award className="w-6 h-6" />
-                                    Certifications
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <Award className="w-5 h-5 text-purple-600" />
+                                    Sertifikasi
                                 </h3>
-                                <div className="space-y-4">
+                                <div className="space-y-3">
                                     {jobseeker.certifications.map((cert) => (
-                                        <div key={cert.id} className="border-l-4 border-purple-500 pl-4">
-                                            <h4 className="font-bold text-gray-900">{cert.name}</h4>
-                                            <p className="text-purple-600">{cert.issuingOrganization}</p>
-                                            <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
-                                                <Calendar className="w-4 h-4" />
-                                                Issued: {formatDate(cert.issueDate)}
-                                                {cert.expiryDate && ` - Expires: ${formatDate(cert.expiryDate)}`}
-                                            </div>
+                                        <div key={cert.id} className="bg-purple-50/50 rounded-xl p-4 border border-purple-100">
+                                            <h4 className="font-semibold text-gray-900 text-sm">{cert.name}</h4>
+                                            <p className="text-purple-600 text-xs">{cert.issuingOrganization}</p>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                {formatDate(cert.issueDate)}
+                                            </p>
                                             {cert.credentialUrl && (
-                                                <a
-                                                    href={cert.credentialUrl}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 mt-2"
-                                                >
-                                                    View Certificate
-                                                    <ExternalLink className="w-3 h-3" />
+                                                <a href={cert.credentialUrl} target="_blank" rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 mt-2">
+                                                    Lihat <ExternalLink className="w-3 h-3" />
                                                 </a>
                                             )}
                                         </div>
@@ -549,39 +755,43 @@ export default function ApplicationDetailPage() {
                             </div>
                         )}
 
-                        {/* Recruiter Notes */}
-                        <div className="bg-white rounded-lg shadow-sm p-6">
-                            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <Edit2 className="w-6 h-6" />
-                                Recruiter Notes
-                            </h3>
-                            <textarea
-                                value={notes}
-                                onChange={(e) => setNotes(e.target.value)}
-                                placeholder="Add internal notes about this candidate..."
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 min-h-[120px]"
-                            ></textarea>
-                            <button
-                                onClick={handleSaveNotes}
-                                disabled={savingNotes || notes === application.recruiterNotes}
-                                className={`mt-4 flex items-center gap-2 px-6 py-3 rounded-lg transition ${savingNotes || notes === application.recruiterNotes
-                                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                        : 'bg-blue-600 text-white hover:bg-blue-700'
-                                    }`}
-                            >
-                                {savingNotes ? (
-                                    <>
-                                        <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white"></div>
-                                        Saving...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Save className="w-5 h-5" />
-                                        Save Notes
-                                    </>
-                                )}
-                            </button>
-                        </div>
+                        {/* Additional Info */}
+                        {(jobseeker.dateOfBirth || jobseeker.gender || jobseeker.maritalStatus || jobseeker.expectedSalary) && (
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                                <h3 className="text-lg font-bold text-gray-900 mb-4">Info Tambahan</h3>
+                                <div className="space-y-3 text-sm">
+                                    {jobseeker.dateOfBirth && (
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Tanggal Lahir</span>
+                                            <span className="font-medium text-gray-900">{formatDate(jobseeker.dateOfBirth)}</span>
+                                        </div>
+                                    )}
+                                    {jobseeker.gender && (
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Jenis Kelamin</span>
+                                            <span className="font-medium text-gray-900">{jobseeker.gender === 'MALE' ? 'Laki-laki' : 'Perempuan'}</span>
+                                        </div>
+                                    )}
+                                    {jobseeker.maritalStatus && (
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Status</span>
+                                            <span className="font-medium text-gray-900">
+                                                {jobseeker.maritalStatus === 'SINGLE' ? 'Belum Menikah' : 
+                                                 jobseeker.maritalStatus === 'MARRIED' ? 'Menikah' : jobseeker.maritalStatus}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {jobseeker.expectedSalary && (
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Ekspektasi Gaji</span>
+                                            <span className="font-medium text-green-600">
+                                                Rp {parseInt(jobseeker.expectedSalary).toLocaleString('id-ID')}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
