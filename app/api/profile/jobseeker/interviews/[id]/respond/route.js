@@ -93,14 +93,6 @@ export async function PATCH(request, context) {
         })
 
         // TODO: Send email to recruiter
-        console.log('📧 Should send email to recruiter:', participant.interviews.recruiters.users.email)
-        console.log('Jobseeker response:', {
-            jobseeker: `${participant.applications.jobseekers.firstName} ${participant.applications.jobseekers.lastName}`,
-            status: status,
-            interview: participant.interviews.title,
-            scheduledAt: participant.interviews.scheduledAt,
-            message: message || null
-        })
 
         let responseMessage = ''
         if (status === 'ACCEPTED') {

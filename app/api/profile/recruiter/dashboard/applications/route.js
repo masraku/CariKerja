@@ -13,8 +13,6 @@ export async function GET(request) {
 
     const decoded = verifyToken(token)
 
-    console.log('📋 Fetching all applications for recruiter')
-
     // Get recruiter profile
     const recruiter = await prisma.recruiters.findUnique({
       where: { userId: decoded.userId }
@@ -86,8 +84,6 @@ export async function GET(request) {
         appliedAt: 'desc'
       }
     })
-
-    console.log(`✅ Found ${applications.length} total applications`)
 
     // Calculate profile completeness for each applicant
     const applicationsWithCompleteness = applications.map(app => {

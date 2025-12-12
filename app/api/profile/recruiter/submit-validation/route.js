@@ -4,10 +4,7 @@ import { getCurrentUser } from '@/lib/authHelper'
 
 export async function POST(request) {
     try {
-        console.log('📥 Submit validation request received')
-        
         const auth = await getCurrentUser(request)
-        console.log('🔐 Auth result:', { error: auth.error, status: auth.status, hasUser: !!auth.user })
         
         if (auth.error) {
             return NextResponse.json(
@@ -17,7 +14,6 @@ export async function POST(request) {
         }
 
         const { user } = auth
-        console.log('👤 User:', { id: user.id, role: user.role })
 
         if (user.role !== 'RECRUITER') {
             return NextResponse.json(
@@ -31,7 +27,6 @@ export async function POST(request) {
             where: { userId: user.id },
             include: { companies: true }
         })
-        console.log('🏢 Recruiter:', { found: !!recruiter, companyId: recruiter?.companyId })
 
         if (!recruiter) {
             return NextResponse.json(
@@ -48,7 +43,6 @@ export async function POST(request) {
         }
 
         const company = recruiter.companies
-        console.log('🏢 Company:', { id: company?.id, status: company?.status, verified: company?.verified })
 
         // Only reject if company is already verified
         if (company.verified) {
@@ -60,7 +54,6 @@ export async function POST(request) {
 
         // Allow resubmission even if already pending (just refresh the timestamp)
         // Update company status to PENDING_RESUBMISSION
-        console.log('📝 Updating company status to PENDING_RESUBMISSION...')
         const updatedCompany = await prisma.companies.update({
             where: { id: company.id },
             data: {
@@ -69,7 +62,6 @@ export async function POST(request) {
                 updatedAt: new Date()
             }
         })
-        console.log('✅ Company updated:', { id: updatedCompany.id, status: updatedCompany.status })
 
         return NextResponse.json({
             success: true,

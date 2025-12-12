@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { AlertTriangle, CheckCircle, XCircle, Shield, FileText, Users, Briefcase, AlertCircle, ChevronDown, ChevronUp, Info, Ban, Award, Eye } from 'lucide-react'
+import { AlertTriangle, CheckCircle, XCircle, Shield, FileText, Users, Briefcase, AlertCircle, ChevronDown, ChevronUp, Info, Ban, Award, Eye, ExternalLink } from 'lucide-react'
 
 const WarningPage = () => {
   const [activeTab, setActiveTab] = useState('jobseeker')
@@ -383,6 +383,78 @@ const WarningPage = () => {
                     <p className="text-gray-700">{tip}</p>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Kartu AK-1 Section */}
+            <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl shadow-lg p-8 border-2 border-indigo-200">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-white" />
+                </div>
+                <h2 className="text-3xl font-bold text-gray-900">Cara Mendapatkan Kartu AK-1</h2>
+              </div>
+
+              <div className="bg-white rounded-xl p-6 mb-6">
+                <h3 className="font-bold text-gray-900 mb-3 text-lg">Apa itu Kartu AK-1?</h3>
+                <p className="text-gray-700 mb-4">
+                  Kartu Kuning atau Kartu AK-1 (Antar Kerja) adalah kartu tanda pencari kerja yang dikeluarkan oleh 
+                  Dinas Tenaga Kerja (Disnaker). Kartu ini menjadi syarat penting bagi pencari kerja untuk melamar 
+                  pekerjaan di instansi pemerintah maupun perusahaan swasta tertentu.
+                </p>
+                
+                <h3 className="font-bold text-gray-900 mb-3 text-lg">Syarat Pembuatan Kartu AK-1:</h3>
+                <ul className="space-y-2 mb-6">
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-700">Fotokopi KTP yang masih berlaku</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-700">Fotokopi Kartu Keluarga (KK)</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-700">Fotokopi ijazah terakhir yang telah dilegalisir</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-700">Pas foto ukuran 3x4 (2 lembar) dengan latar belakang merah</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-700">Surat pengantar dari Kelurahan/Desa (jika diperlukan)</span>
+                  </li>
+                </ul>
+
+                <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+                  <p className="text-indigo-800 font-medium mb-3">
+                    📌 Untuk penduduk Kabupaten Cirebon, Anda dapat mendaftar antrian pembuatan Kartu AK-1 secara online melalui:
+                  </p>
+                  <a
+                    href="https://disnaker.cirebonkab.go.id/form_antrian_ak1"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition font-semibold shadow-lg hover:shadow-xl"
+                  >
+                    <FileText className="w-5 h-5" />
+                    Daftar Antrian Kartu AK-1 Online
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </div>
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold text-amber-800">Catatan Penting:</p>
+                    <p className="text-amber-700 text-sm mt-1">
+                      Kartu AK-1 berlaku selama 2 tahun dan dapat diperpanjang. Pastikan untuk memperbarui kartu Anda 
+                      sebelum masa berlaku habis. Pembuatan Kartu AK-1 tidak dipungut biaya (GRATIS).
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 

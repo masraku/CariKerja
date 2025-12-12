@@ -12,7 +12,6 @@ export function AuthProvider({ children }) {
 
   // Load user on mount
   useEffect(() => {
-    console.log('🔄 AuthContext: Initial load')
     loadUser()
   }, [])
 
@@ -24,7 +23,6 @@ export function AuthProvider({ children }) {
         try {
           const user = JSON.parse(userData)
           if (user.tokenExpiresAt && Date.now() >= user.tokenExpiresAt) {
-            console.log('⏰ Token expired, logging out...')
             logout()
           }
         } catch (e) {
@@ -46,15 +44,12 @@ export function AuthProvider({ children }) {
   const loadUser = async () => {
     try {
       const token = localStorage.getItem('token')
-      console.log('🔑 Token from localStorage:', token ? 'EXISTS' : 'NOT FOUND')
       
       if (!token) {
-        console.log('❌ No token, user not authenticated')
         setLoading(false)
         return
       }
 
-      console.log('📡 Fetching user data from /api/auth/me...')
       // Fetch user profile
       const response = await fetch('/api/auth/me', {
         headers: {
@@ -62,18 +57,14 @@ export function AuthProvider({ children }) {
         }
       })
 
-      console.log('📥 Response status:', response.status)
-
       if (response.ok) {
         const data = await response.json()
-        console.log('✅ User data loaded:', data.user)
         setUser(data.user)
         setIsAuthenticated(true)
         // Store user data with expiry time
         localStorage.setItem('user', JSON.stringify(data.user))
       } else {
         // Token invalid or expired, clear it
-        console.log('❌ Invalid or expired token, clearing...')
         localStorage.removeItem('token')
         localStorage.removeItem('user')
         setUser(null)
@@ -87,26 +78,22 @@ export function AuthProvider({ children }) {
       setIsAuthenticated(false)
     } finally {
       setLoading(false)
-      console.log('✅ Auth loading complete')
     }
   }
 
   // Login function
   const login = async (token, userData) => {
-    console.log('🔐 Login called with token:', token)
     localStorage.setItem('token', token)
     localStorage.setItem('user', JSON.stringify(userData))
     setUser(userData)
     setIsAuthenticated(true)
     
     // Refresh to get complete user data
-    console.log('🔄 Refreshing user data...')
     await loadUser()
   }
 
   // Logout function
   const logout = () => {
-    console.log('👋 Logout called')
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     setUser(null)
@@ -116,7 +103,6 @@ export function AuthProvider({ children }) {
 
   // Refresh user data
   const refreshUser = async () => {
-    console.log('🔄 Manual refresh user called')
     await loadUser()
   }
 

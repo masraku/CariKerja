@@ -325,6 +325,14 @@ export default function ApplicationDetailPage() {
     const interviewTimePassed = interview?.scheduledAt ? new Date(interview.scheduledAt) < new Date() : false
     const canMarkComplete = application.status === 'INTERVIEW_SCHEDULED' && interviewTimePassed
 
+    // Check for reschedule request in recruiterNotes
+    const hasRescheduleRequest = application.recruiterNotes?.includes('[RESCHEDULE REQUEST')
+    const rescheduleRequestMatch = application.recruiterNotes?.match(/\[RESCHEDULE REQUEST - ([^\]]+)\]\n(.+?)(?=\n\n|\n\[|$)/s)
+    const rescheduleInfo = rescheduleRequestMatch ? {
+        date: rescheduleRequestMatch[1],
+        reason: rescheduleRequestMatch[2]?.trim()
+    } : null
+
     // Handle mark interview as complete
     const handleMarkInterviewComplete = async () => {
         const result = await Swal.fire({
@@ -375,6 +383,165 @@ export default function ApplicationDetailPage() {
                 icon: 'error',
                 title: 'Gagal',
                 text: 'Gagal menandai interview selesai'
+            })
+        }
+    }
+
+    // Handle reschedule interview
+    const handleRescheduleInterview = async () => {
+        const result = await Swal.fire({
+            title: '📅 Jadwalkan Ulang Interview',
+            html: `
+                <p class="text-gray-600 mb-4">Pelamar meminta perubahan jadwal interview.</p>
+                ${rescheduleInfo ? `<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 text-left">
+                    <p class="text-xs text-yellow-700 mb-1">Alasan request:</p>
+                    <p class="text-sm text-gray-700">${rescheduleInfo.reason}</p>
+                </div>` : ''}
+                <div class="space-y-3 text-left">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal & Waktu Baru</label>
+                        <input type="datetime-local" id="new-datetime" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Link Meeting (Opsional)</label>
+                        <input type="text" id="new-meeting-url" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="https://meet.google.com/..." value="${interview?.meetingUrl || ''}" />
+                    </div>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: '✓ Simpan Jadwal Baru',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#3b82f6',
+            customClass: {
+                popup: 'rounded-2xl',
+                confirmButton: 'rounded-xl px-6',
+                cancelButton: 'rounded-xl px-6'
+            },
+            preConfirm: () => {
+                const datetime = document.getElementById('new-datetime').value
+                const meetingUrl = document.getElementById('new-meeting-url').value
+                if (!datetime) {
+                    Swal.showValidationMessage('Tanggal dan waktu wajib diisi')
+                    return false
+                }
+                return { datetime, meetingUrl }
+            }
+        })
+
+        if (!result.isConfirmed) return
+
+        try {
+            Swal.fire({
+                title: 'Menyimpan...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            })
+
+            const token = localStorage.getItem('token')
+            const response = await fetch(`/api/profile/recruiter/applications/${params.id}/reschedule`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    newDateTime: result.value.datetime,
+                    meetingUrl: result.value.meetingUrl
+                })
+            })
+
+            const data = await response.json()
+
+            if (response.ok) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Jadwal Diperbarui!',
+                    text: 'Pelamar akan menerima notifikasi jadwal interview baru.',
+                    confirmButtonColor: '#3b82f6'
+                })
+                loadApplication()
+            } else {
+                throw new Error(data.error || 'Gagal memperbarui jadwal')
+            }
+        } catch (error) {
+            console.error('Reschedule error:', error)
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: error.message || 'Gagal memperbarui jadwal interview'
+            })
+        }
+    }
+
+    // Handle reject reschedule request
+    const handleRejectReschedule = async () => {
+        const result = await Swal.fire({
+            title: 'Tolak Request Reschedule?',
+            html: `
+                <p class="text-gray-600 mb-4">Pelamar akan diberitahu bahwa request reschedule ditolak dan interview tetap sesuai jadwal semula.</p>
+                <textarea 
+                    id="reject-reason" 
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" 
+                    placeholder="Alasan penolakan (opsional)&#10;Contoh: Jadwal sudah tidak bisa diubah karena interviewer sudah dikonfirmasi..."
+                    rows="3"
+                ></textarea>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '✗ Ya, Tolak Request',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#ef4444',
+            customClass: {
+                popup: 'rounded-2xl',
+                confirmButton: 'rounded-xl px-6',
+                cancelButton: 'rounded-xl px-6'
+            },
+            preConfirm: () => {
+                return document.getElementById('reject-reason').value
+            }
+        })
+
+        if (!result.isConfirmed) return
+
+        try {
+            Swal.fire({
+                title: 'Memproses...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            })
+
+            const token = localStorage.getItem('token')
+            const response = await fetch(`/api/profile/recruiter/applications/${params.id}/reschedule`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    reason: result.value
+                })
+            })
+
+            const data = await response.json()
+
+            if (response.ok) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Request Ditolak',
+                    text: 'Pelamar akan menerima notifikasi bahwa request reschedule ditolak.',
+                    confirmButtonColor: '#3b82f6'
+                })
+                loadApplication()
+            } else {
+                throw new Error(data.error || 'Gagal menolak request')
+            }
+        } catch (error) {
+            console.error('Reject reschedule error:', error)
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: error.message || 'Gagal menolak request reschedule'
             })
         }
     }
@@ -442,6 +609,45 @@ export default function ApplicationDetailPage() {
                                 >
                                     <XCircle className="w-5 h-5" />
                                     Tolak
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Reschedule Request Alert */}
+                {hasRescheduleRequest && application.status === 'INTERVIEW_SCHEDULED' && (
+                    <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl p-6 mb-6 text-white shadow-xl">
+                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                            <div>
+                                <h2 className="text-xl font-bold mb-2 flex items-center gap-2">
+                                    📅 Request Reschedule Interview
+                                </h2>
+                                <p className="text-white/90 mb-3">
+                                    Pelamar <span className="font-semibold">{jobseeker.firstName} {jobseeker.lastName}</span> meminta perubahan jadwal interview.
+                                </p>
+                                {rescheduleInfo && (
+                                    <div className="bg-white/20 backdrop-blur rounded-xl p-4">
+                                        <p className="text-xs text-white/70 mb-1">Alasan:</p>
+                                        <p className="text-white font-medium">{rescheduleInfo.reason}</p>
+                                        <p className="text-xs text-white/60 mt-2">Dikirim: {rescheduleInfo.date}</p>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={handleRescheduleInterview}
+                                    className="flex items-center gap-2 px-6 py-3 bg-white text-orange-600 rounded-xl font-semibold hover:bg-orange-50 transition shadow-lg whitespace-nowrap"
+                                >
+                                    <Calendar className="w-5 h-5" />
+                                    Jadwalkan Ulang
+                                </button>
+                                <button
+                                    onClick={handleRejectReschedule}
+                                    className="flex items-center gap-2 px-6 py-3 bg-white/20 text-white rounded-xl font-semibold hover:bg-red-600 transition border border-white/30 whitespace-nowrap"
+                                >
+                                    <XCircle className="w-5 h-5" />
+                                    Tolak Request
                                 </button>
                             </div>
                         </div>
@@ -756,7 +962,7 @@ export default function ApplicationDetailPage() {
                         )}
 
                         {/* Additional Info */}
-                        {(jobseeker.dateOfBirth || jobseeker.gender || jobseeker.maritalStatus || jobseeker.expectedSalary) && (
+                        {(jobseeker.dateOfBirth || jobseeker.gender || jobseeker.maritalStatus || jobseeker.expectedSalary || jobseeker.address) && (
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                                 <h3 className="text-lg font-bold text-gray-900 mb-4">Info Tambahan</h3>
                                 <div className="space-y-3 text-sm">
@@ -778,6 +984,17 @@ export default function ApplicationDetailPage() {
                                             <span className="font-medium text-gray-900">
                                                 {jobseeker.maritalStatus === 'SINGLE' ? 'Belum Menikah' : 
                                                  jobseeker.maritalStatus === 'MARRIED' ? 'Menikah' : jobseeker.maritalStatus}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {jobseeker.address && (
+                                        <div className="pt-3 border-t border-gray-100">
+                                            <span className="text-gray-500 block mb-1">Alamat Lengkap</span>
+                                            <span className="font-medium text-gray-900 block">
+                                                {jobseeker.address}
+                                                {jobseeker.city && `, ${jobseeker.city}`}
+                                                {jobseeker.province && `, ${jobseeker.province}`}
+                                                {jobseeker.postalCode && ` ${jobseeker.postalCode}`}
                                             </span>
                                         </div>
                                     )}

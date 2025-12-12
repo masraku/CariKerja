@@ -106,9 +106,6 @@ export async function PATCH(request, context) {
             }
         })
 
-        console.log(`✅ Interview ${id} marked as COMPLETED`)
-        console.log(`📝 Updated ${applicationIds.length} applications to INTERVIEW_COMPLETED`)
-
         return NextResponse.json({
             success: true,
             message: 'Interview marked as completed successfully',

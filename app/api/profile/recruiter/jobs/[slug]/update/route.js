@@ -14,8 +14,6 @@ export async function PUT(request, { params }) {
     const { slug } = await params
     const body = await request.json()
 
-    console.log('📝 Updating job:', slug)
-
     // Verify job ownership
     const existingJob = await prisma.jobs.findUnique({
       where: { slug },
@@ -116,8 +114,6 @@ export async function PUT(request, { params }) {
         isActive: isActive !== undefined ? isActive : existingJob.isActive
       }
     })
-
-    console.log('✅ Job updated successfully')
 
     return NextResponse.json({
       success: true,

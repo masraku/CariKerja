@@ -8,8 +8,6 @@ export async function GET(request) {
     const industry = searchParams.get('industry') || ''
     const size = searchParams.get('size') || ''
 
-    console.log('🏢 Fetching companies with filters:', { search, industry, size })
-
     // Build where clause
     const where = {
       AND: [
@@ -84,8 +82,6 @@ export async function GET(request) {
         { createdAt: 'desc' }
       ]
     })
-
-    console.log(`✅ Found ${companies.length} companies`)
 
     // Calculate ratings and format data
     const formattedCompanies = companies.map(company => {

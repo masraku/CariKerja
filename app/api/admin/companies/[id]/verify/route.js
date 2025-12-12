@@ -57,8 +57,6 @@ export async function PATCH(request, context) {
             }
         })
 
-        console.log(`✅ Company ${company.name} verified by admin ${admin.email}`)
-
         return NextResponse.json({
             success: true,
             message: 'Company verified successfully',

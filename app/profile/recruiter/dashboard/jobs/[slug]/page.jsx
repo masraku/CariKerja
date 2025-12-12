@@ -20,7 +20,9 @@ import {
     Square,
     UserPlus,
     Trash2,
-    ExternalLink
+    ExternalLink,
+    FileText,
+    X
 } from 'lucide-react'
 import Swal from 'sweetalert2'
 
@@ -37,6 +39,7 @@ export default function JobDetailPage() {
     const [currentPage, setCurrentPage] = useState(1)
     const [selectedApplications, setSelectedApplications] = useState([])
     const [selectMode, setSelectMode] = useState(false)
+    const [documentModal, setDocumentModal] = useState({ isOpen: false, url: '', title: '' })
     const itemsPerPage = 10
 
     useEffect(() => {
@@ -394,6 +397,54 @@ export default function JobDetailPage() {
                                 <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-md text-xs font-medium">
                                     +{remainingSkills} lainnya
                                 </span>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Documents Section */}
+                {(application.jobseekers?.cvUrl || application.jobseekers?.ktpUrl || application.jobseekers?.ak1Url) && (
+                    <div className="mb-4">
+                        <p className="text-xs font-semibold text-gray-600 mb-2">Berkas:</p>
+                        <div className="flex flex-wrap gap-2">
+                            {application.jobseekers?.cvUrl && (
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        setDocumentModal({ isOpen: true, url: application.jobseekers.cvUrl, title: 'CV' })
+                                    }}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-medium hover:bg-indigo-100 transition"
+                                >
+                                    <FileText className="w-3.5 h-3.5" />
+                                    CV
+                                </button>
+                            )}
+                            {application.jobseekers?.ktpUrl && (
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        setDocumentModal({ isOpen: true, url: application.jobseekers.ktpUrl, title: 'KTP' })
+                                    }}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-medium hover:bg-green-100 transition"
+                                >
+                                    <FileText className="w-3.5 h-3.5" />
+                                    KTP
+                                </button>
+                            )}
+                            {application.jobseekers?.ak1Url && (
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        setDocumentModal({ isOpen: true, url: application.jobseekers.ak1Url, title: 'Kartu AK-1' })
+                                    }}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-orange-50 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-100 transition"
+                                >
+                                    <FileText className="w-3.5 h-3.5" />
+                                    AK-1
+                                </button>
                             )}
                         </div>
                     </div>
@@ -812,6 +863,61 @@ export default function JobDetailPage() {
                                     Undang Interview Bersama
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Document Preview Modal */}
+            {documentModal.isOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+                        <div className="flex items-center justify-between p-4 border-b">
+                            <h3 className="text-lg font-bold text-gray-900">Preview: {documentModal.title}</h3>
+                            <button
+                                type="button"
+                                onClick={() => setDocumentModal({ isOpen: false, url: '', title: '' })}
+                                className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                        <div className="p-4 h-[70vh] overflow-auto">
+                            {documentModal.url && (
+                                <>
+                                    {documentModal.url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                                        <img
+                                            src={documentModal.url}
+                                            alt={documentModal.title}
+                                            className="max-w-full h-auto mx-auto rounded-lg"
+                                        />
+                                    ) : (
+                                        <iframe
+                                            src={documentModal.url}
+                                            className="w-full h-full rounded-lg"
+                                            title={documentModal.title}
+                                        />
+                                    )}
+                                </>
+                            )}
+                        </div>
+                        <div className="flex justify-end gap-3 p-4 border-t bg-gray-50">
+                            <a
+                                href={documentModal.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm font-medium flex items-center gap-2"
+                            >
+                                <ExternalLink className="w-4 h-4" />
+                                Buka di Tab Baru
+                            </a>
+                            <button
+                                type="button"
+                                onClick={() => setDocumentModal({ isOpen: false, url: '', title: '' })}
+                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm font-medium"
+                            >
+                                Tutup
+                            </button>
                         </div>
                     </div>
                 </div>

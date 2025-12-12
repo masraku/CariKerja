@@ -47,12 +47,10 @@ export default function RecruiterDashboard() {
         setDashboardData(data.data)
       } else if (response.status === 404) {
         // Recruiter profile not found - redirect to create profile
-        console.log('❌ Profile not found, redirecting to profile setup')
         router.push('/profile/recruiter')
         return
       } else if (response.status === 401) {
         // Not authenticated
-        console.log('❌ Not authenticated, redirecting to login')
         router.push('/login?role=recruiter')
         return
       } else {

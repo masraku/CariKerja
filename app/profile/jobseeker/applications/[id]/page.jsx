@@ -24,7 +24,8 @@ import {
     MessageSquare,
     Send,
     User,
-    Eye
+    Eye,
+    RefreshCw
 } from 'lucide-react'
 
 export default function ApplicationDetailPage() {
@@ -94,6 +95,75 @@ export default function ApplicationDetailPage() {
             }
         } catch (error) {
             console.error('Load interview error:', error)
+        }
+    }
+
+    const handleRequestReschedule = async () => {
+        const { value: reason } = await Swal.fire({
+            title: 'Request Reschedule',
+            html: `
+                <p class="text-gray-600 mb-4 text-sm">Jelaskan alasan Anda meminta perubahan jadwal interview.</p>
+                <textarea 
+                    id="reschedule-reason" 
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
+                    placeholder="Contoh: Saya memiliki jadwal kuliah yang tidak dapat ditinggalkan pada waktu tersebut..."
+                    rows="4"
+                ></textarea>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Kirim Request',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#f97316',
+            preConfirm: () => {
+                const reason = document.getElementById('reschedule-reason').value
+                if (!reason.trim()) {
+                    Swal.showValidationMessage('Mohon isi alasan reschedule')
+                    return false
+                }
+                return reason
+            }
+        })
+
+        if (!reason) return
+
+        try {
+            Swal.fire({
+                title: 'Mengirim Request...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            })
+
+            const token = localStorage.getItem('token')
+            const response = await fetch(`/api/profile/jobseeker/applications/${params.id}/reschedule`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ reason })
+            })
+
+            const data = await response.json()
+
+            if (response.ok) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Request Terkirim!',
+                    text: 'Permintaan reschedule Anda telah dikirim ke recruiter. Mohon tunggu konfirmasi.',
+                    confirmButtonColor: '#3b82f6'
+                })
+                loadApplicationDetail()
+            } else {
+                throw new Error(data.error || 'Gagal mengirim request')
+            }
+        } catch (error) {
+            console.error('Reschedule error:', error)
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: error.message || 'Gagal mengirim request reschedule'
+            })
         }
     }
 
@@ -356,7 +426,7 @@ export default function ApplicationDetailPage() {
 
                             {/* Join Meeting Button */}
                             {application.status === 'INTERVIEW_SCHEDULED' && interview.meetingUrl && (
-                                <div className="mt-6">
+                                <div className="mt-6 space-y-3">
                                     <a 
                                         href={interview.meetingUrl} 
                                         target="_blank" 
@@ -369,8 +439,20 @@ export default function ApplicationDetailPage() {
                                             <ExternalLink className="w-5 h-5" />
                                         </button>
                                     </a>
-                                    <p className="text-center text-gray-500 text-sm mt-2">
+                                    <p className="text-center text-gray-500 text-sm">
                                         Klik untuk bergabung ke Google Meet
+                                    </p>
+                                    
+                                    {/* Request Reschedule Button */}
+                                    <button
+                                        onClick={handleRequestReschedule}
+                                        className="w-full bg-white border-2 border-orange-300 text-orange-600 py-3 rounded-2xl font-semibold hover:bg-orange-50 transition flex items-center justify-center gap-2"
+                                    >
+                                        <RefreshCw className="w-5 h-5" />
+                                        Minta Reschedule Interview
+                                    </button>
+                                    <p className="text-center text-gray-400 text-xs">
+                                        Jika ada kendala, Anda dapat meminta jadwal ulang
                                     </p>
                                 </div>
                             )}

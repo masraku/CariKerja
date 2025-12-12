@@ -23,8 +23,6 @@ export async function POST(request) {
             }
         })
 
-        console.log(`Auto-deactivated ${result.count} expired jobs`)
-
         return NextResponse.json({
             success: true,
             message: `Deactivated ${result.count} expired jobs`,

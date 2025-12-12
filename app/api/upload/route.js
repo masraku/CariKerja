@@ -22,15 +22,6 @@ export async function POST(request) {
         const bucket = formData.get('bucket') // 'jobseeker-photos', 'jobseeker-cv', etc.
         const companyId = formData.get('companyId') // For company gallery uploads
 
-        console.log('📂 Upload Request:', {
-            fileName: file?.name,
-            fileType: file?.type,
-            fileSize: file?.size,
-            bucket,
-            type,
-            companyId
-        })
-
         if (!file) {
             return NextResponse.json(
                 { error: 'No file provided' },
@@ -39,13 +30,18 @@ export async function POST(request) {
         }
 
         // Validate file type based on bucket/purpose
-        const isDocument = bucket?.includes('cv') || bucket?.includes('diploma') || bucket?.includes('certificate')
+        const isDocument = bucket?.includes('cv') || 
+                          bucket?.includes('diploma') || 
+                          bucket?.includes('certificate') ||
+                          bucket?.includes('documents') ||
+                          bucket?.includes('ktp') ||
+                          bucket?.includes('ak1')
         
         if (isDocument) {
             // Allow PDF and Images for documents
             if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
                 return NextResponse.json(
-                    { error: 'File must be an image or PDF' },
+                    { error: 'File harus berupa gambar (JPG, PNG) atau PDF' },
                     { status: 400 }
                 )
             }
@@ -53,16 +49,17 @@ export async function POST(request) {
             // Default to images only (for photos)
             if (!file.type.startsWith('image/')) {
                 return NextResponse.json(
-                    { error: 'File must be an image' },
+                    { error: 'File harus berupa gambar (JPG, PNG)' },
                     { status: 400 }
                 )
             }
         }
 
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
+        // Validate file size (max 2MB for Supabase free tier)
+        const maxSize = 2 * 1024 * 1024 // 2MB
+        if (file.size > maxSize) {
             return NextResponse.json(
-                { error: 'File size must be less than 5MB' },
+                { error: `Ukuran file terlalu besar (${(file.size / 1024 / 1024).toFixed(2)}MB). Maksimal 2MB.` },
                 { status: 400 }
             )
         }

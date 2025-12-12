@@ -15,8 +15,6 @@ export async function GET(request, { params }) {
     const decoded = verifyToken(token)
     const { applicationId } = await params
 
-    console.log('📋 Recruiter fetching application detail:', applicationId)
-
     // Get application with full jobseeker details
     const application = await prisma.applications.findUnique({
       where: { id: applicationId },
@@ -60,8 +58,6 @@ export async function GET(request, { params }) {
         { status: 404 }
       )
     }
-
-    console.log('✅ Application found for:', application.jobseekers.firstName)
 
     // Calculate profile completeness
     const jobseeker = application.jobseekers
@@ -123,8 +119,6 @@ export async function PATCH(request, { params }) {
     const { applicationId } = await params
     const body = await request.json()
     const { status, recruiterNotes } = body
-
-    console.log('📝 Updating application:', applicationId, { status, recruiterNotes })
 
     // Valid statuses
     const validStatuses = [
@@ -194,8 +188,6 @@ export async function PATCH(request, { params }) {
         }
       }
     })
-
-    console.log('✅ Application updated successfully')
 
     // TODO: Send notification to jobseeker
 

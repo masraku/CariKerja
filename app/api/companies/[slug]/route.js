@@ -5,8 +5,6 @@ export async function GET(request, { params }) {
   try {
     const { slug } = await params
 
-    console.log('🏢 Fetching company with slug:', slug)
-
     // Get company with all related data
     const company = await prisma.companies.findUnique({
       where: { slug },
@@ -80,21 +78,11 @@ export async function GET(request, { params }) {
     })
 
     if (!company) {
-      console.log('❌ Company not found with slug:', slug)
       return NextResponse.json(
         { error: 'Company not found' },
         { status: 404 }
       )
     }
-
-    console.log('✅ Company found:', {
-      name: company.name,
-      city: company.city,
-      province: company.province,
-      industry: company.industry,
-      jobsCount: company.jobs.length,
-      reviewsCount: company.reviews.length
-    })
 
     // Calculate average ratings if reviews exist
     let averageRatings = null

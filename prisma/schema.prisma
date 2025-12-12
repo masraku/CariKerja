@@ -301,6 +301,8 @@ model jobseekers {
   websiteUrl          String?
   resumeUrl           String?
   cvUrl               String?
+  ktpUrl              String?
+  ak1Url              String?
   desiredJobTitle     String?
   desiredSalaryMin    Int?
   desiredSalaryMax    Int?

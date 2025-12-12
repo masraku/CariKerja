@@ -257,13 +257,9 @@ export default function JobseekerSignup() {
               />
               <span className="ml-2 text-sm text-gray-600">
                 Saya menyetujui{' '}
-                <Link href="/terms" className="text-blue-600 hover:underline">
+                <Link href="/warning" className="text-blue-600 hover:underline">
                   Syarat dan Ketentuan
                 </Link>{' '}
-                serta{' '}
-                <Link href="/privacy" className="text-blue-600 hover:underline">
-                  Kebijakan Privasi
-                </Link>
               </span>
             </label>
             {errors.agreeTerms && <p className="text-red-500 text-xs mt-1">{errors.agreeTerms}</p>}

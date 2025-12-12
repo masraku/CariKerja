@@ -8,8 +8,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 
 export async function POST(request) {
   try {
-    console.log('🔐 Verifying authentication...')
-    
     // Verify authentication
     const cookieStore = await cookies()
     const token = cookieStore.get('token')
@@ -25,7 +23,6 @@ export async function POST(request) {
     let decoded
     try {
       decoded = jwt.verify(token.value, JWT_SECRET)
-      console.log('✅ Token verified, userId:', decoded.userId)
     } catch (jwtError) {
       console.error('❌ JWT verification failed:', jwtError)
       return NextResponse.json(
@@ -38,7 +35,6 @@ export async function POST(request) {
 
     // Get request body
     const body = await request.json()
-    console.log('📦 Received data for userId:', userId)
 
     const {
       // Personal Info
@@ -68,6 +64,8 @@ export async function POST(request) {
       portfolioUrl,
       websiteUrl,
       cvUrl,
+      ktpUrl,
+      ak1Url,
       
       // Education
       educations,
@@ -90,8 +88,6 @@ export async function POST(request) {
       willingToRelocate,
       availableFrom
     } = body
-
-    console.log('🔍 Checking user exists...')
     
     // Check if user exists and is jobseeker
     const user = await prisma.users.findUnique({
@@ -123,8 +119,6 @@ export async function POST(request) {
       )
     }
 
-    console.log('✅ User found, jobseekerId:', user.jobseekers.id)
-
     // Calculate profile completeness
     const totalFields = 15
     let filledFields = 0
@@ -146,9 +140,6 @@ export async function POST(request) {
     if (preferredJobType) filledFields++
     
     const completeness = Math.round((filledFields / totalFields) * 100)
-    console.log('📊 Profile completeness:', completeness + '%')
-
-    console.log('💾 Updating jobseeker profile...')
 
     // Update jobseeker profile
     const jobseeker = await prisma.jobseekers.update({
@@ -181,6 +172,8 @@ export async function POST(request) {
         portfolioUrl,
         websiteUrl,
         cvUrl,
+        ktpUrl,
+        ak1Url,
         
         // Job Preferences
         desiredJobTitle,
@@ -197,11 +190,8 @@ export async function POST(request) {
       }
     })
 
-    console.log('✅ Profile updated')
-
     // Handle educations
     if (educations && educations.length > 0) {
-      console.log('🎓 Processing educations...')
       await prisma.educations.deleteMany({
         where: { jobseekerId: jobseeker.id }
       })
@@ -222,12 +212,10 @@ export async function POST(request) {
           updatedAt: new Date()
         }))
       })
-      console.log('✅ Educations saved')
     }
 
     // Handle work experiences
     if (experiences && experiences.length > 0 && experiences[0].company) {
-      console.log('💼 Processing work experiences...')
       await prisma.work_experiences.deleteMany({
         where: { jobseekerId: jobseeker.id }
       })
@@ -251,12 +239,10 @@ export async function POST(request) {
           })
         }
       }
-      console.log('✅ Work experiences saved')
     }
 
     // Handle skills - UPDATED FOR NEW SCHEMA
     if (skills && skills.length > 0 && skills[0]) {
-      console.log('🎯 Processing skills...')
       
       // Delete existing jobseeker skills
       await prisma.jobseeker_skills.deleteMany({
@@ -271,7 +257,6 @@ export async function POST(request) {
         })
         
         if (!skill) {
-          console.log(`📝 Creating new skill: ${skillName}`)
           skill = await prisma.skills.create({
             data: { 
               id: crypto.randomUUID(),
@@ -292,12 +277,10 @@ export async function POST(request) {
           }
         })
       }
-      console.log('✅ Skills saved')
     }
 
     // Handle certifications
     if (certifications && certifications.length > 0 && certifications[0].name) {
-      console.log('🏆 Processing certifications...')
       await prisma.certifications.deleteMany({
         where: { jobseekerId: jobseeker.id }
       })
@@ -318,11 +301,9 @@ export async function POST(request) {
             updatedAt: new Date()
           }))
       })
-      console.log('✅ Certifications saved')
     }
 
     // Fetch complete profile - UPDATED INCLUDES
-    console.log('📋 Fetching complete profile...')
     const completeProfile = await prisma.jobseekers.findUnique({
       where: { id: jobseeker.id },
       include: {
@@ -336,8 +317,6 @@ export async function POST(request) {
         certifications: true
       }
     })
-
-    console.log('✅ Profile saved successfully!')
 
     return NextResponse.json({
       success: true,
@@ -366,8 +345,6 @@ export async function POST(request) {
 
 export async function GET(request) {
   try {
-    console.log('🔍 Getting jobseeker profile...')
-    
     // Verify authentication - AWAIT cookies()
     const cookieStore = await cookies()
     const token = cookieStore.get('token')
@@ -383,7 +360,6 @@ export async function GET(request) {
     let decoded
     try {
       decoded = jwt.verify(token.value, JWT_SECRET)
-      console.log('✅ Token verified, userId:', decoded.userId)
     } catch (jwtError) {
       console.error('❌ JWT verification failed:', jwtError)
       return NextResponse.json(
@@ -440,14 +416,6 @@ export async function GET(request) {
       }))
     }
 
-    console.log('✅ Profile fetched successfully')
-    console.log('📦 Returning profile data:', {
-      id: transformedProfile.id,
-      firstName: transformedProfile.firstName,
-      workExpCount: transformedProfile.work_experiences?.length,
-      skillsCount: transformedProfile.skills?.length
-    })
-
     return NextResponse.json({ 
       success: true,
       profile: transformedProfile 
@@ -471,8 +439,6 @@ export async function GET(request) {
 
 export async function PATCH(request) {
   try {
-    console.log('🔄 Partially updating profile...')
-    
     // Verify authentication
     const cookieStore = await cookies()
     const token = cookieStore.get('token')
@@ -496,8 +462,6 @@ export async function PATCH(request) {
       data: body
     })
 
-    console.log('✅ Profile partially updated')
-
     return NextResponse.json({
       success: true,
       message: 'Profile updated successfully',
@@ -517,8 +481,6 @@ export async function PATCH(request) {
 
 export async function DELETE(request) {
   try {
-    console.log('🗑️ Deleting profile data...')
-    
     // Verify authentication
     const cookieStore = await cookies()
     const token = cookieStore.get('token')
@@ -561,8 +523,6 @@ export async function DELETE(request) {
     await prisma.certifications.deleteMany({
       where: { jobseekerId: jobseeker.id }
     })
-
-    console.log('✅ Profile data deleted successfully')
 
     return NextResponse.json({
       success: true,

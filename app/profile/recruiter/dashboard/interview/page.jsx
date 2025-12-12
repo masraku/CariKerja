@@ -61,8 +61,6 @@ function ScheduleInterviewContent() {
       setLoading(true)
       const token = localStorage.getItem('token')
 
-      console.log('📋 Loading interview data - jobId:', jobId, 'applicantIds:', applicantIds)
-
       // Load applicants first - this includes job data
       const applicantResponse = await fetch(`/api/applications/batch?ids=${applicantIds}`, {
         headers: {
@@ -70,11 +68,8 @@ function ScheduleInterviewContent() {
         }
       })
 
-      console.log('📋 Applicant response status:', applicantResponse.status)
-
       if (applicantResponse.ok) {
         const applicantData = await applicantResponse.json()
-        console.log('📋 Applicant data received:', applicantData)
         setApplicants(applicantData.applications || [])
         
         // Get job info from first application (all should be same job)
@@ -88,7 +83,6 @@ function ScheduleInterviewContent() {
               ...prev,
               title: `Interview untuk posisi ${jobInfo.title || 'Unknown'}`
             }))
-            console.log('📋 Job info extracted from application:', jobInfo)
           } else {
             console.error('No job info in application')
           }

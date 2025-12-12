@@ -13,8 +13,6 @@ export async function GET(request, { params }) {
     const decoded = verifyToken(token)
     const { slug } = await params
 
-    console.log('📋 Fetching applications for job slug:', slug)
-
     // Find job by slug and verify recruiter owns it
     const job = await prisma.jobs.findUnique({
       where: { slug },
@@ -35,8 +33,6 @@ export async function GET(request, { params }) {
         { status: 404 }
       )
     }
-
-    console.log('✅ Job found:', job.title)
 
     // Get all applications with jobseeker details
     const applications = await prisma.applications.findMany({
@@ -76,8 +72,6 @@ export async function GET(request, { params }) {
         appliedAt: 'desc'
       }
     })
-
-    console.log(`✅ Found ${applications.length} applications`)
 
     // Calculate profile completeness for each applicant
     const applicationsWithCompleteness = applications.map(app => {

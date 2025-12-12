@@ -219,8 +219,6 @@ export async function DELETE(request, context) {
       }
     })
 
-    console.log(`✅ Interview ${id} cancelled, ${applicationIds.length} applications rejected`)
-
     return NextResponse.json({
       success: true,
       message: 'Interview deleted and applications rejected',

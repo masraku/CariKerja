@@ -45,8 +45,6 @@ export async function GET(request) {
         }
 
         // Get jobs with related data
-        console.log('Admin Jobs API - Where clause:', JSON.stringify(where))
-        
         const jobs = await prisma.jobs.findMany({
             where,
             include: {
@@ -78,8 +76,6 @@ export async function GET(request) {
                 createdAt: 'desc'
             }
         })
-        
-        console.log('Admin Jobs API - Found jobs:', jobs.length)
 
         // Get stats
         const totalJobs = await prisma.jobs.count()

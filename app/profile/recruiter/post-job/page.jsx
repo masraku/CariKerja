@@ -60,7 +60,6 @@ export default function PostJobPage() {
             // Check if company is verified
             // API returns { success: true, profile: { companies: { verified: true/false } } }
             const profile = data.profile
-            console.log('📥 Profile data:', profile)
             
             // If no profile exists, redirect to create profile
             if (!profile) {
@@ -71,7 +70,6 @@ export default function PostJobPage() {
 
             // Check company verification - companies is the relation name from Prisma
             const company = profile.companies
-            console.log('📥 Company data:', company)
             
             if (!company?.verified) {
                 setBlockReason('not_verified')
@@ -234,8 +232,6 @@ export default function PostJobPage() {
                 salaryMax: formData.salaryMax ? parseInt(formData.salaryMax) : null
             }
 
-            console.log('📤 Submitting job:', submitData.title)
-
             const response = await fetch('/api/profile/recruiter/jobs/create', {
                 method: 'POST',
                 headers: {
@@ -244,11 +240,7 @@ export default function PostJobPage() {
                 },
                 body: JSON.stringify(submitData)
             })
-
-            console.log('📥 Response status:', response.status)
-
             const data = await response.json()
-            console.log('📥 Response data:', data)
 
             if (response.ok) {
                 await Swal.fire({

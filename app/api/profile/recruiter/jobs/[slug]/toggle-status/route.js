@@ -14,8 +14,6 @@ export async function POST(request, { params }) {
     const decoded = verifyToken(token)
     const { slug } = await params
 
-    console.log('🔄 Toggling job status:', slug)
-
     // Verify job ownership
     const job = await prisma.jobs.findUnique({
       where: { slug },
@@ -44,8 +42,6 @@ export async function POST(request, { params }) {
         isActive: !job.isActive
       }
     })
-
-    console.log(`✅ Job status changed to: ${updatedJob.isActive ? 'active' : 'inactive'}`)
 
     return NextResponse.json({
       success: true,

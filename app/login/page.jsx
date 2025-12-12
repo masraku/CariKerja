@@ -119,13 +119,6 @@ function LoginContent() {
 
       const action = searchParams.get('action')
 
-      // Debug: Log user data to check profileCompleted
-      console.log('🔍 Login Response Data:', {
-        role: data.user.role,
-        jobseeker: data.user.jobseeker,
-        recruiter: data.user.recruiter
-      })
-
       // Special flow posting lowongan
       if (action === 'post-job' && role === 'recruiter') {
         router.push('/profile/recruiter/post-job')
@@ -135,11 +128,9 @@ function LoginContent() {
       // Redirect based on role
       if (data.user.role === 'JOBSEEKER') {
         // Always redirect to dashboard - dashboard will redirect to profile if needed
-        console.log('✅ JOBSEEKER - redirecting to dashboard')
         router.push('/profile/jobseeker/dashboard')
       } else if (data.user.role === 'RECRUITER') {
         // Always redirect to dashboard - dashboard will redirect to profile if needed
-        console.log('✅ RECRUITER - redirecting to dashboard')
         router.push('/profile/recruiter/dashboard')
       } else if (data.user.role === 'ADMIN') {
         router.push('/admin')

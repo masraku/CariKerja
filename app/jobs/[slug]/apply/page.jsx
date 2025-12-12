@@ -5,7 +5,8 @@ import Link from 'next/link'
 import Swal from 'sweetalert2'
 import { 
   ArrowLeft, FileText, Upload, Briefcase, Building2, 
-  MapPin, DollarSign, Loader2, CheckCircle, AlertCircle
+  MapPin, DollarSign, Loader2, CheckCircle, AlertCircle,
+  Eye, X, ExternalLink
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -19,8 +20,8 @@ export default function ApplyJobPage() {
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [documentModal, setDocumentModal] = useState({ isOpen: false, url: '', title: '' })
   const [formData, setFormData] = useState({
-    coverLetter: '',
     resumeUrl: '',
     portfolioUrl: ''
   })
@@ -117,16 +118,6 @@ export default function ApplyJobPage() {
     e.preventDefault()
 
     // Validation
-    if (!formData.coverLetter.trim()) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Cover Letter Required',
-        text: 'Please write a cover letter',
-        confirmButtonColor: '#2563EB'
-      })
-      return
-    }
-
     if (!formData.resumeUrl.trim()) {
       Swal.fire({
         icon: 'warning',
@@ -230,7 +221,7 @@ export default function ApplyJobPage() {
         <div className="container mx-auto px-4 py-4">
           <Link href={`/jobs/${slug}`} className="inline-flex items-center gap-2 text-gray-600 hover:text-blue-600 transition">
             <ArrowLeft className="w-5 h-5" />
-            <span>Back to Job Details</span>
+            <span>Kembali ke Detail Lowongan</span>
           </Link>
         </div>
       </div>
@@ -281,7 +272,7 @@ export default function ApplyJobPage() {
           <div className="bg-white rounded-2xl shadow-lg p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
               <FileText className="w-6 h-6 text-blue-600" />
-              Application Form
+              Formulir Lamaran
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -289,61 +280,108 @@ export default function ApplyJobPage() {
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                 <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
                   <CheckCircle className="w-5 h-5 text-blue-600" />
-                  Your Profile
+                  Profil Anda
                 </h3>
                 <div className="text-sm text-gray-700 space-y-1">
-                  <p><strong>Name:</strong> {profile.firstName} {profile.lastName}</p>
+                  <p><strong>Nama:</strong> {profile.firstName} {profile.lastName}</p>
                   <p><strong>Email:</strong> {profile.email}</p>
-                  <p><strong>Phone:</strong> {profile.phone}</p>
-                  {profile.currentTitle && <p><strong>Current Title:</strong> {profile.currentTitle}</p>}
+                  <p><strong>Telepon:</strong> {profile.phone}</p>
+                  {profile.currentTitle && <p><strong>Posisi Saat Ini:</strong> {profile.currentTitle}</p>}
                 </div>
               </div>
 
-              {/* Cover Letter */}
+              {/* Documents Section */}
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2">
-                  Cover Letter <span className="text-red-500">*</span>
+                <label className="block text-sm font-semibold text-gray-900 mb-3">
+                  Dokumen Anda <span className="text-red-500">*</span>
                 </label>
-                <textarea
-                  name="coverLetter"
-                  value={formData.coverLetter}
-                  onChange={handleChange}
-                  rows={8}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                  placeholder="Tell us why you're the perfect candidate for this position..."
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Explain why you're interested in this role and what makes you a great fit
-                </p>
-              </div>
+                <div className="grid md:grid-cols-3 gap-4">
+                  {/* CV */}
+                  <div className={`border-2 rounded-xl p-4 ${profile.cvUrl ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-gray-50'}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-semibold text-gray-700">CV Terbaru</span>
+                      {profile.cvUrl && <CheckCircle className="w-5 h-5 text-green-600" />}
+                    </div>
+                    {profile.cvUrl ? (
+                      <div className="space-y-2">
+                        <p className="text-xs text-green-700">✓ Sudah diupload</p>
+                        <button
+                          type="button"
+                          onClick={() => setDocumentModal({ isOpen: true, url: profile.cvUrl, title: 'CV Terbaru' })}
+                          className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700 transition"
+                        >
+                          <Eye className="w-4 h-4" />
+                          Lihat CV
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-red-600">Belum diupload</p>
+                    )}
+                  </div>
 
-              {/* Resume URL */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2">
-                  Resume/CV URL <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="url"
-                  name="resumeUrl"
-                  value={formData.resumeUrl}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="https://example.com/your-resume.pdf"
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  {profile.cvUrl 
-                    ? '✓ Using CV from your profile (you can change it above)'
-                    : 'Please upload your CV in your profile or provide a link here'
-                  }
-                </p>
+                  {/* KTP */}
+                  <div className={`border-2 rounded-xl p-4 ${profile.ktpUrl ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-gray-50'}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-semibold text-gray-700">KTP</span>
+                      {profile.ktpUrl && <CheckCircle className="w-5 h-5 text-green-600" />}
+                    </div>
+                    {profile.ktpUrl ? (
+                      <div className="space-y-2">
+                        <p className="text-xs text-green-700">✓ Sudah diupload</p>
+                        <button
+                          type="button"
+                          onClick={() => setDocumentModal({ isOpen: true, url: profile.ktpUrl, title: 'KTP' })}
+                          className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700 transition"
+                        >
+                          <Eye className="w-4 h-4" />
+                          Lihat KTP
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-red-600">Belum diupload</p>
+                    )}
+                  </div>
+
+                  {/* Kartu AK-1 */}
+                  <div className={`border-2 rounded-xl p-4 ${profile.ak1Url ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-gray-50'}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-semibold text-gray-700">Kartu AK-1</span>
+                      {profile.ak1Url && <CheckCircle className="w-5 h-5 text-green-600" />}
+                    </div>
+                    {profile.ak1Url ? (
+                      <div className="space-y-2">
+                        <p className="text-xs text-green-700">✓ Sudah diupload</p>
+                        <button
+                          type="button"
+                          onClick={() => setDocumentModal({ isOpen: true, url: profile.ak1Url, title: 'Kartu AK-1' })}
+                          className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700 transition"
+                        >
+                          <Eye className="w-4 h-4" />
+                          Lihat AK-1
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-red-600">Belum diupload</p>
+                    )}
+                  </div>
+                </div>
+                
+                {(!profile.cvUrl || !profile.ktpUrl || !profile.ak1Url) && (
+                  <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-xs text-amber-700">
+                      <strong>⚠️ Dokumen belum lengkap.</strong>{' '}
+                      <Link href="/profile/jobseeker" className="text-amber-800 underline font-semibold hover:text-amber-900">
+                        Lengkapi dokumen di profil Anda
+                      </Link>
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Portfolio URL (Optional) */}
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-2">
-                  Portfolio URL <span className="text-gray-400">(Optional)</span>
+                  URL Portfolio <span className="text-gray-400">(Opsional)</span>
                 </label>
                 <input
                   type="url"
@@ -351,10 +389,10 @@ export default function ApplyJobPage() {
                   value={formData.portfolioUrl}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="https://your-portfolio.com"
+                  placeholder="https://portfolio-anda.com"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Link to your portfolio, GitHub, or personal website
+                  Link ke portfolio, GitHub, atau website pribadi Anda
                 </p>
               </div>
 
@@ -363,11 +401,11 @@ export default function ApplyJobPage() {
                 <div className="flex items-start gap-3">
                   <AlertCircle className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
                   <div className="text-sm text-gray-700">
-                    <p className="font-semibold mb-1">Before you apply:</p>
+                    <p className="font-semibold mb-1">Sebelum Anda melamar:</p>
                     <ul className="list-disc list-inside space-y-1">
-                      <li>Make sure all information is accurate</li>
-                      <li>Your profile will be shared with the employer</li>
-                      <li>You can track your application status in your dashboard</li>
+                      <li>Pastikan semua informasi sudah benar dan akurat</li>
+                      <li>Profil Anda akan dibagikan kepada perusahaan</li>
+                      <li>Anda dapat melacak status lamaran di dashboard</li>
                     </ul>
                   </div>
                 </div>
@@ -380,7 +418,7 @@ export default function ApplyJobPage() {
                     type="button"
                     className="w-full py-4 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition font-semibold"
                   >
-                    Cancel
+                    Batal
                   </button>
                 </Link>
                 <button
@@ -395,12 +433,12 @@ export default function ApplyJobPage() {
                   {submitting ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Submitting...
+                      Mengirim...
                     </>
                   ) : (
                     <>
                       <Upload className="w-5 h-5" />
-                      Submit Application
+                      Kirim Lamaran
                     </>
                   )}
                 </button>
@@ -409,6 +447,61 @@ export default function ApplyJobPage() {
           </div>
         </div>
       </div>
+
+      {/* Document Preview Modal */}
+      {documentModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-bold text-gray-900">Preview: {documentModal.title}</h3>
+              <button
+                type="button"
+                onClick={() => setDocumentModal({ isOpen: false, url: '', title: '' })}
+                className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-4 h-[70vh] overflow-auto">
+              {documentModal.url && (
+                <>
+                  {documentModal.url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                    <img
+                      src={documentModal.url}
+                      alt={documentModal.title}
+                      className="max-w-full h-auto mx-auto rounded-lg"
+                    />
+                  ) : (
+                    <iframe
+                      src={documentModal.url}
+                      className="w-full h-full rounded-lg"
+                      title={documentModal.title}
+                    />
+                  )}
+                </>
+              )}
+            </div>
+            <div className="flex justify-end gap-3 p-4 border-t bg-gray-50">
+              <a
+                href={documentModal.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm font-medium flex items-center gap-2"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Buka di Tab Baru
+              </a>
+              <button
+                type="button"
+                onClick={() => setDocumentModal({ isOpen: false, url: '', title: '' })}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm font-medium"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

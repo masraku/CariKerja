@@ -105,14 +105,6 @@ export default function RecruiterSignup() {
     setIsLoading(true)
 
     try {
-      console.log('📤 Sending registration data:', {
-        companyName: form.companyName,
-        companyEmail: form.companyEmail,
-        contactPerson: form.contactPerson,
-        phone: form.phone,
-        passwordLength: form.password.length
-      })
-
       const response = await fetch('/api/auth/register/recruiter', {
         method: 'POST',
         headers: {
@@ -128,12 +120,6 @@ export default function RecruiterSignup() {
       })
 
       const data = await response.json()
-
-      console.log('📥 Response:', {
-        status: response.status,
-        success: response.ok,
-        data
-      })
 
       if (!response.ok) {
         throw new Error(data.error || data.details || 'Registrasi gagal')

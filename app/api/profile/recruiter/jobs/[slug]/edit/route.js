@@ -14,8 +14,6 @@ export async function GET(request, { params }) {
     const decoded = verifyToken(token)
     const { slug } = await params
 
-    console.log('📝 Loading job for edit:', slug)
-
     // Get job with ownership verification
     const job = await prisma.jobs.findUnique({
       where: { slug },
@@ -36,8 +34,6 @@ export async function GET(request, { params }) {
         { status: 404 }
       )
     }
-
-    console.log('✅ Job loaded for edit')
 
     return NextResponse.json({
       success: true,

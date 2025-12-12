@@ -3,7 +3,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Swal from 'sweetalert2'
-import { User, Star, Briefcase, GraduationCap, Award, FileText, CheckCircle, Upload, X, Plus, Calendar, Phone, Mail, Globe, Linkedin, Github, ChevronRight, ChevronLeft, Save, ArrowLeft } from 'lucide-react'
+import { User, Star, Briefcase, GraduationCap, Award, FileText, CheckCircle, Upload, X, Plus, Calendar, Phone, Mail, Globe, Linkedin, Github, ChevronRight, ChevronLeft, Save, ArrowLeft, Eye } from 'lucide-react'
 import RupiahInput from '@/components/RupiahInput'
 
 function JobseekerProfileContent() {
@@ -16,6 +16,7 @@ function JobseekerProfileContent() {
   const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isEditMode, setIsEditMode] = useState(false)
+  const [documentModal, setDocumentModal] = useState({ isOpen: false, url: '', title: '' })
   const formatRupiah = (value) => {
     if (!value) return ''
     const number = value.toString().replace(/[^0-9]/g, '')
@@ -51,10 +52,16 @@ function JobseekerProfileContent() {
     portfolioUrl: '',
     websiteUrl: '',
 
-    // CV
+    // CV & Documents
     cvFile: null,
     cvFileName: '',
     cvUrl: '',
+    ktpFile: null,
+    ktpFileName: '',
+    ktpUrl: '',
+    ak1File: null,
+    ak1FileName: '',
+    ak1Url: '',
 
     // Education
     educations: [{
@@ -200,9 +207,13 @@ function JobseekerProfileContent() {
           portfolioUrl: profile.portfolioUrl || '',
           websiteUrl: profile.websiteUrl || '',
 
-          // CV
+          // CV & Documents
           cvUrl: profile.cvUrl || '',
           cvFileName: profile.cvUrl ? 'CV.pdf' : '',
+          ktpUrl: profile.ktpUrl || '',
+          ktpFileName: profile.ktpUrl ? 'KTP.pdf' : '',
+          ak1Url: profile.ak1Url || '',
+          ak1FileName: profile.ak1Url ? 'Kartu AK-1.pdf' : '',
 
           // Education
           educations: profile.educations && profile.educations.length > 0
@@ -306,7 +317,11 @@ function JobseekerProfileContent() {
 
   // Upload file helper
   const uploadFile = async (file, bucket) => {
-    console.log(`🚀 Uploading to bucket: ${bucket}`)
+    // Validate file size (max 2MB for Supabase free tier)
+    const maxSize = 2 * 1024 * 1024 // 2MB
+    if (file.size > maxSize) {
+      throw new Error(`Ukuran file terlalu besar (${(file.size / 1024 / 1024).toFixed(2)}MB). Maksimal 2MB.`)
+    }
 
     const formDataUpload = new FormData()
     formDataUpload.append('file', file)
@@ -321,12 +336,14 @@ function JobseekerProfileContent() {
 
     if (!response.ok) {
       const error = await response.json()
+      // Handle Supabase storage limit error
+      if (error.error?.includes('exceeded the maximum allowed size')) {
+        throw new Error('Ukuran file melebihi batas maksimal. Silakan kompres file terlebih dahulu (maks 2MB).')
+      }
       throw new Error(error.error || 'Upload failed')
     }
 
     const result = await response.json()
-    console.log(`✅ Upload successful to ${bucket}:`, result.url)
-
     return result
   }
 
@@ -417,6 +434,90 @@ function JobseekerProfileContent() {
         icon: 'error',
         title: 'Gagal Upload',
         text: error.message || 'Gagal upload CV'
+      })
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  // Handle KTP upload
+  const handleKTPUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    try {
+      setIsUploading(true)
+      setUploadProgress({ ktp: 0 })
+      setUploadProgress({ ktp: 50 })
+
+      const result = await uploadFile(file, 'jobseeker-documents')
+
+      setFormData(prev => ({
+        ...prev,
+        ktpFile: file,
+        ktpFileName: file.name,
+        ktpUrl: result.url
+      }))
+
+      setUploadProgress({ ktp: 100 })
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: 'KTP berhasil diupload',
+        timer: 2000,
+        showConfirmButton: false
+      })
+
+      setTimeout(() => setUploadProgress({}), 1000)
+    } catch (error) {
+      console.error('KTP upload error:', error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal Upload',
+        text: error.message || 'Gagal upload KTP'
+      })
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  // Handle AK-1 upload
+  const handleAK1Upload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    try {
+      setIsUploading(true)
+      setUploadProgress({ ak1: 0 })
+      setUploadProgress({ ak1: 50 })
+
+      const result = await uploadFile(file, 'jobseeker-documents')
+
+      setFormData(prev => ({
+        ...prev,
+        ak1File: file,
+        ak1FileName: file.name,
+        ak1Url: result.url
+      }))
+
+      setUploadProgress({ ak1: 100 })
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: 'Kartu AK-1 berhasil diupload',
+        timer: 2000,
+        showConfirmButton: false
+      })
+
+      setTimeout(() => setUploadProgress({}), 1000)
+    } catch (error) {
+      console.error('AK-1 upload error:', error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal Upload',
+        text: error.message || 'Gagal upload Kartu AK-1'
       })
     } finally {
       setIsUploading(false)
@@ -610,6 +711,8 @@ function JobseekerProfileContent() {
         portfolioUrl: formData.portfolioUrl,
         websiteUrl: formData.websiteUrl,
         cvUrl: formData.cvUrl,
+        ktpUrl: formData.ktpUrl,
+        ak1Url: formData.ak1Url,
         educations: formData.educations.map(edu => ({
           institution: edu.institution,
           degree: edu.degree,
@@ -1045,55 +1148,167 @@ function JobseekerProfileContent() {
                 <div className="border-t border-gray-200 pt-6 mt-6">
                   <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <FileText className="w-6 h-6 text-indigo-600" />
-                    Upload CV/Resume
+                    Upload Dokumen <span className="text-red-500">*</span>
                   </h3>
+                  <p className="text-sm text-gray-500 mb-4">Upload dokumen-dokumen berikut dalam format PDF atau gambar (Max 2MB per file)</p>
 
-                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-indigo-500 transition">
-                    {formData.cvFileName ? (
-                      <div className="flex items-center justify-between bg-indigo-50 p-4 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <FileText className="w-8 h-8 text-indigo-600" />
-                          <div className="text-left">
-                            <p className="font-semibold text-gray-900">{formData.cvFileName}</p>
-                            <p className="text-sm text-gray-500">CV berhasil diupload</p>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    {/* CV Upload */}
+                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-indigo-500 transition">
+                      <p className="text-sm font-semibold text-gray-700 mb-3">CV Terbaru <span className="text-red-500">*</span></p>
+                      {formData.cvFileName ? (
+                        <div className="bg-indigo-50 p-3 rounded-lg">
+                          <FileText className="w-8 h-8 text-indigo-600 mx-auto mb-2" />
+                          <p className="text-xs font-semibold text-gray-900 truncate">{formData.cvFileName}</p>
+                          <div className="flex gap-2 mt-2 justify-center">
+                            <button
+                              type="button"
+                              onClick={() => setDocumentModal({ isOpen: true, url: formData.cvUrl, title: 'CV' })}
+                              className="text-indigo-600 hover:text-indigo-800 text-xs flex items-center gap-1"
+                            >
+                              <Eye className="w-3 h-3" /> Lihat
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, cvFile: null, cvFileName: '', cvUrl: '' }))}
+                              className="text-red-500 hover:text-red-700 text-xs flex items-center gap-1"
+                            >
+                              <X className="w-3 h-3" /> Hapus
+                            </button>
                           </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => setFormData(prev => ({ ...prev, cvFile: null, cvFileName: '', cvUrl: '' }))}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <X className="w-5 h-5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <label className={`cursor-pointer ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                        <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-700 font-semibold mb-2">
-                          Klik untuk upload CV Anda
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          PDF, DOC, DOCX (Max 5MB)
-                        </p>
-                        <input
-                          type="file"
-                          accept=".pdf,.doc,.docx"
-                          onChange={handleCVUpload}
-                          className="hidden"
-                          disabled={isUploading}
-                        />
-                      </label>
-                    )}
-                    {uploadProgress.cv && (
-                      <div className="mt-4 max-w-xs mx-auto">
-                        <div className="bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-indigo-600 h-2 rounded-full transition-all"
-                            style={{ width: `${uploadProgress.cv}%` }}
-                          ></div>
+                      ) : (
+                        <label className={`cursor-pointer block ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                          <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                          <p className="text-xs text-gray-500">Klik untuk upload</p>
+                          <input
+                            type="file"
+                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                            onChange={handleCVUpload}
+                            className="hidden"
+                            disabled={isUploading}
+                          />
+                        </label>
+                      )}
+                      {uploadProgress.cv && (
+                        <div className="mt-2">
+                          <div className="bg-gray-200 rounded-full h-1.5">
+                            <div className="bg-indigo-600 h-1.5 rounded-full transition-all" style={{ width: `${uploadProgress.cv}%` }}></div>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
+
+                    {/* KTP Upload */}
+                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-indigo-500 transition">
+                      <p className="text-sm font-semibold text-gray-700 mb-3">KTP <span className="text-red-500">*</span></p>
+                      {formData.ktpFileName ? (
+                        <div className="bg-green-50 p-3 rounded-lg">
+                          <FileText className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                          <p className="text-xs font-semibold text-gray-900 truncate">{formData.ktpFileName}</p>
+                          <div className="flex gap-2 mt-2 justify-center">
+                            <button
+                              type="button"
+                              onClick={() => setDocumentModal({ isOpen: true, url: formData.ktpUrl, title: 'KTP' })}
+                              className="text-green-600 hover:text-green-800 text-xs flex items-center gap-1"
+                            >
+                              <Eye className="w-3 h-3" /> Lihat
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, ktpFile: null, ktpFileName: '', ktpUrl: '' }))}
+                              className="text-red-500 hover:text-red-700 text-xs flex items-center gap-1"
+                            >
+                              <X className="w-3 h-3" /> Hapus
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <label className={`cursor-pointer block ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                          <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                          <p className="text-xs text-gray-500">Klik untuk upload</p>
+                          <input
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            onChange={handleKTPUpload}
+                            className="hidden"
+                            disabled={isUploading}
+                          />
+                        </label>
+                      )}
+                      {uploadProgress.ktp && (
+                        <div className="mt-2">
+                          <div className="bg-gray-200 rounded-full h-1.5">
+                            <div className="bg-green-600 h-1.5 rounded-full transition-all" style={{ width: `${uploadProgress.ktp}%` }}></div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* AK-1 Upload */}
+                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-indigo-500 transition">
+                      <p className="text-sm font-semibold text-gray-700 mb-3">Kartu AK-1 Disnaker <span className="text-red-500">*</span></p>
+                      {formData.ak1FileName ? (
+                        <div className="bg-orange-50 p-3 rounded-lg">
+                          <FileText className="w-8 h-8 text-orange-600 mx-auto mb-2" />
+                          <p className="text-xs font-semibold text-gray-900 truncate">{formData.ak1FileName}</p>
+                          <div className="flex gap-2 mt-2 justify-center">
+                            <button
+                              type="button"
+                              onClick={() => setDocumentModal({ isOpen: true, url: formData.ak1Url, title: 'Kartu AK-1' })}
+                              className="text-orange-600 hover:text-orange-800 text-xs flex items-center gap-1"
+                            >
+                              <Eye className="w-3 h-3" /> Lihat
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, ak1File: null, ak1FileName: '', ak1Url: '' }))}
+                              className="text-red-500 hover:text-red-700 text-xs flex items-center gap-1"
+                            >
+                              <X className="w-3 h-3" /> Hapus
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <label className={`cursor-pointer block ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                          <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                          <p className="text-xs text-gray-500">Klik untuk upload</p>
+                          <input
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            onChange={handleAK1Upload}
+                            className="hidden"
+                            disabled={isUploading}
+                          />
+                        </label>
+                      )}
+                      {uploadProgress.ak1 && (
+                        <div className="mt-2">
+                          <div className="bg-gray-200 rounded-full h-1.5">
+                            <div className="bg-orange-600 h-1.5 rounded-full transition-all" style={{ width: `${uploadProgress.ak1}%` }}></div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                    <p className="text-xs text-blue-700">
+                      <strong>Info:</strong> Kartu AK-1 (Kartu Tanda Pencari Kerja) bisa didapatkan di Dinas Tenaga Kerja setempat. 
+                      Untuk penduduk Kab. Cirebon, daftar online di{' '}
+                      <a 
+                        href="https://disnaker.cirebonkab.go.id/form_antrian_ak1" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 underline font-semibold"
+                      >
+                        disnaker.cirebonkab.go.id
+                      </a>
+                      . Lihat info lengkap di halaman{' '}
+                      <a href="/warning" className="text-blue-600 hover:text-blue-800 underline font-semibold">
+                        S&K
+                      </a>.
+                    </p>
                   </div>
                 </div>
 
@@ -1109,7 +1324,7 @@ function JobseekerProfileContent() {
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         <div className="flex items-center gap-2">
                           <Linkedin className="w-5 h-5 text-blue-600" />
-                          LinkedIn
+                          LinkedIn (Opsional)
                         </div>
                       </label>
                       <input
@@ -1126,7 +1341,7 @@ function JobseekerProfileContent() {
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         <div className="flex items-center gap-2">
                           <Github className="w-5 h-5 text-gray-900" />
-                          GitHub
+                          GitHub (Opsional)
                         </div>
                       </label>
                       <input
@@ -1138,29 +1353,11 @@ function JobseekerProfileContent() {
                         placeholder="https://github.com/username"
                       />
                     </div>
-
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         <div className="flex items-center gap-2">
                           <Globe className="w-5 h-5 text-indigo-600" />
-                          Portfolio
-                        </div>
-                      </label>
-                      <input
-                        type="url"
-                        name="portfolioUrl"
-                        value={formData.portfolioUrl}
-                        onChange={handleInputChange}
-                        className="w-full text-gray-900 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        placeholder="https://portfolio.com"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        <div className="flex items-center gap-2">
-                          <Globe className="w-5 h-5 text-indigo-600" />
-                          Website
+                          Website (Opsional)
                         </div>
                       </label>
                       <input
@@ -1346,7 +1543,7 @@ function JobseekerProfileContent() {
 
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Gelar <span className="text-red-500">*</span>
+                          Gelar (Beri - jika tidak ada)<span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -2088,6 +2285,60 @@ function JobseekerProfileContent() {
           </div>
         </form>
       </div>
+
+      {/* Document Preview Modal */}
+      {documentModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-bold text-gray-900">Preview: {documentModal.title}</h3>
+              <button
+                type="button"
+                onClick={() => setDocumentModal({ isOpen: false, url: '', title: '' })}
+                className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-4 h-[70vh] overflow-auto">
+              {documentModal.url && (
+                <>
+                  {documentModal.url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                    <img
+                      src={documentModal.url}
+                      alt={documentModal.title}
+                      className="max-w-full h-auto mx-auto rounded-lg"
+                    />
+                  ) : (
+                    <iframe
+                      src={documentModal.url}
+                      className="w-full h-full rounded-lg"
+                      title={documentModal.title}
+                    />
+                  )}
+                </>
+              )}
+            </div>
+            <div className="flex justify-end gap-3 p-4 border-t bg-gray-50">
+              <a
+                href={documentModal.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm font-medium"
+              >
+                Buka di Tab Baru
+              </a>
+              <button
+                type="button"
+                onClick={() => setDocumentModal({ isOpen: false, url: '', title: '' })}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm font-medium"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div >
   )
 }

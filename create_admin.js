@@ -3,6 +3,10 @@ const bcrypt = require('bcryptjs')
 
 const prisma = new PrismaClient()
 
+function out(line = '') {
+  process.stdout.write(String(line) + '\n')
+}
+
 async function createAdmin() {
   try {
     // Check if admin already exists
@@ -11,7 +15,7 @@ async function createAdmin() {
     })
 
     if (existingAdmin) {
-      console.log('✅ Admin user already exists:', existingAdmin.email)
+      out(`✅ Admin user already exists: ${existingAdmin.email}`)
       return
     }
 
@@ -29,11 +33,11 @@ async function createAdmin() {
       }
     })
 
-    console.log('✅ Admin user created successfully!')
-    console.log('📧 Email:', admin.email)
-    console.log('🔑 Password: admin123')
-    console.log('')
-    console.log('⚠️  IMPORTANT: Change this password after first login!')
+    out('✅ Admin user created successfully!')
+    out(`📧 Email: ${admin.email}`)
+    out('🔑 Password: admin123')
+    out('')
+    out('⚠️  IMPORTANT: Change this password after first login!')
     
   } catch (error) {
     console.error('❌ Error:', error)

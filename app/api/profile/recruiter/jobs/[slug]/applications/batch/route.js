@@ -48,8 +48,6 @@ export async function GET(request) {
 
     const ids = idsParam.split(',')
 
-    console.log('📋 Fetching applications:', ids)
-
     // Get applications
     const applications = await prisma.applications.findMany({
       where: {
@@ -85,8 +83,6 @@ export async function GET(request) {
         { status: 403 }
       )
     }
-
-    console.log(`✅ Found ${applications.length} applications`)
 
     return NextResponse.json({
       success: true,

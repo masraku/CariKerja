@@ -30,7 +30,6 @@ export default function CompanyDetailPage() {
             const data = await response.json()
             if (data.success) {
                 const foundCompany = data.data.companies.find(c => c.id === params.id)
-                console.log('🖼️ Company Gallery URLs:', foundCompany?.gallery)
                 setCompany(foundCompany)
             }
         } catch (error) {

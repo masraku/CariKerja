@@ -50,11 +50,9 @@ export default function JobDetailPage() {
         
         // Set application status directly from API response
         if (data.data.hasApplied) {
-          console.log('✅ User has already applied to this job')
           setHasApplied(true)
           setExistingApplication(data.data.existingApplication)
         } else {
-          console.log('ℹ️ User has not applied to this job yet')
           setHasApplied(false)
           setExistingApplication(null)
         }

@@ -16,8 +16,6 @@ export async function POST(request, { params }) {
     const body = await request.json()
     const { applicationIds, interviewDate, interviewTime, duration, notes, meetingLink, title } = body
 
-    console.log('📅 Scheduling interview for:', { slug, applicationIds })
-
     // Verify job ownership and get recruiter
     const job = await prisma.jobs.findUnique({
       where: { slug },
@@ -43,8 +41,6 @@ export async function POST(request, { params }) {
 
     // Combine date and time
     const interviewDateTime = new Date(`${interviewDate}T${interviewTime}`)
-    
-    console.log('📅 Interview scheduled for:', interviewDateTime)
 
     // Update all selected applications
     const updatePromises = applicationIds.map(async (appId) => {
@@ -89,8 +85,6 @@ export async function POST(request, { params }) {
 
     const results = await Promise.all(updatePromises)
 
-    console.log(`✅ Successfully scheduled interview for ${results.length} candidates`)
-
     // TODO: Send email notifications to candidates
     // You can add email service integration here
 
@@ -124,8 +118,6 @@ export async function GET(request, { params }) {
     const { slug } = await params
     const { searchParams } = new URL(request.url)
     const applicationIds = searchParams.get('applications')?.split(',') || []
-
-    console.log('📋 Fetching applications for scheduling:', applicationIds)
 
     // Verify job ownership
     const job = await prisma.jobs.findUnique({
@@ -167,8 +159,6 @@ export async function GET(request, { params }) {
         }
       }
     })
-
-    console.log(`✅ Found ${applications.length} applications`)
 
     return NextResponse.json({
       success: true,

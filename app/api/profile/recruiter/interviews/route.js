@@ -159,7 +159,8 @@ export async function POST(request) {
         Promise.all(emailPromises).then(results => {
             const successful = results.filter(r => r?.success).length
             const failed = results.filter(r => !r?.success).length
-            console.log(`📧 Email results: ${successful} sent, ${failed} failed`)
+            void successful
+            void failed
         })
 
         return NextResponse.json({

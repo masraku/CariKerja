@@ -4,13 +4,10 @@ import { getCurrentUser } from '@/lib/authHelper'
 
 export async function POST(request) {
   try {
-    console.log('📝 Create job API called')
-    
     // ✅ Use getCurrentUser instead of requireRecruiter
     const auth = await getCurrentUser(request)
     
     if (auth.error) {
-      console.log('❌ Auth error:', auth.error)
       return NextResponse.json(
         { error: auth.error },
         { status: auth.status }
@@ -18,7 +15,6 @@ export async function POST(request) {
     }
 
     const { user } = auth
-    console.log('👤 User:', user.email, 'Role:', user.role)
 
     // Check if user is recruiter
     if (user.role !== 'RECRUITER') {
@@ -33,8 +29,6 @@ export async function POST(request) {
       where: { userId: user.id },
       include: { companies: true }
     })
-
-    console.log('🏢 Recruiter found:', recruiter ? 'YES' : 'NO')
 
     if (!recruiter) {
       return NextResponse.json(
@@ -59,7 +53,6 @@ export async function POST(request) {
     }
 
     const body = await request.json()
-    console.log('📋 Job data received:', body.title)
 
     const {
       // Basic Info
@@ -118,8 +111,6 @@ export async function POST(request) {
       .replace(/^-+|-+$/g, '')
       + '-' + Date.now()
 
-    console.log('🔗 Generated slug:', slug)
-
     // Prepare benefits array
     const allBenefits = [...(benefits || [])]
     if (workingDays) {
@@ -128,8 +119,6 @@ export async function POST(request) {
     if (holidays) {
       allBenefits.push(`Hari Libur: ${holidays}`)
     }
-
-    console.log('💼 Creating job in database...')
 
     // Create job
     const job = await prisma.jobs.create({
@@ -171,12 +160,8 @@ export async function POST(request) {
       }
     })
 
-    console.log('✅ Job created with ID:', job.id)
-
     // Add skills if provided
     if (skills && skills.length > 0) {
-      console.log('🎯 Adding skills:', skills)
-      
       for (const skillName of skills) {
         // Find or create skill
         let skill = await prisma.skills.findFirst({
@@ -203,8 +188,6 @@ export async function POST(request) {
           }
         })
       }
-      
-      console.log('✅ Skills added')
     }
 
     return NextResponse.json({

@@ -15,14 +15,14 @@ const Header = () => {
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10)
     window.addEventListener('scroll', handleScroll)
-    
+
     // Detect dark mode
     const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)')
     setIsDarkMode(darkModeQuery.matches)
-    
+
     const handleDarkModeChange = (e) => setIsDarkMode(e.matches)
     darkModeQuery.addEventListener('change', handleDarkModeChange)
-    
+
     return () => {
       window.removeEventListener('scroll', handleScroll)
       darkModeQuery.removeEventListener('change', handleDarkModeChange)
@@ -278,16 +278,16 @@ const Header = () => {
           {/* Logo */}
           <Link href="/" style={logoStyle}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5">
-              <path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
-              <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+              <path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
+              <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
             </svg>
-            <span>JobSeeker</span>
+            <span>Kerja Yuk!</span>
           </Link>
 
           {/* Desktop Nav */}
           <nav style={navStyle} className="desktop-nav">
             <div style={getNavLinkWrapperStyle('/jobs')}>
-              <Link href="/jobs" style={{ ...navLinkStyle, color: isActive('/jobs') ? '#3b82f6' : colors.textMuted }} 
+              <Link href="/jobs" style={{ ...navLinkStyle, color: isActive('/jobs') ? '#3b82f6' : colors.textMuted }}
                 onMouseOver={(e) => e.target.style.color = isActive('/jobs') ? '#3b82f6' : colors.text}
                 onMouseOut={(e) => e.target.style.color = isActive('/jobs') ? '#3b82f6' : colors.textMuted}>
                 Lowongan
@@ -318,6 +318,14 @@ const Header = () => {
               </Link>
               <div style={{ ...getActiveIndicatorStyle('/warning'), background: 'linear-gradient(90deg, #ef4444, #dc2626)' }} />
             </div>
+            <div style={getNavLinkWrapperStyle('/news')}>
+              <Link href="/news" style={{ ...navLinkStyle, color: isActive('/news') ? '#ef4444' : '#dc2626' }}
+                onMouseOver={(e) => e.target.style.color = '#b91c1c'}
+                onMouseOut={(e) => e.target.style.color = isActive('/news') ? '#ef4444' : '#dc2626'}>
+                Berita Terkini
+              </Link>
+              <div style={{ ...getActiveIndicatorStyle('/news'), background: 'linear-gradient(90deg, #ef4444, #dc2626)' }} />
+            </div>
           </nav>
 
           {/* Auth Section Desktop */}
@@ -337,7 +345,7 @@ const Header = () => {
               </>
             ) : (
               <div style={{ position: 'relative' }}>
-                <div 
+                <div
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '4px' }}
                 >
@@ -353,7 +361,7 @@ const Header = () => {
                   </div>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={colors.textMuted} strokeWidth="2"
                     style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>
-                    <path d="M6 9l6 6 6-6"/>
+                    <path d="M6 9l6 6 6-6" />
                   </svg>
                 </div>
 
@@ -385,8 +393,8 @@ const Header = () => {
                           onMouseOver={(e) => e.currentTarget.style.background = colors.dropdownHover}
                           onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-                            <rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+                            <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
+                            <rect x="14" y="14" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" />
                           </svg>
                           Dashboard
                         </Link>
@@ -394,11 +402,11 @@ const Header = () => {
                         {user?.role === 'JOBSEEKER' && (
                           <Link href="/profile/jobseeker/applications" onClick={() => setIsDropdownOpen(false)}
                             style={dropdownItemStyle}
-                          onMouseOver={(e) => e.currentTarget.style.background = colors.dropdownHover}
-                          onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
+                            onMouseOver={(e) => e.currentTarget.style.background = colors.dropdownHover}
+                            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                              <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+                              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                              <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
                             </svg>
                             Lamaran Saya
                           </Link>
@@ -411,7 +419,7 @@ const Header = () => {
                               onMouseOver={(e) => e.currentTarget.style.background = colors.dropdownHover}
                               onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
                               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M12 5v14M5 12h14"/>
+                                <path d="M12 5v14M5 12h14" />
                               </svg>
                               Pasang Lowongan
                             </Link>
@@ -420,8 +428,8 @@ const Header = () => {
                               onMouseOver={(e) => e.currentTarget.style.background = colors.dropdownHover}
                               onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
                               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-                                <circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+                                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                                <circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
                               </svg>
                               Pelamar
                             </Link>
@@ -436,7 +444,7 @@ const Header = () => {
                           onMouseOver={(e) => e.currentTarget.style.background = '#fef2f2'}
                           onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+                            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
                           </svg>
                           Keluar
                         </button>
@@ -456,9 +464,9 @@ const Header = () => {
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={colors.text} strokeWidth="2">
               {isMenuOpen ? (
-                <path d="M18 6L6 18M6 6l12 12"/>
+                <path d="M18 6L6 18M6 6l12 12" />
               ) : (
-                <path d="M3 12h18M3 6h18M3 18h18"/>
+                <path d="M3 12h18M3 6h18M3 18h18" />
               )}
             </svg>
           </button>
@@ -468,9 +476,9 @@ const Header = () => {
       {/* Mobile Menu */}
       {isMenuOpen && (
         <div style={mobileMenuStyle} className="mobile-menu">
-          <Link href="/jobs" style={{ 
-            ...navLinkStyle, 
-            padding: '12px 0', 
+          <Link href="/jobs" style={{
+            ...navLinkStyle,
+            padding: '12px 0',
             fontSize: '16px',
             color: isActive('/jobs') ? '#3b82f6' : colors.textMuted,
             borderLeft: isActive('/jobs') ? '3px solid #3b82f6' : '3px solid transparent',
@@ -479,9 +487,9 @@ const Header = () => {
           }} onClick={() => setIsMenuOpen(false)}>
             Lowongan
           </Link>
-          <Link href="/companies" style={{ 
-            ...navLinkStyle, 
-            padding: '12px 0', 
+          <Link href="/companies" style={{
+            ...navLinkStyle,
+            padding: '12px 0',
             fontSize: '16px',
             color: isActive('/companies') ? '#3b82f6' : colors.textMuted,
             borderLeft: isActive('/companies') ? '3px solid #3b82f6' : '3px solid transparent',
@@ -490,9 +498,9 @@ const Header = () => {
           }} onClick={() => setIsMenuOpen(false)}>
             Perusahaan
           </Link>
-          <Link href="/about" style={{ 
-            ...navLinkStyle, 
-            padding: '12px 0', 
+          <Link href="/about" style={{
+            ...navLinkStyle,
+            padding: '12px 0',
             fontSize: '16px',
             color: isActive('/about') ? '#3b82f6' : colors.textMuted,
             borderLeft: isActive('/about') ? '3px solid #3b82f6' : '3px solid transparent',
@@ -501,16 +509,27 @@ const Header = () => {
           }} onClick={() => setIsMenuOpen(false)}>
             Tentang
           </Link>
-          <Link href="/warning" style={{ 
-            ...navLinkStyle, 
-            padding: '12px 0', 
-            fontSize: '16px', 
+          <Link href="/warning" style={{
+            ...navLinkStyle,
+            padding: '12px 0',
+            fontSize: '16px',
             color: isActive('/warning') ? '#ef4444' : '#dc2626',
             borderLeft: isActive('/warning') ? '3px solid #ef4444' : '3px solid transparent',
             paddingLeft: '12px',
             marginLeft: '-12px'
           }} onClick={() => setIsMenuOpen(false)}>
             ⚠️ Syarat & Ketentuan
+          </Link>
+          <Link href="/news" style={{
+            ...navLinkStyle,
+            padding: '12px 0',
+            fontSize: '16px',
+            color: isActive('/news') ? '#ef4444' : '#dc2626',
+            borderLeft: isActive('/news') ? '3px solid #ef4444' : '3px solid transparent',
+            paddingLeft: '12px',
+            marginLeft: '-12px'
+          }} onClick={() => setIsMenuOpen(false)}>
+            Berita Terkini
           </Link>
 
           <div style={{ height: '1px', background: '#e5e7eb', margin: '12px 0' }} />

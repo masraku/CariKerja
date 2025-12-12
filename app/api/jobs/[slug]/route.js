@@ -10,8 +10,6 @@ export async function GET(request, context) {
     const params = await context.params
     const { slug } = params
 
-    console.log('🔍 Fetching job with slug/id:', slug)
-
     // Check if user is authenticated - also check Authorization header
     let userId = null
     let userRole = null
@@ -30,10 +28,8 @@ export async function GET(request, context) {
         const decoded = jwt.verify(token, JWT_SECRET)
         userId = decoded.userId
         userRole = decoded.role
-        console.log('🔐 Authenticated user:', userId, 'role:', userRole)
       }
     } catch (error) {
-      console.log('⚠️ Auth check failed:', error.message)
       // Not authenticated, continue without user info
     }
 
@@ -183,8 +179,6 @@ export async function GET(request, context) {
       hasApplied,
       existingApplication
     }
-
-    console.log('✅ Job loaded, hasApplied:', hasApplied)
 
     return NextResponse.json({
       success: true,

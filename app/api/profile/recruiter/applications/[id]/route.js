@@ -20,9 +20,6 @@ export async function GET(request, context) {
 
     const { recruiter } = auth
 
-    console.log('📋 Fetching application detail for ID:', id)
-    console.log('👤 Recruiter ID:', recruiter.id)
-
     // Fetch application with full details
     const application = await prisma.applications.findFirst({
       where: { 
@@ -145,13 +142,10 @@ export async function PATCH(request, context) {
     const params = await context.params
     const { id } = params
 
-    console.log('📝 PATCH application - ID:', id)
-
     // Authenticate user
     const auth = await requireRecruiter(request)
     
     if (auth.error) {
-      console.log('❌ Auth error:', auth.error)
       return NextResponse.json(
         { error: auth.error },
         { status: auth.status }
@@ -159,7 +153,6 @@ export async function PATCH(request, context) {
     }
 
     const { recruiter } = auth
-    console.log('✅ Recruiter authenticated:', recruiter.id, 'Company:', recruiter.companyId)
 
     // Verify application exists and belongs to recruiter's company
     const application = await prisma.applications.findFirst({
@@ -171,8 +164,6 @@ export async function PATCH(request, context) {
       }
     })
 
-    console.log('🔍 Found application:', application ? 'Yes' : 'No')
-
     if (!application) {
       return NextResponse.json(
         { error: 'Application not found or you do not have permission to update it' },
@@ -182,8 +173,6 @@ export async function PATCH(request, context) {
 
     const body = await request.json()
     const { status, recruiterNotes } = body
-
-    console.log('📋 Update request - New status:', status, 'Current status:', application.status)
 
     // Validate interview completion before accepting/rejecting
     if (status === 'ACCEPTED' || status === 'REJECTED') {
@@ -242,8 +231,6 @@ export async function PATCH(request, context) {
       }
     })
 
-    console.log('✅ Application updated successfully - New status:', updatedApplication.status)
-
     // Send email notification for final decisions
     if (status === 'ACCEPTED' || status === 'REJECTED') {
       try {
@@ -258,7 +245,6 @@ export async function PATCH(request, context) {
             'Tim kami akan segera menghubungi Anda untuk proses selanjutnya. Harap periksa email dan telepon Anda secara berkala.' : 
             ''
         })
-        console.log(`📧 Application decision email sent to ${updatedApplication.jobseekers.firstName}`)
       } catch (emailError) {
         console.error('Failed to send decision email:', emailError)
         // Don't fail the request if email fails
@@ -338,8 +324,6 @@ export async function DELETE(request, context) {
     await prisma.applications.delete({
       where: { id }
     })
-
-    console.log(`🗑️ Application deleted: ${application.jobseekers.firstName} ${application.jobseekers.lastName} - ${application.jobs.title}`)
 
     return NextResponse.json({
       success: true,

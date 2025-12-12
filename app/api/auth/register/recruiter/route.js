@@ -14,14 +14,6 @@ export async function POST(request) {
       password
     } = body
 
-    console.log('📥 Received data:', {
-      companyName,
-      companyEmail,
-      contactPersonName,
-      contactPersonPhone,
-      hasPassword: !!password
-    })
-
     // ✅ Validasi input dengan field yang benar
     if (!companyName?.trim()) {
       return NextResponse.json(
@@ -96,8 +88,6 @@ export async function POST(request) {
       )
     }
 
-    console.log('✅ Validation passed, creating records...')
-
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10)
 
@@ -123,12 +113,6 @@ export async function POST(request) {
     const firstName = nameParts[0]
     const lastName = nameParts.slice(1).join(' ') || ''
 
-    console.log('📝 Creating company:', {
-      name: companyName,
-      slug,
-      email: companyEmail
-    })
-
     // ✅ Buat company dengan field yang required saja
     const company = await prisma.companies.create({
       data: {
@@ -148,11 +132,6 @@ export async function POST(request) {
         updatedAt: new Date()
       }
     })
-
-    console.log('✅ Company created:', company.id)
-
-    // Buat user dan recruiter profile
-    console.log('📝 Creating user and recruiter...')
 
     const user = await prisma.users.create({
       data: {
@@ -183,8 +162,6 @@ export async function POST(request) {
         }
       }
     })
-
-    console.log('✅ User and recruiter created successfully')
 
     // Hapus password dari response
     const { password: _, ...userWithoutPassword } = user

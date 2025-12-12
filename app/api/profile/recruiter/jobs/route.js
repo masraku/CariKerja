@@ -14,8 +14,6 @@ export async function GET(request) {
     const status = searchParams.get('status') || 'all'
     const search = searchParams.get('search') || ''
 
-    console.log('📋 Fetching jobs for recruiter:', decoded.userId)
-
     // Get recruiter's company
     const recruiter = await prisma.recruiters.findUnique({
       where: { userId: decoded.userId }
@@ -76,8 +74,6 @@ export async function GET(request) {
         createdAt: 'desc'
       }
     })
-
-    console.log(`✅ Found ${jobs.length} jobs`)
 
     // Calculate stats for each job
     const jobsWithStats = jobs.map(job => {
