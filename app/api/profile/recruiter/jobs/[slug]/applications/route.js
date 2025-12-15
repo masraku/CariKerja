@@ -23,6 +23,11 @@ export async function GET(request, { params }) {
               where: { userId: decoded.userId }
             }
           }
+        },
+        job_skills: {
+          include: {
+            skills: true
+          }
         }
       }
     })
@@ -141,8 +146,12 @@ export async function GET(request, { params }) {
       interviewCompleted: applications.filter(a => a.status === 'INTERVIEW_COMPLETED').length,
       accepted: applications.filter(a => a.status === 'ACCEPTED').length,
       rejected: applications.filter(a => a.status === 'REJECTED').length,
+      withdrawn: applications.filter(a => a.status === 'WITHDRAWN').length,
       profileComplete: applicationsWithCompleteness.filter(a => a.profileCompleteness >= 80).length
     }
+
+    // Extract job skills names
+    const jobSkills = job.job_skills?.map(js => js.skills?.name).filter(Boolean) || []
 
     return NextResponse.json({
       success: true,
@@ -152,7 +161,10 @@ export async function GET(request, { params }) {
         title: job.title,
         location: job.location,
         jobType: job.jobType,
-        level: job.level
+        level: job.level,
+        description: job.description,
+        requirements: job.requirements,
+        skills: jobSkills
       },
       applications: applicationsWithCompleteness,
       stats

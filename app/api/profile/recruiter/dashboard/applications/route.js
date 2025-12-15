@@ -117,11 +117,16 @@ export async function GET(request) {
         ...app,
         jobseekers: {
           ...jobseeker,
+          cvUrl: jobseeker.cvUrl,
+          ktpUrl: jobseeker.ktpUrl,
+          ak1Url: jobseeker.ak1Url,
           skills
         },
         interview, // Add interview data
         profileCompleteness: completenessPercentage,
         hasCV: !!jobseeker.cvUrl,
+        hasKTP: !!jobseeker.ktpUrl,
+        hasAK1: !!jobseeker.ak1Url,
         hasExperience: jobseeker.work_experiences?.length > 0,
         hasEducation: jobseeker.educations?.length > 0,
         skillsCount: skills.length

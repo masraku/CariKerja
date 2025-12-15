@@ -98,6 +98,70 @@ export default function ApplicationDetailPage() {
         }
     }
 
+    // Handle Accept Offer
+    const handleAcceptOffer = async () => {
+        const result = await Swal.fire({
+            title: 'Terima Tawaran Kerja?',
+            html: `
+                <p class="text-gray-600 mb-2">Dengan menerima tawaran ini:</p>
+                <ul class="text-left text-sm text-gray-600 space-y-1 mb-4">
+                    <li>• Status Anda akan berubah menjadi <b>"Tidak Mencari Kerja"</b></li>
+                    <li>• Anda tidak akan muncul di pencarian recruiter lain</li>
+                    <li>• Anda tetap bisa mengubah status nanti di profil</li>
+                </ul>
+                <p class="text-gray-600">Apakah Anda yakin ingin menerima tawaran ini?</p>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Terima Tawaran',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#10b981'
+        })
+
+        if (!result.isConfirmed) return
+
+        try {
+            Swal.fire({
+                title: 'Memproses...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            })
+
+            const token = localStorage.getItem('token')
+            const response = await fetch(`/api/profile/jobseeker/applications/${params.id}/accept`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+
+            const data = await response.json()
+
+            if (response.ok) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Selamat! 🎉',
+                    html: `
+                        <p class="text-gray-600 mb-2">Tawaran berhasil diterima!</p>
+                        <p class="text-sm text-gray-500">Status pencari kerja Anda sekarang: <b>Tidak Aktif</b></p>
+                    `,
+                    confirmButtonColor: '#10b981'
+                })
+                loadApplicationDetail()
+            } else {
+                throw new Error(data.error || 'Gagal menerima tawaran')
+            }
+        } catch (error) {
+            console.error('Accept offer error:', error)
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: error.message || 'Terjadi kesalahan saat menerima tawaran'
+            })
+        }
+    }
+
     const handleRequestReschedule = async () => {
         const { value: reason } = await Swal.fire({
             title: 'Request Reschedule',
@@ -379,6 +443,37 @@ export default function ApplicationDetailPage() {
                                                 </li>
                                             ))}
                                         </ul>
+                                    </div>
+                                )}
+
+                                {/* Accept Offer Button - Show when status is ACCEPTED and not yet responded */}
+                                {application.status === 'ACCEPTED' && !application.respondedAt && (
+                                    <div className="mt-6">
+                                        <button
+                                            onClick={handleAcceptOffer}
+                                            className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 rounded-2xl font-bold text-lg hover:from-green-700 hover:to-emerald-700 transition shadow-lg flex items-center justify-center gap-3"
+                                        >
+                                            <CheckCircle className="w-6 h-6" />
+                                            Terima Tawaran Kerja
+                                        </button>
+                                        <p className="text-center text-gray-500 text-sm mt-2">
+                                            Klik untuk mengkonfirmasi penerimaan tawaran kerja
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* Already Accepted Notice */}
+                                {application.status === 'ACCEPTED' && application.respondedAt && (
+                                    <div className="mt-6 p-4 bg-green-50 rounded-xl border border-green-200">
+                                        <div className="flex items-center gap-3 text-green-700">
+                                            <CheckCircle className="w-6 h-6 flex-shrink-0" />
+                                            <div>
+                                                <p className="font-semibold">Tawaran Telah Diterima</p>
+                                                <p className="text-sm text-green-600">
+                                                    Anda telah menerima tawaran ini pada {formatDate(application.respondedAt)}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
                             </div>

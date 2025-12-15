@@ -420,37 +420,7 @@ export default function RecruiterProfilePage() {
                             <div className="grid md:grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Nama Depan *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="firstName"
-                                        value={formData.firstName}
-                                        onChange={handleChange}
-                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="John"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Nama Belakang *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="lastName"
-                                        value={formData.lastName}
-                                        onChange={handleChange}
-                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="Doe"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Posisi/Jabatan *
+                                        Posisi/Jabatan <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="text"
@@ -465,7 +435,7 @@ export default function RecruiterProfilePage() {
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Nomor Telepon
+                                        Nomor Telepon <span className="text-gray-400 text-xs">(Opsional)</span>
                                     </label>
                                     <input
                                         type="tel"
@@ -479,7 +449,7 @@ export default function RecruiterProfilePage() {
 
                                 <div className="md:col-span-2">
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Departemen
+                                        Departemen <span className="text-gray-400 text-xs">(Opsional)</span>
                                     </label>
                                     <input
                                         type="text"
@@ -738,7 +708,7 @@ export default function RecruiterProfilePage() {
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Alamat Lengkap *
+                                        Alamat Lengkap <span className="text-red-500">*</span>
                                     </label>
                                     <textarea
                                         name="address"
@@ -754,37 +724,61 @@ export default function RecruiterProfilePage() {
                                 <div className="grid md:grid-cols-3 gap-6">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Kota *
+                                            Kota <span className="text-red-500">*</span>
                                         </label>
-                                        <input
-                                            type="text"
+                                        <select
                                             name="city"
                                             value={formData.city}
                                             onChange={handleChange}
                                             className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            placeholder="Jakarta"
                                             required
-                                        />
+                                        >
+                                            <option value="">Pilih Kota</option>
+                                            <option value="Cirebon">Cirebon</option>
+                                            <option value="Bandung">Bandung</option>
+                                            <option value="Jakarta">Jakarta</option>
+                                            <option value="Surabaya">Surabaya</option>
+                                            <option value="Semarang">Semarang</option>
+                                            <option value="Yogyakarta">Yogyakarta</option>
+                                            <option value="Medan">Medan</option>
+                                            <option value="Makassar">Makassar</option>
+                                            <option value="Denpasar">Denpasar</option>
+                                            <option value="Palembang">Palembang</option>
+                                            <option value="Tangerang">Tangerang</option>
+                                            <option value="Bekasi">Bekasi</option>
+                                            <option value="Depok">Depok</option>
+                                            <option value="Bogor">Bogor</option>
+                                        </select>
                                     </div>
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Provinsi *
+                                            Provinsi <span className="text-red-500">*</span>
                                         </label>
-                                        <input
-                                            type="text"
+                                        <select
                                             name="province"
                                             value={formData.province}
                                             onChange={handleChange}
                                             className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            placeholder="DKI Jakarta"
                                             required
-                                        />
+                                        >
+                                            <option value="">Pilih Provinsi</option>
+                                            <option value="Jawa Barat">Jawa Barat</option>
+                                            <option value="DKI Jakarta">DKI Jakarta</option>
+                                            <option value="Jawa Tengah">Jawa Tengah</option>
+                                            <option value="Jawa Timur">Jawa Timur</option>
+                                            <option value="DI Yogyakarta">DI Yogyakarta</option>
+                                            <option value="Banten">Banten</option>
+                                            <option value="Bali">Bali</option>
+                                            <option value="Sumatera Utara">Sumatera Utara</option>
+                                            <option value="Sumatera Selatan">Sumatera Selatan</option>
+                                            <option value="Sulawesi Selatan">Sulawesi Selatan</option>
+                                        </select>
                                     </div>
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Kode Pos
+                                            Kode Pos <span className="text-gray-400 text-xs">(Opsional)</span>
                                         </label>
                                         <input
                                             type="text"

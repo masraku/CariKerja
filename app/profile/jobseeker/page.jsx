@@ -138,15 +138,14 @@ function JobseekerProfileContent() {
     'DI Yogyakarta', 'Bali', 'Sumatera Utara', 'Sumatera Barat', 'Sulawesi Selatan'
   ]
 
-  // Load existing profile if edit mode
+  // Always load existing profile data
   useEffect(() => {
     const mode = searchParams.get('mode')
     if (mode === 'edit') {
       setIsEditMode(true)
-      loadProfile()
-    } else {
-      setIsLoading(false)
     }
+    // Always load profile to prevent data loss
+    loadProfile()
   }, [searchParams])
 
   const loadProfile = async () => {

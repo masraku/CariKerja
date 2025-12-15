@@ -2,10 +2,11 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import Swal from 'sweetalert2'
 import {
     User, Mail, Phone, MapPin, Calendar, Briefcase, GraduationCap,
     Award, FileText, Globe, Linkedin, Github, Edit, Download,
-    Star, Target, ExternalLink, ArrowLeft
+    Star, Target, ExternalLink, ArrowLeft, ToggleLeft, ToggleRight
 } from 'lucide-react'
 
 const ViewProfilePage = () => {
@@ -13,6 +14,7 @@ const ViewProfilePage = () => {
     const { user } = useAuth()
     const [profile, setProfile] = useState(null)
     const [isLoading, setIsLoading] = useState(true)
+    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
 
     useEffect(() => {
         loadProfile()
@@ -26,13 +28,69 @@ const ViewProfilePage = () => {
             if (response.ok && data.profile) {
                 setProfile(data.profile)
             } else {
-                router.push('/profile/jobseeker')
+                router.push('/profile/jobseeker?mode=edit')
             }
         } catch (error) {
             console.error('Load profile error:', error)
-            router.push('/profile/jobseeker')
+            router.push('/profile/jobseeker?mode=edit')
         } finally {
             setIsLoading(false)
+        }
+    }
+
+    // Toggle job seeking status
+    const toggleJobSeekingStatus = async () => {
+        const currentStatus = profile.isLookingForJob
+        const newStatus = !currentStatus
+        
+        const result = await Swal.fire({
+            title: newStatus ? 'Aktifkan Pencarian Kerja?' : 'Nonaktifkan Pencarian Kerja?',
+            html: newStatus 
+                ? '<p class="text-gray-600">Dengan mengaktifkan, profil Anda akan terlihat oleh recruiter yang sedang mencari kandidat.</p>'
+                : '<p class="text-gray-600">Dengan menonaktifkan, profil Anda tidak akan muncul di pencarian recruiter.</p>',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: newStatus ? 'Ya, Aktifkan' : 'Ya, Nonaktifkan',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: newStatus ? '#10b981' : '#f97316'
+        })
+
+        if (!result.isConfirmed) return
+
+        try {
+            setIsUpdatingStatus(true)
+            const response = await fetch('/api/profile/jobseeker/status', {
+                method: 'PUT',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ isLookingForJob: newStatus })
+            })
+
+            const data = await response.json()
+
+            if (response.ok) {
+                setProfile(prev => ({ ...prev, isLookingForJob: newStatus }))
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: newStatus 
+                        ? 'Status pencari kerja telah diaktifkan' 
+                        : 'Status pencari kerja telah dinonaktifkan',
+                    timer: 2000,
+                    showConfirmButton: false
+                })
+            } else {
+                throw new Error(data.error || 'Gagal mengubah status')
+            }
+        } catch (error) {
+            console.error('Toggle status error:', error)
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: error.message
+            })
+        } finally {
+            setIsUpdatingStatus(false)
         }
     }
 
@@ -242,6 +300,41 @@ const ViewProfilePage = () => {
 
                         {/* Right: Action Buttons */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            {/* Job Seeking Status Toggle */}
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: '12px',
+                                padding: '12px 16px',
+                                background: profile.isLookingForJob ? '#dcfce7' : '#fee2e2',
+                                borderRadius: '10px',
+                                border: `2px solid ${profile.isLookingForJob ? '#10b981' : '#f87171'}`
+                            }}>
+                                <div>
+                                    <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '2px' }}>Status Pencari Kerja</p>
+                                    <p style={{ fontWeight: 700, color: profile.isLookingForJob ? '#16a34a' : '#dc2626' }}>
+                                        {profile.isLookingForJob ? 'Aktif' : 'Tidak Aktif'}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={toggleJobSeekingStatus}
+                                    disabled={isUpdatingStatus}
+                                    style={{
+                                        background: 'transparent',
+                                        border: 'none',
+                                        cursor: isUpdatingStatus ? 'not-allowed' : 'pointer',
+                                        opacity: isUpdatingStatus ? 0.5 : 1
+                                    }}
+                                >
+                                    {profile.isLookingForJob ? (
+                                        <ToggleRight size={36} color="#10b981" />
+                                    ) : (
+                                        <ToggleLeft size={36} color="#dc2626" />
+                                    )}
+                                </button>
+                            </div>
+
                             <button
                                 onClick={() => router.push('/profile/jobseeker/dashboard')}
                                 style={{

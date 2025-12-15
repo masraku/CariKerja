@@ -6,14 +6,11 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url)
         const limit = parseInt(searchParams.get('limit') || '8')
 
-        // Get companies with active jobs, sorted by job count
+        // Get verified companies, sorted by job count
         const companies = await prisma.companies.findMany({
             where: {
-                jobs: {
-                    some: {
-                        isActive: true
-                    }
-                }
+                verified: true,
+                status: 'VERIFIED'
             },
             take: limit,
             include: {

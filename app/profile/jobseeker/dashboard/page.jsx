@@ -61,7 +61,7 @@ const JobseekerDashboard = () => {
 
         // If profile not completed, MUST complete profile first
         if (!data.profile.profileCompleted) {
-          router.push('/profile/jobseeker')
+          router.push('/profile/jobseeker?mode=edit')
           return
         }
 
@@ -69,11 +69,11 @@ const JobseekerDashboard = () => {
         loadDashboardData()
       } else {
         // No profile yet, redirect to create profile
-        router.push('/profile/jobseeker')
+        router.push('/profile/jobseeker?mode=edit')
       }
     } catch (error) {
       console.error('Check profile error:', error)
-      router.push('/profile/jobseeker')
+      router.push('/profile/jobseeker?mode=edit')
     } finally {
       setIsLoading(false)
     }
@@ -268,7 +268,7 @@ const JobseekerDashboard = () => {
             </div>
             <div className="flex flex-col gap-2">
               <button
-                onClick={() => router.push('/profile/jobseeker')}
+                onClick={() => router.push('/profile/jobseeker?mode=edit')}
                 className="flex text-gray-900 items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
               >
                 <Edit className="w-4 h-4" />
@@ -491,7 +491,7 @@ const JobseekerDashboard = () => {
                   Profile Anda {profile?.profileCompleteness}% lengkap. Profile yang lengkap meningkatkan peluang Anda dilihat oleh recruiter hingga 3x lipat!
                 </p>
                 <button
-                  onClick={() => router.push('/profile/jobseeker')}
+                  onClick={() => router.push('/profile/jobseeker?mode=edit')}
                   className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition text-sm font-medium"
                 >
                   Lengkapi Sekarang

@@ -20,7 +20,15 @@ import {
     Square,
     UserPlus,
     Trash2,
-    ExternalLink
+    ExternalLink,
+    FileText,
+    CreditCard,
+    Download,
+    X,
+    Sparkles,
+    Loader2,
+    Send,
+    Star
 } from 'lucide-react'
 import Swal from 'sweetalert2'
 
@@ -37,6 +45,11 @@ export default function JobApplicationsPage() {
     const [currentPage, setCurrentPage] = useState(1)
     const [selectedApplications, setSelectedApplications] = useState([])
     const [selectMode, setSelectMode] = useState(false)
+    const [documentModal, setDocumentModal] = useState({ isOpen: false, url: '', title: '', type: '' })
+    const [photoModal, setPhotoModal] = useState({ isOpen: false, url: '', name: '' })
+    const [aiRecommendations, setAiRecommendations] = useState({})
+    const [loadingAI, setLoadingAI] = useState({})
+    const [aiFilter, setAiFilter] = useState(false)
     const itemsPerPage = 10
 
     useEffect(() => {
@@ -45,11 +58,83 @@ export default function JobApplicationsPage() {
 
     useEffect(() => {
         filterApplications()
-    }, [applications, searchQuery, statusFilter])
+    }, [applications, searchQuery, statusFilter, aiFilter, aiRecommendations])
 
     useEffect(() => {
         setCurrentPage(1)
     }, [filteredApplications.length])
+
+    // Fetch AI recommendations
+    useEffect(() => {
+        if (applications.length > 0 && job) {
+            applications.forEach(app => {
+                if (app.jobseekers?.cvUrl && !aiRecommendations[app.id] && !loadingAI[app.id]) {
+                    fetchAIRecommendation(app)
+                }
+            })
+        }
+    }, [applications, job])
+
+    const fetchAIRecommendation = async (application) => {
+        try {
+            setLoadingAI(prev => ({ ...prev, [application.id]: true }))
+            
+            // Skip if no CV URL
+            if (!application.jobseekers?.cvUrl) {
+                setAiRecommendations(prev => ({
+                    ...prev,
+                    [application.id]: {
+                        isRecommended: false,
+                        score: 0,
+                        highlights: [],
+                        loaded: true,
+                        error: false
+                    }
+                }))
+                return
+            }
+
+            const response = await fetch('/api/profile/recruiter/jobs/ai-match', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    cv_url: application.jobseekers?.cvUrl,
+                    cv_skills: application.jobseekers?.skills || [],
+                    job_requirements: {
+                        title: job?.title,
+                        description: job?.description,
+                        requirements: job?.requirements,
+                        skills: job?.skills || []
+                    }
+                })
+            })
+
+            const data = await response.json()
+            setAiRecommendations(prev => ({
+                ...prev,
+                [application.id]: {
+                    isRecommended: (data.match_score || 0) >= 70,
+                    score: data.match_score || 0,
+                    highlights: data.highlights || [],
+                    loaded: true
+                }
+            }))
+        } catch (error) {
+            console.error('AI recommendation error:', error)
+            setAiRecommendations(prev => ({
+                ...prev,
+                [application.id]: {
+                    isRecommended: false,
+                    score: 0,
+                    highlights: [],
+                    loaded: true,
+                    error: true
+                }
+            }))
+        } finally {
+            setLoadingAI(prev => ({ ...prev, [application.id]: false }))
+        }
+    }
 
     const loadApplications = async () => {
         try {
@@ -57,14 +142,16 @@ export default function JobApplicationsPage() {
             const token = localStorage.getItem('token')
 
             const response = await fetch(`/api/profile/recruiter/jobs/${params.slug}/applications`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: { 'Authorization': `Bearer ${token}` }
             })
 
             if (response.ok) {
                 const data = await response.json()
-                setApplications(data.applications)
+                // Sort by appliedAt (newest first)
+                const sortedApps = (data.applications || []).sort((a, b) => 
+                    new Date(b.appliedAt) - new Date(a.appliedAt)
+                )
+                setApplications(sortedApps)
                 setJob(data.job)
                 setStats(data.stats)
             } else {
@@ -73,11 +160,7 @@ export default function JobApplicationsPage() {
             }
         } catch (error) {
             console.error('Load applications error:', error)
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: error.message || 'Failed to load applications'
-            })
+            Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'Failed to load applications' })
         } finally {
             setLoading(false)
         }
@@ -88,6 +171,10 @@ export default function JobApplicationsPage() {
 
         if (statusFilter !== 'all') {
             filtered = filtered.filter(app => app.status === statusFilter)
+        }
+
+        if (aiFilter) {
+            filtered = filtered.filter(app => aiRecommendations[app.id]?.isRecommended)
         }
 
         if (searchQuery) {
@@ -102,20 +189,31 @@ export default function JobApplicationsPage() {
         setFilteredApplications(filtered)
     }
 
+    // Count AI recommended
+    const aiRecommendedCount = Object.values(aiRecommendations).filter(r => r?.isRecommended).length
+
+    const openDocumentModal = (url, title, type) => {
+        setDocumentModal({ isOpen: true, url, title, type })
+    }
+
+    const openPhotoModal = (url, name) => {
+        setPhotoModal({ isOpen: true, url, name })
+    }
+
     const getStatusBadge = (status) => {
         const statusConfig = {
-            PENDING: { label: 'Pending', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
-            REVIEWING: { label: 'Reviewing', color: 'bg-blue-100 text-blue-700', icon: Eye },
-            INTERVIEW_SCHEDULED: { label: 'Interview', color: 'bg-indigo-100 text-indigo-700', icon: Calendar },
-            INTERVIEW_COMPLETED: { label: 'Selesai Interview', color: 'bg-teal-100 text-teal-700', icon: CheckCircle },
-            ACCEPTED: { label: 'Diterima', color: 'bg-green-100 text-green-700', icon: CheckCircle },
-            REJECTED: { label: 'Ditolak', color: 'bg-red-100 text-red-700', icon: XCircle }
+            PENDING: { label: 'Pending', color: 'bg-yellow-100 text-yellow-700 border-yellow-300' },
+            REVIEWING: { label: 'Reviewing', color: 'bg-blue-100 text-blue-700 border-blue-300' },
+            SHORTLISTED: { label: 'Shortlisted', color: 'bg-purple-100 text-purple-700 border-purple-300' },
+            INTERVIEW_SCHEDULED: { label: 'Interview', color: 'bg-indigo-100 text-indigo-700 border-indigo-300' },
+            INTERVIEW_COMPLETED: { label: 'Selesai', color: 'bg-teal-100 text-teal-700 border-teal-300' },
+            ACCEPTED: { label: 'Diterima', color: 'bg-green-100 text-green-700 border-green-300' },
+            REJECTED: { label: 'Ditolak', color: 'bg-red-100 text-red-700 border-red-300' },
+            WITHDRAWN: { label: 'Dibatalkan', color: 'bg-gray-100 text-gray-700 border-gray-300' }
         }
         const config = statusConfig[status] || statusConfig.PENDING
-        const Icon = config.icon
         return (
-            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${config.color}`}>
-                <Icon className="w-3 h-3" />
+            <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${config.color}`}>
                 {config.label}
             </span>
         )
@@ -123,421 +221,306 @@ export default function JobApplicationsPage() {
 
     const formatDate = (date) => {
         return new Date(date).toLocaleDateString('id-ID', {
-            day: 'numeric',
-            month: 'short',
+            day: '2-digit',
+            month: '2-digit',
             year: 'numeric'
         })
     }
 
-    // Toggle select mode
-    const toggleSelectMode = () => {
-        setSelectMode(!selectMode)
-        setSelectedApplications([])
-    }
-
-    // Handle checkbox toggle
-    const handleSelectApplication = (applicationId) => {
-        setSelectedApplications(prev => {
-            if (prev.includes(applicationId)) {
-                return prev.filter(id => id !== applicationId)
-            } else {
-                return [...prev, applicationId]
-            }
-        })
-    }
-
-    // Handle invite multiple to interview
-    const handleInviteMultipleInterview = () => {
-        if (!job?.id) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Data lowongan belum dimuat. Silakan refresh halaman.'
-            })
-            return
+    // Selection handlers
+    const handleSelectAll = () => {
+        const selectableApps = filteredApplications.filter(app => app.status === 'PENDING' || app.status === 'REVIEWING')
+        if (selectedApplications.length === selectableApps.length) {
+            setSelectedApplications([])
+        } else {
+            setSelectedApplications(selectableApps.map(app => app.id))
         }
-
-        // Check if all selected are REVIEWING status
-        const selectedApps = filteredApplications.filter(app => selectedApplications.includes(app.id))
-        const invalidApps = selectedApps.filter(app => app.status !== 'REVIEWING')
-        if (invalidApps.length > 0) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Status Tidak Valid',
-                text: 'Hanya kandidat dengan status "Reviewing" yang bisa diundang interview.',
-                confirmButtonColor: '#3b82f6'
-            })
-            return
-        }
-
-        // Redirect with multiple applicant IDs - same job so use job.id
-        router.push(`/profile/recruiter/dashboard/interview?job=${job.id}&applicants=${selectedApplications.join(',')}`)
     }
 
-    // Handle view application
-    const handleViewApplication = async (application) => {
-        // If PENDING, change to REVIEWING first
-        if (application.status === 'PENDING') {
-            try {
-                const token = localStorage.getItem('token')
-                await fetch(`/api/profile/recruiter/applications/${application.id}`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ status: 'REVIEWING' })
-                })
-            } catch (error) {
-                console.error('Error updating status:', error)
-            }
-        }
-        router.push(`/profile/recruiter/dashboard/jobs/${params.slug}/applications/${application.id}`)
+    const handleSelectApplication = (id) => {
+        setSelectedApplications(prev => 
+            prev.includes(id) ? prev.filter(appId => appId !== id) : [...prev, id]
+        )
     }
 
-    // Handle invite single to interview
+    // Action handlers
     const handleInviteInterview = (application) => {
         if (!job?.id) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Data lowongan belum dimuat. Silakan refresh halaman.'
-            })
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Data lowongan belum dimuat.' })
             return
         }
         router.push(`/profile/recruiter/dashboard/interview?job=${job.id}&applicants=${application.id}`)
     }
 
-    // Handle accept candidate
-    const handleAcceptCandidate = async (application) => {
-        if (application.status !== 'INTERVIEW_COMPLETED') {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Belum Bisa Diterima',
-                text: 'Kandidat hanya bisa diterima setelah interview selesai.',
-                confirmButtonColor: '#3b82f6'
-            })
+    const handleBulkInvite = () => {
+        if (selectedApplications.length === 0) {
+            Swal.fire('Info', 'Pilih pelamar terlebih dahulu', 'info')
             return
         }
+        if (!job?.id) {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Data lowongan belum dimuat.' })
+            return
+        }
+        router.push(`/profile/recruiter/dashboard/interview?job=${job.id}&applicants=${selectedApplications.join(',')}`)
+    }
 
+    const handleReject = async (applicationId, applicantName) => {
         const result = await Swal.fire({
-            title: 'Terima Kandidat?',
-            html: `
-                <p class="mb-4">Apakah Anda yakin ingin menerima <strong>${application.jobseekers.firstName} ${application.jobseekers.lastName}</strong>?</p>
-                <textarea 
-                    id="accept-message" 
-                    class="swal2-input" 
-                    placeholder="Pesan untuk kandidat (opsional)"
-                    rows="4"
-                    style="width: 90%; height: 100px; resize: vertical;"
-                ></textarea>
-            `,
-            icon: 'question',
+            title: 'Tolak Pelamar?',
+            html: `<p>Pelamar <strong>${applicantName}</strong> akan ditolak</p>`,
+            icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Ya, Terima',
-            cancelButtonText: 'Batal',
-            confirmButtonColor: '#10b981',
-            preConfirm: () => {
-                return document.getElementById('accept-message').value
-            }
+            confirmButtonColor: '#dc2626',
+            confirmButtonText: 'Ya, Tolak',
+            cancelButtonText: 'Batal'
         })
 
-        if (!result.isConfirmed) return
-
-        try {
-            const token = localStorage.getItem('token')
-            const response = await fetch(`/api/profile/recruiter/applications/${application.id}`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    status: 'ACCEPTED',
-                    recruiterNotes: result.value || ''
+        if (result.isConfirmed) {
+            try {
+                const token = localStorage.getItem('token')
+                const response = await fetch(`/api/profile/recruiter/applications/${applicationId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: 'REJECTED' })
                 })
-            })
 
-            if (response.ok) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Kandidat Diterima!',
-                    text: 'Email notifikasi telah dikirim ke kandidat.',
-                    timer: 2000,
-                    showConfirmButton: false
-                })
-                loadApplications()
+                if (response.ok) {
+                    await Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Pelamar telah ditolak', timer: 1500, showConfirmButton: false })
+                    loadApplications()
+                }
+            } catch (error) {
+                Swal.fire('Error', 'Gagal menolak pelamar', 'error')
             }
-        } catch (error) {
-            console.error('Accept error:', error)
-            Swal.fire({
-                icon: 'error',
-                title: 'Gagal',
-                text: 'Gagal menerima kandidat'
-            })
         }
     }
 
-    // Handle delete application
-    const handleDeleteApplication = async (applicationId, applicantName) => {
+    const handleDelete = async (applicationId, applicantName) => {
         const result = await Swal.fire({
             title: 'Hapus Lamaran?',
-            html: `<p>Apakah Anda yakin ingin menghapus lamaran dari <strong>${applicantName}</strong>?</p>`,
+            html: `<p>Lamaran dari <strong>${applicantName}</strong> akan dihapus</p>`,
             icon: 'warning',
             showCancelButton: true,
+            confirmButtonColor: '#ef4444',
             confirmButtonText: 'Ya, Hapus',
-            cancelButtonText: 'Batal',
-            confirmButtonColor: '#ef4444'
+            cancelButtonText: 'Batal'
         })
 
-        if (!result.isConfirmed) return
-
-        try {
-            const token = localStorage.getItem('token')
-            const response = await fetch(`/api/profile/recruiter/applications/${applicationId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-
-            if (response.ok) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Lamaran Dihapus',
-                    timer: 1500,
-                    showConfirmButton: false
+        if (result.isConfirmed) {
+            try {
+                const token = localStorage.getItem('token')
+                const response = await fetch(`/api/profile/recruiter/applications/${applicationId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
                 })
-                loadApplications()
+
+                if (response.ok) {
+                    await Swal.fire({ icon: 'success', title: 'Dihapus', timer: 1500, showConfirmButton: false })
+                    loadApplications()
+                }
+            } catch (error) {
+                Swal.fire('Error', 'Gagal menghapus lamaran', 'error')
             }
-        } catch (error) {
-            console.error('Delete error:', error)
-            Swal.fire({
-                icon: 'error',
-                title: 'Gagal',
-                text: 'Gagal menghapus lamaran'
-            })
         }
     }
 
     const totalPages = Math.max(1, Math.ceil(filteredApplications.length / itemsPerPage))
 
-    const renderApplicationCard = (application) => {
-        const skills = application.jobseekers.skills || []
-        const displaySkills = skills.slice(0, 3)
-        const remainingSkills = skills.length - 3
+    const renderApplicationRow = (application) => {
         const isSelected = selectedApplications.includes(application.id)
-        const canSelect = selectMode && application.status === 'REVIEWING'
+        const aiRec = aiRecommendations[application.id]
+        const isLoadingAI = loadingAI[application.id]
+        const canSelect = application.status === 'PENDING' || application.status === 'REVIEWING'
+        const fullName = `${application.jobseekers.firstName} ${application.jobseekers.lastName}`
 
         return (
             <div
                 key={application.id}
-                onClick={() => canSelect && handleSelectApplication(application.id)}
-                className={`group bg-white rounded-2xl border p-5 transition-all duration-300 ${
-                    isSelected 
-                        ? 'border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/30' 
-                        : 'border-gray-100 hover:shadow-xl hover:border-blue-100'
-                } ${canSelect ? 'cursor-pointer' : ''}`}
+                className={`bg-white rounded-xl border-2 p-4 transition-all duration-200 ${
+                    isSelected ? 'border-blue-500 bg-blue-50/30' : 'border-gray-100 hover:border-gray-200'
+                }`}
             >
-                {/* Header with Avatar and Status */}
-                <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-4">
-                        {/* Checkbox for select mode */}
-                        {selectMode && (
-                            <div 
-                                className={`flex-shrink-0 ${application.status !== 'REVIEWING' ? 'opacity-30' : ''}`}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    if (application.status === 'REVIEWING') {
-                                        handleSelectApplication(application.id)
-                                    }
-                                }}
+                <div className="flex items-start gap-4">
+                    {/* Checkbox */}
+                    {canSelect && (
+                        <button onClick={() => handleSelectApplication(application.id)} className="mt-1 flex-shrink-0">
+                            {isSelected ? (
+                                <CheckSquare className="w-5 h-5 text-blue-600" />
+                            ) : (
+                                <Square className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                            )}
+                        </button>
+                    )}
+
+                    {/* Photo */}
+                    <button
+                        onClick={() => application.jobseekers.photo && openPhotoModal(application.jobseekers.photo, fullName)}
+                        className="flex-shrink-0 relative group"
+                    >
+                        <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-xl font-bold overflow-hidden">
+                            {application.jobseekers.photo ? (
+                                <img src={application.jobseekers.photo} alt={fullName} className="w-full h-full object-cover" />
+                            ) : (
+                                <span className="text-gray-500">{application.jobseekers.firstName?.charAt(0) || 'U'}</span>
+                            )}
+                        </div>
+                        {application.jobseekers.photo && (
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 rounded-xl flex items-center justify-center transition-opacity">
+                                <Eye className="w-5 h-5 text-white" />
+                            </div>
+                        )}
+                    </button>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                            <div>
+                                <p className="text-xs text-blue-600 font-medium mb-1">{formatDate(application.appliedAt)}</p>
+                                <h3 className="text-lg font-bold text-gray-900">{fullName}</h3>
+                                <p className="text-sm text-gray-500">{application.jobseekers.currentTitle || 'Pencari Kerja'}</p>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                                {isLoadingAI ? (
+                                    <span className="px-3 py-1 bg-gray-100 text-gray-500 rounded-full text-xs font-medium flex items-center gap-1">
+                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                        Analyzing...
+                                    </span>
+                                ) : aiRec?.isRecommended ? (
+                                    <span className="px-3 py-1 bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 rounded-full text-xs font-semibold flex items-center gap-1 border border-amber-200">
+                                        <Sparkles className="w-3 h-3" />
+                                        CV Recommended by AI
+                                    </span>
+                                ) : null}
+                                {getStatusBadge(application.status)}
+                            </div>
+                        </div>
+
+                        {/* Document Badges */}
+                        <div className="flex flex-wrap items-center gap-2 mb-3">
+                            <button
+                                onClick={() => application.jobseekers.cvUrl && openDocumentModal(application.jobseekers.cvUrl, 'CV', 'pdf')}
+                                disabled={!application.jobseekers.cvUrl}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
+                                    application.jobseekers.cvUrl
+                                        ? 'bg-green-100 text-green-700 hover:bg-green-200 cursor-pointer'
+                                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                }`}
                             >
-                                {isSelected ? (
-                                    <CheckSquare className="w-6 h-6 text-indigo-600" />
-                                ) : (
-                                    <Square className={`w-6 h-6 ${application.status === 'REVIEWING' ? 'text-gray-400 hover:text-indigo-500' : 'text-gray-300'}`} />
+                                <FileText className="w-3.5 h-3.5" />
+                                CV
+                            </button>
+
+                            <button
+                                onClick={() => application.jobseekers.ktpUrl && openDocumentModal(application.jobseekers.ktpUrl, 'KTP', 'image')}
+                                disabled={!application.jobseekers.ktpUrl}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
+                                    application.jobseekers.ktpUrl
+                                        ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200 cursor-pointer'
+                                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                }`}
+                            >
+                                <CreditCard className="w-3.5 h-3.5" />
+                                KTP
+                            </button>
+
+                            <button
+                                onClick={() => application.jobseekers.ak1Url && openDocumentModal(application.jobseekers.ak1Url, 'AK1', 'pdf')}
+                                disabled={!application.jobseekers.ak1Url}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
+                                    application.jobseekers.ak1Url
+                                        ? 'bg-orange-100 text-orange-700 hover:bg-orange-200 cursor-pointer'
+                                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                }`}
+                            >
+                                <FileText className="w-3.5 h-3.5" />
+                                AK1
+                            </button>
+
+                            <button
+                                onClick={() => router.push(`/profile/recruiter/dashboard/jobs/${params.slug}/applications/${application.id}`)}
+                                className="px-3 py-1.5 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition"
+                            >
+                                <Eye className="w-3.5 h-3.5" />
+                                Detail Informasi
+                            </button>
+                        </div>
+
+                        {/* Skills */}
+                        {application.jobseekers.skills?.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5">
+                                {application.jobseekers.skills.slice(0, 3).map((skill, idx) => (
+                                    <span key={idx} className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs font-medium">
+                                        {skill}
+                                    </span>
+                                ))}
+                                {application.jobseekers.skills.length > 3 && (
+                                    <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-md text-xs">
+                                        +{application.jobseekers.skills.length - 3}
+                                    </span>
                                 )}
                             </div>
                         )}
-                        <div className="relative">
-                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-lg font-semibold overflow-hidden">
-                                {application.jobseekers.photo ? (
-                                    <img
-                                        src={application.jobseekers.photo}
-                                        alt={application.jobseekers.firstName}
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    application.jobseekers.firstName?.charAt(0) || 'U'
-                                )}
-                            </div>
-                            <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${application.profileCompleteness >= 80 ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                        </div>
-                        <div>
-                            <h3 className="text-base font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                                {application.jobseekers.firstName} {application.jobseekers.lastName}
-                            </h3>
-                            <p className="text-sm text-gray-500">{application.jobseekers.currentTitle || 'Job Seeker'}</p>
-                        </div>
                     </div>
-                    {getStatusBadge(application.status)}
-                </div>
 
-                {/* Skills */}
-                {skills.length > 0 && (
-                    <div className="mb-4">
-                        <div className="flex flex-wrap gap-1.5">
-                            {displaySkills.map((skill, index) => (
-                                <span key={index} className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs font-medium">
-                                    {skill}
-                                </span>
-                            ))}
-                            {remainingSkills > 0 && (
-                                <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-md text-xs font-medium">
-                                    +{remainingSkills} lainnya
-                                </span>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* Contact & Meta Info */}
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-4 text-xs text-gray-500">
-                    <div className="flex items-center gap-1">
-                        <Mail className="w-3.5 h-3.5" />
-                        <span className="truncate max-w-[150px]">{application.jobseekers.email}</span>
-                    </div>
-                    {application.jobseekers.phone && (
-                        <div className="flex items-center gap-1">
-                            <Phone className="w-3.5 h-3.5" />
-                            {application.jobseekers.phone}
-                        </div>
-                    )}
-                    <div className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5" />
-                        {formatDate(application.appliedAt)}
-                    </div>
-                </div>
-
-                {/* Action Buttons - Dynamic based on status */}
-                <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
-                    {application.status === 'PENDING' ? (
-                        <>
-                            <button
-                                onClick={(e) => { e.stopPropagation(); handleViewApplication(application) }}
-                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition text-sm font-medium"
-                            >
-                                <Eye className="w-4 h-4" />
-                                Lihat
-                            </button>
-                            <button
-                                onClick={(e) => { e.stopPropagation(); handleDeleteApplication(application.id, `${application.jobseekers.firstName} ${application.jobseekers.lastName}`) }}
-                                className="flex items-center justify-center px-3 py-2 border border-gray-200 text-gray-500 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </button>
-                        </>
-                    ) : application.status === 'REVIEWING' ? (
-                        <>
-                            <button
-                                onClick={(e) => { e.stopPropagation(); router.push(`/profile/recruiter/dashboard/jobs/${params.slug}/applications/${application.id}`) }}
-                                className="flex items-center justify-center gap-1.5 px-3 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition text-sm"
-                            >
-                                <Eye className="w-4 h-4" />
-                                Detail
-                            </button>
-                            <button
-                                onClick={(e) => { e.stopPropagation(); handleInviteInterview(application) }}
-                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition text-sm font-medium"
+                    {/* Action Buttons */}
+                    <div className="flex flex-col gap-2 flex-shrink-0">
+                        {(application.status === 'PENDING' || application.status === 'REVIEWING') && (
+                            <>
+                                <button
+                                    onClick={() => handleInviteInterview(application)}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition flex items-center gap-2"
+                                >
+                                    <Send className="w-4 h-4" />
+                                    Undang Interview
+                                </button>
+                                <button
+                                    onClick={() => handleReject(application.id, fullName)}
+                                    className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition"
+                                >
+                                    Tolak
+                                </button>
+                            </>
+                        )}
+                        {application.status === 'INTERVIEW_SCHEDULED' && application.interview?.meetingUrl && (
+                            <a
+                                href={application.interview.meetingUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition flex items-center gap-2"
                             >
                                 <Video className="w-4 h-4" />
-                                Undang Interview
-                            </button>
+                                Join Interview
+                            </a>
+                        )}
+                        {application.status === 'INTERVIEW_COMPLETED' && (
                             <button
-                                onClick={(e) => { e.stopPropagation(); handleDeleteApplication(application.id, `${application.jobseekers.firstName} ${application.jobseekers.lastName}`) }}
-                                className="flex items-center justify-center px-3 py-2 border border-gray-200 text-gray-500 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </button>
-                        </>
-                    ) : application.status === 'INTERVIEW_SCHEDULED' ? (
-                        <>
-                            {application.interview?.meetingUrl && (
-                                <a
-                                    href={application.interview.meetingUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition text-sm font-medium shadow-lg"
-                                >
-                                    <Video className="w-4 h-4" />
-                                    Masuk Interview
-                                    <ExternalLink className="w-3 h-3" />
-                                </a>
-                            )}
-                            <button
-                                onClick={(e) => { e.stopPropagation(); router.push(`/profile/recruiter/dashboard/jobs/${params.slug}/applications/${application.id}`) }}
-                                className="flex items-center justify-center gap-1.5 px-3 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition text-sm"
-                            >
-                                <Eye className="w-4 h-4" />
-                                Detail
-                            </button>
-                            <button
-                                onClick={(e) => { e.stopPropagation(); handleDeleteApplication(application.id, `${application.jobseekers.firstName} ${application.jobseekers.lastName}`) }}
-                                className="flex items-center justify-center px-3 py-2 border border-gray-200 text-gray-500 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </button>
-                        </>
-                    ) : application.status === 'INTERVIEW_COMPLETED' ? (
-                        <>
-                            <button
-                                onClick={(e) => { e.stopPropagation(); router.push(`/profile/recruiter/dashboard/jobs/${params.slug}/applications/${application.id}`) }}
-                                className="flex items-center justify-center gap-1.5 px-3 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition text-sm"
-                            >
-                                <Eye className="w-4 h-4" />
-                                Detail
-                            </button>
-                            <button
-                                onClick={(e) => { e.stopPropagation(); handleAcceptCandidate(application) }}
-                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition text-sm font-medium"
+                                onClick={() => router.push(`/profile/recruiter/dashboard/jobs/${params.slug}/applications/${application.id}`)}
+                                className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition flex items-center gap-2"
                             >
                                 <CheckCircle className="w-4 h-4" />
-                                Terima
+                                Terima Kandidat
                             </button>
+                        )}
+                        {(application.status === 'ACCEPTED' || application.status === 'REJECTED') && (
                             <button
-                                onClick={(e) => { e.stopPropagation(); handleDeleteApplication(application.id, `${application.jobseekers.firstName} ${application.jobseekers.lastName}`) }}
-                                className="flex items-center justify-center px-3 py-2 border border-gray-200 text-gray-500 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </button>
-                        </>
-                    ) : application.status === 'ACCEPTED' ? (
-                        <button
-                            onClick={(e) => { e.stopPropagation(); router.push(`/profile/recruiter/dashboard/jobs/${params.slug}/applications/${application.id}`) }}
-                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition text-sm font-medium"
-                        >
-                            <CheckCircle className="w-4 h-4" />
-                            Lihat Detail
-                        </button>
-                    ) : (
-                        <>
-                            <button
-                                onClick={(e) => { e.stopPropagation(); router.push(`/profile/recruiter/dashboard/jobs/${params.slug}/applications/${application.id}`) }}
-                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition text-sm font-medium"
+                                onClick={() => router.push(`/profile/recruiter/dashboard/jobs/${params.slug}/applications/${application.id}`)}
+                                className="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition flex items-center gap-2"
                             >
                                 <Eye className="w-4 h-4" />
                                 Lihat Detail
                             </button>
+                        )}
+                        {application.status === 'REJECTED' && (
                             <button
-                                onClick={(e) => { e.stopPropagation(); handleDeleteApplication(application.id, `${application.jobseekers.firstName} ${application.jobseekers.lastName}`) }}
-                                className="flex items-center justify-center px-3 py-2 border border-gray-200 text-gray-500 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition"
+                                onClick={() => handleDelete(application.id, fullName)}
+                                className="p-2 border border-gray-200 text-gray-500 rounded-lg hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition"
                             >
                                 <Trash2 className="w-4 h-4" />
                             </button>
-                        </>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
         )
@@ -569,9 +552,7 @@ export default function JobApplicationsPage() {
 
                     {job && (
                         <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-                            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                                {job.title}
-                            </h1>
+                            <h1 className="text-3xl font-bold text-gray-900 mb-2">{job.title}</h1>
                             <div className="flex flex-wrap items-center gap-4 text-gray-600">
                                 <div className="flex items-center gap-1">
                                     <MapPin className="w-4 h-4" />
@@ -586,7 +567,7 @@ export default function JobApplicationsPage() {
                     )}
                 </div>
 
-                {/* Stats Cards - Clickable Filters */}
+                {/* Stats Cards */}
                 {stats && (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
                         <button
@@ -644,6 +625,20 @@ export default function JobApplicationsPage() {
                             <p className={`text-sm mb-1 ${statusFilter === 'ACCEPTED' ? 'text-green-100' : 'text-green-700'}`}>Accepted</p>
                             <p className={`text-3xl font-bold ${statusFilter === 'ACCEPTED' ? 'text-white' : 'text-green-900'}`}>{stats.accepted}</p>
                         </button>
+                        <button
+                            onClick={() => setAiFilter(!aiFilter)}
+                            className={`text-left rounded-xl p-4 transition-all ${
+                                aiFilter
+                                    ? 'bg-gradient-to-br from-amber-500 to-yellow-500 text-white ring-2 ring-amber-500 ring-offset-2'
+                                    : 'bg-gradient-to-br from-amber-50 to-yellow-50 hover:from-amber-100 hover:to-yellow-100 border border-amber-200'
+                            }`}
+                        >
+                            <p className={`text-sm mb-1 flex items-center gap-1 ${aiFilter ? 'text-amber-100' : 'text-amber-700'}`}>
+                                <Sparkles className="w-3.5 h-3.5" />
+                                AI Recommended
+                            </p>
+                            <p className={`text-3xl font-bold ${aiFilter ? 'text-white' : 'text-amber-900'}`}>{aiRecommendedCount}</p>
+                        </button>
                     </div>
                 )}
 
@@ -664,8 +659,7 @@ export default function JobApplicationsPage() {
                             <option value="PENDING">Pending</option>
                             <option value="REVIEWING">Reviewing</option>
                             <option value="INTERVIEW_SCHEDULED">Interview</option>
-                            <option value="INTERVIEW_COMPLETED">Selesai Interview</option>
-                            <option value="ACCEPTED">Diterima</option>
+                            <option value="ACCEPTED">Accepted</option>
                         </select>
 
                         <div className="flex-1 relative">
@@ -678,44 +672,62 @@ export default function JobApplicationsPage() {
                                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                             />
                         </div>
+                    </div>
+                </div>
 
-                        {(statusFilter !== 'all' || searchQuery) && (
-                            <button
-                                onClick={() => {
-                                    setStatusFilter('all')
-                                    setSearchQuery('')
-                                }}
-                                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                            >
-                                Reset Filter
-                            </button>
-                        )}
-
-                        {/* Select Mode Toggle */}
+                {/* Bulk Actions */}
+                <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+                    <div className="flex items-center gap-3">
                         <button
-                            onClick={toggleSelectMode}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${
-                                selectMode
-                                    ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                                    : 'border border-indigo-300 text-indigo-600 hover:bg-indigo-50'
+                            onClick={handleSelectAll}
+                            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition flex items-center gap-2"
+                        >
+                            {selectedApplications.length > 0 ? (
+                                <CheckSquare className="w-4 h-4 text-blue-600" />
+                            ) : (
+                                <Square className="w-4 h-4" />
+                            )}
+                            Pilih Semua
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (selectedApplications.length === 0) return
+                                const names = filteredApplications
+                                    .filter(app => selectedApplications.includes(app.id))
+                                    .map(app => `${app.jobseekers.firstName} ${app.jobseekers.lastName}`)
+                                    .join(', ')
+                                // Bulk reject
+                                Swal.fire('Info', `Fitur hapus massal untuk: ${names} akan segera hadir`, 'info')
+                            }}
+                            disabled={selectedApplications.length === 0}
+                            className={`px-4 py-2 border rounded-lg text-sm font-medium transition flex items-center gap-2 ${
+                                selectedApplications.length > 0
+                                    ? 'border-red-300 text-red-600 hover:bg-red-50'
+                                    : 'border-gray-200 text-gray-400 cursor-not-allowed'
                             }`}
                         >
-                            <UserPlus className="w-4 h-4" />
-                            {selectMode ? 'Batal Pilih' : 'Pilih Kandidat'}
+                            <Trash2 className="w-4 h-4" />
+                            Hapus Terpilih
                         </button>
-                    </div>
+                        <button
+                            onClick={handleBulkInvite}
+                            disabled={selectedApplications.length === 0}
+                            className={`px-4 py-2 border rounded-lg text-sm font-medium transition flex items-center gap-2 ${
+                                selectedApplications.length > 0
+                                    ? 'border-blue-300 text-blue-600 hover:bg-blue-50'
+                                    : 'border-gray-200 text-gray-400 cursor-not-allowed'
+                            }`}
+                        >
+                            <Send className="w-4 h-4" />
+                            Undang Terpilih
+                        </button>
 
-                    {/* Selection Info Bar */}
-                    {selectMode && (
-                        <div className="mt-4 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
-                            <p className="text-sm text-indigo-700">
-                                <span className="font-semibold">Mode Pilih Aktif</span> - Klik checkbox pada kandidat berstatus "Reviewing" untuk memilih beberapa kandidat sekaligus untuk interview bersama.
-                                {selectedApplications.length > 0 && (
-                                    <span className="ml-2 font-bold">{selectedApplications.length} kandidat terpilih</span>
-                                )}
-                            </p>
-                        </div>
-                    )}
+                        {selectedApplications.length > 0 && (
+                            <span className="text-sm text-gray-500 ml-auto">
+                                {selectedApplications.length} pelamar dipilih
+                            </span>
+                        )}
+                    </div>
                 </div>
 
                 {/* Applications List */}
@@ -723,97 +735,86 @@ export default function JobApplicationsPage() {
                     <div className="bg-white rounded-lg shadow-sm p-12 text-center">
                         <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                         <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                            {searchQuery || statusFilter !== 'all'
-                                ? 'Tidak ada pelamar ditemukan'
-                                : 'Belum ada pelamar'}
+                            {searchQuery || statusFilter !== 'all' ? 'Tidak ada pelamar ditemukan' : 'Belum ada pelamar'}
                         </h3>
                         <p className="text-gray-600">
-                            {searchQuery || statusFilter !== 'all'
-                                ? 'Coba ubah filter atau kata kunci pencarian'
-                                : 'Tunggu hingga ada kandidat yang melamar'}
+                            {searchQuery || statusFilter !== 'all' ? 'Coba ubah filter atau kata kunci pencarian' : 'Tunggu hingga ada kandidat yang melamar'}
                         </p>
                     </div>
                 ) : (
-                    (() => {
-                        const start = (currentPage - 1) * itemsPerPage
-                        const pageItems = filteredApplications.slice(start, start + itemsPerPage)
-                        const half = Math.ceil(pageItems.length / 2)
-                        const left = pageItems.slice(0, half)
-                        const right = pageItems.slice(half)
+                    <>
+                        <div className="space-y-4">
+                            {filteredApplications
+                                .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                                .map(app => renderApplicationRow(app))}
+                        </div>
 
-                        return (
-                            <>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-4">
-                                        {left.map((app) => renderApplicationCard(app))}
-                                    </div>
-                                    <div className="space-y-4">
-                                        {right.map((app) => renderApplicationCard(app))}
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center justify-between mt-4">
-                                    <div className="text-sm text-gray-600">
-                                        Menampilkan {Math.min(filteredApplications.length, itemsPerPage)} dari {filteredApplications.length} pelamar
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                                            disabled={currentPage === 1}
-                                            className={`px-3 py-1 rounded-md border ${currentPage === 1 ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}`}
-                                        >
-                                            Prev
-                                        </button>
-                                        <div className="px-3 py-1 bg-white border rounded-md text-sm">
-                                            {currentPage} / {totalPages}
-                                        </div>
-                                        <button
-                                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                                            disabled={currentPage === totalPages}
-                                            className={`px-3 py-1 rounded-md border ${currentPage === totalPages ? 'text-gray-400 border-gray-200' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}`}
-                                        >
-                                            Next
-                                        </button>
-                                    </div>
-                                </div>
-                            </>
-                        )
-                    })()
-                )}
-            </div>
-
-            {/* Floating Action Bar */}
-            {selectedApplications.length > 0 && (
-                <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
-                    <div className="container mx-auto px-4 max-w-7xl">
-                        <div className="flex items-center justify-between py-4">
-                            <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                                        <Users className="w-5 h-5 text-indigo-600" />
-                                    </div>
-                                    <div>
-                                        <p className="font-semibold text-gray-900">{selectedApplications.length} Kandidat Terpilih</p>
-                                        <p className="text-xs text-gray-500">Siap diundang interview bersama</p>
-                                    </div>
-                                </div>
+                        <div className="flex items-center justify-between mt-6">
+                            <div className="text-sm text-gray-600">
+                                Menampilkan {Math.min(filteredApplications.length, (currentPage - 1) * itemsPerPage + 1)}-{Math.min(currentPage * itemsPerPage, filteredApplications.length)} dari {filteredApplications.length} pelamar
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
                                 <button
-                                    onClick={() => setSelectedApplications([])}
-                                    className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    disabled={currentPage === 1}
+                                    className={`px-4 py-2 rounded-lg font-medium ${currentPage === 1 ? 'text-gray-400 bg-gray-100' : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'}`}
                                 >
-                                    Batal
+                                    Prev
                                 </button>
+                                <div className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium">
+                                    {currentPage} / {totalPages}
+                                </div>
                                 <button
-                                    onClick={handleInviteMultipleInterview}
-                                    className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition font-medium shadow-lg shadow-indigo-500/30"
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className={`px-4 py-2 rounded-lg font-medium ${currentPage === totalPages ? 'text-gray-400 bg-gray-100' : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'}`}
                                 >
-                                    <Video className="w-5 h-5" />
-                                    Undang Interview Bersama
+                                    Next
                                 </button>
                             </div>
                         </div>
+                    </>
+                )}
+            </div>
+
+            {/* Document Modal */}
+            {documentModal.isOpen && (
+                <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+                        <div className="flex items-center justify-between p-4 border-b">
+                            <h3 className="text-lg font-semibold text-gray-900">{documentModal.title}</h3>
+                            <div className="flex items-center gap-2">
+                                <a href={documentModal.url} download target="_blank" rel="noopener noreferrer" className="p-2 hover:bg-gray-100 rounded-lg transition" title="Download">
+                                    <Download className="w-5 h-5 text-gray-600" />
+                                </a>
+                                <a href={documentModal.url} target="_blank" rel="noopener noreferrer" className="p-2 hover:bg-gray-100 rounded-lg transition" title="Buka di tab baru">
+                                    <ExternalLink className="w-5 h-5 text-gray-600" />
+                                </a>
+                                <button onClick={() => setDocumentModal({ isOpen: false, url: '', title: '', type: '' })} className="p-2 hover:bg-gray-100 rounded-lg transition">
+                                    <X className="w-5 h-5 text-gray-600" />
+                                </button>
+                            </div>
+                        </div>
+                        <div className="p-4 h-[70vh] overflow-auto">
+                            {documentModal.type === 'image' ? (
+                                <img src={documentModal.url} alt={documentModal.title} className="w-full h-auto rounded-lg" />
+                            ) : (
+                                <iframe src={`${documentModal.url}#toolbar=1`} className="w-full h-full rounded-lg border" title={documentModal.title} />
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Photo Modal */}
+            {photoModal.isOpen && (
+                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={() => setPhotoModal({ isOpen: false, url: '', name: '' })}>
+                    <div className="relative max-w-2xl w-full" onClick={e => e.stopPropagation()}>
+                        <button onClick={() => setPhotoModal({ isOpen: false, url: '', name: '' })} className="absolute -top-12 right-0 p-2 text-white hover:bg-white/20 rounded-lg transition">
+                            <X className="w-6 h-6" />
+                        </button>
+                        <img src={photoModal.url} alt={photoModal.name} className="w-full h-auto rounded-2xl shadow-2xl" />
+                        <p className="text-center text-white mt-4 text-lg font-medium">{photoModal.name}</p>
                     </div>
                 </div>
             )}

@@ -24,7 +24,7 @@ export default function LandingPage() {
         try {
             const [statsRes, jobsRes, companiesRes] = await Promise.all([
                 fetch('/api/homepage/stats'),
-                fetch('/api/homepage/featured-jobs?limit=3'),
+                fetch('/api/homepage/featured-jobs?limit=6'),
                 fetch('/api/homepage/top-companies?limit=6')
             ])
 
@@ -167,7 +167,7 @@ export default function LandingPage() {
                     {/* Jobs Grid */}
                     {loading ? (
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-                            {[1, 2, 3].map(i => (
+                            {[1, 2, 3, 4, 5, 6].map(i => (
                                 <div key={i} className="bg-white rounded-2xl p-5 animate-pulse">
                                     <div className="w-12 h-12 bg-slate-200 rounded-xl mb-4"></div>
                                     <div className="h-5 bg-slate-200 rounded w-3/4 mb-2"></div>

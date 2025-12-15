@@ -8,15 +8,13 @@ import {
     DollarSign,
     Calendar,
     Users,
-    FileText,
-    Award,
-    Clock,
     ArrowLeft,
     ArrowRight,
     Check,
     Save,
     X,
-    Plus
+    Plus,
+    Eye
 } from 'lucide-react'
 import Swal from 'sweetalert2'
 import RupiahInput from '@/components/RupiahInput'
@@ -27,8 +25,10 @@ export default function PostJobPage() {
     const [currentStep, setCurrentStep] = useState(1)
     const [isSaving, setIsSaving] = useState(false)
     const [isCheckingVerification, setIsCheckingVerification] = useState(true)
-    const [blockReason, setBlockReason] = useState(null) // 'no_token' | 'no_profile' | 'not_verified' | 'error'
+    const [blockReason, setBlockReason] = useState(null)
     const [companyStatus, setCompanyStatus] = useState(null)
+    const [companyProfile, setCompanyProfile] = useState(null)
+    const [useCompanyAddress, setUseCompanyAddress] = useState(true)
 
     // Check company verification on page load
     useEffect(() => {
@@ -44,7 +44,6 @@ export default function PostJobPage() {
                 return
             }
 
-            // Fetch recruiter profile to check company verification status
             const response = await fetch('/api/profile/recruiter', {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
@@ -57,18 +56,14 @@ export default function PostJobPage() {
                 return
             }
 
-            // Check if company is verified
-            // API returns { success: true, profile: { companies: { verified: true/false } } }
             const profile = data.profile
             
-            // If no profile exists, redirect to create profile
             if (!profile) {
                 setBlockReason('no_profile')
                 setIsCheckingVerification(false)
                 return
             }
 
-            // Check company verification - companies is the relation name from Prisma
             const company = profile.companies
             
             if (!company?.verified) {
@@ -78,7 +73,17 @@ export default function PostJobPage() {
                 return
             }
 
-            // Company is verified, allow access
+            // Save company profile for address
+            setCompanyProfile(company)
+            
+            // Set default address from company
+            setFormData(prev => ({
+                ...prev,
+                location: company.address || '',
+                city: company.city || '',
+                province: company.province || ''
+            }))
+            
             setBlockReason(null)
             setIsCheckingVerification(false)
 
@@ -90,52 +95,43 @@ export default function PostJobPage() {
     }
 
     const [formData, setFormData] = useState({
-        // Basic Info
+        // Basic Info (Step 1)
         title: '',
         description: '',
-        requirements: '',
         responsibilities: '',
+        educationLevel: '',
+        skills: [],
 
-        // Job Details
-        jobType: 'FULL_TIME',
-        level: 'MID_LEVEL',
-        category: '',
+        // Position Details (Step 1)
+        numberOfPositions: 1,
+        malePositions: 0,
+        femalePositions: 0,
 
-        // Location
+        // Location (Step 1)
         location: '',
         city: '',
         province: '',
         isRemote: false,
 
-        // Salary
+        // Salary & Benefits (Step 2)
         salaryMin: '',
         salaryMax: '',
         salaryType: 'monthly',
         showSalary: true,
-
-        // Work Schedule
-        workingDays: 'Senin - Jumat',
-        holidays: 'Sabtu - Minggu',
-
-        // Requirements
-        minExperience: '',
-        maxExperience: '',
-        educationLevel: '',
-
-        // Additional
         benefits: [],
-        numberOfPositions: 1,
+
+        // Review & Deadline (Step 3)
         applicationDeadline: '',
 
-        // Job Type Specific
-        contractDuration: '',        // For CONTRACT (in months)
-        partTimeHours: '',           // For PART_TIME (hours per week)
-        internshipDuration: '',      // For INTERNSHIP (in months)
-        hasPocketMoney: false,       // For INTERNSHIP
-        hasCertificate: false,       // For INTERNSHIP
-
-        // Skills
-        skills: []
+        // Hidden/Removed fields (kept for API compatibility)
+        jobType: 'FULL_TIME',
+        level: 'MID_LEVEL',
+        category: 'Other',
+        requirements: '',
+        workingDays: 'Senin - Jumat',
+        holidays: 'Sabtu - Minggu',
+        minExperience: '',
+        maxExperience: ''
     })
 
     const [newBenefit, setNewBenefit] = useState('')
@@ -148,6 +144,26 @@ export default function PostJobPage() {
             ...prev,
             [name]: type === 'checkbox' ? checked : value
         }))
+    }
+
+    // Handle address toggle
+    const handleAddressToggle = (useCompany) => {
+        setUseCompanyAddress(useCompany)
+        if (useCompany && companyProfile) {
+            setFormData(prev => ({
+                ...prev,
+                location: companyProfile.address || '',
+                city: companyProfile.city || '',
+                province: companyProfile.province || ''
+            }))
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                location: '',
+                city: '',
+                province: ''
+            }))
+        }
     }
 
     // Add benefit
@@ -188,7 +204,7 @@ export default function PostJobPage() {
         }))
     }
 
-    // Format rupiah for preview (optional)
+    // Format rupiah for preview
     const formatRupiah = (value) => {
         if (!value) return ''
         const number = value.toString().replace(/[^0-9]/g, '')
@@ -200,7 +216,6 @@ export default function PostJobPage() {
         try {
             setIsSaving(true)
 
-            // Check token first
             const token = localStorage.getItem('token')
             if (!token) {
                 Swal.fire({
@@ -225,11 +240,22 @@ export default function PostJobPage() {
                 return
             }
 
-            // ✅ Prepare data - value dari RupiahInput sudah numeric string
+            if (!formData.applicationDeadline) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Data Tidak Lengkap',
+                    text: 'Batas akhir lamaran wajib diisi',
+                    confirmButtonColor: '#2563EB'
+                })
+                return
+            }
+
+            // Prepare data
             const submitData = {
                 ...formData,
                 salaryMin: formData.salaryMin ? parseInt(formData.salaryMin) : null,
-                salaryMax: formData.salaryMax ? parseInt(formData.salaryMax) : null
+                salaryMax: formData.salaryMax ? parseInt(formData.salaryMax) : null,
+                numberOfPositions: parseInt(formData.malePositions || 0) + parseInt(formData.femalePositions || 0) || 1
             }
 
             const response = await fetch('/api/profile/recruiter/jobs/create', {
@@ -251,7 +277,6 @@ export default function PostJobPage() {
                 })
                 router.push('/profile/recruiter/dashboard')
             } else {
-                // Handle specific errors
                 if (response.status === 401) {
                     Swal.fire({
                         icon: 'error',
@@ -261,15 +286,6 @@ export default function PostJobPage() {
                     }).then(() => {
                         localStorage.removeItem('token')
                         router.push('/login?role=recruiter')
-                    })
-                } else if (response.status === 404) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Profile Belum Lengkap',
-                        text: data.error || 'Silakan lengkapi profile perusahaan Anda terlebih dahulu',
-                        confirmButtonColor: '#2563EB'
-                    }).then(() => {
-                        router.push('/profile/recruiter')
                     })
                 } else {
                     Swal.fire({
@@ -281,7 +297,7 @@ export default function PostJobPage() {
                 }
             }
         } catch (error) {
-            console.error('❌ Submit job error:', error)
+            console.error('Submit job error:', error)
             Swal.fire({
                 icon: 'error',
                 title: 'Error!',
@@ -293,12 +309,25 @@ export default function PostJobPage() {
         }
     }
 
-    // Steps configuration - 4 steps (combined Informasi & Persyaratan)
+    // Steps configuration - 3 steps
     const steps = [
-        { number: 1, title: 'Informasi & Persyaratan', icon: Briefcase },
-        { number: 2, title: 'Lokasi & Tipe', icon: MapPin },
-        { number: 3, title: 'Gaji & Jadwal', icon: DollarSign },
-        { number: 4, title: 'Benefits & Skills', icon: Users }
+        { number: 1, title: 'Informasi Lowongan', icon: Briefcase },
+        { number: 2, title: 'Gaji & Benefit', icon: DollarSign },
+        { number: 3, title: 'Review & Posting', icon: Eye }
+    ]
+
+    // City options
+    const cityOptions = [
+        'Cirebon', 'Bandung', 'Jakarta', 'Surabaya', 'Semarang', 
+        'Yogyakarta', 'Medan', 'Makassar', 'Denpasar', 'Palembang',
+        'Tangerang', 'Bekasi', 'Depok', 'Bogor'
+    ]
+
+    // Province options
+    const provinceOptions = [
+        'Jawa Barat', 'DKI Jakarta', 'Jawa Tengah', 'Jawa Timur',
+        'DI Yogyakarta', 'Banten', 'Bali', 'Sumatera Utara',
+        'Sumatera Selatan', 'Sulawesi Selatan'
     ]
 
     // Show loading while checking verification
@@ -358,15 +387,6 @@ export default function PostJobPage() {
                     <div className="text-6xl mb-4">{config.icon}</div>
                     <h1 className="text-2xl font-bold text-gray-900 mb-2">{config.title}</h1>
                     <p className="text-gray-600 mb-6">{config.message}</p>
-                    
-                    {companyStatus === 'PENDING_RESUBMISSION' && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                            <p className="text-sm text-blue-700">
-                                ✨ Profile perusahaan Anda sudah dikirim ulang dan sedang menunggu review admin.
-                            </p>
-                        </div>
-                    )}
-                    
                     <button
                         onClick={config.buttonAction}
                         className="w-full py-3 px-6 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
@@ -428,16 +448,57 @@ export default function PostJobPage() {
 
                 {/* Form Content */}
                 <form className="bg-white rounded-lg shadow-sm p-6">
-                    {/* Step 1: Basic Info */}
+                    {/* Step 1: Informasi Lowongan */}
                     {currentStep === 1 && (
                         <div className="space-y-6">
                             <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                                Informasi Dasar
+                                Informasi Lowongan
                             </h2>
+
+                            {/* Jumlah Posisi & Gender - Di Awal */}
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <h3 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                                    <Users className="w-5 h-5" />
+                                    Jumlah Posisi yang Dibuka
+                                </h3>
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Jumlah Posisi Pria
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="malePositions"
+                                            value={formData.malePositions}
+                                            onChange={handleChange}
+                                            min="0"
+                                            className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="0"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Jumlah Posisi Wanita
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="femalePositions"
+                                            value={formData.femalePositions}
+                                            onChange={handleChange}
+                                            min="0"
+                                            className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="0"
+                                        />
+                                    </div>
+                                </div>
+                                <p className="text-sm text-blue-700 mt-2">
+                                    Total posisi: {(parseInt(formData.malePositions) || 0) + (parseInt(formData.femalePositions) || 0)} orang
+                                </p>
+                            </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Posisi / Jabatan *
+                                    Posisi / Jabatan <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="text"
@@ -452,609 +513,42 @@ export default function PostJobPage() {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Deskripsi Pekerjaan *
+                                    Deskripsi dan Tanggung Jawab <span className="text-red-500">*</span>
                                 </label>
                                 <textarea
                                     name="description"
                                     value={formData.description}
                                     onChange={handleChange}
-                                    rows={6}
+                                    rows={8}
                                     className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="Jelaskan tentang pekerjaan ini, lingkungan kerja, dan apa yang akan dikerjakan..."
+                                    placeholder="Jelaskan tentang pekerjaan ini, lingkungan kerja, dan tanggung jawab utama..."
                                     required
                                 />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Persyaratan *
-                                </label>
-                                <textarea
-                                    name="requirements"
-                                    value={formData.requirements}
-                                    onChange={handleChange}
-                                    rows={5}
-                                    className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="Contoh:&#10;- Minimal S1 Informatika&#10;- Pengalaman 2 tahun di React&#10;- Menguasai TypeScript"
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Tanggung Jawab *
-                                </label>
-                                <textarea
-                                    name="responsibilities"
-                                    value={formData.responsibilities}
-                                    onChange={handleChange}
-                                    rows={5}
-                                    className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="Contoh:&#10;- Mengembangkan fitur baru&#10;- Melakukan code review&#10;- Berkolaborasi dengan tim"
-                                    required
-                                />
-                            </div>
-
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Kategori *
-                                    </label>
-                                    <select
-                                        name="category"
-                                        value={formData.category}
-                                        onChange={handleChange}
-                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        required
-                                    >
-                                        <option value="">Pilih Kategori</option>
-                                        <option value="Technology">Technology</option>
-                                        <option value="Marketing">Marketing</option>
-                                        <option value="Sales">Sales</option>
-                                        <option value="Finance">Finance</option>
-                                        <option value="HR">Human Resources</option>
-                                        <option value="Design">Design</option>
-                                        <option value="Customer Service">Customer Service</option>
-                                        <option value="Operations">Operations</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Level *
-                                    </label>
-                                    <select
-                                        name="level"
-                                        value={formData.level}
-                                        onChange={handleChange}
-                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        required
-                                    >
-                                        <option value="ENTRY_LEVEL">Entry Level</option>
-                                        <option value="JUNIOR">Junior</option>
-                                        <option value="MID_LEVEL">Mid Level</option>
-                                        <option value="SENIOR">Senior</option>
-                                        <option value="LEAD">Lead</option>
-                                        <option value="MANAGER">Manager</option>
-                                        <option value="DIRECTOR">Director</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            {/* Divider */}
-                            <div className="border-t border-gray-200 pt-6">
-                                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                                    Persyaratan Kandidat
-                                </h3>
-                                
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Pendidikan Minimal
-                                        </label>
-                                        <select
-                                            name="educationLevel"
-                                            value={formData.educationLevel}
-                                            onChange={handleChange}
-                                            className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        >
-                                            <option value="">Tidak ada persyaratan khusus</option>
-                                            <option value="SMA">SMA/SMK</option>
-                                            <option value="D3">Diploma (D3)</option>
-                                            <option value="S1">Sarjana (S1)</option>
-                                            <option value="S2">Magister (S2)</option>
-                                            <option value="S3">Doktor (S3)</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Pengalaman Kerja (Tahun)
-                                        </label>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <label className="text-xs text-gray-600 mb-1 block">Min</label>
-                                                <input
-                                                    type="number"
-                                                    name="minExperience"
-                                                    value={formData.minExperience}
-                                                    onChange={handleChange}
-                                                    min="0"
-                                                    className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                    placeholder="0"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="text-xs text-gray-600 mb-1 block">Max</label>
-                                                <input
-                                                    type="number"
-                                                    name="maxExperience"
-                                                    value={formData.maxExperience}
-                                                    onChange={handleChange}
-                                                    min="0"
-                                                    className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                    placeholder="5"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Step 2: Location & Type */}
-                    {currentStep === 2 && (
-                        <div className="space-y-6">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                                Lokasi & Tipe Pekerjaan
-                            </h2>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Tipe Pekerjaan *
-                                </label>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-gray-900">
-                                    {[
-                                        { value: 'FULL_TIME', label: 'Full Time', icon: '💼', desc: 'Pegawai tetap' },
-                                        { value: 'PART_TIME', label: 'Part Time', icon: '⏰', desc: 'Paruh waktu' },
-                                        { value: 'CONTRACT', label: 'Kontrak', icon: '📄', desc: 'Durasi tertentu' },
-                                        { value: 'INTERNSHIP', label: 'Magang', icon: '🎓', desc: 'Program magang' }
-                                    ].map(type => (
-                                        <label
-                                            key={type.value}
-                                            className={`p-4 border-2 rounded-lg text-center cursor-pointer transition ${formData.jobType === type.value
-                                                ? 'border-blue-600 bg-blue-50'
-                                                : 'border-gray-200 hover:border-blue-300'
-                                                }`}
-                                        >
-                                            <input
-                                                type="radio"
-                                                name="jobType"
-                                                value={type.value}
-                                                checked={formData.jobType === type.value}
-                                                onChange={handleChange}
-                                                className="sr-only"
-                                            />
-                                            <div className="text-2xl mb-1">{type.icon}</div>
-                                            <div className="font-medium">{type.label}</div>
-                                            <div className="text-xs text-gray-500 mt-1">{type.desc}</div>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Contract Specific Options */}
-                            {formData.jobType === 'CONTRACT' && (
-                                <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                                    <h3 className="font-medium text-orange-900 mb-3 flex items-center gap-2">
-                                        📄 Detail Kontrak
-                                    </h3>
-                                    <div className="grid md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Durasi Kontrak (Bulan) *
-                                            </label>
-                                            <input
-                                                type="number"
-                                                name="contractDuration"
-                                                value={formData.contractDuration}
-                                                onChange={handleChange}
-                                                min="1"
-                                                max="60"
-                                                className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                                                placeholder="12"
-                                                required
-                                            />
-                                            <p className="text-xs text-gray-500 mt-1">Contoh: 6 bulan, 12 bulan</p>
-                                        </div>
-                                        <div className="flex items-center">
-                                            <div className="p-3 bg-orange-100 rounded-lg">
-                                                <p className="text-sm text-orange-800">
-                                                    💡 Kontrak dapat diperpanjang sesuai kebutuhan perusahaan dan kinerja karyawan.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Part Time Specific Options */}
-                            {formData.jobType === 'PART_TIME' && (
-                                <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                                    <h3 className="font-medium text-purple-900 mb-3 flex items-center gap-2">
-                                        ⏰ Detail Part Time
-                                    </h3>
-                                    <div className="grid md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Jam Kerja per Minggu *
-                                            </label>
-                                            <input
-                                                type="number"
-                                                name="partTimeHours"
-                                                value={formData.partTimeHours}
-                                                onChange={handleChange}
-                                                min="1"
-                                                max="35"
-                                                className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                placeholder="20"
-                                                required
-                                            />
-                                            <p className="text-xs text-gray-500 mt-1">Umumnya 10-25 jam per minggu</p>
-                                        </div>
-                                        <div className="flex items-center">
-                                            <div className="p-3 bg-purple-100 rounded-lg">
-                                                <p className="text-sm text-purple-800">
-                                                    💡 Jam kerja fleksibel dan dapat disesuaikan dengan jadwal pekerja.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Internship Specific Options */}
-                            {formData.jobType === 'INTERNSHIP' && (
-                                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                                    <h3 className="font-medium text-green-900 mb-3 flex items-center gap-2">
-                                        🎓 Detail Program Magang
-                                    </h3>
-                                    <div className="space-y-4">
-                                        <div className="grid md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Durasi Magang (Bulan) *
-                                                </label>
-                                                <input
-                                                    type="number"
-                                                    name="internshipDuration"
-                                                    value={formData.internshipDuration}
-                                                    onChange={handleChange}
-                                                    min="1"
-                                                    max="12"
-                                                    className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                                    placeholder="3"
-                                                    required
-                                                />
-                                                <p className="text-xs text-gray-500 mt-1">Umumnya 3-6 bulan</p>
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="border-t border-green-200 pt-4">
-                                            <label className="block text-sm font-medium text-gray-700 mb-3">
-                                                Fasilitas Magang
-                                            </label>
-                                            <div className="grid md:grid-cols-2 gap-3">
-                                                <label className={`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition ${formData.hasPocketMoney ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}>
-                                                    <input
-                                                        type="checkbox"
-                                                        name="hasPocketMoney"
-                                                        checked={formData.hasPocketMoney}
-                                                        onChange={handleChange}
-                                                        className="w-5 h-5 text-green-600 rounded focus:ring-green-500"
-                                                    />
-                                                    <div>
-                                                        <div className="font-medium text-gray-900">💰 Uang Saku</div>
-                                                        <div className="text-xs text-gray-500">Tersedia tunjangan bulanan</div>
-                                                    </div>
-                                                </label>
-                                                <label className={`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition ${formData.hasCertificate ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}>
-                                                    <input
-                                                        type="checkbox"
-                                                        name="hasCertificate"
-                                                        checked={formData.hasCertificate}
-                                                        onChange={handleChange}
-                                                        className="w-5 h-5 text-green-600 rounded focus:ring-green-500"
-                                                    />
-                                                    <div>
-                                                        <div className="font-medium text-gray-900">📜 Sertifikat</div>
-                                                        <div className="text-xs text-gray-500">Sertifikat setelah selesai</div>
-                                                    </div>
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Full Time Info */}
-                            {formData.jobType === 'FULL_TIME' && (
-                                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                                    <h3 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
-                                        💼 Pegawai Tetap / Full Time
-                                    </h3>
-                                    <p className="text-sm text-blue-800">
-                                        Posisi ini adalah untuk karyawan penuh waktu dengan jam kerja standar (40 jam/minggu). 
-                                        Termasuk benefit seperti BPJS, cuti tahunan, dan fasilitas lainnya sesuai kebijakan perusahaan.
-                                    </p>
-                                </div>
-                            )}
-
-                            <div>
-                                <label className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-300 transition">
-                                    <input
-                                        type="checkbox"
-                                        name="isRemote"
-                                        checked={formData.isRemote}
-                                        onChange={handleChange}
-                                        className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
-                                    />
-                                    <div>
-                                        <div className="font-medium text-gray-900">Remote / Work From Home</div>
-                                        <div className="text-sm text-gray-600">Pekerjaan ini bisa dikerjakan dari rumah</div>
-                                    </div>
-                                </label>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Alamat Lengkap Kantor *
-                                </label>
-                                <textarea
-                                    name="location"
-                                    value={formData.location}
-                                    onChange={handleChange}
-                                    rows={3}
-                                    className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="Jl. Sudirman No. 123, Jakarta Pusat"
-                                    required={!formData.isRemote}
-                                />
-                            </div>
-
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Kota *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="city"
-                                        value={formData.city}
-                                        onChange={handleChange}
-                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="Jakarta"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Provinsi *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="province"
-                                        value={formData.province}
-                                        onChange={handleChange}
-                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="DKI Jakarta"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Jumlah Posisi yang Dibuka
-                                </label>
-                                <input
-                                    type="number"
-                                    name="numberOfPositions"
-                                    value={formData.numberOfPositions}
-                                    onChange={handleChange}
-                                    min="1"
-                                    className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                />
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Step 3: Salary & Schedule */}
-                    {currentStep === 3 && (
-                        <div className="space-y-6">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                                Gaji & Jadwal Kerja
-                            </h2>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Range Gaji
-                                </label>
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-xs text-gray-600 mb-1 block">Gaji Minimum</label>
-                                        <RupiahInput
-                                            name="salaryMin"
-                                            value={formData.salaryMin}
-                                            onChange={handleChange}
-                                            placeholder="5.000.000"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs text-gray-600 mb-1 block">Gaji Maximum</label>
-                                        <RupiahInput
-                                            name="salaryMax"
-                                            value={formData.salaryMax}
-                                            onChange={handleChange}
-                                            placeholder="10.000.000"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Preview Gaji */}
-                                {formData.salaryMin && formData.salaryMax && (
-                                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                        <p className="text-sm text-blue-900">
-                                            <span className="font-medium">Preview Gaji:</span>
-                                            {' '}Rp {formatRupiah(formData.salaryMin)} - Rp {formatRupiah(formData.salaryMax)}
-                                            {formData.salaryType === 'monthly' && ' / bulan'}
-                                            {formData.salaryType === 'yearly' && ' / tahun'}
-                                            {formData.salaryType === 'hourly' && ' / jam'}
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Tipe Gaji
+                                    Persyaratan Pendidikan
                                 </label>
                                 <select
-                                    name="salaryType"
-                                    value={formData.salaryType}
+                                    name="educationLevel"
+                                    value={formData.educationLevel}
                                     onChange={handleChange}
                                     className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 >
-                                    <option value="monthly">Per Bulan</option>
-                                    <option value="yearly">Per Tahun</option>
-                                    <option value="hourly">Per Jam</option>
+                                    <option value="">Tidak ada persyaratan khusus</option>
+                                    <option value="SMA">SMA/SMK</option>
+                                    <option value="D3">Diploma (D3)</option>
+                                    <option value="S1">Sarjana (S1)</option>
+                                    <option value="S2">Magister (S2)</option>
+                                    <option value="S3">Doktor (S3)</option>
                                 </select>
                             </div>
 
-                            <div>
-                                <label className="flex items-center gap-3">
-                                    <input
-                                        type="checkbox"
-                                        name="showSalary"
-                                        checked={formData.showSalary}
-                                        onChange={handleChange}
-                                        className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
-                                    />
-                                    <span className="text-sm font-medium text-gray-700">
-                                        Tampilkan gaji di lowongan
-                                    </span>
-                                </label>
-                            </div>
-
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Hari Kerja *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="workingDays"
-                                        value={formData.workingDays}
-                                        onChange={handleChange}
-                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="Senin - Jumat"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Hari Libur *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="holidays"
-                                        value={formData.holidays}
-                                        onChange={handleChange}
-                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="Sabtu - Minggu"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
+                            {/* Skills di Page Awal */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Batas Akhir Lamaran
-                                </label>
-                                <input
-                                    type="date"
-                                    name="applicationDeadline"
-                                    value={formData.applicationDeadline}
-                                    onChange={handleChange}
-                                    min={new Date().toISOString().split('T')[0]}
-                                    className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                />
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Step 5: Benefits & Skills */}
-                    {/* Step 4: Benefits & Skills */}
-                    {currentStep === 4 && (
-                        <div className="space-y-6">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                                Benefits & Skills
-                            </h2>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Benefits & Fasilitas
-                                </label>
-                                <div className="flex gap-2 mb-3">
-                                    <input
-                                        type="text"
-                                        value={newBenefit}
-                                        onChange={(e) => setNewBenefit(e.target.value)}
-                                        onKeyPress={(e) => {
-                                            if (e.key === 'Enter') {
-                                                e.preventDefault()
-                                                handleAddBenefit()
-                                            }
-                                        }}
-                                        className="text-gray-900 flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="Contoh: BPJS Kesehatan"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={handleAddBenefit}
-                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                                    >
-                                        <Plus className="w-5 h-5" />
-                                    </button>
-                                </div>
-
-                                {formData.benefits.length > 0 && (
-                                    <div className="space-y-2">
-                                        {formData.benefits.map((benefit, index) => (
-                                            <div
-                                                key={index}
-                                                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                                            >
-                                                <span className="text-gray-700">{benefit}</span>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleRemoveBenefit(index)}
-                                                    className="text-red-600 hover:text-red-700"
-                                                >
-                                                    <X className="w-5 h-5" />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Skills yang Dibutuhkan
+                                    Skill yang Dibutuhkan
                                 </label>
                                 <div className="flex gap-2 mb-3">
                                     <input
@@ -1068,7 +562,7 @@ export default function PostJobPage() {
                                             }
                                         }}
                                         className="text-gray-900 flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="Contoh: React, Node.js"
+                                        placeholder="Contoh: React, Node.js, Microsoft Office"
                                     />
                                     <button
                                         type="button"
@@ -1098,6 +592,343 @@ export default function PostJobPage() {
                                         ))}
                                     </div>
                                 )}
+                            </div>
+
+                            {/* Lokasi - Gabung di sini */}
+                            <div className="border-t border-gray-200 pt-6">
+                                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                    <MapPin className="w-5 h-5 text-gray-600" />
+                                    Lokasi Kerja
+                                </h3>
+
+                                <div className="mb-4">
+                                    <label className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-300 transition mb-3">
+                                        <input
+                                            type="checkbox"
+                                            name="isRemote"
+                                            checked={formData.isRemote}
+                                            onChange={handleChange}
+                                            className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                                        />
+                                        <div>
+                                            <div className="font-medium text-gray-900">Remote / Work From Home</div>
+                                            <div className="text-sm text-gray-600">Pekerjaan ini bisa dikerjakan dari rumah</div>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                {!formData.isRemote && (
+                                    <>
+                                        {/* Address Toggle */}
+                                        <div className="flex gap-4 mb-4">
+                                            <label className={`flex-1 p-4 border-2 rounded-lg cursor-pointer transition ${useCompanyAddress ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
+                                                <input
+                                                    type="radio"
+                                                    name="addressType"
+                                                    checked={useCompanyAddress}
+                                                    onChange={() => handleAddressToggle(true)}
+                                                    className="sr-only"
+                                                />
+                                                <div className="font-medium text-gray-900">Sama dengan Alamat Perusahaan</div>
+                                                <div className="text-sm text-gray-500 mt-1">
+                                                    {companyProfile?.address}, {companyProfile?.city}
+                                                </div>
+                                            </label>
+                                            <label className={`flex-1 p-4 border-2 rounded-lg cursor-pointer transition ${!useCompanyAddress ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
+                                                <input
+                                                    type="radio"
+                                                    name="addressType"
+                                                    checked={!useCompanyAddress}
+                                                    onChange={() => handleAddressToggle(false)}
+                                                    className="sr-only"
+                                                />
+                                                <div className="font-medium text-gray-900">Alamat Berbeda</div>
+                                                <div className="text-sm text-gray-500 mt-1">Input alamat manual</div>
+                                            </label>
+                                        </div>
+
+                                        {!useCompanyAddress && (
+                                            <>
+                                                <div className="mb-4">
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        Alamat Lengkap <span className="text-red-500">*</span>
+                                                    </label>
+                                                    <textarea
+                                                        name="location"
+                                                        value={formData.location}
+                                                        onChange={handleChange}
+                                                        rows={2}
+                                                        className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                        placeholder="Jl. Sudirman No. 123"
+                                                        required
+                                                    />
+                                                </div>
+
+                                                <div className="grid md:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                            Kota <span className="text-red-500">*</span>
+                                                        </label>
+                                                        <select
+                                                            name="city"
+                                                            value={formData.city}
+                                                            onChange={handleChange}
+                                                            className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                            required
+                                                        >
+                                                            <option value="">Pilih Kota</option>
+                                                            {cityOptions.map(city => (
+                                                                <option key={city} value={city}>{city}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                            Provinsi <span className="text-red-500">*</span>
+                                                        </label>
+                                                        <select
+                                                            name="province"
+                                                            value={formData.province}
+                                                            onChange={handleChange}
+                                                            className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                            required
+                                                        >
+                                                            <option value="">Pilih Provinsi</option>
+                                                            {provinceOptions.map(prov => (
+                                                                <option key={prov} value={prov}>{prov}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Step 2: Gaji & Benefit */}
+                    {currentStep === 2 && (
+                        <div className="space-y-6">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                                Range Gaji & Benefit
+                            </h2>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Range Gaji
+                                </label>
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-xs text-gray-600 mb-1 block">Gaji Minimum</label>
+                                        <RupiahInput
+                                            name="salaryMin"
+                                            value={formData.salaryMin}
+                                            onChange={handleChange}
+                                            placeholder="5.000.000"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-600 mb-1 block">Gaji Maximum</label>
+                                        <RupiahInput
+                                            name="salaryMax"
+                                            value={formData.salaryMax}
+                                            onChange={handleChange}
+                                            placeholder="10.000.000"
+                                        />
+                                    </div>
+                                </div>
+
+                                {formData.salaryMin && formData.salaryMax && (
+                                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                        <p className="text-sm text-blue-900">
+                                            <span className="font-medium">Preview Gaji:</span>
+                                            {' '}Rp {formatRupiah(formData.salaryMin)} - Rp {formatRupiah(formData.salaryMax)} / bulan
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="flex items-center gap-3">
+                                    <input
+                                        type="checkbox"
+                                        name="showSalary"
+                                        checked={formData.showSalary}
+                                        onChange={handleChange}
+                                        className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm font-medium text-gray-700">
+                                        Tampilkan gaji di lowongan
+                                    </span>
+                                </label>
+                            </div>
+
+                            <div className="border-t border-gray-200 pt-6">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Benefits & Fasilitas
+                                </label>
+                                <div className="flex gap-2 mb-3">
+                                    <input
+                                        type="text"
+                                        value={newBenefit}
+                                        onChange={(e) => setNewBenefit(e.target.value)}
+                                        onKeyPress={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault()
+                                                handleAddBenefit()
+                                            }
+                                        }}
+                                        className="text-gray-900 flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="Contoh: BPJS Kesehatan, Tunjangan Makan"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleAddBenefit}
+                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                    >
+                                        <Plus className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                {/* Quick Add Benefits */}
+                                <div className="flex flex-wrap gap-2 mb-4">
+                                    {['BPJS Kesehatan', 'BPJS Ketenagakerjaan', 'Tunjangan Makan', 'Tunjangan Transport', 'THR', 'Bonus Tahunan'].map(benefit => (
+                                        <button
+                                            key={benefit}
+                                            type="button"
+                                            onClick={() => {
+                                                if (!formData.benefits.includes(benefit)) {
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        benefits: [...prev.benefits, benefit]
+                                                    }))
+                                                }
+                                            }}
+                                            className={`px-3 py-1 text-sm rounded-full transition ${formData.benefits.includes(benefit)
+                                                ? 'bg-green-100 text-green-700 cursor-not-allowed'
+                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                }`}
+                                            disabled={formData.benefits.includes(benefit)}
+                                        >
+                                            + {benefit}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {formData.benefits.length > 0 && (
+                                    <div className="space-y-2">
+                                        {formData.benefits.map((benefit, index) => (
+                                            <div
+                                                key={index}
+                                                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                                            >
+                                                <span className="text-gray-700">{benefit}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveBenefit(index)}
+                                                    className="text-red-600 hover:text-red-700"
+                                                >
+                                                    <X className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Step 3: Review & Posting */}
+                    {currentStep === 3 && (
+                        <div className="space-y-6">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                                Review Lowongan
+                            </h2>
+
+                            {/* Preview Card */}
+                            <div className="border-2 border-gray-200 rounded-xl p-6">
+                                <div className="flex items-start gap-4 mb-4">
+                                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-2xl overflow-hidden">
+                                        {companyProfile?.logo ? (
+                                            <img src={companyProfile.logo} alt="Logo" className="w-full h-full object-cover" />
+                                        ) : (
+                                            '🏢'
+                                        )}
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="text-xl font-bold text-gray-900">{formData.title || 'Posisi/Jabatan'}</h3>
+                                        <p className="text-gray-600">{companyProfile?.name || 'Nama Perusahaan'}</p>
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                            <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm">
+                                                <MapPin className="w-3 h-3 inline mr-1" />
+                                                {formData.city || companyProfile?.city || 'Kota'}
+                                            </span>
+                                            {formData.showSalary && formData.salaryMin && (
+                                                <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm">
+                                                    Rp {formatRupiah(formData.salaryMin)} - {formatRupiah(formData.salaryMax)}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="border-t border-gray-200 pt-4 space-y-3">
+                                    <div>
+                                        <span className="text-sm font-medium text-gray-500">Jumlah Posisi:</span>
+                                        <span className="ml-2 text-gray-900">
+                                            {(parseInt(formData.malePositions) || 0) + (parseInt(formData.femalePositions) || 0)} orang
+                                            ({formData.malePositions || 0} Pria, {formData.femalePositions || 0} Wanita)
+                                        </span>
+                                    </div>
+                                    {formData.educationLevel && (
+                                        <div>
+                                            <span className="text-sm font-medium text-gray-500">Pendidikan:</span>
+                                            <span className="ml-2 text-gray-900">{formData.educationLevel}</span>
+                                        </div>
+                                    )}
+                                    {formData.skills.length > 0 && (
+                                        <div>
+                                            <span className="text-sm font-medium text-gray-500">Skills:</span>
+                                            <div className="flex flex-wrap gap-1 mt-1">
+                                                {formData.skills.map((skill, i) => (
+                                                    <span key={i} className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">{skill}</span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {formData.benefits.length > 0 && (
+                                        <div>
+                                            <span className="text-sm font-medium text-gray-500">Benefits:</span>
+                                            <div className="flex flex-wrap gap-1 mt-1">
+                                                {formData.benefits.map((benefit, i) => (
+                                                    <span key={i} className="px-2 py-1 bg-green-50 text-green-700 rounded text-xs">{benefit}</span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Deadline */}
+                            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                <label className="block text-sm font-medium text-orange-900 mb-2">
+                                    <Calendar className="w-4 h-4 inline mr-2" />
+                                    Batas Akhir Lamaran <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="date"
+                                    name="applicationDeadline"
+                                    value={formData.applicationDeadline}
+                                    onChange={handleChange}
+                                    min={new Date().toISOString().split('T')[0]}
+                                    className="w-full text-gray-900 px-4 py-2 border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white"
+                                    required
+                                />
+                                <p className="text-sm text-orange-700 mt-2">
+                                    Lowongan akan otomatis ditutup setelah tanggal ini
+                                </p>
                             </div>
                         </div>
                     )}
@@ -1131,7 +962,7 @@ export default function PostJobPage() {
                                 type="button"
                                 onClick={handleSubmit}
                                 disabled={isSaving}
-                                className={`flex items-center gap-2 px-6 py-3 rounded-lg transition ${isSaving
+                                className={`flex items-center gap-2 px-8 py-3 rounded-lg transition ${isSaving
                                     ? 'bg-gray-400 cursor-not-allowed'
                                     : 'bg-green-600 text-white hover:bg-green-700'
                                     }`}
@@ -1147,7 +978,7 @@ export default function PostJobPage() {
                                 ) : (
                                     <>
                                         <Save className="w-5 h-5" />
-                                        Publikasikan Lowongan
+                                        Posting Lowongan
                                     </>
                                 )}
                             </button>
