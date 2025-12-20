@@ -43,8 +43,9 @@ const Header = () => {
   }
 
   const getJobseeker = () => {
-    if (user?.jobseekers && typeof user.jobseekers === 'object') return user.jobseekers
+    // API /me returns user.jobseeker (singular)
     if (user?.jobseeker) return user.jobseeker
+    if (user?.jobseekers && typeof user.jobseekers === 'object') return user.jobseekers
     return null
   }
 
@@ -60,6 +61,8 @@ const Header = () => {
 
   const getUserName = () => {
     if (!user) return 'User'
+    // Try user.name first (from API)
+    if (user.name && user.name.trim()) return user.name
     const jobseeker = getJobseeker()
     if (user.role === 'JOBSEEKER' && jobseeker) return jobseeker.firstName || 'User'
     if (user.role === 'RECRUITER') {
@@ -79,6 +82,8 @@ const Header = () => {
       // Check company logo first (API stores at user.company)
       if (user.company?.logo) return user.company.logo
       const recruiter = getRecruiter()
+      // API returns photo (not photoUrl) in recruiter object
+      if (recruiter?.photo) return recruiter.photo
       if (recruiter?.photoUrl) return recruiter.photoUrl
       const company = getCompany(recruiter)
       if (company?.logo) return company.logo
