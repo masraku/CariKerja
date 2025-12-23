@@ -6,15 +6,15 @@ import MainLayout from '@/components/MainLayout'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'JobSeeker - Platform Pencarian Kerja Terpercaya',
-  description: 'Temukan karir impian Anda dengan JobSeeker. Hubungkan talenta terbaik dengan perusahaan terkemuka di Indonesia.',
-  keywords: 'lowongan kerja, karir, pekerjaan, recruitment, job portal, Indonesia',
+  title: 'Disnaker - Portal Karir Masa Depan',
+  description: 'Temukan karir impian Anda dengan Disnaker. Hubungkan talenta terbaik dengan perusahaan terkemuka di Indonesia.',
+  keywords: 'lowongan kerja, karir, pekerjaan, recruitment, job portal, Indonesia, disnaker',
 }
 
 export default function RootLayout({ children }) {
   return (
     <html lang="id">
-      <body className={inter.className}>
+      <body className={`${inter.className} bg-slate-50 text-slate-900 antialiased selection:bg-blue-100 selection:text-blue-900`}>
         <AuthProvider>
           <MainLayout>
             {children}

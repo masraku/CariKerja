@@ -38,7 +38,7 @@ export default function RupiahInput({
         name={name}
         value={formatRupiah(value)}
         onChange={handleChange}
-        className={`w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${className}`}
+        className={`w-full text-gray-900 pl-12 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${className}`}
         placeholder={placeholder}
         required={required}
       />

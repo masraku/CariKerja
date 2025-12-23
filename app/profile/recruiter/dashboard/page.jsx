@@ -443,7 +443,7 @@ export default function RecruiterDashboard() {
                 <div 
                   key={application.id}
                   className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition cursor-pointer"
-                  onClick={() => router.push(`/recruiter/applications?id=${application.id}`)}
+                  onClick={() => router.push(`/profile/recruiter/dashboard/applications`)}
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold overflow-hidden">

@@ -513,6 +513,22 @@ export default function PostJobPage() {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Tipe Pekerjaan <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                    name="jobType"
+                                    value={formData.jobType}
+                                    onChange={handleChange}
+                                    className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required
+                                >
+                                    <option value="FULL_TIME">Full Time</option>
+                                    <option value="PART_TIME">Part Time</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Deskripsi dan Tanggung Jawab <span className="text-red-500">*</span>
                                 </label>
                                 <textarea

@@ -1,17 +1,20 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { requireAdmin } from '@/lib/authHelper'
+import { verifyToken } from '@/lib/auth'
 
 export async function GET(request) {
     try {
-        // Authenticate admin using consistent helper
-        const auth = await requireAdmin(request)
+        // Verify admin
+        const authHeader = request.headers.get('authorization')
+        if (!authHeader) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
+        const token = authHeader.replace('Bearer ', '')
+        const decoded = verifyToken(token)
         
-        if (auth.error) {
-            return NextResponse.json(
-                { success: false, error: auth.error },
-                { status: auth.status }
-            )
+        if (!decoded || decoded.role !== 'ADMIN') {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
         // Get current date and calculate 6 months ago
@@ -22,10 +25,14 @@ export async function GET(request) {
         const [
             // Monthly jobs using groupBy for efficiency
             jobs,
-            // Employment stats using count (much faster than findMany + filter)
+            // Employment stats
             totalJobseekers,
             employedCount,
-            lookingCount
+            lookingCount,
+            // New stats
+            verifiedCompanies,
+            activeJobs,
+            pendingJobs
         ] = await Promise.all([
             // Get jobs for last 6 months
             prisma.jobs.findMany({
@@ -34,12 +41,15 @@ export async function GET(request) {
                 },
                 select: { createdAt: true }
             }),
-            // Total jobseekers
+            // Jobseeker Stats
             prisma.jobseekers.count(),
-            // Employed count
             prisma.jobseekers.count({ where: { isEmployed: true } }),
-            // Looking for job count
-            prisma.jobseekers.count({ where: { isLookingForJob: true } })
+            prisma.jobseekers.count({ where: { isLookingForJob: true } }),
+            
+            // New Dashboard Stats
+            prisma.companies.count({ where: { status: 'VERIFIED' } }),
+            prisma.jobs.count({ where: { status: 'ACTIVE' } }),
+            prisma.jobs.count({ where: { status: 'PENDING' } })
         ])
 
         // Group jobs by month
@@ -80,7 +90,10 @@ export async function GET(request) {
                     notLooking: totalJobseekers - lookingCount
                 },
                 totalJobseekers,
-                totalJobs: jobs.length
+                totalJobs: jobs.length,
+                verifiedCompanies,
+                activeJobs,
+                pendingJobs
             }
         })
 

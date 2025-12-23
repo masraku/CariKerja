@@ -43,7 +43,7 @@ export default function EditJobPage() {
     isActive: true
   })
 
-  const jobTypes = ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERNSHIP']
+  const jobTypes = ['FULL_TIME', 'PART_TIME']
   const levels = ['ENTRY_LEVEL', 'JUNIOR', 'MID_LEVEL', 'SENIOR', 'LEAD', 'MANAGER', 'DIRECTOR']
   const provinces = [
     'DKI Jakarta', 'Jawa Barat', 'Jawa Tengah', 'Jawa Timur', 'Banten',

@@ -231,7 +231,9 @@ model jobs {
   applicationEmail    String?
   applicationUrl      String?
   externalApply       Boolean         @default(false)
-  isActive            Boolean         @default(true)
+  isActive            Boolean         @default(true) // Deprecated: use status instead
+  status              JobStatus       @default(PENDING)
+  rejectionReason     String?
   isFeatured          Boolean         @default(false)
   isPremium           Boolean         @default(false)
   viewCount           Int             @default(0)
@@ -585,9 +587,13 @@ enum JobLevel {
 enum JobType {
   FULL_TIME
   PART_TIME
-  CONTRACT
-  FREELANCE
-  INTERNSHIP
+}
+
+enum JobStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+  CLOSED
 }
 
 enum NotificationType {

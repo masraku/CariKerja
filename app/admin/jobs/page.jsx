@@ -5,6 +5,7 @@ import {
     Briefcase, Search, Building2, MapPin, Clock, Eye, Users,
     CheckCircle, XCircle, ExternalLink, Calendar, TrendingUp
 } from 'lucide-react'
+import Swal from 'sweetalert2'
 
 export default function AdminJobsPage() {
     const [jobs, setJobs] = useState([])
@@ -68,19 +69,112 @@ export default function AdminJobsPage() {
     const getJobTypeBadge = (type) => {
         const styles = {
             FULL_TIME: 'bg-blue-100 text-blue-700',
-            PART_TIME: 'bg-purple-100 text-purple-700',
-            CONTRACT: 'bg-orange-100 text-orange-700',
-            INTERNSHIP: 'bg-emerald-100 text-emerald-700'
+            PART_TIME: 'bg-purple-100 text-purple-700'
         }
         const labels = {
             FULL_TIME: 'Full Time',
-            PART_TIME: 'Part Time',
-            CONTRACT: 'Kontrak',
-            INTERNSHIP: 'Magang'
+            PART_TIME: 'Part Time'
         }
         return (
             <span className={`px-3 py-1 text-xs font-medium rounded-full ${styles[type] || 'bg-slate-100 text-slate-700'}`}>
                 {labels[type] || type}
+            </span>
+        )
+    }
+
+    const handleUpdateStatus = async (jobId, newStatus) => {
+        try {
+            let rejectionReason = null
+
+            // UI Confirmation
+            if (newStatus === 'ACTIVE') {
+                const result = await Swal.fire({
+                    title: 'Setujui Lowongan?',
+                    text: 'Lowongan ini akan ditampilkan ke publik',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10B981',
+                    cancelButtonColor: '#6B7280',
+                    confirmButtonText: 'Ya, Setujui',
+                    cancelButtonText: 'Batal'
+                })
+                if (!result.isConfirmed) return
+            } else if (newStatus === 'REJECTED') {
+                const result = await Swal.fire({
+                    title: 'Tolak Lowongan',
+                    text: 'Silakan masukkan alasan penolakan:',
+                    input: 'textarea',
+                    inputPlaceholder: 'Contoh: Informasi gaji tidak masuk akal...',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#EF4444',
+                    cancelButtonColor: '#6B7280',
+                    confirmButtonText: 'Tolak Lowongan',
+                    cancelButtonText: 'Batal',
+                    inputValidator: (value) => {
+                        if (!value) {
+                            return 'Alasan penolakan wajib diisi!'
+                        }
+                    }
+                })
+                if (!result.isConfirmed) return
+                rejectionReason = result.value
+            }
+
+            // API Call
+            const token = localStorage.getItem('token')
+            const response = await fetch('/api/admin/jobs', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ 
+                    jobId, 
+                    status: newStatus,
+                    rejectionReason 
+                })
+            })
+            
+            if (response.ok) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: newStatus === 'ACTIVE' ? 'Lowongan berhasil disetujui' : 'Lowongan berhasil ditolak',
+                    timer: 1500,
+                    showConfirmButton: false
+                })
+                fetchJobs()
+            } else {
+                throw new Error('Failed to update')
+            }
+        } catch (error) {
+            console.error('Failed to update status', error)
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: 'Terjadi kesalahan saat mengupdate status'
+            })
+        }
+    }
+
+    const getStatusBadge = (status) => {
+        const styles = {
+            PENDING: 'bg-orange-100 text-orange-700',
+            ACTIVE: 'bg-emerald-100 text-emerald-700',
+            REJECTED: 'bg-red-100 text-red-700',
+            CLOSED: 'bg-slate-100 text-slate-700'
+        }
+        const labels = {
+            PENDING: 'Menunggu Review',
+            ACTIVE: 'Aktif / Live',
+            REJECTED: 'Ditolak',
+            CLOSED: 'Ditutup'
+        }
+        return (
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full ${styles[status] || styles.CLOSED}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${status === 'ACTIVE' ? 'bg-emerald-500' : status === 'PENDING' ? 'bg-orange-500' : status === 'REJECTED' ? 'bg-red-500' : 'bg-slate-500'}`} />
+                {labels[status] || status}
             </span>
         )
     }
@@ -100,16 +194,16 @@ export default function AdminJobsPage() {
                             <div className="text-slate-300 text-xs mt-1">Total Lowongan</div>
                         </div>
                         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                            <div className="text-3xl font-bold text-orange-400">{stats?.pending || 0}</div>
+                            <div className="text-slate-300 text-xs mt-1">Perlu Review</div>
+                        </div>
+                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
                             <div className="text-3xl font-bold text-emerald-400">{stats?.active || 0}</div>
                             <div className="text-slate-300 text-xs mt-1">Aktif</div>
                         </div>
                         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                            <div className="text-3xl font-bold text-amber-400">{stats?.totalApplications || 0}</div>
+                            <div className="text-3xl font-bold text-blue-400">{stats?.totalApplications || 0}</div>
                             <div className="text-slate-300 text-xs mt-1">Total Lamaran</div>
-                        </div>
-                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                            <div className="text-3xl font-bold text-blue-400">{stats?.byType?.fullTime || 0}</div>
-                            <div className="text-slate-300 text-xs mt-1">Full Time</div>
                         </div>
                     </div>
                 </div>
@@ -133,37 +227,23 @@ export default function AdminJobsPage() {
                         </div>
 
                         {/* Status Filter */}
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => setStatusFilter('all')}
-                                className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
-                                    statusFilter === 'all' 
-                                        ? 'bg-slate-800 text-white' 
-                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                }`}
-                            >
-                                Semua
-                            </button>
-                            <button
-                                onClick={() => setStatusFilter('active')}
-                                className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
-                                    statusFilter === 'active' 
-                                        ? 'bg-emerald-500 text-white' 
-                                        : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
-                                }`}
-                            >
-                                Aktif
-                            </button>
-                            <button
-                                onClick={() => setStatusFilter('inactive')}
-                                className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
-                                    statusFilter === 'inactive' 
-                                        ? 'bg-red-500 text-white' 
-                                        : 'bg-red-50 text-red-600 hover:bg-red-100'
-                                }`}
-                            >
-                                Nonaktif
-                            </button>
+                        <div className="flex gap-2 bg-slate-100 p-1 rounded-xl overflow-x-auto">
+                            {['all', 'pending', 'active', 'rejected', 'closed'].map(filter => (
+                                <button
+                                    key={filter}
+                                    onClick={() => setStatusFilter(filter)}
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap ${
+                                        statusFilter === filter 
+                                            ? 'bg-white text-slate-800 shadow-sm' 
+                                            : 'text-slate-500 hover:text-slate-700'
+                                    }`}
+                                >
+                                    {filter === 'all' ? 'Semua' : 
+                                     filter === 'pending' ? 'Pending' :
+                                     filter === 'active' ? 'Aktif' :
+                                     filter === 'rejected' ? 'Ditolak' : 'Ditutup'}
+                                </button>
+                            ))}
                         </div>
 
                         {/* Job Type Filter */}
@@ -175,8 +255,6 @@ export default function AdminJobsPage() {
                             <option value="all">Semua Tipe</option>
                             <option value="FULL_TIME">Full Time</option>
                             <option value="PART_TIME">Part Time</option>
-                            <option value="CONTRACT">Kontrak</option>
-                            <option value="INTERNSHIP">Magang</option>
                         </select>
                     </div>
                 </div>
@@ -220,7 +298,7 @@ export default function AdminJobsPage() {
                         {jobs.map((job) => (
                             <div 
                                 key={job.id} 
-                                className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 hover:shadow-md transition group"
+                                className={`bg-white rounded-2xl shadow-sm border p-5 transition group ${job.status === 'PENDING' ? 'border-orange-200 ring-4 ring-orange-50' : 'border-slate-100 hover:shadow-md'}`}
                             >
                                 <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                                     {/* Company Logo & Job Info */}
@@ -267,6 +345,26 @@ export default function AdminJobsPage() {
                                         </div>
                                     </div>
 
+                                    {/* Actions for Pending Jobs */}
+                                    {job.status === 'PENDING' && (
+                                        <div className="flex items-center gap-2 lg:border-l lg:border-r lg:border-slate-100 lg:px-6">
+                                            <button 
+                                                onClick={() => handleUpdateStatus(job.id, 'ACTIVE')}
+                                                className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white text-sm font-medium rounded-lg hover:bg-emerald-600 transition shadow-sm hover:shadow"
+                                            >
+                                                <CheckCircle className="w-4 h-4" />
+                                                Setujui
+                                            </button>
+                                            <button 
+                                                onClick={() => handleUpdateStatus(job.id, 'REJECTED')}
+                                                className="flex items-center gap-2 px-4 py-2 bg-white border border-red-200 text-red-600 text-sm font-medium rounded-lg hover:bg-red-50 transition"
+                                            >
+                                                <XCircle className="w-4 h-4" />
+                                                Tolak
+                                            </button>
+                                        </div>
+                                    )}
+
                                     {/* Stats & Actions */}
                                     <div className="flex items-center gap-6 lg:gap-8">
                                         {/* Job Type Badge */}
@@ -294,17 +392,7 @@ export default function AdminJobsPage() {
 
                                         {/* Status */}
                                         <div>
-                                            {job.isActive ? (
-                                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">
-                                                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                                                    Aktif
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-100 text-red-700 text-xs font-medium rounded-full">
-                                                    <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />
-                                                    Nonaktif
-                                                </span>
-                                            )}
+                                            {getStatusBadge(job.status || 'PENDING')}
                                         </div>
 
                                         {/* Date */}

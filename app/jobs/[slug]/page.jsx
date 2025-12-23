@@ -7,7 +7,7 @@ import {
   MapPin, Briefcase, DollarSign, Clock, Building2, Star, 
   Calendar, Users, BookmarkCheck, Bookmark, Share2, 
   ArrowLeft, CheckCircle, AlertCircle, Loader2,
-  Award, GraduationCap, Target
+  Award, GraduationCap, Target, Globe
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -217,10 +217,10 @@ export default function JobDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Memuat detail lowongan...</p>
+          <p className="text-slate-600">Memuat detail lowongan...</p>
         </div>
       </div>
     )
@@ -231,298 +231,211 @@ export default function JobDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="container mx-auto px-4 py-4">
-          <Link href="/jobs" className="inline-flex items-center gap-2 text-gray-600 hover:text-blue-600 transition">
-            <ArrowLeft className="w-5 h-5" />
-            <span>Kembali ke Daftar Lowongan</span>
-          </Link>
-        </div>
-      </div>
+    <div className="min-h-screen bg-slate-50 pt-24 pb-12">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Back Button */}
+        <Link href="/jobs" className="inline-flex items-center gap-2 text-slate-600 hover:text-blue-600 transition-colors mb-6 group">
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          <span className="font-medium">Kembali ke Daftar Lowongan</span>
+        </Link>
 
-      <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          {/* Single Card - All Job Details */}
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          {/* Main Card */}
+          <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 overflow-hidden border border-slate-100">
             {/* Header Section */}
-            <div className="p-8 border-b border-gray-100">
-              <div className="flex items-start gap-6 mb-6">
+            <div className="p-8 border-b border-slate-100 bg-gradient-to-b from-white to-slate-50/50">
+              <div className="flex flex-col md:flex-row items-start gap-6 mb-8">
                 {/* Company Logo */}
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-4xl flex-shrink-0 overflow-hidden">
+                <div className="w-24 h-24 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center overflow-hidden flex-shrink-0 p-2">
                   {job.company.logo ? (
-                    <img src={job.company.logo} alt={job.company.name} className="w-full h-full object-cover" />
+                    <img src={job.company.logo} alt={job.company.name} className="w-full h-full object-contain" />
                   ) : (
-                    '🏢'
+                    <Building2 className="w-12 h-12 text-slate-300" />
                   )}
                 </div>
 
                 {/* Job Info */}
-                <div className="flex-1">
-                  <div className="flex items-start justify-between mb-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-3">
                     <div>
-                      <h1 className="text-3xl font-bold text-gray-900 mb-2">{job.title}</h1>
-                      <Link href={`/companies/${job.company.slug}`}>
-                        <div className="flex items-center gap-2 text-lg text-gray-700 hover:text-blue-600 transition cursor-pointer">
-                          <Building2 className="w-5 h-5" />
-                          <span className="font-semibold">{job.company.name}</span>
-                        </div>
+                      <h1 className="text-3xl font-bold text-slate-900 mb-2 leading-tight">{job.title}</h1>
+                      <Link href={`/companies/${job.company.slug}`} className="inline-flex items-center gap-2 text-lg text-slate-600 hover:text-blue-600 transition-colors group">
+                        <Building2 className="w-5 h-5 text-slate-400 group-hover:text-blue-500" />
+                        <span className="font-medium">{job.company.name}</span>
                       </Link>
                     </div>
 
                     {job.isFeatured && (
-                      <span className="px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-full text-sm font-semibold flex items-center gap-2">
+                      <span className="px-4 py-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full text-sm font-bold flex items-center gap-2 shadow-lg shadow-orange-500/20">
                         <Star className="w-4 h-4 fill-white" />
                         Featured
                       </span>
                     )}
                   </div>
 
-                  {/* Quick Info */}
+                  {/* Quick Info Tags */}
                   <div className="flex flex-wrap gap-3 mt-4">
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium flex items-center gap-1">
-                      <MapPin className="w-4 h-4" />
+                    <span className="px-4 py-2 bg-slate-50 text-slate-700 rounded-xl text-sm font-medium flex items-center gap-2 border border-slate-100">
+                      <MapPin className="w-4 h-4 text-slate-400" />
                       {job.city}
                     </span>
-                    <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium flex items-center gap-1">
+                    <span className="px-4 py-2 bg-blue-50 text-blue-700 rounded-xl text-sm font-medium flex items-center gap-2 border border-blue-100">
                       <Briefcase className="w-4 h-4" />
                       {formatJobType(job.jobType)}
                     </span>
-                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium flex items-center gap-1">
+                    <span className="px-4 py-2 bg-green-50 text-green-700 rounded-xl text-sm font-medium flex items-center gap-2 border border-green-100">
                       <DollarSign className="w-4 h-4" />
                       {formatSalary()}
                     </span>
                     {job.isRemote && (
-                      <span className="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-sm font-medium">
+                      <span className="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-sm font-medium flex items-center gap-2 border border-emerald-100">
+                        <Globe className="w-4 h-4" />
                         Remote
                       </span>
                     )}
-                    {job.educationLevel && (
-                      <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium flex items-center gap-1">
-                        <GraduationCap className="w-4 h-4" />
-                        {job.educationLevel}
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Stats Row */}
-              <div className="flex justify-around py-4 bg-gray-50 rounded-xl text-center">
-                <div>
-                  <div className="text-2xl font-bold text-gray-900">{job.applicationCount}</div>
-                  <div className="text-sm text-gray-500">Pelamar</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-gray-900">{job.viewCount}</div>
-                  <div className="text-sm text-gray-500">Dilihat</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-gray-900">{job.numberOfPositions}</div>
-                  <div className="text-sm text-gray-500">Posisi</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-gray-900">{getTimeSince(job.publishedAt)}</div>
-                  <div className="text-sm text-gray-500">Posted</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Job Description */}
-            <div className="p-8 border-b border-gray-100">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-blue-600" />
-                Deskripsi Pekerjaan
-              </h2>
-              <div className="text-gray-700 leading-relaxed whitespace-pre-line">
-                {job.description}
-              </div>
-            </div>
-
-            {/* Requirements */}
-            {job.requirements && (
-              <div className="p-8 border-b border-gray-100">
-                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-blue-600" />
-                  Persyaratan
-                </h2>
-                <div className="text-gray-700 leading-relaxed whitespace-pre-line">
-                  {job.requirements}
-                </div>
-              </div>
-            )}
-
-            {/* Responsibilities */}
-            {job.responsibilities && (
-              <div className="p-8 border-b border-gray-100">
-                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Award className="w-5 h-5 text-blue-600" />
-                  Tanggung Jawab
-                </h2>
-                <div className="text-gray-700 leading-relaxed whitespace-pre-line">
-                  {job.responsibilities}
-                </div>
-              </div>
-            )}
-
-            {/* Skills */}
-            {job.skills && job.skills.length > 0 && (
-              <div className="p-8 border-b border-gray-100">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Skills yang Dibutuhkan</h2>
-                <div className="flex flex-wrap gap-3">
-                  {job.skills.map((skill, index) => (
-                    <span
-                      key={index}
-                      className={`px-4 py-2 rounded-full text-sm font-medium ${
-                        skill.isRequired
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-blue-100 text-blue-700'
-                      }`}
-                    >
-                      {skill.name}
-                      {skill.isRequired && ' *'}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Benefits */}
-            {job.benefits && job.benefits.length > 0 && (
-              <div className="p-8 border-b border-gray-100">
-                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Star className="w-5 h-5 text-yellow-500" />
-                  Benefit & Fasilitas
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {job.benefits.map((benefit, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-3 bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-lg"
-                    >
-                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                      <span className="text-gray-700 font-medium">{benefit}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Company Info */}
-            <div className="p-8 border-b border-gray-100 bg-gray-50">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Tentang Perusahaan</h2>
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-2xl overflow-hidden">
-                  {job.company.logo ? (
-                    <img src={job.company.logo} alt={job.company.name} className="w-full h-full object-cover" />
-                  ) : (
-                    '🏢'
-                  )}
-                </div>
-                <div>
-                  <h4 className="font-bold text-gray-900">{job.company.name}</h4>
-                  <p className="text-sm text-gray-500">{job.company.industry}</p>
-                </div>
-              </div>
-
-              {job.company.description && (
-                <p className="text-gray-700 text-sm mb-4">
-                  {job.company.description}
-                </p>
-              )}
-
-              <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-gray-400" />
-                  <span>{job.company.city}, {job.company.province}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-gray-400" />
-                  <span>{job.company.companySize} karyawan</span>
-                </div>
-              </div>
-
-              <Link href={`/companies/${job.company.slug}`}>
-                <button className="mt-4 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm font-medium">
-                  Lihat Profil Perusahaan →
-                </button>
-              </Link>
-            </div>
-
-            {/* Deadline Alert */}
-            {job.applicationDeadline && (
-              <div className={`p-4 ${isDeadlineExpired() ? 'bg-gray-100' : 'bg-orange-50'}`}>
-                <div className="flex items-center justify-center gap-2">
-                  <Calendar className={`w-5 h-5 ${isDeadlineExpired() ? 'text-gray-500' : 'text-orange-600'}`} />
-                  <span className={`font-medium ${isDeadlineExpired() ? 'text-gray-600' : 'text-orange-700'}`}>
-                    {isDeadlineExpired() ? 'Lowongan Sudah Ditutup - ' : 'Deadline: '}
-                    {new Date(job.applicationDeadline).toLocaleDateString('id-ID', {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Action Buttons - Fixed at Bottom */}
-            <div className="p-6 bg-white border-t border-gray-200">
-              <div className="flex gap-4">
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-slate-100">
                 {isDeadlineExpired() ? (
-                  <div className="flex-1 bg-gray-100 py-4 px-6 rounded-xl text-center">
-                    <div className="flex items-center justify-center gap-2 text-gray-500 font-semibold">
-                      <AlertCircle className="w-5 h-5" />
-                      Lowongan Sudah Ditutup
-                    </div>
-                  </div>
+                  <button disabled className="flex-1 px-8 py-4 bg-slate-100 text-slate-400 font-bold rounded-xl cursor-not-allowed flex items-center justify-center gap-2">
+                    <AlertCircle className="w-5 h-5" />
+                    Lowongan Ditutup
+                  </button>
                 ) : hasApplied ? (
-                  <div className="flex-1 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 py-4 px-6 rounded-xl">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-2 text-green-700 font-semibold mb-1">
-                          <CheckCircle className="w-5 h-5" />
-                          Sudah Melamar
-                        </div>
-                        <p className="text-sm text-green-600">
-                          Status: <span className="font-medium">{existingApplication?.status || 'PENDING'}</span>
-                        </p>
-                      </div>
-                      <Link href="/profile/jobseeker/applications">
-                        <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-semibold">
-                          Lihat Status
-                        </button>
-                      </Link>
-                    </div>
+                  <div className="flex-1 px-8 py-4 bg-green-50 text-green-700 font-bold rounded-xl border border-green-100 flex items-center justify-center gap-2">
+                    <CheckCircle className="w-5 h-5" />
+                    Sudah Melamar
+                    <span className="text-sm font-normal ml-1 text-green-600">
+                      ({new Date(existingApplication.appliedAt).toLocaleDateString('id-ID')})
+                    </span>
                   </div>
                 ) : (
                   <button
                     onClick={handleApply}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition font-semibold text-lg shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                    className="flex-1 px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30 hover:-translate-y-0.5 flex items-center justify-center gap-2"
                   >
-                    <Target className="w-5 h-5" />
                     Lamar Sekarang
+                    <ArrowLeft className="w-5 h-5 rotate-180" />
                   </button>
                 )}
-                <button
-                  onClick={toggleSave}
-                  className={`px-6 py-4 rounded-xl transition font-semibold ${
-                    saved
-                      ? 'bg-blue-100 text-blue-600'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {saved ? <BookmarkCheck className="w-6 h-6" /> : <Bookmark className="w-6 h-6" />}
-                </button>
-                <button
-                  onClick={handleShare}
-                  className="px-6 py-4 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition font-semibold"
-                >
-                  <Share2 className="w-6 h-6" />
-                </button>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={toggleSave}
+                    className={`px-6 py-4 rounded-xl font-medium transition-all border flex items-center gap-2 ${
+                      saved
+                        ? 'bg-blue-50 text-blue-600 border-blue-100'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    {saved ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
+                    <span className="hidden sm:inline">{saved ? 'Disimpan' : 'Simpan'}</span>
+                  </button>
+                  
+                  <button
+                    onClick={handleShare}
+                    className="px-6 py-4 rounded-xl font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all flex items-center gap-2"
+                  >
+                    <Share2 className="w-5 h-5" />
+                    <span className="hidden sm:inline">Share</span>
+                  </button>
+                </div>
               </div>
+            </div>
+
+            {/* Content Section */}
+            <div className="p-8 space-y-10">
+              {/* Description */}
+              <section>
+                <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+                    <Briefcase className="w-5 h-5" />
+                  </div>
+                  Deskripsi Pekerjaan
+                </h2>
+                <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: job.description }} />
+              </section>
+
+              {/* Requirements */}
+              <section>
+                <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
+                    <Target className="w-5 h-5" />
+                  </div>
+                  Kualifikasi
+                </h2>
+                <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: job.requirements }} />
+              </section>
+
+              {/* Benefits */}
+              {job.benefits && job.benefits.length > 0 && (
+                <section>
+                  <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center text-green-600">
+                      <Award className="w-5 h-5" />
+                    </div>
+                    Benefit
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {job.benefits.map((benefit, index) => (
+                      <div key={index} className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                        <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                        <span className="text-slate-700 font-medium">{benefit}</span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Additional Info */}
+              <section className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-8 border-t border-slate-100">
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-slate-400 shadow-sm">
+                    <Clock className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Diposting</p>
+                    <p className="text-slate-900 font-medium">{getTimeSince(job.createdAt)}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-slate-400 shadow-sm">
+                    <Calendar className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Batas Lamaran</p>
+                    <p className="text-slate-900 font-medium">
+                      {job.applicationDeadline ? new Date(job.applicationDeadline).toLocaleDateString('id-ID', {
+                        day: 'numeric', month: 'long', year: 'numeric'
+                      }) : 'Tidak ada batas'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-slate-400 shadow-sm">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Pelamar</p>
+                    <p className="text-slate-900 font-medium">{job.applicantsCount || 0} orang</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-slate-400 shadow-sm">
+                    <GraduationCap className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Pengalaman</p>
+                    <p className="text-slate-900 font-medium">Min. {job.experienceLevel} tahun</p>
+                  </div>
+                </div>
+              </section>
             </div>
           </div>
         </div>

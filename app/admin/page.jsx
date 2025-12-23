@@ -77,71 +77,68 @@ export default function AdminDashboard() {
             {/* Main Content */}
             <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
                 {/* Stats Grid */}
+                {/* Stats Grid */}
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-                    {/* Total Jobseekers */}
+                     {/* Verified Companies */}
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition">
                         <div className="flex items-start justify-between mb-4">
                             <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                                <Users className="w-6 h-6 text-blue-600" />
+                                <Building2 className="w-6 h-6 text-blue-600" />
                             </div>
-                            <span className="text-xs text-slate-400">Total</span>
+                            <span className="text-xs text-slate-400">Terdaftar</span>
                         </div>
                         <div className="text-3xl font-bold text-slate-800 mb-1">
-                            {loading ? <span className="inline-block w-12 h-8 bg-slate-200 rounded animate-pulse"></span> : (stats?.jobseekers?.totalJobseekers || 0)}
+                            {loading ? <span className="inline-block w-12 h-8 bg-slate-200 rounded animate-pulse"></span> : (chartData?.verifiedCompanies || 0)}
                         </div>
-                        <div className="text-sm text-slate-500">Jobseekers Terdaftar</div>
+                        <div className="text-sm text-slate-500">Perusahaan Verified</div>
                     </div>
 
-                    {/* Employed */}
+                    {/* Active Jobs */}
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition">
                         <div className="flex items-start justify-between mb-4">
                             <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-                                <UserCheck className="w-6 h-6 text-emerald-600" />
+                                <Briefcase className="w-6 h-6 text-emerald-600" />
                             </div>
-                            <span className="text-xs text-emerald-500 font-medium flex items-center gap-1">
-                                <TrendingUp className="w-3 h-3" />
-                                {loading ? '-' : `${Math.round((stats?.jobseekers?.employed / stats?.jobseekers?.totalJobseekers) * 100) || 0}%`}
+                            <span className="text-xs text-emerald-600 font-medium flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                                Live
                             </span>
                         </div>
                         <div className="text-3xl font-bold text-slate-800 mb-1">
-                            {loading ? <span className="inline-block w-12 h-8 bg-slate-200 rounded animate-pulse"></span> : (stats?.jobseekers?.employed || 0)}
+                            {loading ? <span className="inline-block w-12 h-8 bg-slate-200 rounded animate-pulse"></span> : (chartData?.activeJobs || 0)}
                         </div>
-                        <div className="text-sm text-slate-500">Sudah Bekerja</div>
+                        <div className="text-sm text-slate-500">Total Lowongan Dibuka</div>
                     </div>
 
-                    {/* Looking for Job */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition">
+                    {/* Pending Jobs (Clickable) */}
+                    <Link href="/admin/jobs?status=PENDING" className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-lg hover:border-orange-200 transition group cursor-pointer block">
                         <div className="flex items-start justify-between mb-4">
-                            <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
-                                <Briefcase className="w-6 h-6 text-amber-600" />
-                            </div>
-                            <span className="inline-flex items-center gap-1 text-xs text-amber-600 font-medium">
-                                <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span>
-                                Aktif
-                            </span>
-                        </div>
-                        <div className="text-3xl font-bold text-slate-800 mb-1">
-                            {loading ? <span className="inline-block w-12 h-8 bg-slate-200 rounded animate-pulse"></span> : (stats?.jobseekers?.lookingForJob || 0)}
-                        </div>
-                        <div className="text-sm text-slate-500">Mencari Kerja</div>
-                    </div>
-
-                    {/* Pending Companies */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition">
-                        <div className="flex items-start justify-between mb-4">
-                            <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                            <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition">
                                 <Clock className="w-6 h-6 text-orange-600" />
                             </div>
-                            {(stats?.pendingCompanies || 0) > 0 && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-600 rounded-full text-xs font-medium">
+                            {(chartData?.pendingJobs || 0) > 0 && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-600 rounded-full text-xs font-medium animate-pulse">
                                     Perlu Review
                                 </span>
                             )}
                         </div>
                         <div className="text-3xl font-bold text-slate-800 mb-1">
-                            {loading ? <span className="inline-block w-12 h-8 bg-slate-200 rounded animate-pulse"></span> : (stats?.pendingCompanies || 0)}
+                            {loading ? <span className="inline-block w-12 h-8 bg-slate-200 rounded animate-pulse"></span> : (chartData?.pendingJobs || 0)}
                         </div>
-                        <div className="text-sm text-slate-500">Perusahaan Pending</div>
+                        <div className="text-sm text-slate-500 group-hover:text-orange-600 transition">Lowongan Pending →</div>
+                    </Link>
+
+                     {/* Total Jobseekers */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition">
+                        <div className="flex items-start justify-between mb-4">
+                            <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
+                                <Users className="w-6 h-6 text-indigo-600" />
+                            </div>
+                        </div>
+                        <div className="text-3xl font-bold text-slate-800 mb-1">
+                            {loading ? <span className="inline-block w-12 h-8 bg-slate-200 rounded animate-pulse"></span> : (stats?.jobseekers?.totalJobseekers || 0)}
+                        </div>
+                        <div className="text-sm text-slate-500">Jobseekers Terdaftar</div>
                     </div>
                 </div>
 

@@ -35,9 +35,13 @@ export async function GET(request) {
         }
 
         if (status === 'active') {
-            where.isActive = true
-        } else if (status === 'inactive') {
-            where.isActive = false
+            where.status = 'ACTIVE'
+        } else if (status === 'pending') {
+            where.status = 'PENDING'
+        } else if (status === 'rejected') {
+            where.status = 'REJECTED'
+        } else if (status === 'inactive' || status === 'closed') {
+            where.status = 'CLOSED'
         }
 
         if (jobType !== 'all') {
@@ -79,15 +83,14 @@ export async function GET(request) {
 
         // Get stats
         const totalJobs = await prisma.jobs.count()
-        const activeJobs = await prisma.jobs.count({ where: { isActive: true } })
-        const inactiveJobs = await prisma.jobs.count({ where: { isActive: false } })
+        const activeJobs = await prisma.jobs.count({ where: { status: 'ACTIVE' } })
+        const pendingJobs = await prisma.jobs.count({ where: { status: 'PENDING' } })
+        const rejectedJobs = await prisma.jobs.count({ where: { status: 'REJECTED' } })
         const totalApplications = await prisma.applications.count()
 
         // JobType stats
         const fullTimeJobs = await prisma.jobs.count({ where: { jobType: 'FULL_TIME' } })
         const partTimeJobs = await prisma.jobs.count({ where: { jobType: 'PART_TIME' } })
-        const contractJobs = await prisma.jobs.count({ where: { jobType: 'CONTRACT' } })
-        const internshipJobs = await prisma.jobs.count({ where: { jobType: 'INTERNSHIP' } })
 
         // Transform jobs data
         const transformedJobs = jobs.map(job => ({
@@ -108,7 +111,8 @@ export async function GET(request) {
             city: job.city,
             province: job.province,
             isRemote: job.isRemote,
-            isActive: job.isActive,
+            status: job.status,
+            isActive: job.isActive, // Deprecated, keeping for temporary backward compat
             isFeatured: job.isFeatured,
             salaryMin: job.salaryMin,
             salaryMax: job.salaryMax,
@@ -126,13 +130,12 @@ export async function GET(request) {
             stats: {
                 total: totalJobs,
                 active: activeJobs,
-                inactive: inactiveJobs,
+                pending: pendingJobs,
+                rejected: rejectedJobs,
                 totalApplications,
                 byType: {
                     fullTime: fullTimeJobs,
-                    partTime: partTimeJobs,
-                    contract: contractJobs,
-                    internship: internshipJobs
+                    partTime: partTimeJobs
                 }
             },
             jobs: transformedJobs
@@ -142,6 +145,61 @@ export async function GET(request) {
         console.error('Error fetching admin jobs:', error)
         return NextResponse.json(
             { error: 'Internal server error', details: error.message },
+            { status: 500 }
+        )
+    }
+}
+
+export async function PATCH(request) {
+    try {
+        const authHeader = request.headers.get('authorization')
+        if (!authHeader) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
+        const token = authHeader.replace('Bearer ', '')
+        const decoded = verifyToken(token)
+        
+        if (!decoded || decoded.role !== 'ADMIN') {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
+        const body = await request.json()
+        const { jobId, status, rejectionReason } = body
+
+        if (!jobId || !status) {
+            return NextResponse.json({ error: 'Job ID and status are required' }, { status: 400 })
+        }
+
+        const updateData = {
+            status,
+            rejectionReason: status === 'REJECTED' ? rejectionReason : null,
+            isActive: status === 'ACTIVE', // Sync legacy field
+            updatedAt: new Date()
+        }
+
+        if (status === 'ACTIVE' && !updateData.publishedAt) {
+            updateData.publishedAt = new Date()
+        }
+        
+        // Handle rejection reason if implementing a reason field later? 
+        // Currently Schema doesn't have rejectionReason on jobs, only companies.
+        // Can add 'adminNotes' later if needed.
+
+        const updatedJob = await prisma.jobs.update({
+            where: { id: jobId },
+            data: updateData
+        })
+
+        return NextResponse.json({
+            success: true,
+            data: updatedJob
+        })
+
+    } catch (error) {
+        console.error('Error updating job status:', error)
+        return NextResponse.json(
+            { error: 'Failed to update job status', details: error.message },
             { status: 500 }
         )
     }

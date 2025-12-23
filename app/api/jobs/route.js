@@ -73,7 +73,7 @@ export async function GET(request) {
     // Build where clause with AND for proper filtering
     const where = {
       AND: [
-        { isActive: true },
+        { status: 'ACTIVE' },
         { publishedAt: { not: null } },
         // Only show jobs that haven't passed their deadline
         // Either no deadline set (null) OR deadline is in the future

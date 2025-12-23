@@ -225,7 +225,8 @@ export default function AdminJobseekersPage() {
                         {filteredJobseekers.map((js) => (
                             <div 
                                 key={js.id} 
-                                className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 hover:shadow-md transition"
+                                onClick={() => router.push(`/admin/jobseekers/${js.id}`)}
+                                className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 hover:shadow-md transition cursor-pointer group"
                             >
                                 <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                                     {/* Photo & Info */}
