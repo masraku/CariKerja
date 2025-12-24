@@ -9,16 +9,15 @@ export default function MainLayout({ children }) {
   // Halaman yang tidak perlu Header & Footer
   const noLayoutPages = [
     '/login',
-    '/register',
-    '/register/jobseeker',
-    '/register/recruiter',
     '/forgot-password',
     '/unauthorized'
   ]
   
   // Admin routes should not have MainLayout (they have their own sidebar layout)
   const isAdminRoute = pathname?.startsWith('/admin')
+  const isRecruiterRoute = pathname?.startsWith('/profile/recruiter')
   const showLayout = !noLayoutPages.includes(pathname) && !isAdminRoute
+  const showFooter = showLayout && !isRecruiterRoute
 
   if (!showLayout) {
     return <>{children}</>
@@ -30,7 +29,7 @@ export default function MainLayout({ children }) {
       <main className="min-h-screen">
         {children}
       </main>
-      <Footer />
+      {showFooter && <Footer />}
     </>
   )
 }

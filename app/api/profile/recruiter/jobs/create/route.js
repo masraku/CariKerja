@@ -81,6 +81,9 @@ export async function POST(request) {
       // Work Schedule
       workingDays,
       holidays,
+      isShift,
+      shiftCount,
+      isDisabilityFriendly,
       
       // Requirements
       minExperience,
@@ -91,6 +94,9 @@ export async function POST(request) {
       benefits,
       numberOfPositions,
       applicationDeadline,
+      
+      // Photo
+      photo,
       
       // Skills
       skills
@@ -120,7 +126,7 @@ export async function POST(request) {
       allBenefits.push(`Hari Libur: ${holidays}`)
     }
 
-    // Create job
+    // Create job - set isActive to false for admin validation
     const job = await prisma.jobs.create({
       data: {
         companyId: recruiter.companyId,
@@ -155,8 +161,14 @@ export async function POST(request) {
         
         applicationDeadline: applicationDeadline ? new Date(applicationDeadline) : null,
         
-        isActive: true,
-        publishedAt: new Date()
+        photo: photo || null,
+        isShift: isShift || false,
+        shiftCount: shiftCount ? parseInt(shiftCount) : null,
+        isDisabilityFriendly: isDisabilityFriendly || false,
+        
+        // Set inactive for admin validation
+        isActive: false,
+        publishedAt: null
       }
     })
 
@@ -192,7 +204,7 @@ export async function POST(request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Lowongan berhasil dipublikasikan!',
+      message: 'Lowongan berhasil diajukan! Menunggu validasi admin sebelum dipublikasikan.',
       job
     })
 

@@ -245,7 +245,7 @@ const AboutPage = () => {
                     </p>
                     <div className="flex flex-wrap justify-center gap-4">
                         <Link
-                            href="/register/jobseeker"
+                            href="/login?action=register&role=jobseeker"
                             className="inline-flex items-center gap-2 px-6 py-3 bg-white text-slate-800 font-semibold rounded-xl hover:bg-slate-100 transition shadow-lg"
                         >
                             <Users className="w-5 h-5" />
@@ -253,7 +253,7 @@ const AboutPage = () => {
                             <ArrowRight className="w-5 h-5" />
                         </Link>
                         <Link
-                            href="/register/recruiter"
+                            href="/login?action=register&role=recruiter"
                             className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white font-semibold rounded-xl hover:bg-white/20 transition border border-white/20"
                         >
                             <Building2 className="w-5 h-5" />

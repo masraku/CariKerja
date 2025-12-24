@@ -1,4 +1,3 @@
-//app/api/profile/recruiter/jobs/[slug]/update/route.js
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
@@ -38,28 +37,28 @@ export async function PUT(request, { params }) {
     const {
       title,
       description,
-      requirements,
-      responsibilities,
       benefits,
       location,
       city,
       province,
       isRemote,
       jobType,
-      level,
-      industry,
-      salaryMin,
-      salaryMax,
-      salaryType,
-      showSalary,
-      positions,
+      educationLevel,
+      numberOfPositions,
       applicationDeadline,
       skills,
-      isActive
+      isActive,
+      photo,
+      workingDays,
+      holidays,
+      isShift,
+      shiftCount,
+      isDisabilityFriendly,
+      gallery
     } = body
 
     // Validation
-    if (!title || !description || !location || !jobType || !level) {
+    if (!title || !description || !location || !jobType) {
       return NextResponse.json(
         { error: 'Please fill all required fields' },
         { status: 400 }
@@ -76,7 +75,6 @@ export async function PUT(request, { params }) {
         .replace(/-+/g, '-')
         .trim()
 
-      // Check if slug exists
       const slugExists = await prisma.jobs.findFirst({
         where: {
           slug: baseSlug,
@@ -87,37 +85,43 @@ export async function PUT(request, { params }) {
       newSlug = slugExists ? `${baseSlug}-${Date.now()}` : baseSlug
     }
 
-    // Update job
+    // Update job and reset status to PENDING for admin re-validation
     const updatedJob = await prisma.jobs.update({
       where: { slug },
       data: {
         title,
         slug: newSlug,
         description,
-        requirements: requirements || null,
-        responsibilities: responsibilities || null,
-        benefits: benefits || null,
+        benefits: benefits || [],
         location,
         city: city || location,
         province: province || '',
         isRemote: isRemote || false,
         jobType,
-        level,
-        industry: industry || existingJob.companies.industry,
-        salaryMin: salaryMin ? parseInt(salaryMin) : null,
-        salaryMax: salaryMax ? parseInt(salaryMax) : null,
-        salaryType: salaryType || 'monthly',
-        showSalary: showSalary || false,
-        positions: positions ? parseInt(positions) : 1,
+        educationLevel: educationLevel || null,
+        numberOfPositions: numberOfPositions ? parseInt(numberOfPositions) : 1,
         applicationDeadline: applicationDeadline ? new Date(applicationDeadline) : null,
-        skills: skills || [],
-        isActive: isActive !== undefined ? isActive : existingJob.isActive
+        isActive: false, // Set inactive until admin approves
+        
+        // Reset status to PENDING for admin re-validation
+        status: 'PENDING',
+        rejectionReason: null, // Clear previous rejection reason
+        publishedAt: null, // Clear published date
+        
+        photo: photo || null,
+        workingDays: workingDays || null,
+        holidays: holidays || null,
+        isShift: isShift || false,
+        shiftCount: shiftCount ? parseInt(shiftCount) : null,
+        isDisabilityFriendly: isDisabilityFriendly || false,
+        gallery: gallery || []
       }
     })
 
     return NextResponse.json({
       success: true,
-      job: updatedJob
+      job: updatedJob,
+      message: 'Lowongan berhasil diupdate dan dikirim untuk validasi ulang'
     })
 
   } catch (error) {

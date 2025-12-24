@@ -162,6 +162,15 @@ export async function GET(request, context) {
       maxExperience: job.maxExperience,
       educationLevel: job.educationLevel,
       applicationDeadline: job.applicationDeadline,
+      gallery: job.companies.gallery || [], // Fallback to company gallery if job gallery empty? Wait, schema has job gallery now. Let's use job gallery.
+      // Correction: job model has gallery now.
+      gallery: job.gallery || [],
+      photo: job.photo,
+      workingDays: job.workingDays,
+      holidays: job.holidays,
+      isShift: job.isShift,
+      shiftCount: job.shiftCount,
+      isDisabilityFriendly: job.isDisabilityFriendly,
       applicationEmail: job.applicationEmail,
       externalApply: job.externalApply,
       isFeatured: job.isFeatured,

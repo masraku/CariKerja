@@ -30,10 +30,11 @@ function LoginContent() {
   const searchParams = useSearchParams()
   const { login, refreshUser, isAuthenticated } = useAuth()
 
-  // Handle query alerts
+  // Handle query alerts & Auto-open Register
   useEffect(() => {
     const action = searchParams.get('action')
     const registered = searchParams.get('registered')
+    const roleParam = searchParams.get('role')
 
     if (registered === 'success') {
       Swal.fire({
@@ -48,6 +49,9 @@ function LoginContent() {
 
     if (action === 'register') {
       setIsSignUp(true)
+      if (roleParam === 'jobseeker' || roleParam === 'recruiter') {
+        setRegisterRole(roleParam)
+      }
     }
 
     if (action === 'post-job') {
@@ -427,7 +431,7 @@ function LoginContent() {
                                 className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                             />
                             <span className="ml-2 text-xs text-gray-600">
-                                Saya menyetujui <a href="#" className="text-blue-600 hover:underline">Syarat & Ketentuan</a>
+                                Saya menyetujui <a href="/warning" className="text-blue-600 hover:underline">Syarat & Ketentuan</a>
                             </span>
                         </div>
                         {regErrors.agreeTerms && <p className="text-red-500 text-xs">{regErrors.agreeTerms}</p>}

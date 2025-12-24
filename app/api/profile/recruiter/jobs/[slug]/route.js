@@ -1,11 +1,31 @@
-//app/api/profile/recruiter/jobs/[slug]/route.js
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/authHelper'
 
 export async function GET(request, { params }) {
   try {
+    const auth = await getCurrentUser(request)
+    if (auth.error) {
+      return NextResponse.json(
+        { error: auth.error },
+        { status: auth.status }
+      )
+    }
+
+    const { user } = auth
     const { slug } = await params
+
+    // Get recruiter profile
+    const recruiter = await prisma.recruiters.findUnique({
+      where: { userId: user.id }
+    })
+
+    if (!recruiter) {
+      return NextResponse.json(
+        { error: 'Recruiter profile not found' },
+        { status: 404 }
+      )
+    }
 
     // Get job with all related data
     const job = await prisma.jobs.findUnique({
@@ -24,7 +44,8 @@ export async function GET(request, { params }) {
             website: true,
             city: true,
             province: true,
-            address: true
+            address: true,
+            verified: true
           }
         },
         recruiters: {
@@ -35,9 +56,9 @@ export async function GET(request, { params }) {
             position: true
           }
         },
-        skills: {
+        job_skills: {
           include: {
-            skill: true
+            skills: true
           }
         },
         _count: {
@@ -55,54 +76,31 @@ export async function GET(request, { params }) {
       )
     }
 
-    // Check if job is still active
-    if (!job.isActive) {
+    // Verify ownership
+    if (job.recruiterId !== recruiter.id) {
       return NextResponse.json(
-        { error: 'This job posting is no longer active' },
-        { status: 410 }
+        { error: 'Access denied' },
+        { status: 403 }
       )
     }
 
-    // Increment view count
-    await prisma.jobs.update({
-      where: { id: job.id },
-      data: {
-        viewCount: {
-          increment: 1
-        }
-      }
-    })
+    // Format response like admin API
+    const formattedJob = {
+      ...job,
+      company: job.companies,
+      recruiter: job.recruiters,
+      skills: job.job_skills?.map(js => js.skills.name) || [],
+      applicationCount: job._count?.applications || 0
+    }
 
-    // Get other jobs from same company (related jobs)
-    const relatedJobs = await prisma.jobs.findMany({
-      where: {
-        companyId: job.companyId,
-        isActive: true,
-        id: { not: job.id }
-      },
-      take: 3,
-      orderBy: {
-        createdAt: 'desc'
-      },
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        location: true,
-        city: true,
-        jobType: true,
-        salaryMin: true,
-        salaryMax: true,
-        salaryType: true,
-        showSalary: true,
-        createdAt: true
-      }
-    })
+    delete formattedJob.companies
+    delete formattedJob.recruiters
+    delete formattedJob.job_skills
+    delete formattedJob._count
 
     return NextResponse.json({
       success: true,
-      job,
-      relatedJobs
+      job: formattedJob
     })
 
   } catch (error) {

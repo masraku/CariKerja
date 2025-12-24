@@ -24,6 +24,11 @@ export async function GET(request, { params }) {
               where: { userId: decoded.userId }
             }
           }
+        },
+        job_skills: {
+            include: {
+                skills: true
+            }
         }
       }
     })
@@ -37,7 +42,10 @@ export async function GET(request, { params }) {
 
     return NextResponse.json({
       success: true,
-      job
+      job: {
+        ...job,
+        skills: job.job_skills?.map(js => js.skills.name) || []
+      }
     })
 
   } catch (error) {

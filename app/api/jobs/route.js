@@ -234,7 +234,14 @@ export async function GET(request) {
         benefits: job.benefits,
         skills: job.job_skills.map(js => js.skills.name),
         educationLevel: job.educationLevel,
-        applicationDeadline: job.applicationDeadline
+        applicationDeadline: job.applicationDeadline,
+        gallery: job.gallery || [],
+        photo: job.photo,
+        workingDays: job.workingDays,
+        holidays: job.holidays,
+        isShift: job.isShift,
+        shiftCount: job.shiftCount,
+        isDisabilityFriendly: job.isDisabilityFriendly
       }
     }))
 

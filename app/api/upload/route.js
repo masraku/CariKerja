@@ -237,10 +237,48 @@ export async function POST(request) {
             photoUrl = publicUrl
 
         } else {
-            return NextResponse.json(
-                { error: 'Invalid upload type' },
-                { status: 400 }
-            )
+            // Generic upload (e.g., job photos)
+            const folder = formData.get('folder') || 'misc'
+            
+            // Get recruiter ID for job photos
+            const recruiter = await prisma.recruiters.findUnique({
+                where: { userId: user.id },
+                select: { id: true, companyId: true }
+            })
+
+            if (!recruiter) {
+                return NextResponse.json(
+                    { error: 'Profile not found' },
+                    { status: 404 }
+                )
+            }
+
+            const fileExt = file.name.split('.').pop()
+            const fileName = `${Date.now()}.${fileExt}`
+            const filePath = `${folder}/${recruiter.companyId || recruiter.id}/${fileName}`
+
+            // Upload to Supabase
+            const { data, error } = await supabaseAdmin.storage
+                .from('Profile')
+                .upload(filePath, file, {
+                    cacheControl: '3600',
+                    upsert: true
+                })
+
+            if (error) {
+                console.error('Upload error:', error)
+                return NextResponse.json(
+                    { error: `Failed to upload: ${error.message}` },
+                    { status: 500 }
+                )
+            }
+
+            // Get public URL
+            const { data: { publicUrl } } = supabaseAdmin.storage
+                .from('Profile')
+                .getPublicUrl(filePath)
+
+            photoUrl = publicUrl
         }
 
         return NextResponse.json({

@@ -329,14 +329,14 @@ export default function LandingPage() {
                             </p>
                             <div className="flex flex-col sm:flex-row justify-center gap-4">
                                 <Link
-                                    href="/register/jobseeker"
+                                    href="/login?action=register&role=jobseeker"
                                     className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-blue-600 hover:bg-blue-50 font-bold rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
                                 >
                                     Mulai Cari Kerja
                                     <ArrowRight className="w-5 h-5" />
                                 </Link>
                                 <Link
-                                    href="/register/recruiter"
+                                    href="/login?action=register&role=recruiter"
                                     className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-blue-700/50 hover:bg-blue-700 text-white font-bold rounded-xl transition-all border border-blue-400/30 hover:border-blue-400/50"
                                 >
                                     <Building2 className="w-5 h-5" />

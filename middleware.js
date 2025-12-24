@@ -8,9 +8,7 @@ export function middleware(request) {
   const publicRoutes = [
     '/',
     '/login',
-    '/register',
-    '/register/jobseeker',
-    '/register/recruiter',
+    '/login',
     '/forgot-password',
     '/jobs',
     '/companies',

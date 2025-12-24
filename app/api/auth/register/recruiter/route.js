@@ -121,12 +121,12 @@ export async function POST(request) {
         slug: slug,
         email: companyEmail.toLowerCase(),
         phone: contactPersonPhone,
-        address: 'Belum dilengkapi', // Temporary, akan diisi saat profile completion
-        city: 'Belum dilengkapi',
-        province: 'Belum dilengkapi',
+        address: '', // Empty - akan diisi saat profile completion
+        city: '',
+        province: '',
         website: null,
-        industry: 'Belum dilengkapi',
-        companySize: 'Belum dilengkapi',
+        industry: '',
+        companySize: '',
         status: 'PENDING_VERIFICATION',
         verified: false,
         updatedAt: new Date()

@@ -466,7 +466,35 @@ export default function JobApplicationsPage() {
 
                     {/* Action Buttons */}
                     <div className="flex flex-col gap-2 flex-shrink-0">
+                        {/* PENDING/REVIEWING: Show Shortlist button */}
                         {(application.status === 'PENDING' || application.status === 'REVIEWING') && (
+                            <>
+                                <button
+                                    onClick={async () => {
+                                        const token = localStorage.getItem('token')
+                                        await fetch(`/api/profile/recruiter/applications/${application.id}`, {
+                                            method: 'PATCH',
+                                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ status: 'SHORTLISTED' })
+                                        })
+                                        Swal.fire('Berhasil', 'Pelamar di-shortlist', 'success')
+                                        loadApplications()
+                                    }}
+                                    className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition flex items-center gap-2"
+                                >
+                                    <Star className="w-4 h-4" />
+                                    Shortlist
+                                </button>
+                                <button
+                                    onClick={() => handleReject(application.id, fullName)}
+                                    className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition"
+                                >
+                                    Tolak
+                                </button>
+                            </>
+                        )}
+                        {/* SHORTLISTED: Show Interview button */}
+                        {application.status === 'SHORTLISTED' && (
                             <>
                                 <button
                                     onClick={() => handleInviteInterview(application)}
@@ -658,6 +686,7 @@ export default function JobApplicationsPage() {
                             <option value="all">Semua Status</option>
                             <option value="PENDING">Pending</option>
                             <option value="REVIEWING">Reviewing</option>
+                            <option value="SHORTLISTED">Shortlisted</option>
                             <option value="INTERVIEW_SCHEDULED">Interview</option>
                             <option value="ACCEPTED">Accepted</option>
                         </select>
@@ -677,7 +706,7 @@ export default function JobApplicationsPage() {
 
                 {/* Bulk Actions */}
                 <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                         <button
                             onClick={handleSelectAll}
                             className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition flex items-center gap-2"
@@ -690,14 +719,66 @@ export default function JobApplicationsPage() {
                             Pilih Semua
                         </button>
                         <button
-                            onClick={() => {
+                            onClick={async () => {
                                 if (selectedApplications.length === 0) return
-                                const names = filteredApplications
-                                    .filter(app => selectedApplications.includes(app.id))
-                                    .map(app => `${app.jobseekers.firstName} ${app.jobseekers.lastName}`)
-                                    .join(', ')
-                                // Bulk reject
-                                Swal.fire('Info', `Fitur hapus massal untuk: ${names} akan segera hadir`, 'info')
+                                const result = await Swal.fire({
+                                    title: 'Shortlist Pelamar Terpilih?',
+                                    text: `${selectedApplications.length} pelamar akan di-shortlist`,
+                                    icon: 'question',
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#7c3aed',
+                                    confirmButtonText: 'Ya, Shortlist',
+                                    cancelButtonText: 'Batal'
+                                })
+                                if (result.isConfirmed) {
+                                    const token = localStorage.getItem('token')
+                                    for (const appId of selectedApplications) {
+                                        await fetch(`/api/profile/recruiter/applications/${appId}`, {
+                                            method: 'PATCH',
+                                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ status: 'SHORTLISTED' })
+                                        })
+                                    }
+                                    Swal.fire('Berhasil', 'Pelamar telah di-shortlist', 'success')
+                                    setSelectedApplications([])
+                                    loadApplications()
+                                }
+                            }}
+                            disabled={selectedApplications.length === 0}
+                            className={`px-4 py-2 border rounded-lg text-sm font-medium transition flex items-center gap-2 ${
+                                selectedApplications.length > 0
+                                    ? 'border-purple-300 text-purple-600 hover:bg-purple-50'
+                                    : 'border-gray-200 text-gray-400 cursor-not-allowed'
+                            }`}
+                        >
+                            <Star className="w-4 h-4" />
+                            Shortlist Terpilih
+                        </button>
+                        <button
+                            onClick={async () => {
+                                if (selectedApplications.length === 0) return
+                                const result = await Swal.fire({
+                                    title: 'Tolak Pelamar Terpilih?',
+                                    text: `${selectedApplications.length} pelamar akan ditolak`,
+                                    icon: 'warning',
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#dc2626',
+                                    confirmButtonText: 'Ya, Tolak',
+                                    cancelButtonText: 'Batal'
+                                })
+                                if (result.isConfirmed) {
+                                    const token = localStorage.getItem('token')
+                                    for (const appId of selectedApplications) {
+                                        await fetch(`/api/profile/recruiter/applications/${appId}`, {
+                                            method: 'PATCH',
+                                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ status: 'REJECTED' })
+                                        })
+                                    }
+                                    Swal.fire('Berhasil', 'Pelamar telah ditolak', 'success')
+                                    setSelectedApplications([])
+                                    loadApplications()
+                                }
                             }}
                             disabled={selectedApplications.length === 0}
                             className={`px-4 py-2 border rounded-lg text-sm font-medium transition flex items-center gap-2 ${
@@ -707,7 +788,7 @@ export default function JobApplicationsPage() {
                             }`}
                         >
                             <Trash2 className="w-4 h-4" />
-                            Hapus Terpilih
+                            Tolak Terpilih
                         </button>
                         <button
                             onClick={handleBulkInvite}
@@ -719,7 +800,7 @@ export default function JobApplicationsPage() {
                             }`}
                         >
                             <Send className="w-4 h-4" />
-                            Undang Terpilih
+                            Undang Interview
                         </button>
 
                         {selectedApplications.length > 0 && (

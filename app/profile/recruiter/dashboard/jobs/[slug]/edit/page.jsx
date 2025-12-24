@@ -1,273 +1,408 @@
-'use client'
-import { useState, useEffect } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+"use client";
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import {
   Briefcase,
   MapPin,
-  DollarSign,
   Users,
   Calendar,
   ArrowLeft,
   Save,
   Eye,
-  EyeOff
-} from 'lucide-react'
-import Swal from 'sweetalert2'
-import RupiahInput from '@/components/RupiahInput'
+  Plus,
+  X,
+  Image as ImageIcon,
+} from "lucide-react";
+import Swal from "sweetalert2";
 
 export default function EditJobPage() {
-  const router = useRouter()
-  const params = useParams()
-  const [loading, setLoading] = useState(true)
-  const [submitting, setSubmitting] = useState(false)
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    requirements: '',
-    responsibilities: '',
-    benefits: '',
-    location: '',
-    city: '',
-    province: '',
-    isRemote: false,
-    jobType: '',
-    level: '',
-    industry: '',
-    salaryMin: '',
-    salaryMax: '',
-    salaryType: 'monthly',
-    showSalary: true,
-    positions: '1',
-    applicationDeadline: '',
-    skills: [],
-    isActive: true
-  })
+  const router = useRouter();
+  const params = useParams();
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [newSkill, setNewSkill] = useState("");
+  const [newBenefit, setNewBenefit] = useState("");
 
-  const jobTypes = ['FULL_TIME', 'PART_TIME']
-  const levels = ['ENTRY_LEVEL', 'JUNIOR', 'MID_LEVEL', 'SENIOR', 'LEAD', 'MANAGER', 'DIRECTOR']
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    benefits: [],
+    location: "",
+    city: "",
+    province: "",
+    isRemote: false,
+    jobType: "",
+    educationLevel: "",
+    numberOfPositions: "1",
+    applicationDeadline: "",
+    skills: [],
+    isActive: true,
+    jobPhoto: "",
+    gallery: [],
+    workingDays: "",
+    holidays: "",
+    isShift: false,
+    shiftCount: "",
+    isDisabilityFriendly: false,
+  });
+
+  const jobTypes = ["FULL_TIME", "PART_TIME", "CONTRACT", "INTERNSHIP"];
+  const educationLevels = ["SMA", "D3", "S1", "S2", "S3"];
   const provinces = [
-    'DKI Jakarta', 'Jawa Barat', 'Jawa Tengah', 'Jawa Timur', 'Banten',
-    'DI Yogyakarta', 'Bali', 'Sumatera Utara', 'Sumatera Barat', 'Sulawesi Selatan'
-  ]
+    "DKI Jakarta",
+    "Jawa Barat",
+    "Jawa Tengah",
+    "Jawa Timur",
+    "Banten",
+    "DI Yogyakarta",
+    "Bali",
+    "Sumatera Utara",
+    "Sumatera Barat",
+    "Sulawesi Selatan",
+  ];
 
   useEffect(() => {
-    loadJob()
-  }, [params.slug])
+    loadJob();
+  }, [params.slug]);
 
   const loadJob = async () => {
     try {
-      setLoading(true)
-      const token = localStorage.getItem('token')
-      const response = await fetch(`/api/recruiter/jobs/${params.slug}/edit`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `/api/profile/recruiter/jobs/${params.slug}/edit`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      })
+      );
 
       if (response.ok) {
-        const data = await response.json()
-        const job = data.job
+        const data = await response.json();
+        const job = data.job;
 
-        // Format date for input
         const formatDate = (date) => {
-          if (!date) return ''
-          const d = new Date(date)
-          return d.toISOString().split('T')[0]
-        }
+          if (!date) return "";
+          const d = new Date(date);
+          return d.toISOString().split("T")[0];
+        };
 
         setFormData({
-          title: job.title || '',
-          description: job.description || '',
-          requirements: job.requirements || '',
-          responsibilities: job.responsibilities || '',
-          benefits: job.benefits || '',
-          location: job.location || '',
-          city: job.city || '',
-          province: job.province || '',
+          title: job.title || "",
+          description: job.description || "",
+          benefits: Array.isArray(job.benefits) ? job.benefits : [],
+          location: job.location || "",
+          city: job.city || "",
+          province: job.province || "",
           isRemote: job.isRemote || false,
-          jobType: job.jobType || '',
-          level: job.level || '',
-          industry: job.industry || '',
-          salaryMin: job.salaryMin?.toString() || '',
-          salaryMax: job.salaryMax?.toString() || '',
-          salaryType: job.salaryType || 'monthly',
-          showSalary: job.showSalary || false,
-          positions: job.positions?.toString() || '1',
-          applicationDeadline: formatDate(job.applicationDeadline) || '',
+          jobType: job.jobType || "",
+          educationLevel: job.educationLevel || "",
+          numberOfPositions: job.numberOfPositions?.toString() || "1",
+          applicationDeadline: formatDate(job.applicationDeadline) || "",
           skills: job.skills || [],
-          isActive: job.isActive !== undefined ? job.isActive : true
-        })
+          isActive: job.isActive !== undefined ? job.isActive : true,
+          jobPhoto: job.photo || "",
+          gallery: Array.isArray(job.gallery) ? job.gallery : [],
+          workingDays: job.workingDays || "",
+          holidays: job.holidays || "",
+          isShift: job.isShift || false,
+          shiftCount: job.shiftCount?.toString() || "",
+          isDisabilityFriendly: job.isDisabilityFriendly || false,
+        });
       } else {
-        throw new Error('Failed to load job')
+        throw new Error("Failed to load job");
       }
     } catch (error) {
-      console.error('Load job error:', error)
+      console.error("Load job error:", error);
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Failed to load job data'
-      })
-      router.push('/recruiter/jobs')
+        icon: "error",
+        title: "Error",
+        text: "Failed to load job data",
+      });
+      router.push("/profile/recruiter/dashboard/jobs");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target
-    setFormData(prev => ({
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }))
-  }
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
 
-  const handleSkillsChange = (e) => {
-    const skillsArray = e.target.value.split(',').map(s => s.trim()).filter(s => s)
-    setFormData(prev => ({
+  // Skills handlers
+  const handleAddSkill = () => {
+    if (newSkill.trim() && !formData.skills.includes(newSkill.trim())) {
+      setFormData((prev) => ({
+        ...prev,
+        skills: [...prev.skills, newSkill.trim()],
+      }));
+      setNewSkill("");
+    }
+  };
+
+  const handleRemoveSkill = (index) => {
+    setFormData((prev) => ({
       ...prev,
-      skills: skillsArray
-    }))
-  }
+      skills: prev.skills.filter((_, i) => i !== index),
+    }));
+  };
+
+  // Benefits handlers
+  const handleAddBenefit = () => {
+    if (newBenefit.trim() && !formData.benefits.includes(newBenefit.trim())) {
+      setFormData((prev) => ({
+        ...prev,
+        benefits: [...prev.benefits, newBenefit.trim()],
+      }));
+      setNewBenefit("");
+    }
+  };
+
+  const handleRemoveBenefit = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      benefits: prev.benefits.filter((_, i) => i !== index),
+    }));
+  };
+
+  // Photo Upload Handler (Main Photo)
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    uploadFile(file, "jobPhoto");
+  };
+
+  // Gallery Upload Handler
+  const handleGalleryUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (formData.gallery.length >= 5) {
+      Swal.fire({
+        icon: "warning",
+        title: "Limit Reached",
+        text: "Maksimal 5 foto galeri",
+      });
+      return;
+    }
+
+    uploadFile(file, "gallery");
+  };
+
+  const uploadFile = async (file, type) => {
+    Swal.fire({
+      title: "Uploading...",
+      text: "Sedang mengupload foto",
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading(),
+    });
+
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append("file", file);
+      formDataUpload.append("folder", "jobs");
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: formDataUpload,
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.url) {
+        if (type === "gallery") {
+          setFormData((prev) => ({
+            ...prev,
+            gallery: [...prev.gallery, data.url],
+          }));
+        } else {
+          setFormData((prev) => ({
+            ...prev,
+            [type]: data.url,
+          }));
+        }
+        Swal.close();
+      } else {
+        throw new Error(data.error || "Upload failed");
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Upload Gagal",
+        text: error.message,
+      });
+    }
+  };
+
+  const handleRemoveGallery = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      gallery: prev.gallery.filter((_, i) => i !== index),
+    }));
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    // Validation
-    if (!formData.title || !formData.description || !formData.location || !formData.jobType || !formData.level) {
+    if (
+      !formData.title ||
+      !formData.description ||
+      !formData.location ||
+      !formData.jobType
+    ) {
       Swal.fire({
-        icon: 'warning',
-        title: 'Incomplete Form',
-        text: 'Please fill all required fields'
-      })
-      return
+        icon: "warning",
+        title: "Incomplete Form",
+        text: "Please fill all required fields",
+      });
+      return;
     }
 
     const result = await Swal.fire({
-      title: 'Update Lowongan?',
-      text: 'Pastikan semua informasi sudah benar',
-      icon: 'question',
+      title: "Update Lowongan?",
+      text: "Pastikan semua informasi sudah benar",
+      icon: "question",
       showCancelButton: true,
-      confirmButtonColor: '#3b82f6',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Ya, Update',
-      cancelButtonText: 'Batal'
-    })
+      confirmButtonColor: "#3b82f6",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Ya, Update",
+      cancelButtonText: "Batal",
+    });
 
-    if (!result.isConfirmed) return
+    if (!result.isConfirmed) return;
 
-    setSubmitting(true)
+    setSubmitting(true);
 
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`/api/recruiter/jobs/${params.slug}/update`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      })
+      const token = localStorage.getItem("token");
+      const submitData = {
+        ...formData,
+        photo: formData.jobPhoto,
+        // Ensure array fields are sent correctly
+        gallery: formData.gallery || [],
+        benefits: formData.benefits || [],
+        skills: formData.skills || [],
+      };
 
-      const data = await response.json()
+      const response = await fetch(
+        `/api/profile/recruiter/jobs/${params.slug}/update`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(submitData),
+        }
+      );
+
+      const data = await response.json();
 
       if (response.ok) {
         await Swal.fire({
-          icon: 'success',
-          title: 'Berhasil!',
-          text: 'Lowongan berhasil diupdate',
-          confirmButtonColor: '#3b82f6'
-        })
-        router.push('/recruiter/jobs')
+          icon: "success",
+          title: "Berhasil Diajukan!",
+          text: "Lowongan berhasil diupdate dan dikirim untuk validasi ulang oleh admin.",
+          confirmButtonColor: "#3b82f6",
+        });
+        router.push("/profile/recruiter/dashboard/jobs");
       } else {
-        throw new Error(data.error || 'Failed to update job')
+        throw new Error(data.details || data.error || "Failed to update job");
       }
     } catch (error) {
-      console.error('Update job error:', error)
+      console.error("Update job error:", error);
       Swal.fire({
-        icon: 'error',
-        title: 'Gagal Update',
-        text: error.message
-      })
+        icon: "error",
+        title: "Gagal Update",
+        text: error.message,
+      });
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading job data...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-500 font-medium">Memuat data...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
-        {/* Header */}
-        <div className="mb-6">
+    <div className="min-h-screen bg-gray-50/50 pb-32">
+      {/* Top Bar */}
+      <div className="bg-white border-b border-gray-100 sticky top-0 z-30">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between max-w-5xl">
           <button
-            onClick={() => router.push('/recruiter/jobs')}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+            onClick={() => router.push("/profile/recruiter/dashboard/jobs")}
+            className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors font-medium"
           >
             <ArrowLeft className="w-5 h-5" />
-            Kembali ke Daftar Lowongan
+            <span>Kembali</span>
           </button>
-
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Briefcase className="w-6 h-6 text-blue-600" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Edit Lowongan</h1>
-                <p className="text-gray-600">Update informasi lowongan pekerjaan</p>
-              </div>
-            </div>
-          </div>
+          <h1 className="text-lg font-bold text-gray-900">Edit Lowongan</h1>
+          <div className="w-20"></div> {/* Spacer for center alignment */}
         </div>
+      </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Basic Info */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Informasi Dasar</h2>
+      <main className="container mx-auto px-4 py-8 max-w-5xl">
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Main Info Card */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                <Briefcase className="w-5 h-5" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">
+                Informasi Utama
+              </h2>
+            </div>
 
-            <div className="space-y-4">
+            <div className="grid gap-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Job Title <span className="text-red-500">*</span>
+                  Judul Posisi <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="title"
                   value={formData.title}
                   onChange={handleInputChange}
-                  className="w-full text-gray-900 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g. Senior Frontend Developer"
+                  className="w-full bg-gray-50 text-gray-900 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                  placeholder="Contoh: Senior Frontend Developer"
                   required
                 />
               </div>
 
-              <div className="grid md:grid-cols-3 gap-4">
+              <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Job Type <span className="text-red-500">*</span>
+                    Tipe Pekerjaan <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="jobType"
                     value={formData.jobType}
                     onChange={handleInputChange}
-                    className="w-full text-gray-900 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full bg-gray-50 text-gray-900 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none appearance-none"
                     required
                   >
-                    <option value="">Select Type</option>
-                    {jobTypes.map(type => (
+                    <option value="">Pilih Tipe</option>
+                    {jobTypes.map((type) => (
                       <option key={type} value={type}>
-                        {type.replace('_', ' ')}
+                        {type.replace("_", " ")}
                       </option>
                     ))}
                   </select>
@@ -275,339 +410,473 @@ export default function EditJobPage() {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Level <span className="text-red-500">*</span>
+                    Level Pendidikan
                   </label>
                   <select
-                    name="level"
-                    value={formData.level}
+                    name="educationLevel"
+                    value={formData.educationLevel}
                     onChange={handleInputChange}
-                    className="w-full text-gray-900 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
+                    className="w-full bg-gray-50 text-gray-900 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none appearance-none"
                   >
-                    <option value="">Select Level</option>
-                    {levels.map(level => (
+                    <option value="">Tidak ada persyaratan</option>
+                    {educationLevels.map((level) => (
                       <option key={level} value={level}>
-                        {level.replace('_', ' ')}
+                        {level}
                       </option>
                     ))}
                   </select>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Positions
-                  </label>
-                  <input
-                    type="number"
-                    name="positions"
-                    value={formData.positions}
-                    onChange={handleInputChange}
-                    min="1"
-                    className="w-full text-gray-900 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Industry
+                  Jumlah Posisi
                 </label>
                 <input
-                  type="text"
-                  name="industry"
-                  value={formData.industry}
+                  type="number"
+                  name="numberOfPositions"
+                  value={formData.numberOfPositions}
                   onChange={handleInputChange}
-                  className="w-full text-gray-900 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g. Technology, Finance, Healthcare"
+                  min="1"
+                  className="w-full md:w-1/3 bg-gray-50 text-gray-900 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
                 />
-              </div>
-            </div>
-          </div>
-
-          {/* Location */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Location</h2>
-
-            <div className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Location <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="location"
-                    value={formData.location}
-                    onChange={handleInputChange}
-                    className="w-full text-gray-900 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="e.g. Jakarta Selatan"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    className="w-full text-gray-900 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="e.g. Jakarta"
-                  />
-                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Province
-                </label>
-                <select
-                  name="province"
-                  value={formData.province}
-                  onChange={handleInputChange}
-                  className="w-full text-gray-900 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select Province</option>
-                  {provinces.map(prov => (
-                    <option key={prov} value={prov}>{prov}</option>
-                  ))}
-                </select>
-              </div>
-
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  name="isRemote"
-                  checked={formData.isRemote}
-                  onChange={handleInputChange}
-                  className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                />
-                <span className="text-gray-700">This is a remote position</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Salary */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Salary</h2>
-
-            <div className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Minimum Salary
-                  </label>
-                  <RupiahInput
-                    name="salaryMin"
-                    value={formData.salaryMin}
-                    onChange={handleInputChange}
-                    placeholder="5.000.000"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Maximum Salary
-                  </label>
-                  <RupiahInput
-                    name="salaryMax"
-                    value={formData.salaryMax}
-                    onChange={handleInputChange}
-                    placeholder="10.000.000"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Salary Type
-                </label>
-                <select
-                  name="salaryType"
-                  value={formData.salaryType}
-                  onChange={handleInputChange}
-                  className="w-full text-gray-900 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="monthly">Monthly</option>
-                  <option value="yearly">Yearly</option>
-                  <option value="hourly">Hourly</option>
-                </select>
-              </div>
-
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  name="showSalary"
-                  checked={formData.showSalary}
-                  onChange={handleInputChange}
-                  className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                />
-                <span className="text-gray-700 flex items-center gap-2">
-                  {formData.showSalary ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                  Display salary range to applicants
-                </span>
-              </label>
-            </div>
-          </div>
-
-          {/* Description */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Job Details</h2>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Job Description <span className="text-red-500">*</span>
+                  Deskripsi Pekerjaan <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   name="description"
                   value={formData.description}
                   onChange={handleInputChange}
-                  rows="6"
-                  className="w-full text-gray-900 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Describe the job role, responsibilities, and what makes this position exciting..."
+                  rows="8"
+                  className="w-full bg-gray-50 text-gray-900 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none resize-y"
+                  placeholder="Jelaskan detail tanggung jawab, persyaratan, dan ekspektasi..."
                   required
                 ></textarea>
               </div>
+            </div>
+          </div>
 
+          {/* Media Gallery */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-600">
+                <ImageIcon className="w-5 h-5" />
+              </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Requirements
+                <h2 className="text-xl font-bold text-gray-900">
+                  Media & Galeri
+                </h2>
+                <p className="text-sm text-gray-500">
+                  Upload foto untuk menarik kandidat
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-8">
+              {/* Main Photo */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  Foto Utama (Thumbnail)
                 </label>
-                <textarea
-                  name="requirements"
-                  value={formData.requirements}
+                <div className="border-2 border-dashed border-gray-200 rounded-2xl p-4 transition-all hover:border-blue-400 hover:bg-blue-50/10 group">
+                  {formData.jobPhoto ? (
+                    <div className="relative aspect-video w-full max-w-md mx-auto rounded-xl overflow-hidden shadow-sm">
+                      <img
+                        src={formData.jobPhoto}
+                        alt="Job Thumbnail"
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormData((prev) => ({ ...prev, jobPhoto: "" }))
+                        }
+                        className="absolute top-2 right-2 p-1.5 bg-white/90 text-red-500 rounded-full hover:bg-red-50 transition-colors shadow-sm backdrop-blur-sm"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center py-12 cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handlePhotoUpload}
+                      />
+                      <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <ImageIcon className="w-8 h-8" />
+                      </div>
+                      <span className="font-semibold text-gray-900">
+                        Upload Foto Utama
+                      </span>
+                      <span className="text-sm text-gray-500 mt-1">
+                        JPG, PNG max 5MB
+                      </span>
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              {/* Gallery */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  Galeri Foto Tambahan{" "}
+                  <span className="text-gray-400 font-normal">
+                    (Maksimal 5)
+                  </span>
+                </label>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                  {formData.gallery.map((photo, index) => (
+                    <div
+                      key={index}
+                      className="relative aspect-square rounded-xl overflow-hidden group shadow-sm bg-gray-100"
+                    >
+                      <img
+                        src={photo}
+                        alt={`Gallery ${index}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveGallery(index)}
+                        className="absolute top-1 right-1 p-1 bg-white/90 text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+
+                  {formData.gallery.length < 5 && (
+                    <label className="aspect-square border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/10 transition-all text-gray-400 hover:text-blue-500">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleGalleryUpload}
+                      />
+                      <Plus className="w-8 h-8 mb-2" />
+                      <span className="text-xs font-semibold">Tambah</span>
+                    </label>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Additional Details */}
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Location & Schedule */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 space-y-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-600">
+                  <MapPin className="w-5 h-5" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">
+                  Lokasi & Jadwal
+                </h2>
+              </div>
+
+              <label className="flex items-start gap-3 p-4 border border-gray-200 rounded-xl hover:border-blue-300 transition-colors cursor-pointer bg-gray-50/50">
+                <input
+                  type="checkbox"
+                  name="isRemote"
+                  checked={formData.isRemote}
                   onChange={handleInputChange}
-                  rows="6"
-                  className="w-full text-gray-900 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="List the required qualifications, skills, and experience..."
-                ></textarea>
+                  className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300"
+                />
+                <div>
+                  <span className="font-semibold text-gray-900 block">
+                    Remote / WFH
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    Pekerjaan bisa dilakukan dari mana saja
+                  </span>
+                </div>
+              </label>
+
+              {!formData.isRemote && (
+                <div className="space-y-4 pt-2">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Alamat Lengkap <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="location"
+                      value={formData.location}
+                      onChange={handleInputChange}
+                      className="w-full bg-gray-50 text-gray-900 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                      required
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      name="city"
+                      value={formData.city}
+                      onChange={handleInputChange}
+                      className="w-full bg-gray-50 text-gray-900 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                      placeholder="Kota"
+                    />
+                    <select
+                      name="province"
+                      value={formData.province}
+                      onChange={handleInputChange}
+                      className="w-full bg-gray-50 text-gray-900 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none appearance-none"
+                    >
+                      <option value="">Provinsi</option>
+                      {provinces.map((prov) => (
+                        <option key={prov} value={prov}>
+                          {prov}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-4 border-t border-gray-100 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">
+                      Hari Kerja
+                    </label>
+                    <input
+                      type="text"
+                      name="workingDays"
+                      value={formData.workingDays}
+                      onChange={handleInputChange}
+                      className="w-full bg-gray-50 text-gray-900 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-blue-500 outline-none"
+                      placeholder="Senin - Jumat"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">
+                      Hari Libur
+                    </label>
+                    <input
+                      type="text"
+                      name="holidays"
+                      value={formData.holidays}
+                      onChange={handleInputChange}
+                      className="w-full bg-gray-50 text-gray-900 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-blue-500 outline-none"
+                      placeholder="Sabtu - Minggu"
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <label className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      name="isShift"
+                      checked={formData.isShift}
+                      onChange={handleInputChange}
+                      className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    />
+                    <span className="font-medium text-gray-900 text-sm">
+                      Sistem Shift
+                    </span>
+                  </label>
+
+                  {formData.isShift && (
+                    <select
+                      name="shiftCount"
+                      value={formData.shiftCount}
+                      onChange={handleInputChange}
+                      className="mt-3 w-full bg-white text-gray-900 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-blue-500 outline-none"
+                    >
+                      <option value="">Pilih Jumlah Shift</option>
+                      <option value="2">2 Shift</option>
+                      <option value="3">3 Shift</option>
+                      <option value="4">4 Shift</option>
+                    </select>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Skills & Benefits */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 space-y-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-600">
+                  <Users className="w-5 h-5" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">Kualifikasi</h2>
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Responsibilities
+                  Skill Wajib
                 </label>
-                <textarea
-                  name="responsibilities"
-                  value={formData.responsibilities}
-                  onChange={handleInputChange}
-                  rows="6"
-                  className="w-full text-gray-900 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="What will the person do in this role?"
-                ></textarea>
+                <div className="flex gap-2 mb-3">
+                  <input
+                    type="text"
+                    value={newSkill}
+                    onChange={(e) => setNewSkill(e.target.value)}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" &&
+                      (e.preventDefault(), handleAddSkill())
+                    }
+                    className="flex-1 bg-gray-50 text-gray-900 px-4 py-2 border border-gray-200 rounded-xl focus:border-blue-500 outline-none"
+                    placeholder="Tambah skill..."
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddSkill}
+                    className="w-10 h-10 bg-gray-900 text-white rounded-xl flex items-center justify-center hover:bg-black transition-colors"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2 min-h-[40px]">
+                  {formData.skills.map((skill, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium group"
+                    >
+                      {skill}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSkill(index)}
+                        className="text-gray-400 hover:text-red-500"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </span>
+                  ))}
+                  {formData.skills.length === 0 && (
+                    <p className="text-sm text-gray-400 italic">
+                      Belum ada skill ditambahkan
+                    </p>
+                  )}
+                </div>
               </div>
 
-              <div>
+              <div className="pt-6 border-t border-gray-100">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Benefits
                 </label>
-                <textarea
-                  name="benefits"
-                  value={formData.benefits}
-                  onChange={handleInputChange}
-                  rows="4"
-                  className="w-full text-gray-900 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Health insurance, flexible hours, professional development, etc..."
-                ></textarea>
-              </div>
-            </div>
-          </div>
-
-          {/* Additional Info */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Additional Information</h2>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Required Skills (comma separated)
-                </label>
-                <input
-                  type="text"
-                  value={formData.skills.join(', ')}
-                  onChange={handleSkillsChange}
-                  className="w-full text-gray-900 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="JavaScript, React, Node.js, SQL"
-                />
-                {formData.skills.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {formData.skills.map((skill, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm"
+                <div className="flex gap-2 mb-3">
+                  <input
+                    type="text"
+                    value={newBenefit}
+                    onChange={(e) => setNewBenefit(e.target.value)}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" &&
+                      (e.preventDefault(), handleAddBenefit())
+                    }
+                    className="flex-1 bg-gray-50 text-gray-900 px-4 py-2 border border-gray-200 rounded-xl focus:border-blue-500 outline-none"
+                    placeholder="Tambah benefit..."
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddBenefit}
+                    className="w-10 h-10 bg-green-600 text-white rounded-xl flex items-center justify-center hover:bg-green-700 transition-colors"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {formData.benefits.map((benefit, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-sm font-medium"
+                    >
+                      {benefit}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveBenefit(index)}
+                        className="text-green-600/60 hover:text-green-800"
                       >
-                        {skill}
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-gray-100">
+                <div className="bg-blue-50 rounded-xl p-4">
+                  <label className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      name="isDisabilityFriendly"
+                      checked={formData.isDisabilityFriendly}
+                      onChange={handleInputChange}
+                      className="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    />
+                    <div>
+                      <span className="font-semibold text-blue-900 block text-sm">
+                        Ramah Disabilitas
                       </span>
-                    ))}
-                  </div>
-                )}
+                      <span className="text-xs text-blue-600">
+                        Posisi terbuka untuk penyandang disabilitas
+                      </span>
+                    </div>
+                  </label>
+                </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Application Deadline
-                </label>
-                <input
-                  type="date"
-                  name="applicationDeadline"
-                  value={formData.applicationDeadline}
-                  onChange={handleInputChange}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full text-gray-900 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  name="isActive"
-                  checked={formData.isActive}
-                  onChange={handleInputChange}
-                  className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                />
-                <span className="text-gray-700">Job is active (visible to candidates)</span>
-              </label>
             </div>
           </div>
 
-          {/* Submit Buttons */}
-          <div className="flex items-center gap-4">
-            <button
-              type="submit"
-              disabled={submitting}
-              className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-lg font-semibold text-white transition ${
-                submitting
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700'
-              }`}
-            >
-              {submitting ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white"></div>
-                  Updating...
-                </>
-              ) : (
-                <>
-                  <Save className="w-5 h-5" />
-                  Update Lowongan
-                </>
-              )}
-            </button>
+          {/* Bottom Action Bar */}
+          <div className="fixed bottom-0 left-0 lg:left-64 right-0 bg-white border-t border-gray-100 p-4 shadow-lg z-20">
+            <div className="container mx-auto max-w-5xl flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                  <input
+                    type="checkbox"
+                    name="isActive"
+                    checked={formData.isActive}
+                    onChange={handleInputChange}
+                    className="text-blue-600 focus:ring-blue-500 rounded"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Tampilkan Lowongan
+                  </span>
+                </label>
+              </div>
 
-            <button
-              type="button"
-              onClick={() => router.push('/recruiter/jobs')}
-              className="px-6 py-4 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold"
-            >
-              Batal
-            </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    router.push("/profile/recruiter/dashboard/jobs")
+                  }
+                  className="px-6 py-2.5 text-gray-600 font-medium hover:bg-gray-50 rounded-xl transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className={`flex items-center gap-2 px-8 py-2.5 bg-gray-900 text-white rounded-xl font-medium hover:bg-black transition-all shadow-lg shadow-gray-200 transform active:scale-95 ${
+                    submitting ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
+                >
+                  {submitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <span>Menyimpan...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      <span>Simpan Perubahan</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </form>
-      </div>
+      </main>
     </div>
-  )
+  );
 }

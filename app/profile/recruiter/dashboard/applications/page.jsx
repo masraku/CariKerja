@@ -178,39 +178,112 @@ export default function AllApplicationsPage() {
         )
     }
 
+    const handleBulkShortlist = async () => {
+        if (selectedApplicants.length === 0) {
+            Swal.fire('Info', 'Pilih pelamar terlebih dahulu', 'info')
+            return
+        }
+        
+        const result = await Swal.fire({
+            title: 'Shortlist Pelamar Terpilih?',
+            text: `${selectedApplicants.length} pelamar akan di-shortlist`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#7c3aed',
+            confirmButtonText: 'Ya, Shortlist',
+            cancelButtonText: 'Batal'
+        })
+
+        if (result.isConfirmed) {
+            try {
+                const token = localStorage.getItem('token')
+                let successCount = 0
+                
+                for (const appId of selectedApplicants) {
+                    const response = await fetch(`/api/applications/${appId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ status: 'SHORTLISTED' })
+                    })
+                    if (response.ok) successCount++
+                }
+                
+                await Swal.fire('Berhasil', `${successCount} pelamar telah di-shortlist`, 'success')
+                setSelectedApplicants([])
+                loadAllApplications()
+            } catch (error) {
+                Swal.fire('Error', 'Gagal shortlist pelamar', 'error')
+            }
+        }
+    }
+
     const handleBulkInvite = async () => {
         if (selectedApplicants.length === 0) {
             Swal.fire('Info', 'Pilih pelamar terlebih dahulu', 'info')
             return
         }
         
-        // TODO: Implement bulk invite logic
-        Swal.fire({
-            icon: 'info',
-            title: 'Undang Interview',
-            text: `Fitur undang interview untuk ${selectedApplicants.length} pelamar akan segera hadir`
+        const result = await Swal.fire({
+            title: 'Undang Interview?',
+            text: `${selectedApplicants.length} pelamar akan diundang interview`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#2563eb',
+            confirmButtonText: 'Ya, Undang',
+            cancelButtonText: 'Batal'
         })
+
+        if (result.isConfirmed) {
+            // Navigate to first selected for now
+            const firstApp = applications.find(a => a.id === selectedApplicants[0])
+            if (firstApp) {
+                router.push(`/profile/recruiter/dashboard/jobs/${firstApp.jobs.slug}/applications/${firstApp.id}?action=interview`)
+            }
+        }
     }
 
-    const handleBulkDelete = async () => {
+    const handleBulkReject = async () => {
         if (selectedApplicants.length === 0) {
             Swal.fire('Info', 'Pilih pelamar terlebih dahulu', 'info')
             return
         }
 
         const result = await Swal.fire({
-            title: 'Hapus Pelamar Terpilih?',
-            text: `${selectedApplicants.length} pelamar akan dihapus dari daftar`,
+            title: 'Tolak Pelamar Terpilih?',
+            text: `${selectedApplicants.length} pelamar akan ditolak`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#dc2626',
-            confirmButtonText: 'Ya, Hapus',
+            confirmButtonText: 'Ya, Tolak',
             cancelButtonText: 'Batal'
         })
 
         if (result.isConfirmed) {
-            // TODO: Implement bulk delete logic
-            Swal.fire('Info', 'Fitur hapus massal akan segera hadir', 'info')
+            try {
+                const token = localStorage.getItem('token')
+                let successCount = 0
+                
+                for (const appId of selectedApplicants) {
+                    const response = await fetch(`/api/applications/${appId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ status: 'REJECTED' })
+                    })
+                    if (response.ok) successCount++
+                }
+                
+                await Swal.fire('Berhasil', `${successCount} pelamar telah ditolak`, 'success')
+                setSelectedApplicants([])
+                loadAllApplications()
+            } catch (error) {
+                Swal.fire('Error', 'Gagal menolak pelamar', 'error')
+            }
         }
     }
 
@@ -253,18 +326,61 @@ export default function AllApplicationsPage() {
         }
     }
 
-    const openDocumentModal = (url, title, type) => {
+    const openDocumentModal = async (url, title, type, applicationId, currentStatus) => {
         setDocumentModal({ isOpen: true, url, title, type })
+        
+        // Update status to REVIEWING if currently PENDING
+        if (currentStatus === 'PENDING' && applicationId) {
+            try {
+                const token = localStorage.getItem('token')
+                await fetch(`/api/applications/${applicationId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: 'REVIEWING' })
+                })
+                // Silently update local state
+                setApplications(prev => prev.map(app => 
+                    app.id === applicationId ? { ...app, status: 'REVIEWING' } : app
+                ))
+            } catch (error) {
+                console.error('Failed to update status:', error)
+            }
+        }
     }
 
-    const openPhotoModal = (url, name) => {
+    const openPhotoModal = async (url, name, applicationId, currentStatus) => {
         setPhotoModal({ isOpen: true, url, name })
+        
+        // Update status to REVIEWING if currently PENDING
+        if (currentStatus === 'PENDING' && applicationId) {
+            try {
+                const token = localStorage.getItem('token')
+                await fetch(`/api/applications/${applicationId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: 'REVIEWING' })
+                })
+                // Silently update local state
+                setApplications(prev => prev.map(app => 
+                    app.id === applicationId ? { ...app, status: 'REVIEWING' } : app
+                ))
+            } catch (error) {
+                console.error('Failed to update status:', error)
+            }
+        }
     }
 
     const getStatusBadge = (status) => {
         const statusConfig = {
             PENDING: { label: 'Pending', color: 'bg-yellow-100 text-yellow-700 border-yellow-300' },
             REVIEWING: { label: 'Reviewing', color: 'bg-blue-100 text-blue-700 border-blue-300' },
+            SHORTLISTED: { label: 'Shortlisted', color: 'bg-purple-100 text-purple-700 border-purple-300' },
             INTERVIEW_SCHEDULED: { label: 'Interview', color: 'bg-indigo-100 text-indigo-700 border-indigo-300' },
             INTERVIEW_COMPLETED: { label: 'Selesai', color: 'bg-teal-100 text-teal-700 border-teal-300' },
             ACCEPTED: { label: 'Diterima', color: 'bg-green-100 text-green-700 border-green-300' },
@@ -319,7 +435,7 @@ export default function AllApplicationsPage() {
 
                     {/* Photo */}
                     <button
-                        onClick={() => application.jobseekers.photo && openPhotoModal(application.jobseekers.photo, `${application.jobseekers.firstName} ${application.jobseekers.lastName}`)}
+                        onClick={() => application.jobseekers.photo && openPhotoModal(application.jobseekers.photo, `${application.jobseekers.firstName} ${application.jobseekers.lastName}`, application.id, application.status)}
                         className="flex-shrink-0 relative group"
                     >
                         <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-white text-xl font-bold overflow-hidden">
@@ -375,7 +491,7 @@ export default function AllApplicationsPage() {
                         <div className="flex flex-wrap items-center gap-2 mb-3">
                             {/* CV Badge */}
                             <button
-                                onClick={() => application.jobseekers.cvUrl && openDocumentModal(application.jobseekers.cvUrl, 'CV', 'pdf')}
+                                onClick={() => application.jobseekers.cvUrl && openDocumentModal(application.jobseekers.cvUrl, 'CV', 'pdf', application.id, application.status)}
                                 disabled={!application.jobseekers.cvUrl}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
                                     application.jobseekers.cvUrl
@@ -389,7 +505,7 @@ export default function AllApplicationsPage() {
 
                             {/* KTP Badge */}
                             <button
-                                onClick={() => application.jobseekers.ktpUrl && openDocumentModal(application.jobseekers.ktpUrl, 'KTP', 'image')}
+                                onClick={() => application.jobseekers.ktpUrl && openDocumentModal(application.jobseekers.ktpUrl, 'KTP', 'image', application.id, application.status)}
                                 disabled={!application.jobseekers.ktpUrl}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
                                     application.jobseekers.ktpUrl
@@ -403,7 +519,7 @@ export default function AllApplicationsPage() {
 
                             {/* AK1 Badge */}
                             <button
-                                onClick={() => application.jobseekers.ak1Url && openDocumentModal(application.jobseekers.ak1Url, 'AK1', 'pdf')}
+                                onClick={() => application.jobseekers.ak1Url && openDocumentModal(application.jobseekers.ak1Url, 'AK1', 'pdf', application.id, application.status)}
                                 disabled={!application.jobseekers.ak1Url}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
                                     application.jobseekers.ak1Url
@@ -433,7 +549,35 @@ export default function AllApplicationsPage() {
 
                     {/* Action Buttons */}
                     <div className="flex flex-col gap-2 flex-shrink-0">
-                        {application.status === 'PENDING' && (
+                        {/* PENDING/REVIEWING: Show Shortlist button */}
+                        {(application.status === 'PENDING' || application.status === 'REVIEWING') && (
+                            <>
+                                <button
+                                    onClick={async () => {
+                                        const token = localStorage.getItem('token')
+                                        await fetch(`/api/applications/${application.id}`, {
+                                            method: 'PATCH',
+                                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ status: 'SHORTLISTED' })
+                                        })
+                                        Swal.fire('Berhasil', 'Pelamar di-shortlist', 'success')
+                                        loadAllApplications()
+                                    }}
+                                    className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition flex items-center gap-2"
+                                >
+                                    <Star className="w-4 h-4" />
+                                    Shortlist
+                                </button>
+                                <button
+                                    onClick={() => handleReject(application.id)}
+                                    className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition"
+                                >
+                                    Tolak
+                                </button>
+                            </>
+                        )}
+                        {/* SHORTLISTED: Show Interview button */}
+                        {application.status === 'SHORTLISTED' && (
                             <>
                                 <button
                                     onClick={() => handleInviteInterview(application)}
@@ -450,7 +594,8 @@ export default function AllApplicationsPage() {
                                 </button>
                             </>
                         )}
-                        {application.status !== 'PENDING' && (
+                        {/* Other statuses: Show View Detail */}
+                        {!['PENDING', 'REVIEWING', 'SHORTLISTED'].includes(application.status) && (
                             <button
                                 onClick={() => router.push(`/profile/recruiter/dashboard/jobs/${application.jobs.slug}/applications/${application.id}`)}
                                 className="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition flex items-center gap-2"
@@ -610,6 +755,7 @@ export default function AllApplicationsPage() {
                             <option value="all">Semua Status</option>
                             <option value="PENDING">Pending</option>
                             <option value="REVIEWING">Reviewing</option>
+                            <option value="SHORTLISTED">Shortlisted</option>
                             <option value="INTERVIEW_SCHEDULED">Interview</option>
                             <option value="ACCEPTED">Accepted</option>
                         </select>
@@ -629,7 +775,7 @@ export default function AllApplicationsPage() {
 
                 {/* Bulk Actions */}
                 <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                         <button
                             onClick={handleSelectAll}
                             className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition flex items-center gap-2"
@@ -642,7 +788,19 @@ export default function AllApplicationsPage() {
                             Pilih Semua
                         </button>
                         <button
-                            onClick={handleBulkDelete}
+                            onClick={handleBulkShortlist}
+                            disabled={selectedApplicants.length === 0}
+                            className={`px-4 py-2 border rounded-lg text-sm font-medium transition flex items-center gap-2 ${
+                                selectedApplicants.length > 0
+                                    ? 'border-purple-300 text-purple-600 hover:bg-purple-50'
+                                    : 'border-gray-200 text-gray-400 cursor-not-allowed'
+                            }`}
+                        >
+                            <Star className="w-4 h-4" />
+                            Shortlist Terpilih
+                        </button>
+                        <button
+                            onClick={handleBulkReject}
                             disabled={selectedApplicants.length === 0}
                             className={`px-4 py-2 border rounded-lg text-sm font-medium transition flex items-center gap-2 ${
                                 selectedApplicants.length > 0
@@ -651,7 +809,7 @@ export default function AllApplicationsPage() {
                             }`}
                         >
                             <Trash2 className="w-4 h-4" />
-                            Hapus Terpilih
+                            Tolak Terpilih
                         </button>
                         <button
                             onClick={handleBulkInvite}
@@ -663,7 +821,7 @@ export default function AllApplicationsPage() {
                             }`}
                         >
                             <Send className="w-4 h-4" />
-                            Undang Terpilih
+                            Undang Interview
                         </button>
 
                         {selectedApplicants.length > 0 && (

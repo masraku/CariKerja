@@ -227,80 +227,90 @@ const WarningPage = () => {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Alert Banner */}
-      <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white py-4">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-center gap-3">
-            <AlertTriangle className="w-6 h-6 animate-pulse" />
-            <p className="text-center font-semibold text-lg">
-              PENTING! Baca halaman ini dengan teliti sebelum menggunakan platform
-            </p>
-            <AlertTriangle className="w-6 h-6 animate-pulse" />
+    <div className="min-h-screen bg-gray-50 pt-20"> {/* Fixed header padding */}
+      <div className="container mx-auto px-4 pb-12">
+        {/* New Integrated Alert Banner */}
+        <div className="mt-6 mb-8 bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl shadow-sm flex items-start gap-4">
+          <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5 animate-pulse" />
+          <div>
+             <h3 className="font-bold text-amber-800">PENTING!</h3>
+             <p className="text-amber-700 text-sm mt-1">
+               Mohon baca halaman ini dengan teliti sebelum menggunakan platform. 
+               Pelanggaran terhadap syarat dan ketentuan dapat berakibat pada sanksi tegas.
+             </p>
           </div>
         </div>
-      </div>
 
-      {/* Hero Section */}
-      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white py-20">
-        <div className="container mx-auto px-4">
-          <div className="text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full mb-6">
-              <Shield className="w-10 h-10" />
-            </div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              Syarat & Ketentuan Platform
-            </h1>
-            <p className="text-xl text-indigo-100 mb-8">
-              Demi keamanan dan kenyamanan bersama, mohon patuhi semua peraturan yang berlaku di platform ini. 
-              Pelanggaran akan berakibat pada sanksi tegas.
-            </p>
-            <div className="grid md:grid-cols-3 gap-6 mt-12">
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                <Eye className="w-8 h-8 mx-auto mb-3" />
-                <h3 className="font-bold text-lg mb-2">Transparansi</h3>
-                <p className="text-sm text-indigo-100">Informasi jujur dan akurat dari semua pihak</p>
+        {/* Hero Section - Card Style matching LandingPage */}
+        <div className="relative rounded-3xl overflow-hidden bg-blue-600 shadow-xl mb-12">
+           <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-900 opacity-90" />
+           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+           
+           {/* Decorative elements */}
+           <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
+           <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl"></div>
+
+           <div className="relative z-10 p-8 md:p-12 lg:p-16 text-center max-w-4xl mx-auto">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-white/10 backdrop-blur-md rounded-2xl mb-8 border border-white/20 shadow-lg shadow-blue-900/20">
+                <Shield className="w-10 h-10 text-white" />
               </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                <Shield className="w-8 h-8 mx-auto mb-3" />
-                <h3 className="font-bold text-lg mb-2">Keamanan</h3>
-                <p className="text-sm text-indigo-100">Data dan privasi terlindungi dengan baik</p>
+              
+              <h1 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">
+                Syarat & Ketentuan <span className="text-blue-200">Platform</span>
+              </h1>
+              
+              <p className="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed mb-12">
+                Panduan lengkap untuk menjaga ekosistem karir yang aman, profesional, dan terpercaya bagi semua pengguna.
+              </p>
+
+              <div className="grid md:grid-cols-3 gap-6 text-left">
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 hover:bg-white/15 transition-colors">
+                  <div className="w-10 h-10 bg-blue-500/30 rounded-xl flex items-center justify-center mb-4">
+                     <Eye className="w-5 h-5 text-blue-200" />
+                  </div>
+                  <h3 className="font-bold text-white text-lg mb-2">Transparansi</h3>
+                  <p className="text-sm text-blue-100">Informasi jujur dan akurat dari semua pihak</p>
+                </div>
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 hover:bg-white/15 transition-colors">
+                  <div className="w-10 h-10 bg-indigo-500/30 rounded-xl flex items-center justify-center mb-4">
+                     <Shield className="w-5 h-5 text-indigo-200" />
+                  </div>
+                  <h3 className="font-bold text-white text-lg mb-2">Keamanan</h3>
+                  <p className="text-sm text-blue-100">Data dan privasi terlindungi dengan baik</p>
+                </div>
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 hover:bg-white/15 transition-colors">
+                  <div className="w-10 h-10 bg-purple-500/30 rounded-xl flex items-center justify-center mb-4">
+                     <Award className="w-5 h-5 text-purple-200" />
+                  </div>
+                  <h3 className="font-bold text-white text-lg mb-2">Profesionalisme</h3>
+                  <p className="text-sm text-blue-100">Komunikasi dan proses yang profesional</p>
+                </div>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                <Award className="w-8 h-8 mx-auto mb-3" />
-                <h3 className="font-bold text-lg mb-2">Profesionalisme</h3>
-                <p className="text-sm text-indigo-100">Komunikasi dan proses yang profesional</p>
-              </div>
-            </div>
-          </div>
+           </div>
         </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-12">
-        {/* Tab Navigation */}
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden mb-8">
-          <div className="flex">
+        {/* Tab Navigation - Redesigned */}
+        <div className="bg-white p-2 rounded-2xl shadow-sm border border-slate-200 mb-8 max-w-2xl mx-auto">
+          <div className="flex gap-2">
             <button
               onClick={() => setActiveTab('jobseeker')}
-              className={`flex-1 flex items-center justify-center gap-3 px-8 py-6 font-bold text-lg transition ${
+              className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-bold text-sm md:text-base transition-all duration-300 ${
                 activeTab === 'jobseeker'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+                  : 'text-slate-600 hover:bg-slate-50'
               }`}
             >
-              <Users className="w-6 h-6" />
+              <Users className="w-5 h-5" />
               <span>Untuk Jobseeker</span>
             </button>
             <button
               onClick={() => setActiveTab('recruiter')}
-              className={`flex-1 flex items-center justify-center gap-3 px-8 py-6 font-bold text-lg transition ${
+              className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-bold text-sm md:text-base transition-all duration-300 ${
                 activeTab === 'recruiter'
-                  ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+                  : 'text-slate-600 hover:bg-slate-50'
               }`}
             >
-              <Briefcase className="w-6 h-6" />
+              <Briefcase className="w-5 h-5" />
               <span>Untuk Recruiter</span>
             </button>
           </div>
@@ -624,7 +634,7 @@ const WarningPage = () => {
         </div>
 
         {/* Contact Support */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-2xl p-8 text-white text-center mt-8">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-xl p-8 text-white text-center mt-8">
           <h2 className="text-3xl font-bold mb-4">Masih Ada Pertanyaan?</h2>
           <p className="text-xl text-indigo-100 mb-6 max-w-2xl mx-auto">
             Tim support kami siap membantu Anda 24/7
