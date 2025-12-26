@@ -135,9 +135,9 @@ export default function JobseekerInterviewsPage() {
             if (response.ok) {
                 let successText = ''
                 if (isAccept) {
-                    successText = 'Konfirmasi kehadiran berhasil. Recruiter akan menerima notifikasi.'
+                    successText = 'Konfirmasi kehadiran berhasil. Rekruter akan menerima notifikasi.'
                 } else if (isReschedule) {
-                    successText = 'Permintaan reschedule telah dikirim. Tunggu konfirmasi dari recruiter.'
+                    successText = 'Permintaan reschedule telah dikirim. Tunggu konfirmasi dari rekruter.'
                 } else {
                     successText = 'Interview berhasil ditolak'
                 }
@@ -464,7 +464,7 @@ export default function JobseekerInterviewsPage() {
                                             <div className="bg-orange-100 border border-orange-200 rounded-lg p-4">
                                                 <p className="text-sm text-orange-800">
                                                     <strong>⏳ Permintaan reschedule telah dikirim</strong><br />
-                                                    Tunggu konfirmasi dari recruiter untuk jadwal baru.
+                                                    Tunggu konfirmasi dari rekruter untuk jadwal baru.
                                                 </p>
                                                 {interview.responseMessage && (
                                                     <p className="text-sm text-orange-700 mt-2">

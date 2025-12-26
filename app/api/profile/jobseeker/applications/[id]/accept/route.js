@@ -54,6 +54,52 @@ export async function POST(request, { params }) {
             }, { status: 400 })
         }
 
+        // Check if jobseeker already confirmed another offer
+        const existingConfirmed = await prisma.applications.findFirst({
+            where: {
+                jobseekerId: jobseeker.id,
+                confirmedByJobseeker: true,
+                id: { not: id }
+            },
+            include: {
+                jobs: {
+                    include: { companies: true }
+                }
+            }
+        })
+
+        if (existingConfirmed) {
+            return NextResponse.json({ 
+                error: 'Anda sudah menerima tawaran lain',
+                message: `Anda sudah menerima tawaran dari ${existingConfirmed.jobs.companies.name} untuk posisi ${existingConfirmed.jobs.title}`
+            }, { status: 400 })
+        }
+
+        // Mark this application as confirmed by jobseeker
+        await prisma.applications.update({
+            where: { id },
+            data: {
+                confirmedByJobseeker: true,
+                respondedAt: new Date()
+            }
+        })
+
+        // Auto-withdraw all other pending applications for this jobseeker
+        const withdrawnApps = await prisma.applications.updateMany({
+            where: {
+                jobseekerId: jobseeker.id,
+                id: { not: id },
+                status: {
+                    in: ['PENDING', 'REVIEWING', 'SHORTLISTED', 'INTERVIEW_SCHEDULED', 'INTERVIEW_COMPLETED']
+                }
+            },
+            data: {
+                status: 'WITHDRAWN',
+                withdrawnAt: new Date(),
+                withdrawReason: 'Otomatis ditarik karena menerima tawaran dari perusahaan lain'
+            }
+        })
+
         // Update jobseeker profile - set isLookingForJob to false
         await prisma.jobseekers.update({
             where: { id: jobseeker.id },
@@ -65,17 +111,9 @@ export async function POST(request, { params }) {
             }
         })
 
-        // Optional: Update application respondedAt timestamp
-        await prisma.applications.update({
-            where: { id },
-            data: {
-                respondedAt: new Date()
-            }
-        })
-
         return NextResponse.json({
             success: true,
-            message: 'Selamat! Tawaran telah diterima. Status pencari kerja Anda sekarang: Tidak Aktif'
+            message: `Selamat! Anda telah menerima tawaran dari ${application.jobs?.companies?.name}. ${withdrawnApps.count > 0 ? `${withdrawnApps.count} lamaran lainnya telah ditarik secara otomatis.` : ''}`
         })
     } catch (error) {
         console.error('Accept offer error:', error)

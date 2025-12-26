@@ -53,7 +53,7 @@ export default function NewsPage() {
         {
             id: 5,
             title: "Membangun Portofolio yang Menarik",
-            excerpt: "Cara menyusun portofolio yang efektif untuk menarik perhatian recruiter dan klien potensial.",
+            excerpt: "Cara menyusun portofolio yang efektif untuk menarik perhatian rekruter dan klien potensial.",
             image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
             date: "19 Des 2024",
             author: "Design Lead",

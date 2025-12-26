@@ -257,7 +257,7 @@ const AboutPage = () => {
                             className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white font-semibold rounded-xl hover:bg-white/20 transition border border-white/20"
                         >
                             <Building2 className="w-5 h-5" />
-                            Daftar Sebagai Recruiter
+                            Daftar Sebagai Rekruter
                             <ArrowRight className="w-5 h-5" />
                         </Link>
                     </div>

@@ -25,6 +25,9 @@ model applications {
   rejectionReason        String?
   viewed                 Boolean                  @default(false)
   viewedAt               DateTime?
+  confirmedByJobseeker   Boolean                  @default(false)
+  withdrawnAt            DateTime?
+  withdrawReason         String?
   createdAt              DateTime                 @default(now())
   updatedAt              DateTime
   jobs                   jobs                     @relation(fields: [jobId], references: [id], onDelete: Cascade)
@@ -285,34 +288,43 @@ model jobseeker_skills {
 }
 
 model jobseekers {
-  id                  String             @id
-  userId              String             @unique
-  photo               String?
-  firstName           String?
-  lastName            String?
-  dateOfBirth         DateTime?
-  gender              String?
-  religion            String?
-  maritalStatus       String?
-  nationality         String?
-  idNumber            String?
-  phone               String?
-  email               String?
-  address             String?
-  city                String?
-  province            String?
-  postalCode          String?
-  currentTitle        String?
-  summary             String?
-  linkedinUrl         String?
-  githubUrl           String?
-  portfolioUrl        String?
-  websiteUrl          String?
-  resumeUrl           String?
-  cvUrl               String?
-  ktpUrl              String?
-  ak1Url              String?
-  desiredJobTitle     String?
+  id                      String             @id
+  userId                  String             @unique
+  photo                   String?
+  firstName               String?
+  lastName                String?
+  dateOfBirth             DateTime?
+  gender                  String?
+  religion                String?
+  maritalStatus           String?
+  nationality             String?
+  idNumber                String?
+  phone                   String?
+  email                   String?
+  address                 String?
+  city                    String?
+  province                String?
+  postalCode              String?
+  kecamatan               String?
+  kelurahan               String?
+  currentTitle            String?
+  summary                 String?
+  linkedinUrl             String?
+  githubUrl               String?
+  portfolioUrl            String?
+  websiteUrl              String?
+  resumeUrl               String?
+  cvUrl                   String?
+  ktpUrl                  String?
+  ak1Url                  String?
+  ijazahUrl               String?
+  sertifikatUrl           String?
+  suratPengalamanUrl      String?
+  lastEducationLevel      String?
+  lastEducationInstitution String?
+  lastEducationMajor      String?
+  graduationYear          Int?
+  desiredJobTitle         String?
   desiredSalaryMin    Int?
   desiredSalaryMax    Int?
   preferredLocation   String?

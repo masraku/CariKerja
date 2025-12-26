@@ -81,6 +81,32 @@ export async function GET(request) {
                 phone: jobseeker.phone,
                 city: jobseeker.city,
                 province: jobseeker.province,
+                address: jobseeker.address,
+                postalCode: jobseeker.postalCode,
+                kecamatan: jobseeker.kecamatan,
+                kelurahan: jobseeker.kelurahan,
+                // Personal info
+                idNumber: jobseeker.idNumber,
+                dateOfBirth: jobseeker.dateOfBirth,
+                gender: jobseeker.gender,
+                religion: jobseeker.religion,
+                maritalStatus: jobseeker.maritalStatus,
+                nationality: jobseeker.nationality,
+                // Education
+                lastEducationLevel: jobseeker.lastEducationLevel,
+                lastEducationInstitution: jobseeker.lastEducationInstitution,
+                lastEducationMajor: jobseeker.lastEducationMajor,
+                graduationYear: jobseeker.graduationYear,
+                // Documents
+                cvUrl: jobseeker.cvUrl,
+                ktpUrl: jobseeker.ktpUrl,
+                ak1Url: jobseeker.ak1Url,
+                ijazahUrl: jobseeker.ijazahUrl,
+                sertifikatUrl: jobseeker.sertifikatUrl,
+                suratPengalamanUrl: jobseeker.suratPengalamanUrl,
+                // Summary
+                summary: jobseeker.summary,
+                // Status
                 isEmployed: jobseeker.isEmployed || false,
                 isLookingForJob: jobseeker.isLookingForJob ?? true,
                 employedCompany: jobseeker.employedCompany,
@@ -94,7 +120,8 @@ export async function GET(request) {
                 acceptedCount: acceptedApplications.length,
                 rejectedCount: rejectedApplications.length,
                 pendingCount: pendingApplications.length,
-                joinedAt: jobseeker.users.createdAt
+                joinedAt: jobseeker.users.createdAt,
+                createdAt: jobseeker.createdAt
             }
         })
 

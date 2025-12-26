@@ -55,6 +55,8 @@ export async function POST(request) {
       city,
       province,
       postalCode,
+      kecamatan,
+      kelurahan,
       
       // Professional Info
       currentTitle,
@@ -66,8 +68,17 @@ export async function POST(request) {
       cvUrl,
       ktpUrl,
       ak1Url,
+      ijazahUrl,
+      sertifikatUrl,
+      suratPengalamanUrl,
       
-      // Education
+      // Education (Simplified)
+      lastEducationLevel,
+      lastEducationInstitution,
+      lastEducationMajor,
+      graduationYear,
+      
+      // Education (Array - legacy)
       educations,
       
       // Work Experience
@@ -163,6 +174,8 @@ export async function POST(request) {
         city,
         province,
         postalCode,
+        kecamatan,
+        kelurahan,
         
         // Professional Info
         currentTitle,
@@ -174,6 +187,15 @@ export async function POST(request) {
         cvUrl,
         ktpUrl,
         ak1Url,
+        ijazahUrl,
+        sertifikatUrl,
+        suratPengalamanUrl,
+        
+        // Education (Simplified)
+        lastEducationLevel,
+        lastEducationInstitution,
+        lastEducationMajor,
+        graduationYear: graduationYear ? parseInt(graduationYear) : null,
         
         // Job Preferences
         desiredJobTitle,

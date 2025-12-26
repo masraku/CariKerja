@@ -81,7 +81,7 @@ const WarningPage = () => {
       'Siapkan diri dengan baik sebelum interview',
       'Follow up secara profesional setelah melamar',
       'Update profil Anda secara berkala',
-      'Jaga komunikasi yang baik dengan recruiter',
+      'Jaga komunikasi yang baik dengan rekruter',
       'Berikan notifikasi jika berubah pikiran atau sudah diterima di tempat lain'
     ]
   }
@@ -202,7 +202,7 @@ const WarningPage = () => {
   const faqs = [
     {
       question: 'Apakah ada biaya untuk menggunakan platform ini?',
-      answer: 'Tidak ada biaya apapun untuk jobseeker. Platform ini 100% gratis untuk pencari kerja. Untuk recruiter, kami menyediakan paket gratis dengan fitur terbatas dan paket berbayar dengan fitur premium.'
+      answer: 'Tidak ada biaya apapun untuk pencaker. Platform ini 100% gratis untuk pencari kerja. Untuk rekruter, kami menyediakan paket gratis dengan fitur terbatas dan paket berbayar dengan fitur premium.'
     },
     {
       question: 'Bagaimana cara melaporkan lowongan atau perusahaan yang mencurigakan?',
@@ -214,11 +214,11 @@ const WarningPage = () => {
     },
     {
       question: 'Apakah data pribadi saya aman?',
-      answer: 'Ya, kami sangat menjaga kerahasiaan data Anda. Data hanya dapat diakses oleh recruiter yang Anda lamar, dan kami tidak akan membagikan data Anda kepada pihak ketiga tanpa izin.'
+      answer: 'Ya, kami sangat menjaga kerahasiaan data Anda. Data hanya dapat diakses oleh rekruter yang Anda lamar, dan kami tidak akan membagikan data Anda kepada pihak ketiga tanpa izin.'
     },
     {
-      question: 'Apa yang harus dilakukan jika diminta transfer uang oleh recruiter?',
-      answer: 'JANGAN TRANSFER! Ini adalah red flag penipuan. Segera laporkan kepada kami dan jangan lanjutkan proses apapun dengan recruiter tersebut. Perusahaan legitimate tidak akan meminta uang dalam proses rekrutmen.'
+      question: 'Apa yang harus dilakukan jika diminta transfer uang oleh rekruter?',
+      answer: 'JANGAN TRANSFER! Ini adalah red flag penipuan. Segera laporkan kepada kami dan jangan lanjutkan proses apapun dengan rekruter tersebut. Perusahaan legitimate tidak akan meminta uang dalam proses rekrutmen.'
     },
     {
       question: 'Bolehkah melamar ke banyak posisi sekaligus?',
@@ -311,7 +311,7 @@ const WarningPage = () => {
               }`}
             >
               <Briefcase className="w-5 h-5" />
-              <span>Untuk Recruiter</span>
+              <span>Untuk Rekruter</span>
             </button>
           </div>
         </div>

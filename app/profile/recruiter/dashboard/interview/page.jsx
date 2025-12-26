@@ -1,7 +1,7 @@
-'use client'
-import { useState, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
+"use client";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Calendar,
   Clock,
@@ -12,229 +12,314 @@ import {
   CheckCircle,
   X,
   ArrowLeft,
-  Send
-} from 'lucide-react'
-import Swal from 'sweetalert2'
+  Send,
+} from "lucide-react";
+import Swal from "sweetalert2";
 
 function ScheduleInterviewContent() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const { user } = useAuth()
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user } = useAuth();
 
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [job, setJob] = useState(null)
-  const [applicants, setApplicants] = useState([])
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [job, setJob] = useState(null);
+  const [applicants, setApplicants] = useState([]);
 
   const [formData, setFormData] = useState({
-    title: '',
-    date: '',
-    time: '',
+    title: "",
+    date: "",
+    time: "",
     duration: 60,
-    meetingType: 'GOOGLE_MEET',
-    meetingUrl: '',
-    location: '',
-    description: '',
-    notes: ''
-  })
+    meetingType: "GOOGLE_MEET",
+    meetingUrl: "",
+    location: "",
+    description: "",
+    notes: "",
+  });
 
   useEffect(() => {
-    const jobId = searchParams.get('job')
-    const applicantIds = searchParams.get('applicants')
+    const jobId = searchParams.get("job");
+    const applicantIds = searchParams.get("applicants");
 
     if (jobId && applicantIds) {
-      loadData(jobId, applicantIds)
+      loadData(jobId, applicantIds);
     } else {
       Swal.fire({
-        icon: 'error',
-        title: 'Invalid Request',
-        text: 'Missing required parameters',
-        confirmButtonColor: '#2563EB'
+        icon: "error",
+        title: "Invalid Request",
+        text: "Missing required parameters",
+        confirmButtonColor: "#2563EB",
       }).then(() => {
-        router.push('/recruiter/dashboard')
-      })
+        router.push("/recruiter/dashboard");
+      });
     }
-  }, [])
+  }, []);
 
   const loadData = async (jobId, applicantIds) => {
     try {
-      setLoading(true)
-      const token = localStorage.getItem('token')
+      setLoading(true);
+      const token = localStorage.getItem("token");
 
       // Load applicants first - this includes job data
-      const applicantResponse = await fetch(`/api/applications/batch?ids=${applicantIds}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      const applicantResponse = await fetch(
+        `/api/applications/batch?ids=${applicantIds}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      })
+      );
 
       if (applicantResponse.ok) {
-        const applicantData = await applicantResponse.json()
-        setApplicants(applicantData.applications || [])
-        
+        const applicantData = await applicantResponse.json();
+        setApplicants(applicantData.applications || []);
+
         // Get job info from first application (all should be same job)
         // API returns 'job' (singular) not 'jobs'
-        if (applicantData.applications && applicantData.applications.length > 0) {
-          const jobInfo = applicantData.applications[0].job
+        if (
+          applicantData.applications &&
+          applicantData.applications.length > 0
+        ) {
+          const jobInfo = applicantData.applications[0].job;
           if (jobInfo) {
-            setJob(jobInfo)
+            setJob(jobInfo);
             // Set default interview title
-            setFormData(prev => ({
+            setFormData((prev) => ({
               ...prev,
-              title: `Interview untuk posisi ${jobInfo.title || 'Unknown'}`
-            }))
+              title: `Interview untuk posisi ${jobInfo.title || "Unknown"}`,
+            }));
           } else {
-            console.error('No job info in application')
+            console.error("No job info in application");
           }
         }
       } else {
-        const errorText = await applicantResponse.text()
-        console.error('Failed to load applicants:', errorText)
+        const errorText = await applicantResponse.text();
+        console.error("Failed to load applicants:", errorText);
         Swal.fire({
-          icon: 'error',
-          title: 'Gagal Memuat Data',
-          text: 'Silakan coba lagi atau kembali ke halaman sebelumnya',
-          confirmButtonColor: '#2563EB'
-        })
+          icon: "error",
+          title: "Gagal Memuat Data",
+          text: "Silakan coba lagi atau kembali ke halaman sebelumnya",
+          confirmButtonColor: "#2563EB",
+        });
       }
-
     } catch (error) {
-      console.error('Load data error:', error)
+      console.error("Load data error:", error);
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Failed to load data',
-        confirmButtonColor: '#2563EB'
-      })
+        icon: "error",
+        title: "Error",
+        text: "Failed to load data",
+        confirmButtonColor: "#2563EB",
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
+    const { name, value } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
-    }))
-  }
+      [name]: value,
+    }));
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     // Validation
     if (!formData.date || !formData.time) {
       Swal.fire({
-        icon: 'warning',
-        title: 'Input Tidak Valid',
-        text: 'Silakan tentukan tanggal dan waktu interview',
-        confirmButtonColor: '#2563EB'
-      })
-      return
+        icon: "warning",
+        title: "Input Tidak Valid",
+        text: "Silakan tentukan tanggal dan waktu interview",
+        confirmButtonColor: "#2563EB",
+      });
+      return;
     }
 
-    if ((formData.meetingType === 'GOOGLE_MEET' || formData.meetingType === 'ZOOM') && !formData.meetingUrl) {
+    if (
+      (formData.meetingType === "GOOGLE_MEET" ||
+        formData.meetingType === "ZOOM") &&
+      !formData.meetingUrl
+    ) {
       Swal.fire({
-        icon: 'warning',
-        title: 'Link Meeting Belum Diisi',
-        text: 'Silakan masukkan link meeting',
-        confirmButtonColor: '#2563EB'
-      })
-      return
+        icon: "warning",
+        title: "Link Meeting Belum Diisi",
+        text: "Silakan masukkan link meeting",
+        confirmButtonColor: "#2563EB",
+      });
+      return;
     }
 
-    if (formData.meetingType === 'IN_PERSON' && !formData.location) {
+    if (formData.meetingType === "IN_PERSON" && !formData.location) {
       Swal.fire({
-        icon: 'warning',
-        title: 'Lokasi Belum Diisi',
-        text: 'Silakan masukkan lokasi interview',
-        confirmButtonColor: '#2563EB'
-      })
-      return
+        icon: "warning",
+        title: "Lokasi Belum Diisi",
+        text: "Silakan masukkan lokasi interview",
+        confirmButtonColor: "#2563EB",
+      });
+      return;
     }
 
     if (!job?.id) {
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Data lowongan belum dimuat. Silakan refresh halaman.',
-        confirmButtonColor: '#2563EB'
-      })
-      return
+        icon: "error",
+        title: "Error",
+        text: "Data lowongan belum dimuat. Silakan refresh halaman.",
+        confirmButtonColor: "#2563EB",
+      });
+      return;
     }
 
     if (!applicants || applicants.length === 0) {
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Data kandidat belum dimuat. Silakan refresh halaman.',
-        confirmButtonColor: '#2563EB'
-      })
-      return
+        icon: "error",
+        title: "Error",
+        text: "Data kandidat belum dimuat. Silakan refresh halaman.",
+        confirmButtonColor: "#2563EB",
+      });
+      return;
     }
 
     try {
-      setSaving(true)
+      setSaving(true);
 
-      const token = localStorage.getItem('token')
-      const response = await fetch('/api/interviews/schedule', {
-        method: 'POST',
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/interviews/schedule", {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           ...formData,
           jobId: job.id,
-          applicationIds: applicants.map(app => app.id)
-        })
-      })
+          applicationIds: applicants.map((app) => app.id),
+        }),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
+        // Format date for WhatsApp message
+        const formattedDate = new Date(formData.date).toLocaleDateString(
+          "id-ID",
+          {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          }
+        );
+
+        // Send WhatsApp to each candidate with phone number
+        const candidatesWithPhone = applicants.filter(
+          (app) => app.jobseeker?.phone
+        );
+
+        if (candidatesWithPhone.length > 0) {
+          await Swal.fire({
+            icon: "info",
+            title: "Kirim Undangan WhatsApp",
+            html: `<p>Klik OK untuk membuka WhatsApp dan mengirim undangan ke ${candidatesWithPhone.length} kandidat.</p>
+                  <p class="text-sm text-gray-500 mt-2">Tab baru akan terbuka untuk setiap kandidat.</p>`,
+            confirmButtonColor: "#25D366",
+            confirmButtonText: "Buka WhatsApp",
+          });
+
+          // Open WhatsApp for each candidate
+          candidatesWithPhone.forEach((app, index) => {
+            const phone = app.jobseeker.phone.replace(/[^0-9]/g, ""); // Remove non-numeric chars
+            const formattedPhone = phone.startsWith("0")
+              ? "62" + phone.slice(1)
+              : phone; // Convert 08xx to 628xx
+
+            const meetingInfo =
+              formData.meetingType === "IN_PERSON"
+                ? `📍 *Lokasi:* ${formData.location}`
+                : `🔗 *Link Meeting:* ${formData.meetingUrl}`;
+
+            const message = encodeURIComponent(
+              `Halo ${app.jobseeker.firstName} ${app.jobseeker.lastName},
+
+Selamat! Anda diundang untuk mengikuti interview untuk posisi *${
+                job?.title
+              }* di *${job?.company?.name || "Perusahaan"}*.
+
+📅 *Tanggal:* ${formattedDate}
+⏰ *Waktu:* ${formData.time} WIB
+⏱️ *Durasi:* ${formData.duration} menit
+${meetingInfo}
+
+${formData.description ? `📝 *Info:* ${formData.description}\n` : ""}
+Mohon konfirmasi kehadiran Anda dengan membalas pesan ini.
+
+Terima kasih dan sampai jumpa!`
+            );
+
+            // Delay opening each tab to prevent blocking
+            setTimeout(() => {
+              window.open(
+                `https://wa.me/${formattedPhone}?text=${message}`,
+                "_blank"
+              );
+            }, index * 800);
+          });
+        }
+
         await Swal.fire({
-          icon: 'success',
-          title: 'Interview Dijadwalkan!',
-          text: `Interview telah dijadwalkan untuk ${applicants.length} kandidat`,
-          confirmButtonColor: '#2563EB'
-        })
-        router.push('/profile/recruiter/dashboard/applications')
+          icon: "success",
+          title: "Interview Dijadwalkan!",
+          html: `
+            <p>Interview telah dijadwalkan untuk ${
+              applicants.length
+            } kandidat</p>
+            <p class="text-sm text-gray-600 mt-2">Email notifikasi telah dikirim ke semua kandidat</p>
+            ${
+              candidatesWithPhone.length > 0
+                ? `<p class="text-sm text-green-600 mt-1">✓ ${candidatesWithPhone.length} undangan WhatsApp sudah dibuka</p>`
+                : ""
+            }
+          `,
+          confirmButtonColor: "#2563EB",
+        });
+        router.push("/profile/recruiter/dashboard/applications");
       } else {
         Swal.fire({
-          icon: 'error',
-          title: 'Gagal',
-          text: data.error || 'Gagal menjadwalkan interview',
-          confirmButtonColor: '#2563EB'
-        })
+          icon: "error",
+          title: "Gagal",
+          text: data.error || "Gagal menjadwalkan interview",
+          confirmButtonColor: "#2563EB",
+        });
       }
     } catch (error) {
-      console.error('Schedule interview error:', error)
+      console.error("Schedule interview error:", error);
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Failed to schedule interview',
-        confirmButtonColor: '#2563EB'
-      })
+        icon: "error",
+        title: "Error",
+        text: "Failed to schedule interview",
+        confirmButtonColor: "#2563EB",
+      });
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const removeApplicant = (applicantId) => {
-    setApplicants(prev => prev.filter(app => app.id !== applicantId))
-    
+    setApplicants((prev) => prev.filter((app) => app.id !== applicantId));
+
     if (applicants.length === 1) {
       Swal.fire({
-        icon: 'warning',
-        title: 'No Applicants',
-        text: 'You need at least one applicant to schedule an interview',
-        confirmButtonColor: '#2563EB'
+        icon: "warning",
+        title: "No Applicants",
+        text: "You need at least one applicant to schedule an interview",
+        confirmButtonColor: "#2563EB",
       }).then(() => {
-        router.back()
-      })
+        router.back();
+      });
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -244,7 +329,7 @@ function ScheduleInterviewContent() {
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -263,10 +348,9 @@ function ScheduleInterviewContent() {
               Jadwalkan Interview
             </h1>
             <p className="text-gray-600">
-              {applicants.length > 1 
+              {applicants.length > 1
                 ? `Undang ${applicants.length} kandidat untuk interview bersama`
-                : `Jadwalkan interview untuk kandidat`
-              }
+                : `Jadwalkan interview untuk kandidat`}
             </p>
           </div>
         </div>
@@ -274,12 +358,19 @@ function ScheduleInterviewContent() {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Main Form */}
           <div className="lg:col-span-2">
-            <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-6 space-y-6">
+            <form
+              onSubmit={handleSubmit}
+              className="bg-white rounded-lg shadow-sm p-6 space-y-6"
+            >
               {/* Job Info */}
               {job && (
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm text-blue-600 font-medium mb-1">Posisi</p>
-                  <h3 className="text-lg font-bold text-gray-900">{job.title}</h3>
+                  <p className="text-sm text-blue-600 font-medium mb-1">
+                    Posisi
+                  </p>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    {job.title}
+                  </h3>
                   <p className="text-sm text-gray-600">{job.company?.name}</p>
                 </div>
               )}
@@ -311,7 +402,7 @@ function ScheduleInterviewContent() {
                     name="date"
                     value={formData.date}
                     onChange={handleChange}
-                    min={new Date().toISOString().split('T')[0]}
+                    min={new Date().toISOString().split("T")[0]}
                     className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
@@ -358,16 +449,16 @@ function ScheduleInterviewContent() {
                 </label>
                 <div className="grid md:grid-cols-3 gap-4">
                   {[
-                    { value: 'GOOGLE_MEET', label: 'Google Meet', icon: Video },
-                    { value: 'ZOOM', label: 'Zoom', icon: Video },
-                    { value: 'IN_PERSON', label: 'Tatap Muka', icon: MapPin }
-                  ].map(type => (
+                    { value: "GOOGLE_MEET", label: "Google Meet", icon: Video },
+                    { value: "ZOOM", label: "Zoom", icon: Video },
+                    { value: "IN_PERSON", label: "Tatap Muka", icon: MapPin },
+                  ].map((type) => (
                     <label
                       key={type.value}
                       className={`p-4 border-2 rounded-lg cursor-pointer transition ${
                         formData.meetingType === type.value
-                          ? 'border-blue-600 bg-blue-50'
-                          : 'border-gray-200 hover:border-blue-300'
+                          ? "border-blue-600 bg-blue-50"
+                          : "border-gray-200 hover:border-blue-300"
                       }`}
                     >
                       <input
@@ -380,7 +471,9 @@ function ScheduleInterviewContent() {
                       />
                       <div className="flex flex-col items-center text-center">
                         <type.icon className="w-6 h-6 text-gray-600 mb-2" />
-                        <span className="font-medium text-gray-900">{type.label}</span>
+                        <span className="font-medium text-gray-900">
+                          {type.label}
+                        </span>
                       </div>
                     </label>
                   ))}
@@ -388,7 +481,8 @@ function ScheduleInterviewContent() {
               </div>
 
               {/* Meeting URL (for online meetings) */}
-              {(formData.meetingType === 'GOOGLE_MEET' || formData.meetingType === 'ZOOM') && (
+              {(formData.meetingType === "GOOGLE_MEET" ||
+                formData.meetingType === "ZOOM") && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Link Meeting *
@@ -399,19 +493,23 @@ function ScheduleInterviewContent() {
                     value={formData.meetingUrl}
                     onChange={handleChange}
                     className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder={formData.meetingType === 'GOOGLE_MEET' ? "https://meet.google.com/xxx-xxxx-xxx" : "https://zoom.us/j/xxxxxxxxx"}
+                    placeholder={
+                      formData.meetingType === "GOOGLE_MEET"
+                        ? "https://meet.google.com/xxx-xxxx-xxx"
+                        : "https://zoom.us/j/xxxxxxxxx"
+                    }
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    {formData.meetingType === 'GOOGLE_MEET' 
-                      ? 'Masukkan link Google Meet yang sudah Anda buat'
-                      : 'Masukkan link Zoom meeting Anda'}
+                    {formData.meetingType === "GOOGLE_MEET"
+                      ? "Masukkan link Google Meet yang sudah Anda buat"
+                      : "Masukkan link Zoom meeting Anda"}
                   </p>
                 </div>
               )}
 
               {/* Location (for in-person) */}
-              {formData.meetingType === 'IN_PERSON' && (
+              {formData.meetingType === "IN_PERSON" && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Lokasi *
@@ -472,8 +570,8 @@ function ScheduleInterviewContent() {
                   disabled={saving}
                   className={`flex-1 px-6 py-3 rounded-lg transition flex items-center justify-center gap-2 ${
                     saving
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-blue-600 text-white hover:bg-blue-700"
                   }`}
                 >
                   {saving ? (
@@ -516,15 +614,17 @@ function ScheduleInterviewContent() {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            application.jobseeker?.firstName?.charAt(0) || 'U'
+                            application.jobseeker?.firstName?.charAt(0) || "U"
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-medium text-gray-900 text-sm truncate">
-                            {application.jobseeker?.firstName} {application.jobseeker?.lastName}
+                            {application.jobseeker?.firstName}{" "}
+                            {application.jobseeker?.lastName}
                           </h4>
                           <p className="text-xs text-gray-600 truncate">
-                            {application.jobseeker?.currentTitle || 'Job Seeker'}
+                            {application.jobseeker?.currentTitle ||
+                              "Job Seeker"}
                           </p>
                         </div>
                       </div>
@@ -547,7 +647,8 @@ function ScheduleInterviewContent() {
                   <div className="text-sm text-blue-900">
                     <p className="font-medium mb-1">Notifikasi Email</p>
                     <p className="text-blue-700">
-                      Semua kandidat yang dipilih akan menerima email dengan detail interview.
+                      Semua kandidat yang dipilih akan menerima email dengan
+                      detail interview.
                     </p>
                   </div>
                 </div>
@@ -557,20 +658,22 @@ function ScheduleInterviewContent() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default function ScheduleInterviewPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Memuat halaman...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-indigo-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Memuat halaman...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <ScheduleInterviewContent />
     </Suspense>
-  )
+  );
 }

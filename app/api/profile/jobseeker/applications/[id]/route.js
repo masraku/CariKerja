@@ -20,7 +20,7 @@ export async function GET(request, context) {
     const { jobseeker } = auth
 
     // Fetch application with full details
-    const application = await prisma.applications.findUnique({
+    let application = await prisma.applications.findUnique({
       where: { 
         id,
         jobseekerId: jobseeker.id // Ensure user owns this application
@@ -55,7 +55,12 @@ export async function GET(request, context) {
               select: {
                 id: true,
                 scheduledAt: true,
-                status: true
+                status: true,
+                duration: true,
+                title: true,
+                description: true,
+                meetingType: true,
+                meetingUrl: true
               }
             }
           }
@@ -69,6 +74,83 @@ export async function GET(request, context) {
         { status: 404 }
       )
     }
+
+    // --- AUTO-CHECK: Update status if 24 hours have passed since interview ---
+    if (application.status === 'INTERVIEW_SCHEDULED') {
+      const participant = application.interview_participants?.[0]
+      const interview = participant?.interviews
+      
+      if (interview?.scheduledAt) {
+        const now = new Date()
+        const interviewTime = new Date(interview.scheduledAt)
+        const hoursSinceInterview = (now - interviewTime) / (1000 * 60 * 60)
+        
+        // If 24 hours have passed since interview time
+        if (hoursSinceInterview >= 24) {
+          console.log(`🔄 Auto-completing interview for application ${id} (${hoursSinceInterview.toFixed(1)}h since interview)`)
+          
+          // Update application and participant status
+          await prisma.$transaction([
+            prisma.applications.update({
+              where: { id: application.id },
+              data: { status: 'INTERVIEW_COMPLETED' }
+            }),
+            ...(participant ? [
+              prisma.interview_participants.update({
+                where: { id: participant.id },
+                data: { status: 'INTERVIEW_COMPLETED' }
+              })
+            ] : [])
+          ])
+          
+          // Refresh application data
+          application = await prisma.applications.findUnique({
+            where: { id },
+            include: {
+              jobs: {
+                include: {
+                  companies: {
+                    select: {
+                      id: true,
+                      name: true,
+                      logo: true,
+                      city: true,
+                      province: true,
+                      industry: true
+                    }
+                  },
+                  recruiters: {
+                    select: {
+                      id: true,
+                      firstName: true,
+                      lastName: true,
+                      position: true
+                    }
+                  }
+                }
+              },
+              interview_participants: {
+                include: {
+                  interviews: {
+                    select: {
+                      id: true,
+                      scheduledAt: true,
+                      status: true,
+                      duration: true,
+                      title: true,
+                      description: true,
+                      meetingType: true,
+                      meetingUrl: true
+                    }
+                  }
+                }
+              }
+            }
+          })
+        }
+      }
+    }
+    // --- END AUTO-CHECK ---
 
     return NextResponse.json({
       success: true,

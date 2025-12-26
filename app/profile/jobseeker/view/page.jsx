@@ -1,603 +1,525 @@
-'use client'
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
-import Swal from 'sweetalert2'
+"use client";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import Swal from "sweetalert2";
 import {
-    User, Mail, Phone, MapPin, Calendar, Briefcase, GraduationCap,
-    Award, FileText, Globe, Linkedin, Github, Edit, Download,
-    Star, Target, ExternalLink, ArrowLeft, ToggleLeft, ToggleRight
-} from 'lucide-react'
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Calendar,
+  GraduationCap,
+  FileText,
+  Edit,
+  Download,
+  ArrowLeft,
+  ToggleLeft,
+  ToggleRight,
+  CheckCircle2,
+  Eye,
+  X,
+} from "lucide-react";
 
 const ViewProfilePage = () => {
-    const router = useRouter()
-    const { user } = useAuth()
-    const [profile, setProfile] = useState(null)
-    const [isLoading, setIsLoading] = useState(true)
-    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
+  const router = useRouter();
+  const { user } = useAuth();
+  const [profile, setProfile] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [previewModal, setPreviewModal] = useState({
+    isOpen: false,
+    url: "",
+    fileName: "",
+    fileType: "",
+  });
 
-    useEffect(() => {
-        loadProfile()
-    }, [])
+  useEffect(() => {
+    loadProfile();
+  }, []);
 
-    const loadProfile = async () => {
-        try {
-            const response = await fetch('/api/profile/jobseeker', { credentials: 'include' })
-            const data = await response.json()
+  const loadProfile = async () => {
+    try {
+      const response = await fetch("/api/profile/jobseeker", {
+        credentials: "include",
+      });
+      const data = await response.json();
 
-            if (response.ok && data.profile) {
-                setProfile(data.profile)
-            } else {
-                router.push('/profile/jobseeker?mode=edit')
-            }
-        } catch (error) {
-            console.error('Load profile error:', error)
-            router.push('/profile/jobseeker?mode=edit')
-        } finally {
-            setIsLoading(false)
-        }
+      if (response.ok && data.profile) {
+        setProfile(data.profile);
+      } else {
+        router.push("/profile/jobseeker?mode=edit");
+      }
+    } catch (error) {
+      console.error("Load profile error:", error);
+      router.push("/profile/jobseeker?mode=edit");
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    // Toggle job seeking status
-    const toggleJobSeekingStatus = async () => {
-        const currentStatus = profile.isLookingForJob
-        const newStatus = !currentStatus
-        
-        const result = await Swal.fire({
-            title: newStatus ? 'Aktifkan Pencarian Kerja?' : 'Nonaktifkan Pencarian Kerja?',
-            html: newStatus 
-                ? '<p class="text-gray-600">Dengan mengaktifkan, profil Anda akan terlihat oleh recruiter yang sedang mencari kandidat.</p>'
-                : '<p class="text-gray-600">Dengan menonaktifkan, profil Anda tidak akan muncul di pencarian recruiter.</p>',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: newStatus ? 'Ya, Aktifkan' : 'Ya, Nonaktifkan',
-            cancelButtonText: 'Batal',
-            confirmButtonColor: newStatus ? '#10b981' : '#f97316'
-        })
+  const toggleJobSeekingStatus = async () => {
+    const currentStatus = profile.isLookingForJob;
+    const newStatus = !currentStatus;
 
-        if (!result.isConfirmed) return
+    const result = await Swal.fire({
+      title: newStatus
+        ? "Aktifkan Pencarian Kerja?"
+        : "Nonaktifkan Pencarian Kerja?",
+      html: newStatus
+        ? '<p class="text-gray-600">Dengan mengaktifkan, profil Anda akan terlihat oleh recruiter.</p>'
+        : '<p class="text-gray-600">Dengan menonaktifkan, profil Anda tidak akan muncul di pencarian.</p>',
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: newStatus ? "Ya, Aktifkan" : "Ya, Nonaktifkan",
+      cancelButtonText: "Batal",
+      confirmButtonColor: newStatus ? "#10b981" : "#f97316",
+    });
 
-        try {
-            setIsUpdatingStatus(true)
-            const response = await fetch('/api/profile/jobseeker/status', {
-                method: 'PUT',
-                credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ isLookingForJob: newStatus })
-            })
+    if (!result.isConfirmed) return;
 
-            const data = await response.json()
+    try {
+      setIsUpdatingStatus(true);
+      const response = await fetch("/api/profile/jobseeker/status", {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isLookingForJob: newStatus }),
+      });
 
-            if (response.ok) {
-                setProfile(prev => ({ ...prev, isLookingForJob: newStatus }))
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil!',
-                    text: newStatus 
-                        ? 'Status pencari kerja telah diaktifkan' 
-                        : 'Status pencari kerja telah dinonaktifkan',
-                    timer: 2000,
-                    showConfirmButton: false
-                })
-            } else {
-                throw new Error(data.error || 'Gagal mengubah status')
-            }
-        } catch (error) {
-            console.error('Toggle status error:', error)
-            Swal.fire({
-                icon: 'error',
-                title: 'Gagal',
-                text: error.message
-            })
-        } finally {
-            setIsUpdatingStatus(false)
-        }
+      if (response.ok) {
+        setProfile((prev) => ({ ...prev, isLookingForJob: newStatus }));
+        await Swal.fire({
+          icon: "success",
+          title: "Berhasil!",
+          text: newStatus
+            ? "Status pencari kerja telah diaktifkan"
+            : "Status pencari kerja telah dinonaktifkan",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
+    } catch (error) {
+      Swal.fire({ icon: "error", text: "Gagal mengupdate status" });
+    } finally {
+      setIsUpdatingStatus(false);
     }
+  };
 
-    const formatDate = (dateString) => {
-        if (!dateString) return '-'
-        return new Date(dateString).toLocaleDateString('id-ID', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        })
+  const calculateAge = (dateOfBirth) => {
+    if (!dateOfBirth) return null;
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
     }
+    return age;
+  };
 
-    const formatMonthYear = (dateString) => {
-        if (!dateString) return '-'
-        return new Date(dateString).toLocaleDateString('id-ID', {
-            year: 'numeric',
-            month: 'short'
-        })
-    }
+  const openPreview = (url, fileName) => {
+    const extension = (fileName || url).split(".").pop().toLowerCase();
+    const fileType = ["jpg", "jpeg", "png", "gif", "webp"].includes(extension)
+      ? "image"
+      : "pdf";
+    setPreviewModal({ isOpen: true, url, fileName, fileType });
+  };
 
-    const formatCurrency = (amount) => {
-        if (!amount) return '-'
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0
-        }).format(amount)
-    }
+  const closePreview = () => {
+    setPreviewModal({ isOpen: false, url: "", fileName: "", fileType: "" });
+  };
 
-    const calculateAge = (birthDate) => {
-        if (!birthDate) return '-'
-        const today = new Date()
-        const birth = new Date(birthDate)
-        let age = today.getFullYear() - birth.getFullYear()
-        const monthDiff = today.getMonth() - birth.getMonth()
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-            age--
-        }
-        return age
-    }
+  // Document list for display
+  const documents = [
+    {
+      key: "cv",
+      label: "CV / Daftar Riwayat Hidup",
+      url: profile?.cvUrl,
+      fileName: profile?.cvFileName,
+    },
+    {
+      key: "ktp",
+      label: "KTP",
+      url: profile?.ktpUrl,
+      fileName: profile?.ktpFileName,
+    },
+    {
+      key: "ak1",
+      label: "AK1 (Kartu Pencari Kerja)",
+      url: profile?.ak1Url,
+      fileName: profile?.ak1FileName,
+    },
+    {
+      key: "ijazah",
+      label: "Ijazah Pendidikan Terakhir",
+      url: profile?.ijazahUrl,
+      fileName: profile?.ijazahFileName,
+    },
+    {
+      key: "sertifikat",
+      label: "Sertifikat",
+      url: profile?.sertifikatUrl,
+      fileName: profile?.sertifikatFileName,
+    },
+    {
+      key: "suratPengalaman",
+      label: "Surat Pengalaman Kerja",
+      url: profile?.suratPengalamanUrl,
+      fileName: profile?.suratPengalamanFileName,
+    },
+  ];
 
-    const getCompletenessColor = (val) => {
-        if (val >= 80) return { bg: '#dcfce7', color: '#16a34a' }
-        if (val >= 50) return { bg: '#fef9c3', color: '#ca8a04' }
-        return { bg: '#fee2e2', color: '#dc2626' }
-    }
-
-    // Styles
-    const containerStyle = {
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #f0f4ff 0%, #faf5ff 100%)',
-        padding: '5% 4%'
-    }
-
-    const cardStyle = {
-        background: 'white',
-        borderRadius: '16px',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-        padding: 'clamp(20px, 4%, 32px)',
-        marginBottom: '24px'
-    }
-
-    const sectionTitleStyle = {
-        fontSize: 'clamp(1.1rem, 2vw, 1.25rem)',
-        fontWeight: 700,
-        color: '#111827',
-        marginBottom: '16px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '10px'
-    }
-
-    const labelStyle = {
-        fontSize: '13px',
-        color: '#6b7280',
-        marginBottom: '4px'
-    }
-
-    const valueStyle = {
-        fontSize: '14px',
-        fontWeight: 600,
-        color: '#111827'
-    }
-
-    const badgeStyle = {
-        display: 'inline-block',
-        padding: '6px 12px',
-        background: '#eef2ff',
-        color: '#4f46e5',
-        borderRadius: '100px',
-        fontSize: '13px',
-        fontWeight: 500
-    }
-
-    if (isLoading) {
-        return (
-            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9fafb' }}>
-                <div style={{ textAlign: 'center' }}>
-                    <div style={{ width: '48px', height: '48px', border: '4px solid #e5e7eb', borderTopColor: '#4f46e5', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
-                    <p style={{ color: '#6b7280' }}>Memuat profile...</p>
-                </div>
-                <style jsx>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-            </div>
-        )
-    }
-
-    if (!profile) return null
-
-    const completenessColors = getCompletenessColor(profile.profileCompleteness)
-
+  if (isLoading) {
     return (
-        <div style={containerStyle}>
-            <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-
-                {/* Header Card */}
-                <div style={cardStyle}>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '24px' }}>
-                        
-                        {/* Left: Photo + Info */}
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', flex: '1 1 300px' }}>
-                            {/* Photo */}
-                            <div style={{ position: 'relative' }}>
-                                {profile.photo ? (
-                                    <img
-                                        src={profile.photo}
-                                        alt="Profile"
-                                        style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', border: '4px solid #e0e7ff' }}
-                                    />
-                                ) : (
-                                    <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: 'linear-gradient(135deg, #e0e7ff, #f3e8ff)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '4px solid #e0e7ff' }}>
-                                        <User size={40} color="#818cf8" />
-                                    </div>
-                                )}
-                                <div style={{
-                                    position: 'absolute',
-                                    bottom: '-4px',
-                                    right: '-4px',
-                                    padding: '4px 10px',
-                                    borderRadius: '100px',
-                                    fontSize: '12px',
-                                    fontWeight: 700,
-                                    background: completenessColors.bg,
-                                    color: completenessColors.color
-                                }}>
-                                    {profile.profileCompleteness}%
-                                </div>
-                            </div>
-
-                            {/* Info */}
-                            <div style={{ flex: 1 }}>
-                                <h1 style={{ fontSize: 'clamp(1.5rem, 3vw, 2rem)', fontWeight: 700, color: '#111827', marginBottom: '4px' }}>
-                                    {profile.firstName} {profile.lastName}
-                                </h1>
-                                {profile.currentTitle && (
-                                    <p style={{ fontSize: '1rem', color: '#4f46e5', fontWeight: 600, marginBottom: '12px' }}>
-                                        {profile.currentTitle}
-                                    </p>
-                                )}
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '14px', color: '#6b7280' }}>
-                                    {profile.email && (
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            <Mail size={16} /> {profile.email}
-                                        </span>
-                                    )}
-                                    {profile.phone && (
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            <Phone size={16} /> {profile.phone}
-                                        </span>
-                                    )}
-                                    {(profile.city && profile.province) && (
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            <MapPin size={16} /> {profile.city}, {profile.province}
-                                        </span>
-                                    )}
-                                    {profile.dateOfBirth && (
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            <Calendar size={16} /> {calculateAge(profile.dateOfBirth)} tahun
-                                        </span>
-                                    )}
-                                </div>
-
-                                {/* Social Links */}
-                                {(profile.linkedinUrl || profile.githubUrl || profile.portfolioUrl) && (
-                                    <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
-                                        {profile.linkedinUrl && (
-                                            <a href={profile.linkedinUrl} target="_blank" rel="noopener noreferrer"
-                                                style={{ padding: '8px', background: '#dbeafe', borderRadius: '8px', color: '#2563eb' }}>
-                                                <Linkedin size={18} />
-                                            </a>
-                                        )}
-                                        {profile.githubUrl && (
-                                            <a href={profile.githubUrl} target="_blank" rel="noopener noreferrer"
-                                                style={{ padding: '8px', background: '#f3f4f6', borderRadius: '8px', color: '#374151' }}>
-                                                <Github size={18} />
-                                            </a>
-                                        )}
-                                        {profile.portfolioUrl && (
-                                            <a href={profile.portfolioUrl} target="_blank" rel="noopener noreferrer"
-                                                style={{ padding: '8px', background: '#e0e7ff', borderRadius: '8px', color: '#4f46e5' }}>
-                                                <Globe size={18} />
-                                            </a>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Right: Action Buttons */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            {/* Job Seeking Status Toggle */}
-                            <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                gap: '12px',
-                                padding: '12px 16px',
-                                background: profile.isLookingForJob ? '#dcfce7' : '#fee2e2',
-                                borderRadius: '10px',
-                                border: `2px solid ${profile.isLookingForJob ? '#10b981' : '#f87171'}`
-                            }}>
-                                <div>
-                                    <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '2px' }}>Status Pencari Kerja</p>
-                                    <p style={{ fontWeight: 700, color: profile.isLookingForJob ? '#16a34a' : '#dc2626' }}>
-                                        {profile.isLookingForJob ? 'Aktif' : 'Tidak Aktif'}
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={toggleJobSeekingStatus}
-                                    disabled={isUpdatingStatus}
-                                    style={{
-                                        background: 'transparent',
-                                        border: 'none',
-                                        cursor: isUpdatingStatus ? 'not-allowed' : 'pointer',
-                                        opacity: isUpdatingStatus ? 0.5 : 1
-                                    }}
-                                >
-                                    {profile.isLookingForJob ? (
-                                        <ToggleRight size={36} color="#10b981" />
-                                    ) : (
-                                        <ToggleLeft size={36} color="#dc2626" />
-                                    )}
-                                </button>
-                            </div>
-
-                            <button
-                                onClick={() => router.push('/profile/jobseeker/dashboard')}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    padding: '12px 24px',
-                                    background: '#f3f4f6',
-                                    color: '#374151',
-                                    borderRadius: '10px',
-                                    border: 'none',
-                                    fontWeight: 600,
-                                    cursor: 'pointer',
-                                    fontSize: '14px'
-                                }}
-                            >
-                                <ArrowLeft size={18} />
-                                Dashboard
-                            </button>
-                            <button
-                                onClick={() => router.push('/profile/jobseeker?mode=edit')}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    padding: '12px 24px',
-                                    background: '#4f46e5',
-                                    color: 'white',
-                                    borderRadius: '10px',
-                                    border: 'none',
-                                    fontWeight: 600,
-                                    cursor: 'pointer',
-                                    fontSize: '14px'
-                                }}
-                            >
-                                <Edit size={18} />
-                                Edit Profile
-                            </button>
-                            <button
-                                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    padding: '12px 24px',
-                                    background: '#10b981',
-                                    color: 'white',
-                                    borderRadius: '10px',
-                                    border: 'none',
-                                    fontWeight: 600,
-                                    cursor: 'pointer',
-                                    fontSize: '14px'
-                                }}
-                            >
-                                <User size={18} />
-                                Lihat Profile
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* CV Download */}
-                    {profile.cvUrl && (
-                        <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
-                            <a
-                                href={profile.cvUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    padding: '12px 20px',
-                                    background: '#dcfce7',
-                                    color: '#16a34a',
-                                    borderRadius: '10px',
-                                    textDecoration: 'none',
-                                    fontWeight: 600,
-                                    fontSize: '14px'
-                                }}
-                            >
-                                <Download size={18} />
-                                Download CV
-                            </a>
-                        </div>
-                    )}
-                </div>
-
-                {/* Grid Content */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
-                    
-                    {/* Left Column */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                        
-                        {/* Personal Info */}
-                        <div style={cardStyle}>
-                            <h2 style={sectionTitleStyle}>
-                                <User size={20} color="#4f46e5" />
-                                Informasi Pribadi
-                            </h2>
-                            <div style={{ display: 'grid', gap: '12px' }}>
-                                {profile.gender && (
-                                    <div><p style={labelStyle}>Jenis Kelamin</p><p style={valueStyle}>{profile.gender}</p></div>
-                                )}
-                                {profile.religion && (
-                                    <div><p style={labelStyle}>Agama</p><p style={valueStyle}>{profile.religion}</p></div>
-                                )}
-                                {profile.maritalStatus && (
-                                    <div><p style={labelStyle}>Status</p><p style={valueStyle}>{profile.maritalStatus}</p></div>
-                                )}
-                                {profile.nationality && (
-                                    <div><p style={labelStyle}>Kewarganegaraan</p><p style={valueStyle}>{profile.nationality}</p></div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Job Preferences */}
-                        <div style={cardStyle}>
-                            <h2 style={sectionTitleStyle}>
-                                <Target size={20} color="#4f46e5" />
-                                Preferensi Kerja
-                            </h2>
-                            <div style={{ display: 'grid', gap: '12px' }}>
-                                {profile.desiredJobTitle && (
-                                    <div><p style={labelStyle}>Posisi Diinginkan</p><p style={valueStyle}>{profile.desiredJobTitle}</p></div>
-                                )}
-                                {profile.preferredJobType && (
-                                    <div><p style={labelStyle}>Tipe Pekerjaan</p><p style={valueStyle}>{profile.preferredJobType}</p></div>
-                                )}
-                                {(profile.desiredSalaryMin || profile.desiredSalaryMax) && (
-                                    <div><p style={labelStyle}>Ekspektasi Gaji</p><p style={valueStyle}>{formatCurrency(profile.desiredSalaryMin)} - {formatCurrency(profile.desiredSalaryMax)}</p></div>
-                                )}
-                                {profile.preferredLocation && (
-                                    <div><p style={labelStyle}>Lokasi</p><p style={valueStyle}>{profile.preferredLocation}</p></div>
-                                )}
-                                <div><p style={labelStyle}>Bersedia Relokasi</p><p style={valueStyle}>{profile.willingToRelocate ? 'Ya' : 'Tidak'}</p></div>
-                            </div>
-                        </div>
-
-                        {/* Skills */}
-                        {profile.skills?.length > 0 && (
-                            <div style={cardStyle}>
-                                <h2 style={sectionTitleStyle}>
-                                    <Star size={20} color="#4f46e5" />
-                                    Skills
-                                </h2>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                    {profile.skills.map((skill, i) => (
-                                        <span key={i} style={badgeStyle}>{skill.name}</span>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Right Column */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                        
-                        {/* Summary */}
-                        {profile.summary && (
-                            <div style={cardStyle}>
-                                <h2 style={sectionTitleStyle}>
-                                    <FileText size={20} color="#4f46e5" />
-                                    Ringkasan
-                                </h2>
-                                <p style={{ color: '#374151', lineHeight: 1.7, whiteSpace: 'pre-wrap', fontSize: '14px' }}>
-                                    {profile.summary}
-                                </p>
-                            </div>
-                        )}
-
-                        {/* Education */}
-                        {profile.educations?.length > 0 && (
-                            <div style={cardStyle}>
-                                <h2 style={sectionTitleStyle}>
-                                    <GraduationCap size={20} color="#4f46e5" />
-                                    Pendidikan
-                                </h2>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                    {profile.educations.map((edu, i) => (
-                                        <div key={i} style={{ borderLeft: '3px solid #4f46e5', paddingLeft: '16px' }}>
-                                            <h3 style={{ fontWeight: 600, color: '#111827', marginBottom: '2px' }}>{edu.degree} - {edu.fieldOfStudy}</h3>
-                                            <p style={{ color: '#4f46e5', fontWeight: 500, fontSize: '14px' }}>{edu.institution}</p>
-                                            <p style={{ color: '#6b7280', fontSize: '13px', marginTop: '4px' }}>
-                                                {edu.level} • {formatMonthYear(edu.startDate)} - {edu.isCurrent ? 'Sekarang' : formatMonthYear(edu.endDate)}
-                                            </p>
-                                            {edu.gpa && <p style={{ color: '#6b7280', fontSize: '13px' }}>IPK: {edu.gpa}</p>}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Experience */}
-                        {profile.work_experiences?.length > 0 && profile.work_experiences[0].company && (
-                            <div style={cardStyle}>
-                                <h2 style={sectionTitleStyle}>
-                                    <Briefcase size={20} color="#4f46e5" />
-                                    Pengalaman
-                                </h2>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                    {profile.work_experiences.map((exp, i) => (
-                                        <div key={i} style={{ borderLeft: '3px solid #4f46e5', paddingLeft: '16px' }}>
-                                            <h3 style={{ fontWeight: 600, color: '#111827', marginBottom: '2px' }}>{exp.position}</h3>
-                                            <p style={{ color: '#4f46e5', fontWeight: 500, fontSize: '14px' }}>{exp.company}</p>
-                                            <p style={{ color: '#6b7280', fontSize: '13px', marginTop: '4px' }}>
-                                                {exp.location} • {formatMonthYear(exp.startDate)} - {exp.isCurrent ? 'Sekarang' : formatMonthYear(exp.endDate)}
-                                            </p>
-                                            {exp.description && <p style={{ color: '#374151', fontSize: '14px', marginTop: '8px' }}>{exp.description}</p>}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Certifications */}
-                        {profile.certifications?.length > 0 && profile.certifications[0].name && (
-                            <div style={cardStyle}>
-                                <h2 style={sectionTitleStyle}>
-                                    <Award size={20} color="#4f46e5" />
-                                    Sertifikat
-                                </h2>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                    {profile.certifications.map((cert, i) => (
-                                        <div key={i} style={{ padding: '12px', border: '1px solid #e5e7eb', borderRadius: '10px' }}>
-                                            <h3 style={{ fontWeight: 600, color: '#111827', marginBottom: '2px' }}>{cert.name}</h3>
-                                            <p style={{ color: '#4f46e5', fontSize: '14px' }}>{cert.issuingOrganization}</p>
-                                            <p style={{ color: '#6b7280', fontSize: '13px', marginTop: '4px' }}>
-                                                {formatMonthYear(cert.issueDate)}
-                                                {cert.expiryDate && ` - ${formatMonthYear(cert.expiryDate)}`}
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Back Button */}
-                <div style={{ textAlign: 'center', marginTop: '32px' }}>
-                    <button
-                        onClick={() => router.push('/profile/jobseeker/dashboard')}
-                        style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '12px 24px',
-                            background: '#f3f4f6',
-                            color: '#374151',
-                            borderRadius: '10px',
-                            border: 'none',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            fontSize: '14px'
-                        }}
-                    >
-                        <ArrowLeft size={18} />
-                        Kembali ke Dashboard
-                    </button>
-                </div>
-            </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mx-auto mb-4" />
+          <p className="text-gray-500">Memuat profil...</p>
         </div>
-    )
-}
+      </div>
+    );
+  }
 
-export default ViewProfilePage
+  if (!profile) return null;
+
+  return (
+    <div className="min-h-screen bg-gray-50 pt-24 pb-12">
+      <div className="container mx-auto px-4 max-w-5xl">
+        <div className="grid lg:grid-cols-12 gap-6">
+          {/* Left Column - Profile Card */}
+          <div className="lg:col-span-4 space-y-6">
+            {/* Profile Card */}
+            <div className="bg-white rounded-3xl shadow-lg overflow-hidden">
+              {/* Header Background */}
+              <div className="h-24 bg-gradient-to-br from-blue-600 to-indigo-700 relative">
+                <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2">
+                  <div className="w-24 h-24 rounded-2xl border-4 border-white bg-white shadow-lg overflow-hidden">
+                    {profile.photo ? (
+                      <img
+                        src={profile.photo}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-500">
+                        <User size={40} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-16 pb-6 px-6 text-center">
+                <h1 className="text-xl font-bold text-gray-900">
+                  {profile.firstName} {profile.lastName}
+                </h1>
+
+                {/* Location & Age */}
+                <div className="flex flex-wrap justify-center gap-2 mt-3">
+                  {(profile.kecamatan || profile.kelurahan) && (
+                    <span className="flex items-center gap-1.5 text-gray-500 text-sm bg-gray-50 px-3 py-1.5 rounded-full">
+                      <MapPin size={14} />
+                      {profile.kelurahan && `${profile.kelurahan}, `}
+                      {profile.kecamatan || profile.city}
+                    </span>
+                  )}
+                  {profile.dateOfBirth && (
+                    <span className="flex items-center gap-1.5 text-gray-500 text-sm bg-gray-50 px-3 py-1.5 rounded-full">
+                      <Calendar size={14} />
+                      {calculateAge(profile.dateOfBirth)} Tahun
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Status Card */}
+            <div className="bg-white rounded-3xl shadow-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-gray-900">
+                  Status Pencari Kerja
+                </h3>
+                <div
+                  className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    profile.isLookingForJob
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  {profile.isLookingForJob ? "AKTIF" : "NON-AKTIF"}
+                </div>
+              </div>
+
+              <button
+                onClick={toggleJobSeekingStatus}
+                disabled={isUpdatingStatus}
+                className={`w-full py-3 rounded-xl font-medium transition flex items-center justify-center gap-2 ${
+                  profile.isLookingForJob
+                    ? "bg-red-50 text-red-600 hover:bg-red-100"
+                    : "bg-green-50 text-green-600 hover:bg-green-100"
+                }`}
+              >
+                {isUpdatingStatus ? (
+                  <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                ) : profile.isLookingForJob ? (
+                  <>
+                    <ToggleLeft size={20} /> Nonaktifkan
+                  </>
+                ) : (
+                  <>
+                    <ToggleRight size={20} /> Aktifkan
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => router.push("/profile/jobseeker?mode=edit")}
+                className="w-full py-3.5 bg-blue-600 text-white rounded-2xl font-semibold shadow-lg hover:bg-blue-700 transition flex items-center justify-center gap-2"
+              >
+                <Edit size={18} /> Edit Profil
+              </button>
+              <button
+                onClick={() => router.push("/profile/jobseeker/dashboard")}
+                className="w-full py-3.5 bg-white text-gray-700 border rounded-2xl font-semibold hover:bg-gray-50 transition flex items-center justify-center gap-2"
+              >
+                <ArrowLeft size={18} /> Kembali ke Dashboard
+              </button>
+            </div>
+          </div>
+
+          {/* Right Column - Details */}
+          <div className="lg:col-span-8 space-y-6">
+            {/* Ringkasan */}
+            {profile.summary && (
+              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+                    <FileText size={20} />
+                  </div>
+                  <h2 className="text-lg font-bold text-gray-900">
+                    Tentang Saya
+                  </h2>
+                </div>
+                <p className="text-gray-600 leading-relaxed whitespace-pre-line">
+                  {profile.summary}
+                </p>
+              </div>
+            )}
+
+            {/* Info Grid */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Data Diri */}
+              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                    <User size={20} />
+                  </div>
+                  <h2 className="text-lg font-bold text-gray-900">Data Diri</h2>
+                </div>
+                <div className="space-y-3">
+                  <InfoItem label="NIK" value={profile.idNumber} />
+                  <InfoItem label="Jenis Kelamin" value={profile.gender} />
+                  <InfoItem label="Agama" value={profile.religion} />
+                  <InfoItem label="Status" value={profile.maritalStatus} />
+                </div>
+              </div>
+
+              {/* Kontak */}
+              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
+                    <Phone size={20} />
+                  </div>
+                  <h2 className="text-lg font-bold text-gray-900">Kontak</h2>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <Mail className="w-5 h-5 text-gray-400 mt-0.5" />
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-bold">
+                        Email
+                      </p>
+                      <p className="font-medium text-gray-900">
+                        {profile.email}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Phone className="w-5 h-5 text-gray-400 mt-0.5" />
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-bold">
+                        Telepon
+                      </p>
+                      <p className="font-medium text-gray-900">
+                        {profile.phone || "-"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-bold">
+                        Alamat
+                      </p>
+                      <p className="font-medium text-gray-900">
+                        {profile.address && `${profile.address}, `}
+                        {profile.kelurahan && `${profile.kelurahan}, `}
+                        {profile.kecamatan || profile.city || "-"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Pendidikan Terakhir */}
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600">
+                  <GraduationCap size={20} />
+                </div>
+                <h2 className="text-lg font-bold text-gray-900">
+                  Pendidikan Terakhir
+                </h2>
+              </div>
+              {profile.lastEducationLevel ||
+              profile.lastEducationInstitution ? (
+                <div className="bg-gray-50 rounded-2xl p-4">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 font-bold text-lg shrink-0">
+                      {profile.lastEducationLevel?.charAt(0) || "?"}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900">
+                        {profile.lastEducationInstitution || "-"}
+                      </h3>
+                      <p className="text-purple-600 font-medium">
+                        {profile.lastEducationLevel}
+                        {profile.lastEducationMajor &&
+                          ` - ${profile.lastEducationMajor}`}
+                      </p>
+                      {profile.graduationYear && (
+                        <p className="text-sm text-gray-500 mt-1">
+                          Lulus: {profile.graduationYear}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-gray-500 italic">
+                  Belum ada data pendidikan.
+                </p>
+              )}
+            </div>
+
+            {/* Dokumen */}
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
+                  <FileText size={20} />
+                </div>
+                <h2 className="text-lg font-bold text-gray-900">Dokumen</h2>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {documents.map((doc) => (
+                  <div
+                    key={doc.key}
+                    className={`flex items-center justify-between p-3 rounded-xl border ${
+                      doc.url
+                        ? "bg-green-50 border-green-200"
+                        : "bg-gray-50 border-gray-200"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {doc.url ? (
+                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <div className="w-4 h-4 rounded-full border-2 border-gray-300" />
+                      )}
+                      <span
+                        className={`text-sm font-medium ${
+                          doc.url ? "text-green-700" : "text-gray-500"
+                        }`}
+                      >
+                        {doc.label}
+                      </span>
+                    </div>
+                    {doc.url && (
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => openPreview(doc.url, doc.fileName)}
+                          className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                        >
+                          <Eye size={16} />
+                        </button>
+                        <a
+                          href={doc.url}
+                          download
+                          className="p-1.5 text-green-600 hover:bg-green-100 rounded-lg transition"
+                        >
+                          <Download size={16} />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Preview Modal */}
+      {previewModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="font-semibold text-gray-900 truncate pr-4">
+                {previewModal.fileName || "Preview"}
+              </h3>
+              <button
+                onClick={closePreview}
+                className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 overflow-auto max-h-[calc(90vh-80px)] flex items-center justify-center bg-gray-100">
+              {previewModal.fileType === "image" ? (
+                <img
+                  src={previewModal.url}
+                  alt={previewModal.fileName}
+                  className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"
+                />
+              ) : (
+                <iframe
+                  src={previewModal.url}
+                  title={previewModal.fileName}
+                  className="w-full h-[70vh] rounded-lg border"
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Helper component
+const InfoItem = ({ label, value }) => (
+  <div>
+    <p className="text-xs text-gray-500 uppercase font-bold">{label}</p>
+    <p className="font-medium text-gray-900">{value || "-"}</p>
+  </div>
+);
+
+export default ViewProfilePage;

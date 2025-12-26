@@ -205,7 +205,7 @@ export default function JobseekerInterviewDetailPage() {
               <div className="flex-1">
                 <h3 className="font-semibold text-gray-900 mb-2">Interview Invitation Pending</h3>
                 <p className="text-gray-600 mb-4">
-                  Please respond to this interview invitation. Let the recruiter know if you can attend.
+                  Silakan respon undangan wawancara ini. Beritahu rekruter apakah Anda dapat hadir.
                 </p>
                 <div className="flex gap-3">
                   <button
@@ -363,9 +363,9 @@ export default function JobseekerInterviewDetailPage() {
             </div>
           </div>
 
-          {/* Recruiter Contact */}
+          {/* Kontak Rekruter */}
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Recruiter Contact</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Kontak Rekruter</h2>
             
             <div className="flex items-start gap-3">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-lg font-bold">

@@ -103,7 +103,7 @@ const Header = () => {
                   isHomePage && !isScrolled ? "text-blue-100" : "text-slate-500"
                 }`}
               >
-                Portal Karir
+                Disnaker Kabupaten Cirebon
               </span>
             </div>
           </Link>
@@ -142,7 +142,11 @@ const Header = () => {
                         : user.name || "User"}
                     </span>
                     <span className="text-[10px] text-slate-500 capitalize">
-                      {user.role === "RECRUITER" ? "Recruiter" : user.role}
+                      {user.role === "RECRUITER"
+                        ? "Rekruter"
+                        : user.role === "JOBSEEKER"
+                        ? "Pencaker"
+                        : user.role}
                     </span>
                   </div>
                   <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-sm overflow-hidden">
@@ -202,7 +206,18 @@ const Header = () => {
                           onClick={() => setIsProfileOpen(false)}
                         >
                           <LayoutDashboard className="w-4 h-4" />
-                          Dashboard Recruiter
+                          Dashboard Rekruter
+                        </Link>
+                      )}
+
+                      {user.role === "JOBSEEKER" && (
+                        <Link
+                          href="/profile/jobseeker/dashboard"
+                          className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          <LayoutDashboard className="w-4 h-4" />
+                          Dashboard
                         </Link>
                       )}
 

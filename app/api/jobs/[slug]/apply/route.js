@@ -73,7 +73,7 @@ export async function POST(request, context) {
       )
     }
 
-    // Check if already applied
+    // Check if already applied and still in progress
     const existingApplication = await prisma.applications.findUnique({
       where: {
         jobId_jobseekerId: {
@@ -84,15 +84,31 @@ export async function POST(request, context) {
     })
 
     if (existingApplication) {
-      return NextResponse.json(
-        { 
-          error: 'Anda sudah melamar pekerjaan ini',
-          message: 'Anda sudah pernah melamar ke lowongan ini. Silakan melamar di lowongan lain atau perusahaan lain.',
-          applicationId: existingApplication.id,
-          appliedAt: existingApplication.appliedAt
-        },
-        { status: 400 }
-      )
+      // Define completed statuses
+      const completedStatuses = ['REJECTED', 'WITHDRAWN', 'ACCEPTED']
+      const isInProgress = !completedStatuses.includes(existingApplication.status)
+      
+      if (isInProgress) {
+        return NextResponse.json(
+          { 
+            error: 'Lamaran Anda masih dalam proses seleksi',
+            message: `Anda sudah melamar ke lowongan ini dan masih dalam tahap ${existingApplication.status}. Silakan tunggu hasil seleksi sebelum melamar kembali.`,
+            applicationId: existingApplication.id,
+            status: existingApplication.status,
+            appliedAt: existingApplication.appliedAt
+          },
+          { status: 400 }
+        )
+      } else if (existingApplication.status === 'ACCEPTED') {
+        return NextResponse.json(
+          { 
+            error: 'Anda sudah diterima di lowongan ini',
+            message: 'Anda sudah diterima bekerja untuk posisi ini.',
+          },
+          { status: 400 }
+        )
+      }
+      // If REJECTED or WITHDRAWN, they can apply again (allow re-apply)
     }
 
     // Get request body

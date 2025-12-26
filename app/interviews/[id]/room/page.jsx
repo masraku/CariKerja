@@ -222,7 +222,7 @@ export default function InterviewRoomPage() {
 
                             {interview.description && (
                                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-                                    <p className="text-sm font-semibold text-blue-900 mb-2">📝 Catatan dari Recruiter:</p>
+                                    <p className="text-sm font-semibold text-blue-900 mb-2">📝 Catatan dari Rekruter:</p>
                                     <p className="text-gray-700">{interview.description}</p>
                                 </div>
                             )}

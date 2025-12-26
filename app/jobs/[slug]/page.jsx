@@ -165,7 +165,7 @@ export default function JobDetailPage() {
       Swal.fire({
         icon: "error",
         title: "Akses Ditolak",
-        text: "Hanya jobseeker yang dapat melamar pekerjaan",
+        text: "Hanya pencaker yang dapat melamar pekerjaan",
         confirmButtonColor: "#2563EB",
       });
       return;

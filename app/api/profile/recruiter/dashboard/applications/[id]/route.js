@@ -16,7 +16,7 @@ export async function GET(request, { params }) {
     const { applicationId } = await params
 
     // Get application with full jobseeker details
-    const application = await prisma.applications.findUnique({
+    let application = await prisma.applications.findUnique({
       where: { id: applicationId },
       include: {
         jobseekers: {
@@ -47,6 +47,18 @@ export async function GET(request, { params }) {
               }
             }
           }
+        },
+        // Include interview participants for auto-check
+        interview_participants: {
+          include: {
+            interviews: {
+              select: {
+                id: true,
+                scheduledAt: true,
+                status: true
+              }
+            }
+          }
         }
       }
     })
@@ -58,6 +70,41 @@ export async function GET(request, { params }) {
         { status: 404 }
       )
     }
+
+    // --- AUTO-CHECK: Update status if 24 hours have passed since interview ---
+    if (application.status === 'INTERVIEW_SCHEDULED') {
+      const participant = application.interview_participants?.[0]
+      const interview = participant?.interviews
+      
+      if (interview?.scheduledAt) {
+        const now = new Date()
+        const interviewTime = new Date(interview.scheduledAt)
+        const hoursSinceInterview = (now - interviewTime) / (1000 * 60 * 60)
+        
+        // If 24 hours have passed since interview time
+        if (hoursSinceInterview >= 24) {
+          console.log(`🔄 [Recruiter] Auto-completing interview for application ${applicationId} (${hoursSinceInterview.toFixed(1)}h since interview)`)
+          
+          // Update application and participant status
+          await prisma.$transaction([
+            prisma.applications.update({
+              where: { id: application.id },
+              data: { status: 'INTERVIEW_COMPLETED' }
+            }),
+            ...(participant ? [
+              prisma.interview_participants.update({
+                where: { id: participant.id },
+                data: { status: 'INTERVIEW_COMPLETED' }
+              })
+            ] : [])
+          ])
+          
+          // Update local application object
+          application.status = 'INTERVIEW_COMPLETED'
+        }
+      }
+    }
+    // --- END AUTO-CHECK ---
 
     // Calculate profile completeness
     const jobseeker = application.jobseekers

@@ -17,6 +17,7 @@ import {
   Image,
 } from "lucide-react";
 import Swal from "sweetalert2";
+import RupiahInput from "@/components/RupiahInput";
 
 export default function PostJobPage() {
   const router = useRouter();
@@ -112,6 +113,7 @@ export default function PostJobPage() {
     isRemote: false,
 
     // Salary & Benefits (Step 2)
+    showSalary: false,
     salaryMin: "",
     salaryMax: "",
     salaryType: "monthly",
@@ -893,6 +895,73 @@ export default function PostJobPage() {
                 </div>
               </div>
 
+              {/* Salary Section - Optional */}
+              <div className="border-t border-gray-200 pt-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  Informasi Gaji (Opsional)
+                </h3>
+
+                {/* Toggle for showing salary */}
+                <div className="mb-4">
+                  <label className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-300 transition">
+                    <input
+                      type="checkbox"
+                      name="showSalary"
+                      checked={formData.showSalary}
+                      onChange={handleChange}
+                      className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                    />
+                    <div>
+                      <div className="font-medium text-gray-900">
+                        Tampilkan Range Gaji
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Jika tidak dicentang, gaji akan ditampilkan sebagai
+                        "Negotiable"
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Salary inputs - only show if showSalary is checked */}
+                {formData.showSalary && (
+                  <div className="grid md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Gaji Minimum
+                      </label>
+                      <RupiahInput
+                        name="salaryMin"
+                        value={formData.salaryMin}
+                        onChange={handleChange}
+                        placeholder="3.000.000"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Gaji Maksimum
+                      </label>
+                      <RupiahInput
+                        name="salaryMax"
+                        value={formData.salaryMax}
+                        onChange={handleChange}
+                        placeholder="5.000.000"
+                      />
+                    </div>
+                    {formData.salaryMin && formData.salaryMax && (
+                      <div className="md:col-span-2 text-sm text-green-700 bg-green-50 p-3 rounded-lg">
+                        Preview:{" "}
+                        <strong>
+                          Rp {formatRupiah(formData.salaryMin)} -{" "}
+                          {formatRupiah(formData.salaryMax)}
+                        </strong>{" "}
+                        /bulan
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <div className="border-t border-gray-200 pt-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Benefits & Fasilitas
@@ -1131,10 +1200,16 @@ export default function PostJobPage() {
                           <MapPin className="w-3 h-3 inline mr-1" />
                           {formData.city || companyProfile?.city || "Kota"}
                         </span>
-                        {formData.showSalary && formData.salaryMin && (
+                        {formData.showSalary &&
+                        formData.salaryMin &&
+                        formData.salaryMax ? (
                           <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm">
                             Rp {formatRupiah(formData.salaryMin)} -{" "}
                             {formatRupiah(formData.salaryMax)}
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-sm">
+                            Negotiable
                           </span>
                         )}
                       </div>

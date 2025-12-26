@@ -188,6 +188,44 @@ export async function PATCH(request, context) {
       }
     }
 
+    // Check exclusive acceptance - jobseeker can only be accepted by one company
+    if (status === 'ACCEPTED') {
+      // Get jobseekerId from the current application
+      const currentApp = await prisma.applications.findUnique({
+        where: { id },
+        select: { jobseekerId: true }
+      })
+
+      // Check if this jobseeker is already accepted AND confirmed somewhere else
+      const alreadyAccepted = await prisma.applications.findFirst({
+        where: {
+          jobseekerId: currentApp.jobseekerId,
+          status: 'ACCEPTED',
+          confirmedByJobseeker: true, // Only block if jobseeker confirmed the offer
+          id: { not: id } // Exclude current application
+        },
+        include: {
+          jobs: {
+            include: {
+              companies: {
+                select: { name: true }
+              }
+            }
+          }
+        }
+      })
+
+      if (alreadyAccepted) {
+        return NextResponse.json(
+          { 
+            error: 'Kandidat sudah menerima tawaran perusahaan lain',
+            message: `Kandidat ini sudah menerima tawaran bekerja di ${alreadyAccepted.jobs.companies.name} untuk posisi ${alreadyAccepted.jobs.title}. Kandidat tidak dapat diterima di lebih dari satu perusahaan.`
+          },
+          { status: 400 }
+        )
+      }
+    }
+
     // Update application
     const updateData = {
       status,
