@@ -22,6 +22,9 @@ export async function GET(request) {
         const search = searchParams.get('search') || ''
         const status = searchParams.get('status') || 'all'
         const jobType = searchParams.get('jobType') || 'all'
+        const kecamatan = searchParams.get('kecamatan') || 'all'
+        const scope = searchParams.get('scope') || 'all'
+        const sort = searchParams.get('sort') || 'newest'
 
         // Build where clause
         let where = {}
@@ -30,7 +33,8 @@ export async function GET(request) {
             where.OR = [
                 { title: { contains: search, mode: 'insensitive' } },
                 { companies: { name: { contains: search, mode: 'insensitive' } } },
-                { city: { contains: search, mode: 'insensitive' } }
+                { city: { contains: search, mode: 'insensitive' } },
+                { location: { contains: search, mode: 'insensitive' } }
             ]
         }
 
@@ -46,6 +50,38 @@ export async function GET(request) {
 
         if (jobType !== 'all') {
             where.jobType = jobType
+        }
+
+        // Filter by kecamatan (search in location field)
+        if (kecamatan !== 'all') {
+            where.location = {
+                contains: kecamatan,
+                mode: 'insensitive'
+            }
+        }
+
+        // Filter by scope (domestic / international)
+        if (scope === 'domestic') {
+            where.jobScope = 'DOMESTIC'
+        } else if (scope === 'international') {
+            where.jobScope = 'INTERNATIONAL'
+        }
+
+        // Determine sort order
+        let orderBy = {}
+        switch (sort) {
+            case 'oldest':
+                orderBy = { createdAt: 'asc' }
+                break
+            case 'deadline_asc':
+                orderBy = { applicationDeadline: 'asc' }
+                break
+            case 'deadline_desc':
+                orderBy = { applicationDeadline: 'desc' }
+                break
+            case 'newest':
+            default:
+                orderBy = { createdAt: 'desc' }
         }
 
         // Get jobs with related data
@@ -76,9 +112,7 @@ export async function GET(request) {
                     }
                 }
             },
-            orderBy: {
-                createdAt: 'desc'
-            }
+            orderBy
         })
 
         // Get stats

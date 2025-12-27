@@ -955,9 +955,7 @@ export default function JobDetailPage() {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  router.push(
-                    `/profile/recruiter/dashboard/jobs/${params.slug}/applications/${application.id}`
-                  );
+                  handleViewApplication(application);
                 }}
                 className="flex items-center justify-center gap-1.5 px-3 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition text-sm"
               >
@@ -982,9 +980,7 @@ export default function JobDetailPage() {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  router.push(
-                    `/profile/recruiter/dashboard/jobs/${params.slug}/applications/${application.id}`
-                  );
+                  handleViewApplication(application);
                 }}
                 className="flex items-center justify-center gap-1.5 px-3 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition text-sm"
               >
@@ -1018,9 +1014,7 @@ export default function JobDetailPage() {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                router.push(
-                  `/profile/recruiter/dashboard/jobs/${params.slug}/applications/${application.id}`
-                );
+                handleViewApplication(application);
               }}
               className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition text-sm font-medium"
             >
@@ -1032,9 +1026,7 @@ export default function JobDetailPage() {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  router.push(
-                    `/profile/recruiter/dashboard/jobs/${params.slug}/applications/${application.id}`
-                  );
+                  handleViewApplication(application);
                 }}
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition text-sm font-medium"
               >
@@ -1425,46 +1417,51 @@ export default function JobDetailPage() {
                   </div>
                 </div>
 
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-4">
-                    <div className="text-sm text-gray-600">
-                      Menampilkan{" "}
-                      {Math.min(filteredApplications.length, itemsPerPage)} dari{" "}
-                      {filteredApplications.length} pelamar
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() =>
-                          setCurrentPage((p) => Math.max(1, p - 1))
-                        }
-                        disabled={currentPage === 1}
-                        className={`px-3 py-1 rounded-md border ${
-                          currentPage === 1
-                            ? "text-gray-400 border-gray-200"
-                            : "text-gray-700 border-gray-300 hover:bg-gray-50"
-                        }`}
-                      >
-                        Prev
-                      </button>
-                      <div className="px-3 py-1 bg-white border rounded-md text-sm">
-                        {currentPage} / {totalPages}
-                      </div>
-                      <button
-                        onClick={() =>
-                          setCurrentPage((p) => Math.min(totalPages, p + 1))
-                        }
-                        disabled={currentPage === totalPages}
-                        className={`px-3 py-1 rounded-md border ${
-                          currentPage === totalPages
-                            ? "text-gray-400 border-gray-200"
-                            : "text-gray-700 border-gray-300 hover:bg-gray-50"
-                        }`}
-                      >
-                        Next
-                      </button>
-                    </div>
+                {/* Pagination - Always Show */}
+                <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                  <div className="text-sm text-gray-600">
+                    Menampilkan{" "}
+                    {Math.min(
+                      (currentPage - 1) * itemsPerPage + 1,
+                      filteredApplications.length
+                    )}{" "}
+                    -{" "}
+                    {Math.min(
+                      currentPage * itemsPerPage,
+                      filteredApplications.length
+                    )}{" "}
+                    dari {filteredApplications.length} pelamar
                   </div>
-                )}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                        currentPage === 1
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      Sebelumnya
+                    </button>
+                    <div className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">
+                      Halaman {currentPage} / {totalPages}
+                    </div>
+                    <button
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                      }
+                      disabled={currentPage === totalPages}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                        currentPage === totalPages
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      Selanjutnya
+                    </button>
+                  </div>
+                </div>
               </>
             );
           })()

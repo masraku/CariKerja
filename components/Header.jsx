@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -70,7 +71,7 @@ const Header = () => {
     { name: "Lowongan", href: "/jobs" },
     { name: "Perusahaan", href: "/companies" },
     { name: "Tentang", href: "/about" },
-    { name: "Peringatan", href: "/warning" },
+    { name: "Syarat & Ketentuan", href: "/warning" },
   ];
 
   const isActive = (path) => pathname === path;
@@ -86,25 +87,13 @@ const Header = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-600/20 group-hover:scale-105 transition-transform duration-300">
-              <Briefcase className="w-6 h-6" />
-            </div>
-            <div className="flex flex-col">
-              <span
-                className={`text-xl font-bold tracking-tight leading-none ${
-                  isHomePage && !isScrolled ? "text-white" : "text-slate-900"
-                }`}
-              >
-                Disnaker
-              </span>
-              <span
-                className={`text-[10px] font-medium tracking-wider uppercase ${
-                  isHomePage && !isScrolled ? "text-blue-100" : "text-slate-500"
-                }`}
-              >
-                Disnaker Kabupaten Cirebon
-              </span>
+          <Link href="/" className="flex items-center group">
+            <div className="h-12 md:h-16 bg-white rounded-xl flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform duration-300 shadow-md py-1 px-2">
+              <img
+                src="/assets/logo-disnakerkabcirebon.png"
+                alt="Disnaker Kabupaten Cirebon"
+                className="h-full w-auto"
+              />
             </div>
           </Link>
 
@@ -114,10 +103,10 @@ const Header = () => {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
                   isActive(link.href)
-                    ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
-                    : "text-slate-600 hover:text-blue-600 hover:bg-blue-50"
+                    ? "bg-[#03587f] text-white shadow-md shadow-blue-900/20"
+                    : "text-slate-600 hover:text-[#03587f] hover:bg-blue-50"
                 }`}
               >
                 {link.name}
@@ -259,16 +248,17 @@ const Header = () => {
                 <Link
                   href="/login"
                   className={`px-5 py-2.5 text-sm font-semibold transition-colors ${
-                    isHomePage && !isScrolled
+                    !isScrolled &&
+                    (isHomePage || pathname.startsWith("/companies"))
                       ? "text-white hover:text-blue-100"
-                      : "text-slate-600 hover:text-blue-600"
+                      : "text-slate-600 hover:text-[#03587f]"
                   }`}
                 >
                   Masuk
                 </Link>
                 <Link
                   href="/login?action=register"
-                  className="px-5 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-full shadow-lg shadow-blue-600/20 transition-all hover:scale-105 active:scale-95"
+                  className="px-5 py-2.5 text-sm font-semibold text-white bg-[#03587f] hover:bg-[#024666] rounded-full shadow-lg shadow-blue-900/20 transition-all hover:scale-105 active:scale-95"
                 >
                   Daftar
                 </Link>
@@ -300,7 +290,7 @@ const Header = () => {
                 href={link.href}
                 className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                   isActive(link.href)
-                    ? "bg-blue-50 text-blue-600"
+                    ? "bg-[#03587f]/10 text-[#03587f]"
                     : "text-slate-600 hover:bg-slate-50"
                 }`}
               >
@@ -375,7 +365,7 @@ const Header = () => {
                 </Link>
                 <Link
                   href="/login?action=register"
-                  className="w-full px-4 py-3 rounded-xl text-sm font-semibold text-center text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20"
+                  className="w-full px-4 py-3 rounded-xl text-sm font-semibold text-center text-white bg-[#03587f] hover:bg-[#024666] shadow-lg shadow-blue-900/20"
                 >
                   Daftar Sekarang
                 </Link>

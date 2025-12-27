@@ -267,11 +267,13 @@ export default function AllApplicationsPage() {
     });
 
     if (result.isConfirmed) {
-      // Navigate to first selected for now
+      // Navigate to interview page with selected applicants
       const firstApp = applications.find((a) => a.id === selectedApplicants[0]);
       if (firstApp) {
         router.push(
-          `/profile/recruiter/dashboard/jobs/${firstApp.jobs.slug}/applications/${firstApp.id}?action=interview`
+          `/profile/recruiter/dashboard/interview?job=${
+            firstApp.jobs.id
+          }&applicants=${selectedApplicants.join(",")}`
         );
       }
     }
@@ -325,7 +327,7 @@ export default function AllApplicationsPage() {
 
   const handleInviteInterview = async (application) => {
     router.push(
-      `/profile/recruiter/dashboard/jobs/${application.jobs.slug}/applications/${application.id}?action=interview`
+      `/profile/recruiter/dashboard/interview?job=${application.jobs.id}&applicants=${application.id}`
     );
   };
 
@@ -647,7 +649,7 @@ export default function AllApplicationsPage() {
               <button
                 onClick={() =>
                   router.push(
-                    `/profile/recruiter/dashboard/jobs/${application.jobs.slug}/applications/${application.id}`
+                    `/profile/recruiter/dashboard/jobs/${application.jobs.slug}`
                   )
                 }
                 className="px-3 py-1.5 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition"
@@ -724,7 +726,7 @@ export default function AllApplicationsPage() {
               <button
                 onClick={() =>
                   router.push(
-                    `/profile/recruiter/dashboard/jobs/${application.jobs.slug}/applications/${application.id}`
+                    `/profile/recruiter/dashboard/jobs/${application.jobs.slug}`
                   )
                 }
                 className="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition flex items-center gap-2"

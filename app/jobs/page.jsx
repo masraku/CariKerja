@@ -28,8 +28,13 @@ import {
   Accessibility,
 } from "lucide-react";
 
+import { useRouter, useSearchParams } from "next/navigation";
+
 const JobsPage = () => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const searchParams = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(
+    searchParams.get("search") || ""
+  );
   const [location, setLocation] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [savedJobs, setSavedJobs] = useState([]);

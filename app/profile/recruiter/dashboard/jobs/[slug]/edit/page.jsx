@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import {
   Briefcase,
   MapPin,
@@ -12,25 +12,38 @@ import {
   Plus,
   X,
   Image as ImageIcon,
+  AlertCircle,
 } from "lucide-react";
 import Swal from "sweetalert2";
+import {
+  kecamatanCirebon,
+  getKelurahanByKecamatan,
+  getAllKecamatan,
+} from "@/lib/cirebonData";
 
 export default function EditJobPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
+  const isActivateMode = searchParams.get("activate") === "true";
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [newSkill, setNewSkill] = useState("");
   const [newBenefit, setNewBenefit] = useState("");
+  const [useCompanyAddress, setUseCompanyAddress] = useState(false);
+  const [companyProfile, setCompanyProfile] = useState(null);
 
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     benefits: [],
     location: "",
-    city: "",
-    province: "",
+    kecamatan: "",
+    kelurahan: "",
+    city: "Cirebon",
+    province: "Jawa Barat",
     isRemote: false,
+    jobScope: "DOMESTIC",
     jobType: "",
     educationLevel: "",
     numberOfPositions: "1",
@@ -45,6 +58,9 @@ export default function EditJobPage() {
     shiftCount: "",
     isDisabilityFriendly: false,
   });
+
+  const [selectedKecamatan, setSelectedKecamatan] = useState("");
+  const [kelurahanOptions, setKelurahanOptions] = useState([]);
 
   const jobTypes = ["FULL_TIME", "PART_TIME", "CONTRACT", "INTERNSHIP"];
   const educationLevels = ["SMA", "D3", "S1", "S2", "S3"];
@@ -63,7 +79,54 @@ export default function EditJobPage() {
 
   useEffect(() => {
     loadJob();
+    loadCompanyProfile();
   }, [params.slug]);
+
+  const loadCompanyProfile = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/profile/recruiter", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.profile?.companies) {
+          setCompanyProfile(data.profile.companies);
+        }
+      }
+    } catch (error) {
+      console.error("Load company profile error:", error);
+    }
+  };
+
+  // Handle address toggle
+  const handleAddressToggle = (useCompany) => {
+    setUseCompanyAddress(useCompany);
+    if (useCompany && companyProfile) {
+      setFormData((prev) => ({
+        ...prev,
+        location: companyProfile.address || "",
+        city: companyProfile.city || "",
+        province: companyProfile.province || "",
+        kecamatan: "",
+        kelurahan: "",
+      }));
+      setSelectedKecamatan("");
+      setKelurahanOptions([]);
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        location: "",
+        city: "Cirebon",
+        province: "Jawa Barat",
+        kecamatan: "",
+        kelurahan: "",
+      }));
+      setSelectedKecamatan("");
+      setKelurahanOptions([]);
+    }
+  };
 
   const loadJob = async () => {
     try {
@@ -131,6 +194,32 @@ export default function EditJobPage() {
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  // Handle kecamatan change
+  const handleKecamatanChange = (e) => {
+    const kecamatan = e.target.value;
+    setSelectedKecamatan(kecamatan);
+    setKelurahanOptions(getKelurahanByKecamatan(kecamatan));
+    setFormData((prev) => ({
+      ...prev,
+      kecamatan: kecamatan,
+      kelurahan: "",
+      location: kecamatan ? `Kec. ${kecamatan}, Kab. Cirebon, Jawa Barat` : "",
+    }));
+  };
+
+  // Handle kelurahan change
+  const handleKelurahanChange = (e) => {
+    const kelurahan = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      kelurahan: kelurahan,
+      location:
+        kelurahan && selectedKecamatan
+          ? `${kelurahan}, Kec. ${selectedKecamatan}, Kab. Cirebon, Jawa Barat`
+          : prev.location,
     }));
   };
 
@@ -268,13 +357,15 @@ export default function EditJobPage() {
     }
 
     const result = await Swal.fire({
-      title: "Update Lowongan?",
-      text: "Pastikan semua informasi sudah benar",
+      title: isActivateMode ? "Aktifkan Lowongan?" : "Update Lowongan?",
+      text: isActivateMode
+        ? "Lowongan akan diaktifkan dan dikirim untuk validasi admin"
+        : "Pastikan semua informasi sudah benar",
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#3b82f6",
       cancelButtonColor: "#6b7280",
-      confirmButtonText: "Ya, Update",
+      confirmButtonText: isActivateMode ? "Ya, Aktifkan" : "Ya, Update",
       cancelButtonText: "Batal",
     });
 
@@ -291,6 +382,8 @@ export default function EditJobPage() {
         gallery: formData.gallery || [],
         benefits: formData.benefits || [],
         skills: formData.skills || [],
+        // If activate mode, set isActive to true
+        isActive: isActivateMode ? true : formData.isActive,
       };
 
       const response = await fetch(
@@ -310,8 +403,10 @@ export default function EditJobPage() {
       if (response.ok) {
         await Swal.fire({
           icon: "success",
-          title: "Berhasil Diajukan!",
-          text: "Lowongan berhasil diupdate dan dikirim untuk validasi ulang oleh admin.",
+          title: isActivateMode ? "Lowongan Diaktifkan!" : "Berhasil Diupdate!",
+          text: isActivateMode
+            ? "Lowongan berhasil diaktifkan dan dikirim untuk validasi admin."
+            : "Lowongan berhasil diupdate dan dikirim untuk validasi ulang oleh admin.",
           confirmButtonColor: "#3b82f6",
         });
         router.push("/profile/recruiter/dashboard/jobs");
@@ -353,12 +448,30 @@ export default function EditJobPage() {
             <ArrowLeft className="w-5 h-5" />
             <span>Kembali</span>
           </button>
-          <h1 className="text-lg font-bold text-gray-900">Edit Lowongan</h1>
+          <h1 className="text-lg font-bold text-gray-900">
+            {isActivateMode ? "Aktifkan Lowongan" : "Edit Lowongan"}
+          </h1>
           <div className="w-20"></div> {/* Spacer for center alignment */}
         </div>
       </div>
 
       <main className="container mx-auto px-4 py-8 max-w-5xl">
+        {/* Activate Mode Banner */}
+        {isActivateMode && (
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-6 flex items-start gap-3">
+            <AlertCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-blue-900">
+                Aktifkan Kembali Lowongan
+              </h3>
+              <p className="text-sm text-blue-700 mt-1">
+                Silakan perbarui <strong>tanggal deadline penutupan</strong>{" "}
+                lowongan dan review informasi lainnya. Setelah disimpan,
+                lowongan akan aktif kembali dan menunggu validasi admin.
+              </p>
+            </div>
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Main Info Card */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
@@ -428,18 +541,44 @@ export default function EditJobPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Jumlah Posisi
-                </label>
-                <input
-                  type="number"
-                  name="numberOfPositions"
-                  value={formData.numberOfPositions}
-                  onChange={handleInputChange}
-                  min="1"
-                  className="w-full md:w-1/3 bg-gray-50 text-gray-900 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
-                />
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Jumlah Posisi
+                  </label>
+                  <input
+                    type="number"
+                    name="numberOfPositions"
+                    value={formData.numberOfPositions}
+                    onChange={handleInputChange}
+                    min="1"
+                    className="w-full bg-gray-50 text-gray-900 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Batas Akhir Lamaran <span className="text-red-500">*</span>
+                    {isActivateMode && (
+                      <span className="ml-2 text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">
+                        Wajib diperbarui
+                      </span>
+                    )}
+                  </label>
+                  <input
+                    type="date"
+                    name="applicationDeadline"
+                    value={formData.applicationDeadline}
+                    onChange={handleInputChange}
+                    min={new Date().toISOString().split("T")[0]}
+                    className={`w-full bg-gray-50 text-gray-900 px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none ${
+                      isActivateMode
+                        ? "border-yellow-400 bg-yellow-50"
+                        : "border-gray-200"
+                    }`}
+                    required
+                  />
+                </div>
               </div>
 
               <div>
@@ -581,6 +720,62 @@ export default function EditJobPage() {
                 </h2>
               </div>
 
+              {/* Job Scope Toggle */}
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  Skup Lowongan
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <label
+                    className={`p-3 border-2 rounded-xl cursor-pointer transition flex items-center gap-3 ${
+                      formData.jobScope === "DOMESTIC"
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="jobScope"
+                      value="DOMESTIC"
+                      checked={formData.jobScope === "DOMESTIC"}
+                      onChange={handleInputChange}
+                      className="sr-only"
+                    />
+                    <span className="text-lg">🇮🇩</span>
+                    <div>
+                      <div className="font-semibold text-gray-900 text-sm">
+                        Dalam Negeri
+                      </div>
+                      <div className="text-xs text-gray-500">Indonesia</div>
+                    </div>
+                  </label>
+                  <label
+                    className={`p-3 border-2 rounded-xl cursor-pointer transition flex items-center gap-3 ${
+                      formData.jobScope === "INTERNATIONAL"
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="jobScope"
+                      value="INTERNATIONAL"
+                      checked={formData.jobScope === "INTERNATIONAL"}
+                      onChange={handleInputChange}
+                      className="sr-only"
+                    />
+                    <span className="text-lg">🌍</span>
+                    <div>
+                      <div className="font-semibold text-gray-900 text-sm">
+                        Luar Negeri
+                      </div>
+                      <div className="text-xs text-gray-500">Internasional</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Remote Toggle */}
               <label className="flex items-start gap-3 p-4 border border-gray-200 rounded-xl hover:border-blue-300 transition-colors cursor-pointer bg-gray-50/50">
                 <input
                   type="checkbox"
@@ -601,42 +796,113 @@ export default function EditJobPage() {
 
               {!formData.isRemote && (
                 <div className="space-y-4 pt-2">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Alamat Lengkap <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="location"
-                      value={formData.location}
-                      onChange={handleInputChange}
-                      className="w-full bg-gray-50 text-gray-900 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
-                      required
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      name="city"
-                      value={formData.city}
-                      onChange={handleInputChange}
-                      className="w-full bg-gray-50 text-gray-900 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
-                      placeholder="Kota"
-                    />
-                    <select
-                      name="province"
-                      value={formData.province}
-                      onChange={handleInputChange}
-                      className="w-full bg-gray-50 text-gray-900 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none appearance-none"
+                  {/* Address Toggle */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <label
+                      className={`p-3 border-2 rounded-xl cursor-pointer transition ${
+                        useCompanyAddress
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
                     >
-                      <option value="">Provinsi</option>
-                      {provinces.map((prov) => (
-                        <option key={prov} value={prov}>
-                          {prov}
-                        </option>
-                      ))}
-                    </select>
+                      <input
+                        type="radio"
+                        name="addressType"
+                        checked={useCompanyAddress}
+                        onChange={() => handleAddressToggle(true)}
+                        className="sr-only"
+                      />
+                      <div className="font-semibold text-gray-900 text-sm">
+                        Sama dengan Alamat Kantor
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1 truncate">
+                        {companyProfile?.address || "Loading..."}
+                      </div>
+                    </label>
+                    <label
+                      className={`p-3 border-2 rounded-xl cursor-pointer transition ${
+                        !useCompanyAddress
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="addressType"
+                        checked={!useCompanyAddress}
+                        onChange={() => handleAddressToggle(false)}
+                        className="sr-only"
+                      />
+                      <div className="font-semibold text-gray-900 text-sm">
+                        Alamat Berbeda
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        Pilih kecamatan/kelurahan
+                      </div>
+                    </label>
                   </div>
+
+                  {/* Kecamatan/Kelurahan Dropdowns - Only show if not using company address */}
+                  {!useCompanyAddress && (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Kecamatan <span className="text-red-500">*</span>
+                          </label>
+                          <select
+                            name="kecamatan"
+                            value={formData.kecamatan}
+                            onChange={handleKecamatanChange}
+                            className="w-full bg-gray-50 text-gray-900 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none appearance-none"
+                            required
+                          >
+                            <option value="">Pilih Kecamatan</option>
+                            {getAllKecamatan().map((kec) => (
+                              <option key={kec} value={kec}>
+                                {kec}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Kelurahan/Desa{" "}
+                            <span className="text-red-500">*</span>
+                          </label>
+                          <select
+                            name="kelurahan"
+                            value={formData.kelurahan}
+                            onChange={handleKelurahanChange}
+                            className="w-full bg-gray-50 text-gray-900 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none appearance-none"
+                            required
+                            disabled={!selectedKecamatan}
+                          >
+                            <option value="">
+                              {selectedKecamatan
+                                ? "Pilih Kelurahan/Desa"
+                                : "Pilih Kecamatan Terlebih Dahulu"}
+                            </option>
+                            {kelurahanOptions.map((kel) => (
+                              <option key={kel} value={kel}>
+                                {kel}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Preview Alamat */}
+                  {formData.location && (
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                      <p className="text-sm text-blue-800">
+                        <span className="font-medium">Alamat Lengkap:</span>{" "}
+                        {formData.location}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 

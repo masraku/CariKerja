@@ -40,8 +40,8 @@ export default function ApplyJobPage() {
     if (!isAuthenticated) {
       Swal.fire({
         icon: "info",
-        title: "Login Required",
-        text: "Please login first to apply for this job",
+        title: "Login Dibutuhkan",
+        text: "Silahkan login terlebih dahulu untuk melamar",
         confirmButtonColor: "#2563EB",
       }).then(() => {
         router.push(`/login?redirect=/jobs/${slug}/apply`);
@@ -52,8 +52,8 @@ export default function ApplyJobPage() {
     if (user?.role !== "JOBSEEKER") {
       Swal.fire({
         icon: "error",
-        title: "Access Denied",
-        text: "Only jobseekers can apply for jobs",
+        title: "Akses Ditolak",
+        text: "Hanya pekerja yang dapat melamar",
         confirmButtonColor: "#2563EB",
       }).then(() => {
         router.push("/jobs");
@@ -89,11 +89,11 @@ export default function ApplyJobPage() {
         if (!profileData.profile.profileCompleted) {
           Swal.fire({
             icon: "warning",
-            title: "Profile Incomplete",
-            text: "Please complete your profile before applying for jobs",
+            title: "Profil Belum Lengkap",
+            text: "Harap lengkapi profil terlebih dahulu untuk melamar",
             showCancelButton: true,
-            confirmButtonText: "Complete Profile",
-            cancelButtonText: "Cancel",
+            confirmButtonText: "Lengkapi Profil",
+            cancelButtonText: "Batal",
             confirmButtonColor: "#2563EB",
           }).then((result) => {
             if (result.isConfirmed) {
@@ -248,7 +248,7 @@ export default function ApplyJobPage() {
   const docStatus = getDocumentStatus();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pt-20">
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-4 py-4">

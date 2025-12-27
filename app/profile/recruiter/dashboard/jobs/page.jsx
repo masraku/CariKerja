@@ -87,54 +87,78 @@ export default function RecruiterJobsPage() {
   };
 
   const handleToggleStatus = async (slug, currentStatus) => {
-    const result = await Swal.fire({
-      title: currentStatus ? "Nonaktifkan Lowongan?" : "Aktifkan Lowongan?",
-      text: currentStatus
-        ? "Lowongan akan disembunyikan dari pencarian"
-        : "Lowongan akan muncul kembali di pencarian",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonColor: currentStatus ? "#ef4444" : "#3b82f6",
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: currentStatus ? "Ya, Nonaktifkan" : "Ya, Aktifkan",
-      cancelButtonText: "Batal",
-    });
-
-    if (!result.isConfirmed) return;
-
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(
-        `/api/profile/recruiter/jobs/${slug}/toggle-status`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.ok) {
-        Swal.fire({
-          icon: "success",
-          title: "Berhasil!",
-          text: `Lowongan berhasil ${
-            currentStatus ? "dinonaktifkan" : "diaktifkan"
-          }`,
-          timer: 2000,
-          showConfirmButton: false,
-        });
-        loadJobs();
-      } else {
-        throw new Error("Failed to toggle status");
-      }
-    } catch (error) {
-      console.error("Toggle status error:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Gagal",
-        text: "Gagal mengubah status lowongan",
+    // If currently active (deactivating), just toggle immediately
+    if (currentStatus) {
+      const result = await Swal.fire({
+        title: "Nonaktifkan Lowongan?",
+        text: "Lowongan akan disembunyikan dari pencarian",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#ef4444",
+        cancelButtonColor: "#6b7280",
+        confirmButtonText: "Ya, Nonaktifkan",
+        cancelButtonText: "Batal",
       });
+
+      if (!result.isConfirmed) return;
+
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(
+          `/api/profile/recruiter/jobs/${slug}/toggle-status`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          Swal.fire({
+            icon: "success",
+            title: "Berhasil!",
+            text: "Lowongan berhasil dinonaktifkan",
+            timer: 2000,
+            showConfirmButton: false,
+          });
+          loadJobs();
+        } else {
+          throw new Error("Failed to toggle status");
+        }
+      } catch (error) {
+        console.error("Toggle status error:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Gagal",
+          text: "Gagal mengubah status lowongan",
+        });
+      }
+    } else {
+      // If currently inactive (activating), redirect to edit page to update deadline
+      const result = await Swal.fire({
+        title: "Aktifkan Lowongan?",
+        html: `
+          <p>Untuk mengaktifkan kembali lowongan, Anda perlu:</p>
+          <ul class="text-left mt-3 space-y-1 text-sm text-gray-600">
+            <li>✓ Memperbarui <strong>tanggal deadline</strong> penutupan</li>
+            <li>✓ Mereview informasi lowongan</li>
+          </ul>
+          <p class="mt-3 text-sm">Anda akan diarahkan ke halaman edit.</p>
+        `,
+        icon: "info",
+        showCancelButton: true,
+        confirmButtonColor: "#3b82f6",
+        cancelButtonColor: "#6b7280",
+        confirmButtonText: "Ya, Edit & Aktifkan",
+        cancelButtonText: "Batal",
+      });
+
+      if (result.isConfirmed) {
+        router.push(
+          `/profile/recruiter/dashboard/jobs/${slug}/edit?activate=true`
+        );
+      }
     }
   };
 
@@ -478,7 +502,7 @@ export default function RecruiterJobsPage() {
                   <button
                     onClick={() =>
                       router.push(
-                        `/profile/recruiter/dashboard/jobs/${job.slug}/applications`
+                        `/profile/recruiter/dashboard/jobs/${job.slug}`
                       )
                     }
                     className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition text-sm font-medium"

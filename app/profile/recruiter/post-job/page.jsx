@@ -18,6 +18,11 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 import RupiahInput from "@/components/RupiahInput";
+import {
+  kecamatanCirebon,
+  getKelurahanByKecamatan,
+  getAllKecamatan,
+} from "@/lib/cirebonData";
 
 export default function PostJobPage() {
   const router = useRouter();
@@ -108,9 +113,12 @@ export default function PostJobPage() {
 
     // Location (Step 1)
     location: "",
-    city: "",
-    province: "",
+    kecamatan: "",
+    kelurahan: "",
+    city: "Cirebon",
+    province: "Jawa Barat",
     isRemote: false,
+    jobScope: "DOMESTIC", // DOMESTIC or INTERNATIONAL
 
     // Salary & Benefits (Step 2)
     showSalary: false,
@@ -119,6 +127,7 @@ export default function PostJobPage() {
     salaryType: "monthly",
     // Photo (Step 2)
     jobPhoto: "",
+    gallery: [],
     benefits: [],
 
     // Work Schedule (Step 2)
@@ -142,6 +151,8 @@ export default function PostJobPage() {
 
   const [newBenefit, setNewBenefit] = useState("");
   const [newSkill, setNewSkill] = useState("");
+  const [selectedKecamatan, setSelectedKecamatan] = useState("");
+  const [kelurahanOptions, setKelurahanOptions] = useState([]);
 
   // Handle input change
   const handleChange = (e) => {
@@ -149,6 +160,32 @@ export default function PostJobPage() {
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  // Handle kecamatan change
+  const handleKecamatanChange = (e) => {
+    const kecamatan = e.target.value;
+    setSelectedKecamatan(kecamatan);
+    setKelurahanOptions(getKelurahanByKecamatan(kecamatan));
+    setFormData((prev) => ({
+      ...prev,
+      kecamatan: kecamatan,
+      kelurahan: "",
+      location: kecamatan ? `Kec. ${kecamatan}, Kab. Cirebon, Jawa Barat` : "",
+    }));
+  };
+
+  // Handle kelurahan change
+  const handleKelurahanChange = (e) => {
+    const kelurahan = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      kelurahan: kelurahan,
+      location:
+        kelurahan && selectedKecamatan
+          ? `${kelurahan}, Kec. ${selectedKecamatan}, Kab. Cirebon, Jawa Barat`
+          : prev.location,
     }));
   };
 
@@ -236,21 +273,46 @@ export default function PostJobPage() {
       }
 
       // Validate required fields
-      if (!formData.title || !formData.description) {
-        Swal.fire({
-          icon: "warning",
-          title: "Data Tidak Lengkap",
-          text: "Posisi dan deskripsi wajib diisi",
-          confirmButtonColor: "#2563EB",
-        });
-        return;
+      const missingFields = [];
+
+      // Basic Info
+      if (!formData.title) missingFields.push("Nama Posisi");
+      if (!formData.description) missingFields.push("Deskripsi Pekerjaan");
+      if (!formData.educationLevel) missingFields.push("Level Pendidikan");
+
+      // Skills
+      if (!formData.skills || formData.skills.length === 0) {
+        missingFields.push("Skill yang Dibutuhkan (minimal 1)");
       }
 
+      // Positions
+      const totalPositions =
+        parseInt(formData.malePositions || 0) +
+        parseInt(formData.femalePositions || 0);
+      if (totalPositions < 1) {
+        missingFields.push("Jumlah Posisi (minimal 1)");
+      }
+
+      // Location (if not remote)
+      if (!formData.isRemote) {
+        if (!formData.location && !formData.kecamatan) {
+          missingFields.push("Lokasi Kerja");
+        }
+      }
+
+      // Deadline
       if (!formData.applicationDeadline) {
+        missingFields.push("Batas Akhir Lamaran");
+      }
+
+      // Show error if missing fields
+      if (missingFields.length > 0) {
         Swal.fire({
           icon: "warning",
           title: "Data Tidak Lengkap",
-          text: "Batas akhir lamaran wajib diisi",
+          html: `<p>Mohon lengkapi field berikut:</p><ul style="text-align:left;margin-top:10px;">${missingFields
+            .map((f) => `<li>• ${f}</li>`)
+            .join("")}</ul>`,
           confirmButtonColor: "#2563EB",
         });
         return;
@@ -499,7 +561,8 @@ export default function PostJobPage() {
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h3 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
                   <Users className="w-5 h-5" />
-                  Jumlah Posisi yang Dibuka
+                  Jumlah Posisi yang Dibuka{" "}
+                  <span className="text-red-500">*</span>
                 </h3>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
@@ -608,7 +671,7 @@ export default function PostJobPage() {
               {/* Skills di Page Awal */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Skill yang Dibutuhkan
+                  Skill yang Dibutuhkan <span className="text-red-500">*</span>
                 </label>
                 <div className="flex gap-2 mb-3">
                   <input
@@ -661,6 +724,70 @@ export default function PostJobPage() {
                   Lokasi Kerja
                 </h3>
 
+                {/* Job Scope Toggle */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Skup Lowongan <span className="text-red-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <label
+                      className={`p-4 border-2 rounded-xl cursor-pointer transition flex items-center gap-3 ${
+                        formData.jobScope === "DOMESTIC"
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="jobScope"
+                        value="DOMESTIC"
+                        checked={formData.jobScope === "DOMESTIC"}
+                        onChange={handleChange}
+                        className="sr-only"
+                      />
+                      <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                        <span className="text-xl">🇮🇩</span>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">
+                          Dalam Negeri
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Lowongan di Indonesia
+                        </div>
+                      </div>
+                    </label>
+                    <label
+                      className={`p-4 border-2 rounded-xl cursor-pointer transition flex items-center gap-3 ${
+                        formData.jobScope === "INTERNATIONAL"
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="jobScope"
+                        value="INTERNATIONAL"
+                        checked={formData.jobScope === "INTERNATIONAL"}
+                        onChange={handleChange}
+                        className="sr-only"
+                      />
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        <span className="text-xl">🌍</span>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">
+                          Luar Negeri
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Lowongan internasional
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Remote Toggle */}
                 <div className="mb-4">
                   <label className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-300 transition mb-3">
                     <input
@@ -731,62 +858,64 @@ export default function PostJobPage() {
 
                     {!useCompanyAddress && (
                       <>
-                        <div className="mb-4">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Alamat Lengkap{" "}
-                            <span className="text-red-500">*</span>
-                          </label>
-                          <textarea
-                            name="location"
-                            value={formData.location}
-                            onChange={handleChange}
-                            rows={2}
-                            className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Jl. Sudirman No. 123"
-                            required
-                          />
+                        <div className="grid md:grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Kecamatan <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                              name="kecamatan"
+                              value={formData.kecamatan}
+                              onChange={handleKecamatanChange}
+                              className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              required
+                            >
+                              <option value="">Pilih Kecamatan</option>
+                              {getAllKecamatan().map((kec) => (
+                                <option key={kec} value={kec}>
+                                  {kec}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Kelurahan/Desa{" "}
+                              <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                              name="kelurahan"
+                              value={formData.kelurahan}
+                              onChange={handleKelurahanChange}
+                              className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              required
+                              disabled={!selectedKecamatan}
+                            >
+                              <option value="">
+                                {selectedKecamatan
+                                  ? "Pilih Kelurahan/Desa"
+                                  : "Pilih Kecamatan Terlebih Dahulu"}
+                              </option>
+                              {kelurahanOptions.map((kel) => (
+                                <option key={kel} value={kel}>
+                                  {kel}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
                         </div>
 
-                        <div className="grid md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Kota <span className="text-red-500">*</span>
-                            </label>
-                            <select
-                              name="city"
-                              value={formData.city}
-                              onChange={handleChange}
-                              className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              required
-                            >
-                              <option value="">Pilih Kota</option>
-                              {cityOptions.map((city) => (
-                                <option key={city} value={city}>
-                                  {city}
-                                </option>
-                              ))}
-                            </select>
+                        {/* Preview Alamat */}
+                        {formData.location && (
+                          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p className="text-sm text-blue-800">
+                              <span className="font-medium">
+                                Alamat Lengkap:
+                              </span>{" "}
+                              {formData.location}
+                            </p>
                           </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Provinsi <span className="text-red-500">*</span>
-                            </label>
-                            <select
-                              name="province"
-                              value={formData.province}
-                              onChange={handleChange}
-                              className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              required
-                            >
-                              <option value="">Pilih Provinsi</option>
-                              {provinceOptions.map((prov) => (
-                                <option key={prov} value={prov}>
-                                  {prov}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
+                        )}
                       </>
                     )}
                   </>
@@ -802,34 +931,56 @@ export default function PostJobPage() {
                 Foto & Benefit
               </h2>
 
-              {/* Job Photo Upload */}
+              {/* Job Photos Gallery Upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Foto Lowongan (Opsional)
                 </label>
                 <p className="text-sm text-gray-500 mb-3">
                   Upload foto yang menggambarkan pekerjaan atau lingkungan kerja
+                  (maksimal 5 foto)
                 </p>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition">
-                  {formData.jobPhoto ? (
-                    <div className="relative">
+
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  {/* Existing Photos */}
+                  {(formData.gallery || []).map((photo, index) => (
+                    <div
+                      key={index}
+                      className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group"
+                    >
                       <img
-                        src={formData.jobPhoto}
-                        alt="Job Photo"
-                        className="max-h-48 mx-auto rounded-lg"
+                        src={photo}
+                        alt={`Job Photo ${index + 1}`}
+                        className="w-full h-full object-cover"
                       />
                       <button
                         type="button"
-                        onClick={() =>
-                          setFormData((prev) => ({ ...prev, jobPhoto: "" }))
-                        }
-                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                        onClick={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            gallery: prev.gallery.filter((_, i) => i !== index),
+                            // Set first image as jobPhoto
+                            jobPhoto:
+                              index === 0
+                                ? prev.gallery[1] || ""
+                                : prev.jobPhoto,
+                          }));
+                        }}
+                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 opacity-0 group-hover:opacity-100 transition"
                       >
                         <X className="w-4 h-4" />
                       </button>
+                      {index === 0 && (
+                        <span className="absolute bottom-1 left-1 text-xs bg-blue-600 text-white px-2 py-0.5 rounded">
+                          Utama
+                        </span>
+                      )}
                     </div>
-                  ) : (
-                    <label className="cursor-pointer">
+                  ))}
+
+                  {/* Add Photo Button */}
+                  {(formData.gallery?.length || 0) < 5 && (
+                    <label className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition">
                       <input
                         type="file"
                         accept="image/*"
@@ -864,10 +1015,18 @@ export default function PostJobPage() {
                             const data = await response.json();
 
                             if (response.ok && data.url) {
-                              setFormData((prev) => ({
-                                ...prev,
-                                jobPhoto: data.url,
-                              }));
+                              setFormData((prev) => {
+                                const newGallery = [
+                                  ...(prev.gallery || []),
+                                  data.url,
+                                ];
+                                return {
+                                  ...prev,
+                                  gallery: newGallery,
+                                  // Set first image as jobPhoto
+                                  jobPhoto: newGallery[0] || "",
+                                };
+                              });
                               Swal.close();
                             } else {
                               throw new Error(data.error || "Upload failed");
@@ -881,18 +1040,17 @@ export default function PostJobPage() {
                           }
                         }}
                       />
-                      <div className="flex flex-col items-center">
-                        <Plus className="w-12 h-12 text-gray-400 mb-2" />
-                        <span className="text-sm text-gray-600">
-                          Klik untuk upload foto
-                        </span>
-                        <span className="text-xs text-gray-400 mt-1">
-                          JPG, PNG, maksimal 5MB
-                        </span>
-                      </div>
+                      <Plus className="w-8 h-8 text-gray-400 mb-1" />
+                      <span className="text-xs text-gray-500">Tambah Foto</span>
+                      <span className="text-xs text-gray-400 mt-1">
+                        {formData.gallery?.length || 0}/5
+                      </span>
                     </label>
                   )}
                 </div>
+                <p className="text-xs text-gray-400 mt-2">
+                  Foto pertama akan menjadi foto utama lowongan
+                </p>
               </div>
 
               {/* Salary Section - Optional */}

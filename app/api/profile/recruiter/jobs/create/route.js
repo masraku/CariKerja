@@ -71,6 +71,7 @@ export async function POST(request) {
       city,
       province,
       isRemote,
+      jobScope,
       
       // Salary
       salaryMin,
@@ -97,6 +98,7 @@ export async function POST(request) {
       
       // Photo
       photo,
+      gallery,
       
       // Skills
       skills
@@ -161,10 +163,12 @@ export async function POST(request) {
         
         applicationDeadline: applicationDeadline ? new Date(applicationDeadline) : null,
         
-        photo: photo || null,
+        photo: photo || (gallery && gallery.length > 0 ? gallery[0] : null),
+        gallery: gallery || [],
         isShift: isShift || false,
         shiftCount: shiftCount ? parseInt(shiftCount) : null,
         isDisabilityFriendly: isDisabilityFriendly || false,
+        jobScope: jobScope || 'DOMESTIC',
         
         // Set inactive for admin validation
         isActive: false,

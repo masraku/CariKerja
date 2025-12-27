@@ -101,8 +101,8 @@ function LoginContent() {
 
     // Common validations
     if (!regForm.password) errors.password = "Password wajib diisi";
-    else if (regForm.password.length < 6)
-      errors.password = "Minimal 6 karakter";
+    else if (regForm.password.length < 8)
+      errors.password = "Minimal 8 karakter";
 
     if (regForm.password !== regForm.confirmPassword) {
       errors.confirmPassword = "Password tidak cocok";
@@ -114,15 +114,19 @@ function LoginContent() {
     if (registerRole === "jobseeker") {
       if (!regForm.name?.trim()) errors.name = "Nama lengkap wajib diisi";
       if (!regForm.email?.trim()) errors.email = "Email wajib diisi";
-      else if (!/\S+@\S+\.\S+/.test(regForm.email))
-        errors.email = "Format email tidak valid";
+      else if (
+        !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(regForm.email)
+      )
+        errors.email = "Format email tidak valid (harus mengandung @domain)";
       if (!regForm.phone?.trim()) errors.phone = "Nomor telepon wajib diisi";
     } else if (registerRole === "recruiter") {
       if (!regForm.companyName?.trim())
         errors.companyName = "Nama perusahaan wajib diisi";
       if (!regForm.email?.trim()) errors.email = "Email perusahaan wajib diisi";
-      else if (!/\S+@\S+\.\S+/.test(regForm.email))
-        errors.email = "Format email tidak valid";
+      else if (
+        !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(regForm.email)
+      )
+        errors.email = "Format email tidak valid (harus mengandung @domain)";
       if (!regForm.contactPerson?.trim())
         errors.contactPerson = "Nama kontak wajib diisi";
       if (!regForm.phone?.trim()) errors.phone = "Nomor telepon wajib diisi";

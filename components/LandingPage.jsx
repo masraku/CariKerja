@@ -57,7 +57,7 @@ export default function LandingPage() {
   const handleSearch = (e) => {
     e.preventDefault();
     const params = new URLSearchParams();
-    if (searchKeyword) params.set("keyword", searchKeyword);
+    if (searchKeyword) params.set("search", searchKeyword);
     router.push(`/jobs?${params.toString()}`);
   };
 
@@ -84,35 +84,62 @@ export default function LandingPage() {
     return map[type] || type;
   };
 
+  const getTimeAgo = (date) => {
+    if (!date) return "Baru saja";
+    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + " thn lalu";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + " bln lalu";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + " hari lalu";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + " jam lalu";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + " menit lalu";
+    return "Baru saja";
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden">
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-blue-600">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-900 opacity-90" />
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?ixlib=rb-1.2.1&auto=format&fit=crop&w=2850&q=80')] bg-cover bg-center mix-blend-overlay opacity-20" />
+      <section className="relative pt-24 pb-16 lg:pt-36 lg:pb-24 overflow-hidden bg-blue-600">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#03587f] to-[#81acbf] opacity-90" />
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-20"
+        >
+          <source
+            src="https://static.vecteezy.com/system/resources/previews/025/315/414/mp4/yogyakarta-indonesia-may-5th-2023-aerial-view-of-tugu-jogja-or-yogyakarta-monument-indonesia-free-video.mp4"
+            type="video/mp4"
+          />
+        </video>
 
         <div className="max-w-5xl mx-auto px-4 lg:px-8 relative z-10 text-center">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20 mb-8 animate-fade-in-up shadow-lg shadow-blue-900/20">
             <Sparkles className="w-4 h-4 text-yellow-300" />
             <span className="text-sm text-white font-medium">
-              Platform Karir Masa Depan
+              Platform Karir by Dinas Ketenagakerjaan Kabupaten Cirebon
             </span>
           </div>
 
           {/* Main Heading */}
           <h1 className="text-5xl lg:text-7xl font-bold tracking-tight text-white mb-6 leading-tight drop-shadow-sm">
-            Temukan Karir <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-indigo-200">
-              Impianmu
-            </span>{" "}
-            Disini
+            Cari Kerja Lebih <span className="text-[#ffd700]">SIMPEL</span>
           </h1>
-
-          <p className="text-lg lg:text-xl text-blue-100 mb-10 max-w-2xl mx-auto leading-relaxed font-light">
-            Hubungkan potensimu dengan ribuan perusahaan terkemuka. Karir
-            cemerlang dimulai dari langkah yang tepat.
-          </p>
+          <div className="flex flex-col items-center justify-center mb-10">
+            <div className="h-px w-24 bg-blue-400/50 mb-1"></div>
+            <p className="text-5xl lg:text-2xl text-[#ffd700] font-semibold tracking-wider uppercase">
+              Sistem Informasi Matching Pelamar
+            </p>
+            <p className="text-base lg:text-lg text-blue-100 font-light mt-1">
+              Platform Pencari Kerja Kabupaten Cirebon
+            </p>
+          </div>
 
           {/* Search Bar */}
           <form
@@ -145,7 +172,7 @@ export default function LandingPage() {
             <div className="grid grid-cols-3 gap-4 max-w-3xl mx-auto">
               {[
                 {
-                  label: "Lowongan Aktif",
+                  label: "Total Lowongan",
                   value: stats.totalJobs,
                   color: "text-white",
                 },
@@ -253,7 +280,7 @@ export default function LandingPage() {
                   <div className="pt-4 border-t border-gray-50 flex items-center justify-between mt-auto">
                     <div className="text-gray-400 text-xs font-medium flex items-center">
                       <Clock className="w-3.5 h-3.5 mr-1.5" />
-                      Baru saja
+                      {getTimeAgo(job.postedAt)}
                     </div>
                     {(job.salaryMin || job.salaryMax) && (
                       <div className="font-bold text-blue-600 text-sm">

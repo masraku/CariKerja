@@ -18,6 +18,7 @@ import {
   CalendarDays,
   Coffee,
   AlertCircle,
+  Accessibility,
 } from "lucide-react";
 import Swal from "sweetalert2";
 
@@ -277,6 +278,12 @@ export default function AdminJobDetailPage() {
                     Remote
                   </span>
                 )}
+                {job.isDisabilityFriendly && (
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-50 text-purple-700">
+                    <Accessibility className="w-3 h-3" />
+                    Ramah Disabilitas
+                  </span>
+                )}
               </div>
 
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -304,6 +311,18 @@ export default function AdminJobDetailPage() {
                   {job.educationLevel || "Semua Jenjang"}
                 </div>
               </div>
+
+              {/* Full Location Address */}
+              {job.location && (
+                <div className="mt-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium text-gray-700">
+                      Alamat Lengkap:
+                    </span>{" "}
+                    {job.location}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -14,8 +14,12 @@ import {
   ExternalLink,
   Calendar,
   TrendingUp,
+  Filter,
+  ArrowUpDown,
+  Globe,
 } from "lucide-react";
 import Swal from "sweetalert2";
+import { getAllKecamatan } from "@/lib/cirebonData";
 
 export default function AdminJobsPage() {
   const [jobs, setJobs] = useState([]);
@@ -24,10 +28,20 @@ export default function AdminJobsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [jobTypeFilter, setJobTypeFilter] = useState("all");
+  const [kecamatanFilter, setKecamatanFilter] = useState("all");
+  const [sortOrder, setSortOrder] = useState("newest");
+  const [scopeFilter, setScopeFilter] = useState("all");
 
   useEffect(() => {
     fetchJobs();
-  }, [search, statusFilter, jobTypeFilter]);
+  }, [
+    search,
+    statusFilter,
+    jobTypeFilter,
+    kecamatanFilter,
+    sortOrder,
+    scopeFilter,
+  ]);
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -37,6 +51,10 @@ export default function AdminJobsPage() {
       if (search) params.append("search", search);
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (jobTypeFilter !== "all") params.append("jobType", jobTypeFilter);
+      if (kecamatanFilter !== "all")
+        params.append("kecamatan", kecamatanFilter);
+      if (scopeFilter !== "all") params.append("scope", scopeFilter);
+      params.append("sort", sortOrder);
 
       const response = await fetch(`/api/admin/jobs?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -255,8 +273,9 @@ export default function AdminJobsPage() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6">
         {/* Filters */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-6">
-          <div className="flex flex-col lg:flex-row gap-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-6">
+          {/* Row 1: Search + Status Filter */}
+          <div className="flex flex-col lg:flex-row gap-4 mb-4">
             {/* Search */}
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -265,46 +284,94 @@ export default function AdminJobsPage() {
                 placeholder="Cari lowongan, perusahaan, atau lokasi..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-400"
+                className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 placeholder-slate-400"
               />
             </div>
 
-            {/* Status Filter */}
-            <div className="flex gap-2 bg-slate-100 p-1 rounded-xl overflow-x-auto">
-              {["all", "pending", "active", "rejected", "closed"].map(
-                (filter) => (
-                  <button
-                    key={filter}
-                    onClick={() => setStatusFilter(filter)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap ${
-                      statusFilter === filter
-                        ? "bg-white text-slate-800 shadow-sm"
-                        : "text-slate-500 hover:text-slate-700"
-                    }`}
-                  >
-                    {filter === "all"
-                      ? "Semua"
-                      : filter === "pending"
-                      ? "Pending"
-                      : filter === "active"
-                      ? "Aktif"
-                      : filter === "rejected"
-                      ? "Ditolak"
-                      : "Ditutup"}
-                  </button>
-                )
-              )}
+            {/* Status Filter Pills */}
+            <div className="flex gap-1.5 bg-slate-100 p-1.5 rounded-xl overflow-x-auto">
+              {[
+                { key: "all", label: "Semua", color: "" },
+                { key: "pending", label: "Pending", color: "text-orange-600" },
+                { key: "active", label: "Aktif", color: "text-emerald-600" },
+                { key: "rejected", label: "Ditolak", color: "text-red-600" },
+                { key: "closed", label: "Ditutup", color: "text-slate-600" },
+              ].map((filter) => (
+                <button
+                  key={filter.key}
+                  onClick={() => setStatusFilter(filter.key)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap ${
+                    statusFilter === filter.key
+                      ? "bg-white text-slate-800 shadow-sm"
+                      : `${filter.color || "text-slate-500"} hover:bg-white/50`
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
             </div>
+          </div>
+
+          {/* Row 2: Advanced Filters */}
+          <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-100">
+            <div className="flex items-center gap-2 text-sm text-slate-500">
+              <Filter className="w-4 h-4" />
+              <span>Filter:</span>
+            </div>
+
+            {/* Kecamatan Filter */}
+            <select
+              value={kecamatanFilter}
+              onChange={(e) => setKecamatanFilter(e.target.value)}
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">Semua Kecamatan</option>
+              {getAllKecamatan().map((kec) => (
+                <option key={kec} value={kec}>
+                  Kec. {kec}
+                </option>
+              ))}
+            </select>
 
             {/* Job Type Filter */}
             <select
               value={jobTypeFilter}
               onChange={(e) => setJobTypeFilter(e.target.value)}
-              className="px-4 py-3 bg-slate-50 border-0 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">Semua Tipe</option>
               <option value="FULL_TIME">Full Time</option>
               <option value="PART_TIME">Part Time</option>
+            </select>
+
+            {/* Scope Filter */}
+            <select
+              value={scopeFilter}
+              onChange={(e) => setScopeFilter(e.target.value)}
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">Semua Skup</option>
+              <option value="domestic">Dalam Negeri</option>
+              <option value="international">Luar Negeri</option>
+            </select>
+
+            {/* Divider */}
+            <div className="w-px h-6 bg-slate-200 hidden sm:block"></div>
+
+            {/* Sort Order */}
+            <div className="flex items-center gap-2 text-sm text-slate-500">
+              <ArrowUpDown className="w-4 h-4" />
+              <span>Urutkan:</span>
+            </div>
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="newest">Terbaru</option>
+              <option value="oldest">Terlama</option>
+              <option value="deadline_asc">Deadline Terdekat</option>
+              <option value="deadline_desc">Deadline Terjauh</option>
             </select>
           </div>
         </div>

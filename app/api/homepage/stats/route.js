@@ -9,7 +9,9 @@ export async function GET() {
         // Count active jobs
         prisma.jobs.count({
           where: {
-            isActive: true,
+            status: {
+              in: ["ACTIVE", "CLOSED"],
+            },
           },
         }),
 

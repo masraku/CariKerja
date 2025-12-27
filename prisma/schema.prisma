@@ -244,6 +244,7 @@ model jobs {
   isActive            Boolean         @default(true) // Deprecated: use status instead
   status              JobStatus       @default(PENDING)
   rejectionReason     String?
+  jobScope            JobScope        @default(DOMESTIC)
   isFeatured          Boolean         @default(false)
   isPremium           Boolean         @default(false)
   viewCount           Int             @default(0)
@@ -604,6 +605,11 @@ enum JobStatus {
   ACTIVE
   REJECTED
   CLOSED
+}
+
+enum JobScope {
+  DOMESTIC
+  INTERNATIONAL
 }
 
 enum NotificationType {
