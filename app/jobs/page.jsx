@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import {
   Search,
@@ -26,6 +26,7 @@ import {
   Heart,
   XCircle,
   Accessibility,
+  Loader2,
 } from "lucide-react";
 
 import { useRouter, useSearchParams } from "next/navigation";
@@ -735,4 +736,21 @@ const JobsPage = () => {
   );
 };
 
-export default JobsPage;
+// Loading fallback for Suspense
+const JobsPageLoading = () => (
+  <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">
+    <div className="text-center">
+      <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+      <p className="text-gray-600">Memuat lowongan...</p>
+    </div>
+  </div>
+);
+
+// Export with Suspense wrapper
+export default function JobsPageWrapper() {
+  return (
+    <Suspense fallback={<JobsPageLoading />}>
+      <JobsPage />
+    </Suspense>
+  );
+}
