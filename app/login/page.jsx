@@ -260,11 +260,13 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex bg-gray-50">
+    <div className="min-h-screen relative overflow-x-hidden overflow-y-auto flex bg-gray-50">
       {/* REGISTER FORM CONTAINER (Left Side - Revealed when isSignUp is true) */}
       <div
-        className={`absolute top-0 left-0 w-full lg:w-1/2 h-full flex items-center justify-center p-8 lg:p-12 bg-white transition-all duration-700 ease-in-out z-10 ${
-          isSignUp ? "opacity-100 z-50" : "opacity-0 z-0"
+        className={`absolute top-0 left-0 w-full lg:w-1/2 min-h-screen flex items-center justify-center p-4 sm:p-8 lg:p-12 bg-white transition-all duration-700 ease-in-out z-10 ${
+          isSignUp
+            ? "opacity-100 z-50"
+            : "opacity-0 z-0 pointer-events-none lg:pointer-events-auto"
         }`}
       >
         <div className="w-full max-w-md space-y-8">
@@ -612,8 +614,10 @@ function LoginContent() {
 
       {/* LOGIN FORM CONTAINER (Right Side - Default) */}
       <div
-        className={`flex items-center justify-center p-8 lg:p-12 w-full lg:w-1/2 h-full bg-white absolute top-0 right-0 transition-all duration-700 ease-in-out ${
-          isSignUp ? "opacity-0 z-0" : "opacity-100 z-20"
+        className={`flex items-center justify-center p-4 sm:p-8 lg:p-12 w-full lg:w-1/2 min-h-screen bg-white absolute top-0 right-0 transition-all duration-700 ease-in-out ${
+          isSignUp
+            ? "opacity-0 z-0 pointer-events-none lg:pointer-events-auto"
+            : "opacity-100 z-20"
         }`}
       >
         <div className="w-full max-w-md space-y-8">
