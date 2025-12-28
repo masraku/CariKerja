@@ -168,34 +168,29 @@ export default function LandingPage() {
 
           {/* Stats */}
           {!loading && stats && (
-            <div className="grid grid-cols-3 gap-4 max-w-3xl mx-auto">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 max-w-3xl mx-auto">
               {[
                 {
                   label: "Total Lowongan",
                   value: stats.totalJobs,
-                  color: "text-white",
                 },
                 {
                   label: "Perusahaan",
                   value: stats.totalCompanies,
-                  color: "text-white",
                 },
                 {
                   label: "Talenta Diterima",
                   value: stats.totalHires,
-                  color: "text-white",
                 },
               ].map((stat, i) => (
                 <div
                   key={i}
-                  className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-4 lg:p-6 shadow-lg"
+                  className="bg-white/10 backdrop-blur-md border border-white/10 rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg text-center"
                 >
-                  <div
-                    className={`text-2xl lg:text-4xl font-bold ${stat.color} mb-1`}
-                  >
+                  <div className="text-xl sm:text-2xl lg:text-4xl font-bold text-white mb-1">
                     {stat.value?.toLocaleString() || "0"}+
                   </div>
-                  <div className="text-sm text-blue-200 font-medium uppercase tracking-wider">
+                  <div className="text-[10px] sm:text-xs lg:text-sm text-blue-200 font-medium uppercase tracking-wider leading-tight">
                     {stat.label}
                   </div>
                 </div>

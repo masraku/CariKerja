@@ -342,11 +342,6 @@ export async function POST(request) {
       completeness: completeness
     })
   } catch (error) {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    })
-    
     return NextResponse.json(
       { 
         error: 'Failed to save profile', 
@@ -433,10 +428,6 @@ export async function GET(request) {
       profile: transformedProfile 
     })
   } catch (error) {
-      message: error.message,
-      stack: error.stack
-    })
-    
     return NextResponse.json(
       { 
         error: 'Failed to get profile',
