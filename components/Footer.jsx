@@ -60,97 +60,56 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Links Columns */}
-          <div className="lg:col-span-2">
-            <h3 className="font-semibold text-slate-900 mb-6">Pencari Kerja</h3>
-            <ul className="space-y-4">
-              <li>
-                <Link
-                  href="/jobs"
-                  className="text-slate-500 hover:text-blue-600 transition-colors"
-                >
-                  Cari Lowongan
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/companies"
-                  className="text-slate-500 hover:text-blue-600 transition-colors"
-                >
-                  Perusahaan
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/salaries"
-                  className="text-slate-500 hover:text-blue-600 transition-colors"
-                >
-                  Cek Gaji
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/career-tips"
-                  className="text-slate-500 hover:text-blue-600 transition-colors"
-                >
-                  Tips Karir
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div className="lg:col-span-2">
-            <h3 className="font-semibold text-slate-900 mb-6">Perusahaan</h3>
-            <ul className="space-y-4">
-              <li>
-                <Link
-                  href="/post-job"
-                  className="text-slate-500 hover:text-blue-600 transition-colors"
-                >
-                  Pasang Iklan
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/talent-search"
-                  className="text-slate-500 hover:text-blue-600 transition-colors"
-                >
-                  Cari Kandidat
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/pricing"
-                  className="text-slate-500 hover:text-blue-600 transition-colors"
-                >
-                  Harga
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/partners"
-                  className="text-slate-500 hover:text-blue-600 transition-colors"
-                >
-                  Partner
-                </Link>
-              </li>
-            </ul>
-          </div>
-
+          {/* Location Map */}
           <div className="lg:col-span-4">
-            <h3 className="font-semibold text-slate-900 mb-6">Newsletter</h3>
-            <p className="text-slate-500 mb-4">
-              Dapatkan info lowongan terbaru setiap minggu.
-            </p>
-            <div className="flex gap-2">
-              <input
-                type="email"
-                placeholder="Email Anda"
-                className="flex-1 px-4 py-3 rounded-xl bg-slate-50 border-transparent focus:bg-white focus:border-blue-200 focus:ring-4 focus:ring-blue-50 transition-all outline-none text-slate-600 placeholder:text-slate-400"
-              />
-              <button className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20">
-                <Send className="w-5 h-5" />
-              </button>
+            <h3 className="font-semibold text-slate-900 mb-6">Lokasi Kantor</h3>
+            <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm mb-4">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3962.539947168774!2d108.55461!3d-6.7066667!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e6efc8c3f76b9d9%3A0x5d61d9c8c9d8c9d8!2sDinas%20Ketenagakerjaan%20Kabupaten%20Cirebon!5e0!3m2!1sid!2sid!4v1703764800000!5m2!1sid!2sid"
+                width="100%"
+                height="150"
+                style={{ border: 0 }}
+                allowFullScreen=""
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Lokasi Disnaker Kabupaten Cirebon"
+              ></iframe>
+            </div>
+            <a
+              href="https://maps.app.goo.gl/ybHtX9x4Py8AhPa86"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline"
+            >
+              📍 Buka di Google Maps
+            </a>
+          </div>
+
+          {/* Contact Info */}
+          <div className="lg:col-span-4">
+            <h3 className="font-semibold text-slate-900 mb-6">Hubungi Kami</h3>
+            <div className="space-y-4 text-sm text-slate-600">
+              <div>
+                <p className="font-semibold text-slate-800 mb-1">Alamat:</p>
+                <p>Jl. Sunan Kalijaga No. 7, Sumber</p>
+                <p>Kabupaten Cirebon, Jawa Barat 45611</p>
+              </div>
+              <div>
+                <p className="font-semibold text-slate-800 mb-1">Telepon:</p>
+                <a
+                  href="tel:+62231321881"
+                  className="hover:text-blue-600 transition-colors"
+                >
+                  (0231) 321881
+                </a>
+              </div>
+              <div>
+                <p className="font-semibold text-slate-800 mb-1">
+                  Jam Operasional:
+                </p>
+                <p>Senin - Jumat: 08.00 - 16.00 WIB</p>
+                <p className="text-slate-400">Sabtu, Minggu & Libur: Tutup</p>
+              </div>
             </div>
           </div>
         </div>

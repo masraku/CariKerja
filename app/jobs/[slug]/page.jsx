@@ -80,7 +80,7 @@ export default function JobDetailPage() {
           icon: "error",
           title: "Job Not Found",
           text: "Lowongan tidak ditemukan",
-          confirmButtonColor: "#2563EB",
+          confirmButtonColor: "#03587f",
         }).then(() => {
           router.push("/jobs");
         });
@@ -90,7 +90,7 @@ export default function JobDetailPage() {
         icon: "error",
         title: "Error",
         text: "Gagal memuat detail lowongan",
-        confirmButtonColor: "#2563EB",
+        confirmButtonColor: "#03587f",
       });
     } finally {
       setLoading(false);
@@ -106,7 +106,7 @@ export default function JobDetailPage() {
         showCancelButton: true,
         confirmButtonText: "Login",
         cancelButtonText: "Batal",
-        confirmButtonColor: "#2563EB",
+        confirmButtonColor: "#03587f",
       }).then((result) => {
         if (result.isConfirmed) {
           router.push("/login?redirect=/jobs/" + slug);
@@ -151,7 +151,7 @@ export default function JobDetailPage() {
         showCancelButton: true,
         confirmButtonText: "Login",
         cancelButtonText: "Batal",
-        confirmButtonColor: "#2563EB",
+        confirmButtonColor: "#03587f",
       }).then((result) => {
         if (result.isConfirmed) {
           router.push("/login?redirect=/jobs/" + slug);
@@ -165,7 +165,7 @@ export default function JobDetailPage() {
         icon: "error",
         title: "Akses Ditolak",
         text: "Hanya pencaker yang dapat melamar pekerjaan",
-        confirmButtonColor: "#2563EB",
+        confirmButtonColor: "#03587f",
       });
       return;
     }
@@ -282,7 +282,7 @@ export default function JobDetailPage() {
                 )}
                 {job.isDisabilityFriendly && (
                   <div
-                    className="absolute -bottom-2 -right-2 bg-blue-600 text-white p-1 rounded-full border-2 border-white shadow-sm"
+                    className="absolute -bottom-2 -right-2 bg-green-600 text-white p-1 rounded-full border-2 border-white shadow-sm"
                     title="Ramah Difabel"
                   >
                     <Accessibility className="w-4 h-4" />
@@ -371,7 +371,7 @@ export default function JobDetailPage() {
           <div className="lg:col-span-2 space-y-8">
             {/* Disability Friendly Prominent Banner */}
             {job.isDisabilityFriendly && (
-              <div className="bg-gradient-to-r from-blue-600 to-blue-500 rounded-3xl p-6 shadow-lg shadow-blue-500/20 text-white flex flex-col sm:flex-row items-center gap-6 animate-in slide-in-from-bottom-2">
+              <div className="bg-gradient-to-r from-green-600 to-green-500 rounded-3xl p-6 shadow-lg shadow-green-500/20 text-white flex flex-col sm:flex-row items-center gap-6 animate-in slide-in-from-bottom-2">
                 <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center flex-shrink-0">
                   <Accessibility className="w-8 h-8" />
                 </div>
@@ -379,9 +379,8 @@ export default function JobDetailPage() {
                   <h3 className="font-bold text-xl leading-tight mb-1">
                     Ramah Disabilitas
                   </h3>
-                  <p className="text-blue-50 opacity-90">
-                    Lowongan ini berkomitmen untuk inklusivitas dan terbuka bagi
-                    pelamar disabilitas.
+                  <p className="text-green-50 opacity-90">
+                    Lowongan ini terbuka dan inklusif untuk teman-teman difabel.
                   </p>
                 </div>
                 <div className="hidden sm:block">
@@ -493,7 +492,7 @@ export default function JobDetailPage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Apply Card */}
-            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 sticky top-24">
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
               <h3 className="font-bold text-slate-900 mb-4 text-lg">
                 Tertarik Melamar?
               </h3>
@@ -518,7 +517,7 @@ export default function JobDetailPage() {
               ) : (
                 <button
                   onClick={handleApply}
-                  className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30 hover:-translate-y-0.5 flex items-center justify-center gap-2 mb-4"
+                  className="w-full py-4 bg-[#03587f] hover:bg-[#024666] text-white font-bold rounded-xl transition-all shadow-lg shadow-[#03587f]/20 hover:shadow-[#03587f]/30 hover:-translate-y-0.5 flex items-center justify-center gap-2 mb-4"
                 >
                   Lamar Sekarang
                   <ArrowLeft className="w-5 h-5 rotate-180" />

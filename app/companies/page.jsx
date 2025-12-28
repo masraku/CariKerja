@@ -145,14 +145,6 @@ const CompaniesPage = () => {
                 Lowongan Aktif
               </div>
             </div>
-            <div className="text-center">
-              <div className="text-3xl lg:text-4xl font-bold text-pink-400 mb-1">
-                {followedCompanies.length}
-              </div>
-              <div className="text-sm text-blue-200 font-medium uppercase tracking-wider">
-                Diikuti
-              </div>
-            </div>
           </div>
         </div>
       </div>

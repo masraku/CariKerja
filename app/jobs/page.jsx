@@ -203,7 +203,7 @@ const JobsPage = () => {
           {/* Disability Badge for Card */}
           {job.isDisabilityFriendly && (
             <div
-              className="absolute -bottom-1 -right-1 bg-blue-600 text-white p-0.5 rounded-full border-2 border-white"
+              className="absolute -bottom-1 -right-1 bg-green-600 text-white p-0.5 rounded-full border-2 border-white"
               title="Ramah Difabel"
             >
               <Accessibility className="w-3 h-3" />
@@ -253,7 +253,7 @@ const JobsPage = () => {
   const JobDetail = ({ job }) => (
     <div className="h-full overflow-y-auto custom-scrollbar relative">
       {/* Header */}
-      <div className="p-6 lg:p-8 border-b border-slate-100 bg-white sticky top-0 z-10">
+      <div className="p-6 lg:p-8 border-b border-slate-100 bg-white">
         {/* Mobile Back Button */}
         <button
           onClick={() => setShowDetail(false)}
@@ -331,7 +331,7 @@ const JobsPage = () => {
 
         {/* Disability Friendly Prominent Banner */}
         {job.isDisabilityFriendly && (
-          <div className="mt-6 bg-gradient-to-r from-blue-600 to-blue-500 rounded-2xl p-4 shadow-lg shadow-blue-500/20 text-white flex items-center gap-4 animate-in slide-in-from-bottom-2">
+          <div className="mt-6 bg-gradient-to-r from-green-600 to-green-500 rounded-2xl p-4 shadow-lg shadow-green-500/20 text-white flex items-center gap-4 animate-in slide-in-from-bottom-2">
             <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
               <Accessibility className="w-7 h-7" />
             </div>
@@ -339,7 +339,7 @@ const JobsPage = () => {
               <h3 className="font-bold text-lg leading-tight">
                 Ramah Disabilitas
               </h3>
-              <p className="text-blue-50 text-sm opacity-90">
+              <p className="text-green-50 text-sm opacity-90">
                 Lowongan ini terbuka dan inklusif untuk teman-teman difabel.
               </p>
             </div>
@@ -373,7 +373,7 @@ const JobsPage = () => {
         <div className="flex gap-4 mt-8">
           <Link
             href={`/jobs/${job.slug}`}
-            className="flex-1 flex items-center justify-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30 hover:-translate-y-0.5"
+            className="flex-1 flex items-center justify-center gap-2 px-8 py-4 bg-[#03587f] hover:bg-[#024666] text-white font-bold rounded-xl transition-all shadow-lg shadow-[#03587f]/20 hover:shadow-[#03587f]/30 hover:-translate-y-0.5"
           >
             Lamar Sekarang
             <ArrowRight className="w-5 h-5" />
