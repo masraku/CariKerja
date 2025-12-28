@@ -104,7 +104,6 @@ export async function GET(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Get job by slug error:', error)
     return NextResponse.json(
       { error: 'Failed to fetch job details' },
       { status: 500 }
@@ -178,7 +177,6 @@ export async function DELETE(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Delete job error:', error)
     return NextResponse.json(
       { error: 'Gagal menghapus lowongan. Silakan coba lagi.' },
       { status: 500 }

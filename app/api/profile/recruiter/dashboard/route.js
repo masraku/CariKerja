@@ -163,8 +163,6 @@ export async function GET(request) {
     })
 
   } catch (error) {
-    console.error('❌ Get recruiter dashboard error:', error.message)
-    console.error('Stack:', error.stack)
     return NextResponse.json(
       { 
         error: 'Failed to fetch dashboard data',

@@ -128,7 +128,6 @@ export async function GET(request) {
     })
 
   } catch (error) {
-    console.error('Get current user error:', error.message)
     return NextResponse.json(
       { error: 'Failed to get user data' },
       { status: 500 }

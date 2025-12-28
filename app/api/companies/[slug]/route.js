@@ -123,7 +123,6 @@ export async function GET(request, { params }) {
     })
 
   } catch (error) {
-    console.error('❌ Get company error:', error)
     return NextResponse.json(
       { 
         error: 'Failed to fetch company details',

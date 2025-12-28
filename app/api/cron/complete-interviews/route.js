@@ -84,7 +84,6 @@ export async function GET(request) {
     })
 
   } catch (error) {
-    console.error('❌ Auto-complete interviews error:', error)
     return NextResponse.json(
       { 
         error: 'Failed to auto-complete interviews',

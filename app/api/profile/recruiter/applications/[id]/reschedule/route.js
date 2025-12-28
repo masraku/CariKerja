@@ -137,7 +137,6 @@ export async function POST(request, context) {
         })
 
     } catch (error) {
-        console.error('Reschedule interview error:', error)
         return NextResponse.json(
             { error: error.message || 'Gagal memperbarui jadwal interview' },
             { status: 500 }
@@ -255,7 +254,6 @@ export async function DELETE(request, context) {
         })
 
     } catch (error) {
-        console.error('Reject reschedule error:', error)
         return NextResponse.json(
             { error: error.message || 'Gagal menolak request reschedule' },
             { status: 500 }

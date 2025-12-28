@@ -62,7 +62,6 @@ export async function PATCH(request, context) {
         })
 
     } catch (error) {
-        console.error('❌ Reject company error:', error)
         return NextResponse.json(
             { error: 'Failed to reject company' },
             { status: 500 }

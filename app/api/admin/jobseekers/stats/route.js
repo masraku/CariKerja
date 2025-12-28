@@ -60,7 +60,6 @@ export async function GET(request) {
         })
 
     } catch (error) {
-        console.error('❌ Admin jobseeker stats error:', error)
         return NextResponse.json(
             { error: 'Failed to fetch jobseeker statistics' },
             { status: 500 }

@@ -66,7 +66,6 @@ export async function PATCH(request, context) {
         })
 
     } catch (error) {
-        console.error('❌ Verify company error:', error)
         return NextResponse.json(
             { error: 'Failed to verify company' },
             { status: 500 }

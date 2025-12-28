@@ -95,7 +95,6 @@ export async function POST(request, { params }) {
     })
 
   } catch (error) {
-    console.error('❌ Schedule interview error:', error)
     return NextResponse.json(
       { 
         error: 'Failed to schedule interview',
@@ -172,7 +171,6 @@ export async function GET(request, { params }) {
     })
 
   } catch (error) {
-    console.error('❌ Get applications error:', error)
     return NextResponse.json(
       { error: 'Failed to fetch applications' },
       { status: 500 }

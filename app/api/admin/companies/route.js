@@ -139,7 +139,6 @@ export async function GET(request) {
         })
 
     } catch (error) {
-        console.error('Admin companies error:', error.message)
         return NextResponse.json(
             { error: 'Failed to fetch companies', details: error.message },
             { status: 500 }

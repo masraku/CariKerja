@@ -67,7 +67,6 @@ export default function RecruiterPhotoUpload({
         throw new Error(data.error || "Upload failed");
       }
     } catch (error) {
-      console.error("Upload error:", error);
       alert(error.message || "Failed to upload photo");
       setPreview(currentPhoto); // Revert preview
     } finally {

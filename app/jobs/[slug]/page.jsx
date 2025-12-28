@@ -86,7 +86,6 @@ export default function JobDetailPage() {
         });
       }
     } catch (error) {
-      console.error("Error fetching job:", error);
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -189,7 +188,6 @@ export default function JobDetailPage() {
         });
       } catch (error) {
         if (error.name !== "AbortError" && error.name !== "InvalidStateError") {
-          console.error("Share failed:", error);
         }
       } finally {
         setIsSharing(false);

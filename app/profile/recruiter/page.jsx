@@ -137,7 +137,6 @@ export default function RecruiterProfilePage() {
       router.push("/profile/recruiter/dashboard");
       router.refresh();
     } catch (error) {
-      console.error("Save profile error:", error);
       Swal.fire({
         icon: "error",
         title: "Error!",
@@ -210,7 +209,6 @@ export default function RecruiterProfilePage() {
         }
       }
     } catch (error) {
-      console.error("Load profile error:", error);
     } finally {
       setIsLoading(false);
     }

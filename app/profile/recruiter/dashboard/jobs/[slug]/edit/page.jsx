@@ -96,7 +96,6 @@ export default function EditJobPage() {
         }
       }
     } catch (error) {
-      console.error("Load company profile error:", error);
     }
   };
 
@@ -177,7 +176,6 @@ export default function EditJobPage() {
         throw new Error("Failed to load job");
       }
     } catch (error) {
-      console.error("Load job error:", error);
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -414,7 +412,6 @@ export default function EditJobPage() {
         throw new Error(data.details || data.error || "Failed to update job");
       }
     } catch (error) {
-      console.error("Update job error:", error);
       Swal.fire({
         icon: "error",
         title: "Gagal Update",

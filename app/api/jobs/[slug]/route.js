@@ -195,7 +195,6 @@ export async function GET(request, context) {
     })
 
   } catch (error) {
-    console.error('Get job detail error:', error)
     return NextResponse.json(
       { 
         success: false,

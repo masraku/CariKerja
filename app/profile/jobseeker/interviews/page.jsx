@@ -54,7 +54,6 @@ export default function JobseekerInterviewsPage() {
                 throw new Error(data.error)
             }
         } catch (error) {
-            console.error('Load interviews error:', error)
             Swal.fire({
                 icon: 'error',
                 title: 'Gagal',
@@ -155,7 +154,6 @@ export default function JobseekerInterviewsPage() {
                 throw new Error(data.error)
             }
         } catch (error) {
-            console.error('Respond error:', error)
             Swal.fire({
                 icon: 'error',
                 title: 'Gagal',

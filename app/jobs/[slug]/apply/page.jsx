@@ -42,7 +42,7 @@ export default function ApplyJobPage() {
         icon: "info",
         title: "Login Dibutuhkan",
         text: "Silahkan login terlebih dahulu untuk melamar",
-        confirmButtonColor: "#2563EB",
+        confirmButtonColor: "#03587f",
       }).then(() => {
         router.push(`/login?redirect=/jobs/${slug}/apply`);
       });
@@ -54,7 +54,7 @@ export default function ApplyJobPage() {
         icon: "error",
         title: "Akses Ditolak",
         text: "Hanya pekerja yang dapat melamar",
-        confirmButtonColor: "#2563EB",
+        confirmButtonColor: "#03587f",
       }).then(() => {
         router.push("/jobs");
       });
@@ -94,7 +94,7 @@ export default function ApplyJobPage() {
             showCancelButton: true,
             confirmButtonText: "Lengkapi Profil",
             cancelButtonText: "Batal",
-            confirmButtonColor: "#2563EB",
+            confirmButtonColor: "#03587f",
           }).then((result) => {
             if (result.isConfirmed) {
               router.push("/profile/jobseeker?mode=edit");
@@ -105,12 +105,11 @@ export default function ApplyJobPage() {
         }
       }
     } catch (error) {
-      console.error("Error:", error);
       Swal.fire({
         icon: "error",
         title: "Error",
         text: "Failed to load job details",
-        confirmButtonColor: "#2563EB",
+        confirmButtonColor: "#03587f",
       }).then(() => {
         router.push("/jobs");
       });
@@ -128,7 +127,7 @@ export default function ApplyJobPage() {
         icon: "warning",
         title: "CV Diperlukan",
         text: "Silakan upload CV Anda di profil terlebih dahulu",
-        confirmButtonColor: "#2563EB",
+        confirmButtonColor: "#03587f",
       });
       return;
     }
@@ -157,12 +156,11 @@ export default function ApplyJobPage() {
         icon: "success",
         title: "Lamaran Terkirim!",
         text: "Lamaran Anda telah berhasil dikirim. Semoga berhasil!",
-        confirmButtonColor: "#2563EB",
+        confirmButtonColor: "#03587f",
       }).then(() => {
         router.push("/profile/jobseeker/applications");
       });
     } catch (error) {
-      console.error("Submit error:", error);
 
       if (
         error.message.includes("sudah melamar") ||
@@ -178,7 +176,7 @@ export default function ApplyJobPage() {
           showCancelButton: true,
           confirmButtonText: "Lihat Status Aplikasi",
           cancelButtonText: "Cari Lowongan Lain",
-          confirmButtonColor: "#2563EB",
+          confirmButtonColor: "#03587f",
         }).then((result) => {
           if (result.isConfirmed) {
             router.push("/profile/jobseeker/applications");
@@ -191,7 +189,7 @@ export default function ApplyJobPage() {
           icon: "error",
           title: "Gagal Mengirim Lamaran",
           text: error.message,
-          confirmButtonColor: "#2563EB",
+          confirmButtonColor: "#03587f",
         });
       }
     } finally {
@@ -479,7 +477,7 @@ export default function ApplyJobPage() {
                 className={`w-full py-4 rounded-xl font-semibold text-white transition flex items-center justify-center gap-2 ${
                   submitting || !docStatus.allRequiredComplete
                     ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl"
+                    : "bg-gradient-to-r from-[#03587f] to-[#024666] hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl"
                 }`}
               >
                 {submitting ? (

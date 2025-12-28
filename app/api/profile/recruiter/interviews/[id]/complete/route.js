@@ -117,7 +117,6 @@ export async function PATCH(request, context) {
         })
 
     } catch (error) {
-        console.error('❌ Complete interview error:', error)
         return NextResponse.json(
             { error: 'Failed to mark interview as completed', details: error.message },
             { status: 500 }

@@ -90,12 +90,10 @@ function ScheduleInterviewContent() {
               title: `Interview untuk posisi ${jobInfo.title || "Unknown"}`,
             }));
           } else {
-            console.error("No job info in application");
           }
         }
       } else {
         const errorText = await applicantResponse.text();
-        console.error("Failed to load applicants:", errorText);
         Swal.fire({
           icon: "error",
           title: "Gagal Memuat Data",
@@ -104,7 +102,6 @@ function ScheduleInterviewContent() {
         });
       }
     } catch (error) {
-      console.error("Load data error:", error);
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -294,7 +291,6 @@ Terima kasih dan sampai jumpa!`
         });
       }
     } catch (error) {
-      console.error("Schedule interview error:", error);
       Swal.fire({
         icon: "error",
         title: "Error",

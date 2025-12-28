@@ -95,8 +95,6 @@ export async function GET(request) {
     })
 
   } catch (error) {
-    console.error('❌ Error fetching applications:', error)
-    console.error('Error stack:', error.stack)
     return NextResponse.json(
       { 
         error: 'Failed to fetch applications',

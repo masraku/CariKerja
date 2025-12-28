@@ -70,7 +70,6 @@ export default function AdminJobseekerDetail() {
         }
       }
     } catch (error) {
-      console.error("Error loading profile:", error);
     } finally {
       setLoading(false);
     }

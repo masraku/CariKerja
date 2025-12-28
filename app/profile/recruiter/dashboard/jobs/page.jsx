@@ -75,7 +75,6 @@ export default function RecruiterJobsPage() {
         throw new Error("Failed to load jobs");
       }
     } catch (error) {
-      console.error("Load jobs error:", error);
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -127,7 +126,6 @@ export default function RecruiterJobsPage() {
           throw new Error("Failed to toggle status");
         }
       } catch (error) {
-        console.error("Toggle status error:", error);
         Swal.fire({
           icon: "error",
           title: "Gagal",
@@ -202,7 +200,6 @@ export default function RecruiterJobsPage() {
         throw new Error("Failed to delete job");
       }
     } catch (error) {
-      console.error("Delete job error:", error);
       Swal.fire({
         icon: "error",
         title: "Gagal",

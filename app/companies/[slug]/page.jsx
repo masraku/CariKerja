@@ -50,7 +50,6 @@ export default function CompanyProfilePage() {
         router.push("/companies");
       }
     } catch (error) {
-      console.error("Load company error:", error);
     } finally {
       setLoading(false);
     }

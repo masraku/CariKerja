@@ -50,7 +50,7 @@ function LoginContent() {
         icon: "success",
         title: "Pendaftaran Berhasil",
         text: "Akun Anda telah berhasil dibuat. Silakan login.",
-        confirmButtonColor: "#2563EB",
+        confirmButtonColor: "#03587f",
       });
       setIsSignUp(false);
       setRegisterRole(null);
@@ -68,7 +68,7 @@ function LoginContent() {
         icon: "info",
         title: "Login Diperlukan",
         text: "Silakan login sebagai rekruter untuk memposting pekerjaan.",
-        confirmButtonColor: "#2563EB",
+        confirmButtonColor: "#03587f",
       });
     }
   }, [searchParams]);
@@ -181,7 +181,7 @@ function LoginContent() {
         icon: "success",
         title: "Registrasi Berhasil",
         text: "Akun Anda telah berhasil dibuat. Silakan login.",
-        confirmButtonColor: "#2563EB",
+        confirmButtonColor: "#03587f",
       });
 
       // Switch to login view
@@ -190,12 +190,11 @@ function LoginContent() {
       setEmail(regForm.email);
       setPassword("");
     } catch (error) {
-      console.error("Registration error:", error);
       Swal.fire({
         icon: "error",
         title: "Registrasi Gagal",
         text: error.message || "Terjadi kesalahan saat registrasi.",
-        confirmButtonColor: "#2563EB",
+        confirmButtonColor: "#03587f",
       });
     } finally {
       setIsLoading(false);
@@ -220,7 +219,7 @@ function LoginContent() {
           icon: "error",
           title: "Login Gagal",
           text: data.error || "Terjadi kesalahan saat login.",
-          confirmButtonColor: "#2563EB",
+          confirmButtonColor: "#03587f",
         });
         return;
       }
@@ -251,12 +250,11 @@ function LoginContent() {
 
       router.refresh();
     } catch (error) {
-      console.error(error);
       Swal.fire({
         icon: "error",
         title: "Login Error",
         text: "Terjadi kesalahan, silakan coba lagi.",
-        confirmButtonColor: "#2563EB",
+        confirmButtonColor: "#03587f",
       });
     } finally {
       setIsLoading(false);
@@ -605,7 +603,7 @@ function LoginContent() {
                   className={`w-full py-3 rounded-lg font-bold text-white transition-all transform hover:-translate-y-0.5 ${
                     registerRole === "recruiter"
                       ? "bg-purple-600 hover:bg-purple-700"
-                      : "bg-blue-600 hover:bg-blue-700"
+                      : "bg-[#03587f] hover:bg-[#024666]"
                   }`}
                 >
                   {isLoading ? "Memproses..." : "Daftar Sekarang"}
@@ -704,7 +702,7 @@ function LoginContent() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex justify-center items-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-lg hover:shadow-blue-600/20"
+              className="w-full flex justify-center items-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-[#03587f] hover:bg-[#024666] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-lg hover:shadow-blue-600/20"
             >
               {isLoading ? (
                 <>
@@ -751,7 +749,7 @@ function LoginContent() {
         }`}
       >
         {/* Background Elements */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-900 opacity-90 z-10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#03587f] to-[#024666] opacity-90 z-10" />
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1497215728101-856f4ea42174?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')] bg-cover bg-center" />
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-white/10 rounded-full blur-3xl z-10" />
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl z-10" />

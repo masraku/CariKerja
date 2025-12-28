@@ -85,7 +85,6 @@ export async function POST(request) {
         })
 
     } catch (error) {
-        console.error('❌ Upload gallery photo error:', error)
         return NextResponse.json(
             { error: 'Failed to upload photo' },
             { status: 500 }
@@ -153,7 +152,6 @@ export async function DELETE(request) {
         })
 
     } catch (error) {
-        console.error('❌ Delete gallery photo error:', error)
         return NextResponse.json(
             { error: 'Failed to delete photo' },
             { status: 500 }

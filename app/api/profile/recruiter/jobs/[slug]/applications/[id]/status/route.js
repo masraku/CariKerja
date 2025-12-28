@@ -116,7 +116,6 @@ export async function PATCH(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Update application status error:', error)
     return NextResponse.json(
       { error: 'Failed to update application status' },
       { status: 500 }

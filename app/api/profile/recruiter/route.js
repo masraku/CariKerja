@@ -37,7 +37,6 @@ export async function GET(request) {
         })
 
     } catch (error) {
-        console.error('Get recruiter profile error:', error)
         return NextResponse.json(
             { error: 'Failed to fetch profile' },
             { status: 500 }
@@ -283,7 +282,6 @@ export async function POST(request) {
         })
 
     } catch (error) {
-        console.error('Save recruiter profile error:', error)
         return NextResponse.json(
             { error: 'Failed to save profile' },
             { status: 500 }

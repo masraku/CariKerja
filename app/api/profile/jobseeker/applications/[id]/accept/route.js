@@ -116,7 +116,6 @@ export async function POST(request, { params }) {
             message: `Selamat! Anda telah menerima tawaran dari ${application.jobs?.companies?.name}. ${withdrawnApps.count > 0 ? `${withdrawnApps.count} lamaran lainnya telah ditarik secara otomatis.` : ''}`
         })
     } catch (error) {
-        console.error('Accept offer error:', error)
         return NextResponse.json({ 
             error: 'Terjadi kesalahan saat menerima tawaran' 
         }, { status: 500 })

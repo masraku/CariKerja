@@ -115,8 +115,6 @@ export async function POST(request, { params }) {
         })
 
     } catch (error) {
-        console.error('Reschedule request error:', error)
-        console.error('Error stack:', error.stack)
         return NextResponse.json(
             { error: error.message || 'Gagal mengirim request reschedule' },
             { status: 500 }

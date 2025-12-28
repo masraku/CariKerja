@@ -98,7 +98,6 @@ export async function GET(request) {
         })
 
     } catch (error) {
-        console.error('Get recruiter interviews error:', error)
         return NextResponse.json(
             { error: 'Failed to fetch interviews', details: error.message },
             { status: 500 }

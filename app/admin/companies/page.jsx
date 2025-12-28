@@ -33,7 +33,6 @@ export default function AdminCompaniesPage() {
                 setCompanies(data.data.companies)
             }
         } catch (error) {
-            console.error('Failed to load companies:', error)
         } finally {
             setLoading(false)
         }

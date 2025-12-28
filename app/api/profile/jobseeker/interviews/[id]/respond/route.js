@@ -112,7 +112,6 @@ export async function PATCH(request, context) {
         })
 
     } catch (error) {
-        console.error('Respond to interview error:', error)
         return NextResponse.json(
             { error: 'Failed to respond to interview', details: error.message },
             { status: 500 }

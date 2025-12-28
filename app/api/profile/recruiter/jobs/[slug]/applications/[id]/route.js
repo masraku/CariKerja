@@ -99,7 +99,6 @@ export async function GET(request, { params }) {
     })
 
   } catch (error) {
-    console.error('❌ Get application detail error:', error)
     return NextResponse.json(
       { error: 'Failed to fetch application detail' },
       { status: 500 }
@@ -197,7 +196,6 @@ export async function PATCH(request, { params }) {
     })
 
   } catch (error) {
-    console.error('❌ Update application error:', error)
     return NextResponse.json(
       { error: 'Failed to update application' },
       { status: 500 }

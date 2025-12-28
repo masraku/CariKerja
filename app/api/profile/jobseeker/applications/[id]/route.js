@@ -87,7 +87,6 @@ export async function GET(request, context) {
         
         // If 24 hours have passed since interview time
         if (hoursSinceInterview >= 24) {
-          console.log(`🔄 Auto-completing interview for application ${id} (${hoursSinceInterview.toFixed(1)}h since interview)`)
           
           // Update application and participant status
           await prisma.$transaction([
@@ -161,7 +160,6 @@ export async function GET(request, context) {
     })
 
   } catch (error) {
-    console.error('Error fetching application detail:', error)
     return NextResponse.json(
       { error: 'Failed to fetch application details' },
       { status: 500 }

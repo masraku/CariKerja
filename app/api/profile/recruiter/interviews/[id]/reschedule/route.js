@@ -147,7 +147,6 @@ export async function PATCH(request, context) {
           interviewId: id
         })
       } catch (emailError) {
-        console.error(`Failed to send reschedule email to ${participant.applications.jobseekers.users.email}:`, emailError)
         // Don't fail the whole request if email fails
       }
     })
@@ -172,7 +171,6 @@ export async function PATCH(request, context) {
     })
 
   } catch (error) {
-    console.error('❌ Reschedule interview error:', error)
     return NextResponse.json(
       { 
         error: 'Failed to reschedule interview',

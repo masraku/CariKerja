@@ -116,7 +116,6 @@ export async function GET(request, context) {
         })
 
     } catch (error) {
-        console.error('Get interview room error:', error)
         return NextResponse.json(
             { error: 'Failed to get interview room', details: error.message },
             { status: 500 }
@@ -176,7 +175,6 @@ export async function PATCH(request, context) {
         })
 
     } catch (error) {
-        console.error('Mark interview completed error:', error)
         return NextResponse.json(
             { error: 'Failed to mark interview as completed' },
             { status: 500 }

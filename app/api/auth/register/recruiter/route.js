@@ -176,7 +176,6 @@ export async function POST(request) {
     )
 
   } catch (error) {
-    console.error('❌ Registration error:', error)
     
     // Handle specific Prisma errors
     if (error.code === 'P2002') {

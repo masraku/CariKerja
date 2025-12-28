@@ -127,7 +127,6 @@ export async function PUT(request, { params }) {
     })
 
   } catch (error) {
-    console.error('❌ Update job error:', error)
     return NextResponse.json(
       { 
         error: 'Failed to update job',

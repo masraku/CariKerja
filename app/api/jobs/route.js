@@ -23,7 +23,6 @@ async function autoDeactivateExpiredJobs() {
             }
         })
     } catch (error) {
-        console.error('Auto-deactivate error:', error)
     }
 }
 
@@ -264,7 +263,6 @@ export async function GET(request) {
     })
 
   } catch (error) {
-    console.error('Get jobs error:', error)
     return NextResponse.json(
       { 
         success: false,

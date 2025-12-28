@@ -58,7 +58,6 @@ const Header = () => {
       await logout();
       router.push("/login");
     } catch (error) {
-      console.error("Logout failed:", error);
     }
   };
 

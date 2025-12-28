@@ -13,7 +13,6 @@ export async function POST(request) {
     const token = cookieStore.get('token')
 
     if (!token) {
-      console.error('❌ No token found')
       return NextResponse.json(
         { error: 'Unauthorized - No token' },
         { status: 401 }
@@ -24,7 +23,6 @@ export async function POST(request) {
     try {
       decoded = jwt.verify(token.value, JWT_SECRET)
     } catch (jwtError) {
-      console.error('❌ JWT verification failed:', jwtError)
       return NextResponse.json(
         { error: 'Invalid token' },
         { status: 401 }
@@ -107,7 +105,6 @@ export async function POST(request) {
     })
 
     if (!user) {
-      console.error('❌ User not found:', userId)
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -115,7 +112,6 @@ export async function POST(request) {
     }
 
     if (user.role !== 'JOBSEEKER') {
-      console.error('❌ User is not a jobseeker, role:', user.role)
       return NextResponse.json(
         { error: 'User is not a jobseeker' },
         { status: 403 }
@@ -123,7 +119,6 @@ export async function POST(request) {
     }
 
     if (!user.jobseekers) {
-      console.error('❌ Jobseeker profile not found for user:', userId)
       return NextResponse.json(
         { error: 'Jobseeker profile not found' },
         { status: 404 }
@@ -347,8 +342,6 @@ export async function POST(request) {
       completeness: completeness
     })
   } catch (error) {
-    console.error('💥 Save profile error:', error)
-    console.error('Error details:', {
       message: error.message,
       stack: error.stack,
       name: error.name
@@ -372,7 +365,6 @@ export async function GET(request) {
     const token = cookieStore.get('token')
 
     if (!token) {
-      console.error('❌ No token found')
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -383,7 +375,6 @@ export async function GET(request) {
     try {
       decoded = jwt.verify(token.value, JWT_SECRET)
     } catch (jwtError) {
-      console.error('❌ JWT verification failed:', jwtError)
       return NextResponse.json(
         { error: 'Invalid token' },
         { status: 401 }
@@ -420,7 +411,6 @@ export async function GET(request) {
     })
 
     if (!profile) {
-      console.error('❌ Profile not found for userId:', userId)
       return NextResponse.json(
         { error: 'Profile not found' },
         { status: 404 }
@@ -443,8 +433,6 @@ export async function GET(request) {
       profile: transformedProfile 
     })
   } catch (error) {
-    console.error('💥 Get profile error:', error)
-    console.error('Error details:', {
       message: error.message,
       stack: error.stack
     })
@@ -490,7 +478,6 @@ export async function PATCH(request) {
       profile: jobseeker
     })
   } catch (error) {
-    console.error('💥 Patch profile error:', error)
     return NextResponse.json(
       { 
         error: 'Failed to update profile',
@@ -551,7 +538,6 @@ export async function DELETE(request) {
       message: 'Profile data deleted successfully'
     })
   } catch (error) {
-    console.error('💥 Delete profile error:', error)
     return NextResponse.json(
       { 
         error: 'Failed to delete profile',

@@ -61,13 +61,11 @@ export default function JobseekerApplicationsPage() {
         setApplications(result.data.applications);
         setStats(result.data.stats);
       } else {
-        console.error("Error:", result.error);
         if (response.status === 401) {
           window.location.href = "/login";
         }
       }
     } catch (error) {
-      console.error("Error fetching applications:", error);
     } finally {
       setLoading(false);
     }
@@ -123,7 +121,6 @@ export default function JobseekerApplicationsPage() {
         });
       }
     } catch (error) {
-      console.error("Error withdrawing application:", error);
       await Swal.fire({
         title: "Error!",
         text: "Terjadi kesalahan saat menarik lamaran",

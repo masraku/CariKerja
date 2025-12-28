@@ -47,7 +47,6 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error("❌ Homepage stats error:", error);
     return NextResponse.json(
       { error: "Failed to fetch homepage statistics" },
       { status: 500 }

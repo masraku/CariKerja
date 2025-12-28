@@ -90,7 +90,6 @@ export async function GET(request) {
     })
 
   } catch (error) {
-    console.error('❌ Get batch applications error:', error)
     return NextResponse.json(
       { error: 'Failed to fetch applications' },
       { status: 500 }

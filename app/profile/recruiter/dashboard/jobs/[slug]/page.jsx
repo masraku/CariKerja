@@ -107,24 +107,25 @@ export default function JobDetailPage() {
     try {
       setLoadingAI((prev) => ({ ...prev, [application.id]: true }));
 
-      const response = await fetch(
-        "https://cv-parser-api.up.railway.app/match",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+      // Use internal API route to avoid CORS issues
+      const response = await fetch("/api/profile/recruiter/jobs/ai-match", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          cv_url: application.jobseekers?.cvUrl,
+          job_requirements: {
+            title: job?.title,
+            description: job?.description,
+            requirements: job?.requirements,
+            skills:
+              job?.job_skills?.map((js) => js.skills?.name).filter(Boolean) ||
+              job?.skills ||
+              [],
           },
-          body: JSON.stringify({
-            cv_url: application.jobseekers?.cvUrl,
-            job_requirements: {
-              title: job?.title,
-              description: job?.description,
-              requirements: job?.requirements,
-              skills: job?.skills || [],
-            },
-          }),
-        }
-      );
+        }),
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -138,7 +139,6 @@ export default function JobDetailPage() {
         }));
       }
     } catch (error) {
-      console.error("AI recommendation error:", error);
     } finally {
       setLoadingAI((prev) => ({ ...prev, [application.id]: false }));
     }
@@ -168,7 +168,6 @@ export default function JobDetailPage() {
         throw new Error(errorData.error || "Failed to load applications");
       }
     } catch (error) {
-      console.error("Load applications error:", error);
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -200,6 +199,27 @@ export default function JobDetailPage() {
         const query = searchQuery.toLowerCase();
         return fullName.includes(query) || email.includes(query);
       });
+    }
+
+    // Sort: AI Recommended first, then by date (oldest first - FIFO)
+    if (statusFilter === "all" || statusFilter === "PENDING") {
+      filtered = [...filtered].sort((a, b) => {
+        const aRecommended = aiRecommendations[a.id]?.isRecommended ? 1 : 0;
+        const bRecommended = aiRecommendations[b.id]?.isRecommended ? 1 : 0;
+
+        // AI recommended first
+        if (bRecommended !== aRecommended) {
+          return bRecommended - aRecommended;
+        }
+
+        // Then by date (oldest first - FIFO)
+        return new Date(a.appliedAt) - new Date(b.appliedAt);
+      });
+    } else {
+      // For other filters, just sort by date (oldest first - FIFO)
+      filtered = [...filtered].sort(
+        (a, b) => new Date(a.appliedAt) - new Date(b.appliedAt)
+      );
     }
 
     setFilteredApplications(filtered);
@@ -345,7 +365,6 @@ export default function JobDetailPage() {
       setSelectedApplications([]);
       setSelectMode(false);
     } catch (error) {
-      console.error("Bulk shortlist error:", error);
       Swal.fire({
         icon: "error",
         title: "Gagal",
@@ -399,7 +418,6 @@ export default function JobDetailPage() {
       setSelectedApplications([]);
       setSelectMode(false);
     } catch (error) {
-      console.error("Bulk delete error:", error);
       Swal.fire({
         icon: "error",
         title: "Gagal",
@@ -462,7 +480,6 @@ export default function JobDetailPage() {
           )
         );
       } catch (error) {
-        console.error("Error updating status:", error);
       }
     }
     // Open modal instead of navigating
@@ -515,7 +532,6 @@ export default function JobDetailPage() {
         throw new Error("Failed to update status");
       }
     } catch (error) {
-      console.error("Shortlist error:", error);
       Swal.fire({
         icon: "error",
         title: "Gagal",
@@ -603,7 +619,6 @@ export default function JobDetailPage() {
         loadApplications();
       }
     } catch (error) {
-      console.error("Accept error:", error);
       Swal.fire({
         icon: "error",
         title: "Gagal",
@@ -648,7 +663,6 @@ export default function JobDetailPage() {
         loadApplications();
       }
     } catch (error) {
-      console.error("Delete error:", error);
       Swal.fire({
         icon: "error",
         title: "Gagal",

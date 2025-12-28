@@ -213,7 +213,6 @@ export async function POST(request) {
     })
 
   } catch (error) {
-    console.error('❌ Create job error:', error)
     // Don't expose internal error details to users
     return NextResponse.json(
       { error: 'Gagal membuat lowongan. Silakan coba lagi atau hubungi admin jika masalah berlanjut.' },

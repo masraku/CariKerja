@@ -53,7 +53,6 @@ export default function RecruiterInterviewsPage() {
         throw new Error(data.error);
       }
     } catch (error) {
-      console.error("Load interviews error:", error);
       Swal.fire({
         icon: "error",
         title: "Gagal",

@@ -76,7 +76,6 @@ export default function InterviewRoomPage() {
                 throw new Error(data.error)
             }
         } catch (error) {
-            console.error('Load interview room error:', error)
             Swal.fire({
                 icon: 'error',
                 title: 'Gagal',
@@ -140,7 +139,6 @@ export default function InterviewRoomPage() {
                 router.push('/profile/jobseeker/interviews')
             })
         } catch (error) {
-            console.error('Mark completed error:', error)
         }
     }
 

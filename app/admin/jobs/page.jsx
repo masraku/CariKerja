@@ -69,7 +69,6 @@ export default function AdminJobsPage() {
         setStats(null);
       }
     } catch (error) {
-      console.error("Error fetching jobs:", error);
       setJobs([]);
       setStats(null);
     } finally {
@@ -184,7 +183,6 @@ export default function AdminJobsPage() {
         throw new Error("Failed to update");
       }
     } catch (error) {
-      console.error("Failed to update status", error);
       Swal.fire({
         icon: "error",
         title: "Gagal",

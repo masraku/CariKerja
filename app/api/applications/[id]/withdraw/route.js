@@ -85,7 +85,6 @@ export async function PATCH(request, context) {
         })
 
     } catch (error) {
-        console.error('Withdraw application error:', error)
         return NextResponse.json(
             { error: 'Gagal menarik lamaran', details: error.message },
             { status: 500 }

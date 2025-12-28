@@ -171,7 +171,6 @@ export async function POST(request) {
         })
 
     } catch (error) {
-        console.error('Schedule interview error:', error)
         return NextResponse.json({ 
             error: 'Failed to schedule interview',
             details: error.message 

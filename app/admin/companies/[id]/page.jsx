@@ -46,7 +46,6 @@ export default function CompanyDetailPage() {
         setCompany(foundCompany);
       }
     } catch (error) {
-      console.error("Failed to load company:", error);
     } finally {
       setLoading(false);
     }

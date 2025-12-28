@@ -81,7 +81,6 @@ export async function PATCH(request, { params }) {
     })
 
   } catch (error) {
-    console.error('Error withdrawing application:', error)
     return NextResponse.json(
       { error: 'Failed to withdraw application' },
       { status: 500 }

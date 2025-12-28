@@ -49,7 +49,6 @@ export async function GET(request, { params }) {
     })
 
   } catch (error) {
-    console.error('❌ Get job error:', error)
     return NextResponse.json(
       { error: 'Failed to load job' },
       { status: 500 }

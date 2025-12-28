@@ -149,7 +149,6 @@ export async function POST(request, context) {
     })
 
   } catch (error) {
-    console.error('Submit application error:', error)
     return NextResponse.json(
       { 
         error: 'Failed to submit application',

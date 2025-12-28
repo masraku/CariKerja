@@ -93,7 +93,6 @@ export async function PATCH(request, context) {
         })
 
     } catch (error) {
-        console.error('Update participant error:', error)
         return NextResponse.json(
             { error: 'Failed to update participant', details: error.message },
             { status: 500 }

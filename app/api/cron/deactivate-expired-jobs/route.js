@@ -31,7 +31,6 @@ export async function POST(request) {
         })
 
     } catch (error) {
-        console.error('Auto-deactivate jobs error:', error)
         return NextResponse.json({
             success: false,
             error: error.message

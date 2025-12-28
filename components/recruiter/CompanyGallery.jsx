@@ -53,7 +53,6 @@ export default function CompanyGallery({
         throw new Error(data.error || "Upload failed");
       }
     } catch (error) {
-      console.error("Upload error:", error);
       alert(error.message || "Failed to upload photo");
     } finally {
       setUploading(false);
@@ -88,7 +87,6 @@ export default function CompanyGallery({
         throw new Error(data.error || "Delete failed");
       }
     } catch (error) {
-      console.error("Delete error:", error);
       alert(error.message || "Failed to delete photo");
     } finally {
       setDeleting(null);

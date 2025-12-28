@@ -51,7 +51,6 @@ const ViewProfilePage = () => {
         router.push("/profile/jobseeker?mode=edit");
       }
     } catch (error) {
-      console.error("Load profile error:", error);
       router.push("/profile/jobseeker?mode=edit");
     } finally {
       setIsLoading(false);

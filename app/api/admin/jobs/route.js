@@ -176,7 +176,6 @@ export async function GET(request) {
         })
 
     } catch (error) {
-        console.error('Error fetching admin jobs:', error)
         return NextResponse.json(
             { error: 'Internal server error', details: error.message },
             { status: 500 }
@@ -231,7 +230,6 @@ export async function PATCH(request) {
         })
 
     } catch (error) {
-        console.error('Error updating job status:', error)
         return NextResponse.json(
             { error: 'Failed to update job status', details: error.message },
             { status: 500 }

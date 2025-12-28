@@ -92,7 +92,6 @@ export default function PostJobPage() {
       setBlockReason(null);
       setIsCheckingVerification(false);
     } catch (error) {
-      console.error("Error checking verification:", error);
       setBlockReason("error");
       setIsCheckingVerification(false);
     }
@@ -366,7 +365,6 @@ export default function PostJobPage() {
         }
       }
     } catch (error) {
-      console.error("Submit job error:", error);
       Swal.fire({
         icon: "error",
         title: "Error!",

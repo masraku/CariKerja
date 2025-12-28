@@ -25,11 +25,18 @@ model applications {
   rejectionReason        String?
   viewed                 Boolean                  @default(false)
   viewedAt               DateTime?
-  confirmedByJobseeker   Boolean                  @default(false)
-  withdrawnAt            DateTime?
-  withdrawReason         String?
   createdAt              DateTime                 @default(now())
   updatedAt              DateTime
+  confirmedByJobseeker   Boolean                  @default(false)
+  withdrawReason         String?
+  withdrawnAt            DateTime?
+  candidateName          String?
+  candidateEmail         String?
+  candidatePhone         String?
+  matchedSkills          String[]                 @default([])
+  matchStatus            String?
+  matchPercentage        String?
+  errorMessage           String?
   jobs                   jobs                     @relation(fields: [jobId], references: [id], onDelete: Cascade)
   jobseekers             jobseekers               @relation(fields: [jobseekerId], references: [id], onDelete: Cascade)
   interview_participants interview_participants[]
@@ -39,6 +46,7 @@ model applications {
   @@index([jobId])
   @@index([jobseekerId])
   @@index([status])
+  @@index([matchStatus], map: "idx_applications_matchStatus")
 }
 
 model audit_logs {
@@ -105,7 +113,7 @@ model companies {
   verified        Boolean       @default(false)
   verifiedAt      DateTime?
   rejectionReason String?
-  bio             String?       @db.Text
+  bio             String?
   culture         String?
   benefits        String[]
   gallery         String[]
@@ -151,8 +159,8 @@ model interview_participants {
   applicationId   String
   invitedAt       DateTime     @default(now())
   respondedAt     DateTime?
-  status          String       @default("PENDING") // PENDING, ACCEPTED, DECLINED, RESCHEDULE_REQUESTED
-  responseMessage String?      // Reason for reschedule or decline
+  status          String       @default("PENDING")
+  responseMessage String?
   feedback        String?
   rating          Int?
   notes           String?
@@ -206,61 +214,61 @@ model job_skills {
 }
 
 model jobs {
-  id                  String          @id @default(cuid())
-  companyId           String
-  recruiterId         String
-  title               String
-  slug                String          @unique
-  description         String
-  requirements        String
-  responsibilities    String
-  jobType             JobType
-  level               String?
-  category            String
-  location            String
-  city                String
-  province            String
-  isRemote            Boolean         @default(false)
-  salaryMin           Int?
-  salaryMax           Int?
-  salaryType          String?
-  showSalary          Boolean         @default(true)
-  benefits            String[]
-  numberOfPositions   Int             @default(1)
-  minExperience       Int?
-  maxExperience       Int?
-  educationLevel      EducationLevel?
-  applicationDeadline DateTime?
-  photo               String?
-  gallery             String[]
-  workingDays         String?
-  holidays            String?
-  isShift             Boolean         @default(false)
-  shiftCount          Int?
-  isDisabilityFriendly Boolean        @default(false)
-  applicationEmail    String?
-  applicationUrl      String?
-  externalApply       Boolean         @default(false)
-  isActive            Boolean         @default(true) // Deprecated: use status instead
-  status              JobStatus       @default(PENDING)
-  rejectionReason     String?
-  jobScope            JobScope        @default(DOMESTIC)
-  isFeatured          Boolean         @default(false)
-  isPremium           Boolean         @default(false)
-  viewCount           Int             @default(0)
-  applicationCount    Int             @default(0)
-  metaTitle           String?
-  metaDescription     String?
-  publishedAt         DateTime?
-  closedAt            DateTime?
-  createdAt           DateTime        @default(now())
-  updatedAt           DateTime        @updatedAt
-  applications        applications[]
-  interviews          interviews[]
-  job_skills          job_skills[]
-  companies           companies       @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  recruiters          recruiters      @relation(fields: [recruiterId], references: [id])
-  saved_jobs          saved_jobs[]
+  id                   String          @id @default(cuid())
+  companyId            String
+  recruiterId          String
+  title                String
+  slug                 String          @unique
+  description          String
+  requirements         String
+  responsibilities     String
+  jobType              JobType
+  category             String
+  location             String
+  city                 String
+  province             String
+  isRemote             Boolean         @default(false)
+  salaryMin            Int?
+  salaryMax            Int?
+  salaryType           String?
+  showSalary           Boolean         @default(true)
+  benefits             String[]
+  numberOfPositions    Int             @default(1)
+  minExperience        Int?
+  maxExperience        Int?
+  educationLevel       EducationLevel?
+  applicationDeadline  DateTime?
+  applicationEmail     String?
+  applicationUrl       String?
+  externalApply        Boolean         @default(false)
+  isActive             Boolean         @default(true)
+  isFeatured           Boolean         @default(false)
+  isPremium            Boolean         @default(false)
+  viewCount            Int             @default(0)
+  applicationCount     Int             @default(0)
+  metaTitle            String?
+  metaDescription      String?
+  publishedAt          DateTime?
+  closedAt             DateTime?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  status               JobStatus       @default(PENDING)
+  rejectionReason      String?
+  photo                String?
+  isDisabilityFriendly Boolean         @default(false)
+  isShift              Boolean         @default(false)
+  shiftCount           Int?
+  level                String?
+  gallery              String[]
+  holidays             String?
+  workingDays          String?
+  jobScope             JobScope        @default(DOMESTIC)
+  applications         applications[]
+  interviews           interviews[]
+  job_skills           job_skills[]
+  companies            companies       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  recruiters           recruiters      @relation(fields: [recruiterId], references: [id])
+  saved_jobs           saved_jobs[]
 
   @@index([category])
   @@index([city])
@@ -289,66 +297,66 @@ model jobseeker_skills {
 }
 
 model jobseekers {
-  id                      String             @id
-  userId                  String             @unique
-  photo                   String?
-  firstName               String?
-  lastName                String?
-  dateOfBirth             DateTime?
-  gender                  String?
-  religion                String?
-  maritalStatus           String?
-  nationality             String?
-  idNumber                String?
-  phone                   String?
-  email                   String?
-  address                 String?
-  city                    String?
-  province                String?
-  postalCode              String?
-  kecamatan               String?
-  kelurahan               String?
-  currentTitle            String?
-  summary                 String?
-  linkedinUrl             String?
-  githubUrl               String?
-  portfolioUrl            String?
-  websiteUrl              String?
-  resumeUrl               String?
-  cvUrl                   String?
-  ktpUrl                  String?
-  ak1Url                  String?
-  ijazahUrl               String?
-  sertifikatUrl           String?
-  suratPengalamanUrl      String?
-  lastEducationLevel      String?
+  id                       String             @id
+  userId                   String             @unique
+  photo                    String?
+  firstName                String?
+  lastName                 String?
+  dateOfBirth              DateTime?
+  gender                   String?
+  religion                 String?
+  maritalStatus            String?
+  nationality              String?
+  idNumber                 String?
+  phone                    String?
+  email                    String?
+  address                  String?
+  city                     String?
+  province                 String?
+  postalCode               String?
+  currentTitle             String?
+  summary                  String?
+  linkedinUrl              String?
+  githubUrl                String?
+  portfolioUrl             String?
+  websiteUrl               String?
+  resumeUrl                String?
+  cvUrl                    String?
+  ktpUrl                   String?
+  ak1Url                   String?
+  desiredJobTitle          String?
+  desiredSalaryMin         Int?
+  desiredSalaryMax         Int?
+  preferredLocation        String?
+  preferredJobType         String?
+  willingToRelocate        Boolean            @default(false)
+  availableFrom            DateTime?
+  profileCompleted         Boolean            @default(false)
+  profileCompleteness      Int                @default(0)
+  isEmployed               Boolean            @default(false)
+  isLookingForJob          Boolean            @default(true)
+  employedAt               DateTime?
+  employedCompany          String?
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime
+  graduationYear           Int?
+  ijazahUrl                String?
+  kecamatan                String?
+  kelurahan                String?
   lastEducationInstitution String?
-  lastEducationMajor      String?
-  graduationYear          Int?
-  desiredJobTitle         String?
-  desiredSalaryMin    Int?
-  desiredSalaryMax    Int?
-  preferredLocation   String?
-  preferredJobType    String?
-  willingToRelocate   Boolean            @default(false)
-  availableFrom       DateTime?
-  profileCompleted    Boolean            @default(false)
-  profileCompleteness Int                @default(0)
-  isEmployed          Boolean            @default(false)
-  isLookingForJob     Boolean            @default(true)
-  employedAt          DateTime?
-  employedCompany     String?
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime
-  applications        applications[]
-  certifications      certifications[]
-  educations          educations[]
-  jobseeker_skills    jobseeker_skills[]
-  users               users              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  profile_views       profile_views[]
-  reviews             reviews[]
-  saved_jobs          saved_jobs[]
-  work_experiences    work_experiences[]
+  lastEducationLevel       String?
+  lastEducationMajor       String?
+  sertifikatUrl            String?
+  suratPengalamanUrl       String?
+  applications             applications[]
+  certifications           certifications[]
+  educations               educations[]
+  jobseeker_skills         jobseeker_skills[]
+  users                    users              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profile_views            profile_views[]
+  reviews                  reviews[]
+  saved_jobs               saved_jobs[]
+  work_experiences         work_experiences[]
 }
 
 model messages {
@@ -592,8 +600,6 @@ enum EducationLevel {
   S2
   S3
 }
-
-
 
 enum JobType {
   FULL_TIME

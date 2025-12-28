@@ -171,7 +171,6 @@ export async function GET(request, { params }) {
     })
 
   } catch (error) {
-    console.error('❌ Get applications error:', error)
     return NextResponse.json(
       { 
         error: 'Failed to fetch applications',

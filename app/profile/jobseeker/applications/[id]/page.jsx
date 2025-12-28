@@ -76,7 +76,6 @@ export default function ApplicationDetailPage() {
         throw new Error("Failed to load application");
       }
     } catch (error) {
-      console.error("Load error:", error);
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -104,7 +103,6 @@ export default function ApplicationDetailPage() {
         setInterview(data.interview);
       }
     } catch (error) {
-      console.error("Load interview error:", error);
     }
   };
 
@@ -166,7 +164,6 @@ export default function ApplicationDetailPage() {
         throw new Error(data.error || "Gagal menerima tawaran");
       }
     } catch (error) {
-      console.error("Accept offer error:", error);
       Swal.fire({
         icon: "error",
         title: "Gagal",
@@ -238,7 +235,6 @@ export default function ApplicationDetailPage() {
         throw new Error(data.error || "Gagal mengirim request");
       }
     } catch (error) {
-      console.error("Reschedule error:", error);
       Swal.fire({
         icon: "error",
         title: "Gagal",

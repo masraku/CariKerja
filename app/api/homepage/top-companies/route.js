@@ -68,7 +68,6 @@ export async function GET(request) {
         })
 
     } catch (error) {
-        console.error('❌ Top companies error:', error)
         return NextResponse.json(
             { error: 'Failed to fetch top companies' },
             { status: 500 }

@@ -69,7 +69,6 @@ export default function JobDetailPage() {
                 })
             }
         } catch (error) {
-            console.error('Load job error:', error)
         } finally {
             setLoading(false)
         }
@@ -89,7 +88,6 @@ export default function JobDetailPage() {
                 setApplicants(data.applicants)
             }
         } catch (error) {
-            console.error('Load applicants error:', error)
         }
     }
 

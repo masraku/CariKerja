@@ -69,8 +69,6 @@ export async function POST(request) {
         })
 
     } catch (error) {
-        console.error('❌ Submit validation error:', error.message)
-        console.error('Stack:', error.stack)
         return NextResponse.json(
             { 
                 error: 'Failed to submit for validation',

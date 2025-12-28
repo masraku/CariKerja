@@ -63,7 +63,6 @@ export async function PUT(request) {
         })
 
     } catch (error) {
-        console.error('❌ Update jobseeker status error:', error)
         return NextResponse.json(
             { error: 'Failed to update status' },
             { status: 500 }
@@ -101,7 +100,6 @@ export async function GET(request) {
         })
 
     } catch (error) {
-        console.error('❌ Get jobseeker status error:', error)
         return NextResponse.json(
             { error: 'Failed to get status' },
             { status: 500 }

@@ -146,7 +146,6 @@ export async function POST(request) {
                     description: description,
                     interviewId: interview.id
                 }).catch(error => {
-                    console.error(`Failed to send email to ${application.jobseekers.users.email}:`, error)
                     return { success: false, email: application.jobseekers.users.email, error }
                 })
             )
@@ -173,7 +172,6 @@ export async function POST(request) {
         })
 
     } catch (error) {
-        console.error('Create interview error:', error)
         return NextResponse.json(
             { error: 'Failed to schedule interview', details: error.message },
             { status: 500 }

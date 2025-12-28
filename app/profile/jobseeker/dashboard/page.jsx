@@ -74,7 +74,6 @@ const JobseekerDashboard = () => {
         router.push("/profile/jobseeker?mode=edit");
       }
     } catch (error) {
-      console.error("Check profile error:", error);
       router.push("/profile/jobseeker?mode=edit");
     } finally {
       setIsLoading(false);
@@ -120,7 +119,6 @@ const JobseekerDashboard = () => {
       // Load employment status
       await loadEmploymentStatus();
     } catch (error) {
-      console.error("Load dashboard data error:", error);
     }
   };
 
@@ -143,7 +141,6 @@ const JobseekerDashboard = () => {
         }
       }
     } catch (error) {
-      console.error("Load employment status error:", error);
     }
   };
 

@@ -142,7 +142,6 @@ export async function GET(request) {
         })
 
     } catch (error) {
-        console.error('❌ Admin jobseekers error:', error)
         return NextResponse.json(
             { error: 'Failed to fetch jobseekers' },
             { status: 500 }

@@ -55,10 +55,8 @@ export default function RecruiterDashboard() {
         router.push("/login?role=recruiter");
         return;
       } else {
-        console.error("Failed to load dashboard:", response.status);
       }
     } catch (error) {
-      console.error("Load dashboard error:", error);
     } finally {
       setLoading(false);
     }

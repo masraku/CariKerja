@@ -65,7 +65,6 @@ export default function AdminJobseekersPage() {
         calculateStats(data.data.jobseekers);
       }
     } catch (error) {
-      console.error("Failed to load jobseekers:", error);
     } finally {
       setLoading(false);
     }

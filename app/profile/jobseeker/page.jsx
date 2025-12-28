@@ -359,7 +359,6 @@ function JobseekerProfileContent() {
         });
       }
     } catch (error) {
-      console.error("Load Error:", error);
     } finally {
       setIsLoading(false);
     }

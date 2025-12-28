@@ -48,7 +48,6 @@ export default function LandingPage() {
       if (jobsData.success) setFeaturedJobs(jobsData.data.jobs);
       if (companiesData.success) setTopCompanies(companiesData.data.companies);
     } catch (error) {
-      console.error("Failed to load homepage data:", error);
     } finally {
       setLoading(false);
     }

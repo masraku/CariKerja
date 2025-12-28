@@ -113,7 +113,6 @@ export async function GET(request) {
     })
 
   } catch (error) {
-    console.error('❌ Get jobs error:', error)
     return NextResponse.json(
       { 
         error: 'Failed to fetch jobs',

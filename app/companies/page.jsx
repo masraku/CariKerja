@@ -81,7 +81,6 @@ const CompaniesPage = () => {
         setIndustries(uniqueIndustries);
       }
     } catch (error) {
-      console.error("Load companies error:", error);
     } finally {
       setLoading(false);
     }

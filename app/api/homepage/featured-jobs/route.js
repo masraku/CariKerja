@@ -61,7 +61,6 @@ export async function GET(request) {
         })
 
     } catch (error) {
-        console.error('❌ Featured jobs error:', error)
         return NextResponse.json(
             { error: 'Failed to fetch featured jobs' },
             { status: 500 }

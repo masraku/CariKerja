@@ -70,7 +70,6 @@ export async function GET(request, { params }) {
             participantStatus: participant.status
         })
     } catch (error) {
-        console.error('Get application interview error:', error)
         return NextResponse.json(
             { error: 'Internal server error', details: error.message },
             { status: 500 }

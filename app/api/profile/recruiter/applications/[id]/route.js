@@ -128,7 +128,6 @@ export async function GET(request, context) {
     })
 
   } catch (error) {
-    console.error('Error fetching application detail:', error)
     return NextResponse.json(
       { error: 'Failed to fetch application details' },
       { status: 500 }
@@ -284,7 +283,6 @@ export async function PATCH(request, context) {
             ''
         })
       } catch (emailError) {
-        console.error('Failed to send decision email:', emailError)
         // Don't fail the request if email fails
       }
     }
@@ -296,8 +294,6 @@ export async function PATCH(request, context) {
     })
 
   } catch (error) {
-    console.error('Error updating application:', error)
-    console.error('Error stack:', error.stack)
     return NextResponse.json(
       { error: 'Failed to update application', details: error.message },
       { status: 500 }
@@ -369,7 +365,6 @@ export async function DELETE(request, context) {
     })
 
   } catch (error) {
-    console.error('Error deleting application:', error)
     return NextResponse.json(
       { error: 'Failed to delete application' },
       { status: 500 }

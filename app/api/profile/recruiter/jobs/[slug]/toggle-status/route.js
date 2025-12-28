@@ -49,7 +49,6 @@ export async function POST(request, { params }) {
     })
 
   } catch (error) {
-    console.error('❌ Toggle status error:', error)
     return NextResponse.json(
       { error: 'Failed to toggle job status' },
       { status: 500 }

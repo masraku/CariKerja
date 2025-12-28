@@ -47,7 +47,6 @@ export default function AdminJobDetailPage() {
         setJob(data.job);
       }
     } catch (error) {
-      console.error("Error fetching job:", error);
     } finally {
       setLoading(false);
     }

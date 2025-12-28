@@ -83,7 +83,6 @@ export async function GET(request, { params }) {
         
         // If 24 hours have passed since interview time
         if (hoursSinceInterview >= 24) {
-          console.log(`🔄 [Recruiter] Auto-completing interview for application ${applicationId} (${hoursSinceInterview.toFixed(1)}h since interview)`)
           
           // Update application and participant status
           await prisma.$transaction([
@@ -146,7 +145,6 @@ export async function GET(request, { params }) {
     })
 
   } catch (error) {
-    console.error('❌ Get application detail error:', error)
     return NextResponse.json(
       { error: 'Failed to fetch application detail' },
       { status: 500 }
@@ -244,7 +242,6 @@ export async function PATCH(request, { params }) {
     })
 
   } catch (error) {
-    console.error('❌ Update application error:', error)
     return NextResponse.json(
       { error: 'Failed to update application' },
       { status: 500 }

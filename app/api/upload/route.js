@@ -100,7 +100,6 @@ export async function POST(request) {
                 })
 
             if (error) {
-                console.error('Upload error:', error)
                 return NextResponse.json(
                     { error: `Failed to upload: ${error.message}` },
                     { status: 500 }
@@ -166,7 +165,6 @@ export async function POST(request) {
                 })
 
             if (error) {
-                console.error('Upload error:', error)
                 return NextResponse.json(
                     { error: `Failed to upload: ${error.message}` },
                     { status: 500 }
@@ -222,7 +220,6 @@ export async function POST(request) {
                 })
 
             if (error) {
-                console.error('Upload error:', error)
                 return NextResponse.json(
                     { error: `Failed to upload: ${error.message}` },
                     { status: 500 }
@@ -266,7 +263,6 @@ export async function POST(request) {
                 })
 
             if (error) {
-                console.error('Upload error:', error)
                 return NextResponse.json(
                     { error: `Failed to upload: ${error.message}` },
                     { status: 500 }
@@ -288,7 +284,6 @@ export async function POST(request) {
         })
 
     } catch (error) {
-        console.error('❌ Upload error:', error)
         return NextResponse.json(
             { error: 'Failed to upload file' },
             { status: 500 }
@@ -360,7 +355,6 @@ export async function DELETE(request) {
         })
 
     } catch (error) {
-        console.error('❌ Delete error:', error)
         return NextResponse.json(
             { error: 'Failed to delete photo' },
             { status: 500 }

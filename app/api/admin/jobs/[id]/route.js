@@ -88,7 +88,6 @@ export async function GET(request, { params }) {
         })
 
     } catch (error) {
-        console.error('Error fetching job detail:', error)
         return NextResponse.json(
             { error: 'Failed to fetch job detail' },
             { status: 500 }

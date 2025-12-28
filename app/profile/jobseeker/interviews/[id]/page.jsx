@@ -61,7 +61,6 @@ export default function JobseekerInterviewDetailPage() {
         router.push('/profile/jobseeker/interviews')
       }
     } catch (error) {
-      console.error('Load interview error:', error)
       alert('Failed to load interview details')
     } finally {
       setLoading(false)
@@ -95,7 +94,6 @@ export default function JobseekerInterviewDetailPage() {
         alert(data.error || 'Failed to respond to interview')
       }
     } catch (error) {
-      console.error('Response error:', error)
       alert('Failed to respond to interview')
     } finally {
       setResponding(false)

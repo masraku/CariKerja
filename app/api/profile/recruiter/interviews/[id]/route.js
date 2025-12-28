@@ -140,7 +140,6 @@ export async function GET(request, context) {
     })
 
   } catch (error) {
-    console.error('❌ Get interview details error:', error)
     return NextResponse.json(
       { 
         error: 'Failed to fetch interview details',
@@ -226,7 +225,6 @@ export async function DELETE(request, context) {
     })
 
   } catch (error) {
-    console.error('❌ Delete interview error:', error)
     return NextResponse.json(
       { 
         error: 'Failed to delete interview',
