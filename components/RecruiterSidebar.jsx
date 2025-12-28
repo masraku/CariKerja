@@ -49,14 +49,14 @@ export default function RecruiterSidebar() {
   };
 
   return (
-    <div className="w-64 bg-slate-900 text-white flex flex-col h-screen sticky top-0">
+    <div className="w-64 bg-white text-[#03587f] flex flex-col h-screen sticky top-0 border-r-2 border-[#03587f]">
       {/* Logo */}
-      <div className="p-6 border-b border-slate-800">
+      <div className="p-6">
         <Link
           href="/profile/recruiter/dashboard"
           className="flex items-center gap-2"
         >
-          <div className="w-10 h-10 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-lg flex items-center justify-center shadow-lg shadow-[#03587f]/20 overflow-hidden">
+          <div className="w-10 h-10 bg-[#03587f] rounded-lg flex items-center justify-center shadow-lg overflow-hidden">
             {user?.company?.logo ? (
               <img
                 src={user.company.logo}
@@ -64,14 +64,14 @@ export default function RecruiterSidebar() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <Building2 className="w-6 h-6" />
+              <Building2 className="w-6 h-6 text-white" />
             )}
           </div>
           <div className="overflow-hidden">
-            <div className="font-bold text-lg truncate">
+            <div className="font-bold text-lg truncate text-[#03587f]">
               {user?.company?.name || "Perusahaan"}
             </div>
-            <div className="text-xs text-slate-400">Panel Perusahaan</div>
+            <div className="text-xs text-gray-500">Panel Perusahaan</div>
           </div>
         </Link>
       </div>
@@ -113,8 +113,8 @@ export default function RecruiterSidebar() {
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                     isActive
-                      ? "bg-gradient-to-r from-[#03587f] to-[#024666] text-white shadow-md"
-                      : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                      ? "bg-[#03587f] text-white shadow-md"
+                      : "text-[#03587f] hover:bg-[#03587f]/10"
                   }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -127,10 +127,10 @@ export default function RecruiterSidebar() {
       </nav>
 
       {/* Logout */}
-      <div className="p-4 border-t border-slate-800">
+      <div className="p-4 border-t-2 border-[#03587f]">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-red-400 hover:bg-red-900/20 hover:text-red-300 transition-colors"
+          className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-red-600 hover:bg-red-50 transition-colors"
         >
           <LogOut className="w-5 h-5" />
           <span className="font-medium">Keluar</span>

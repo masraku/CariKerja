@@ -34,16 +34,16 @@ export default function AdminSidebar() {
   };
 
   return (
-    <div className="w-64 bg-gray-900 text-white flex flex-col h-screen">
+    <div className="w-64 bg-white text-[#03587f] flex flex-col h-screen border-r-2 border-[#03587f]">
       {/* Logo */}
-      <div className="p-6 border-b border-gray-800">
+      <div className="p-6 border-b-2 border-[#03587f]">
         <Link href="/admin" className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-[#03587f] rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-[#03587f] rounded-lg flex items-center justify-center text-white">
             <CheckCircle className="w-6 h-6" />
           </div>
           <div>
-            <div className="font-bold text-lg">Panel Admin</div>
-            <div className="text-xs text-gray-400">Disnaker Cirebon</div>
+            <div className="font-bold text-lg text-[#03587f]">Panel Admin</div>
+            <div className="text-xs text-gray-500">Disnaker Cirebon</div>
           </div>
         </Link>
       </div>
@@ -64,10 +64,10 @@ export default function AdminSidebar() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
                     isActive
-                      ? "bg-[#03587f] text-white"
-                      : "text-gray-300 hover:bg-gray-800"
+                      ? "bg-[#03587f] text-white shadow-md"
+                      : "text-[#03587f] hover:bg-[#03587f]/10"
                   }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -85,10 +85,10 @@ export default function AdminSidebar() {
       </nav>
 
       {/* Logout */}
-      <div className="p-4 border-t border-gray-800">
+      <div className="p-4 border-t-2 border-[#03587f]">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-gray-300 hover:bg-gray-800 transition-colors"
+          className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-red-600 hover:bg-red-50 transition-colors"
         >
           <LogOut className="w-5 h-5" />
           <span className="font-medium">Keluar</span>

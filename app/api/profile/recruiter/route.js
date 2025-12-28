@@ -123,6 +123,19 @@ export async function POST(request) {
 
         if (recruiter) {
             // ===== UPDATE EXISTING RECRUITER =====
+            
+            // Check if company is already verified - block edits
+            const existingCompany = await prisma.companies.findUnique({
+                where: { id: recruiter.companyId },
+                select: { verified: true, status: true }
+            })
+            
+            if (existingCompany?.verified === true) {
+                return NextResponse.json(
+                    { error: 'Perusahaan sudah terverifikasi. Hubungi admin untuk mengubah data.' },
+                    { status: 403 }
+                )
+            }
 
             // If companyId provided and different, update company association
             if (companyId && companyId !== recruiter.companyId) {

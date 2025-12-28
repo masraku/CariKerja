@@ -945,6 +945,15 @@ export default function RecruiterProfilePage() {
                   Selanjutnya
                   <ArrowRight className="w-5 h-5" />
                 </button>
+              ) : companyStatus === "VERIFIED" ? (
+                <button
+                  type="button"
+                  onClick={() => router.push("/profile/recruiter/dashboard")}
+                  className="flex items-center gap-2 px-6 py-3 bg-[#03587f] text-white rounded-lg hover:bg-[#024666] transition"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  Kembali ke Dashboard
+                </button>
               ) : (
                 <>
                   <button
