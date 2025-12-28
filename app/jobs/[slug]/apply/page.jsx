@@ -265,7 +265,7 @@ export default function ApplyJobPage() {
           {/* Job Info Card - Compact */}
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-2xl overflow-hidden flex-shrink-0">
+              <div className="w-14 h-14 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-xl flex items-center justify-center text-2xl overflow-hidden flex-shrink-0">
                 {job.company.logo ? (
                   <img
                     src={job.company.logo}
@@ -477,7 +477,7 @@ export default function ApplyJobPage() {
                 className={`w-full py-4 rounded-xl font-semibold text-white transition flex items-center justify-center gap-2 ${
                   submitting || !docStatus.allRequiredComplete
                     ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-gradient-to-r from-[#03587f] to-[#024666] hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl"
+                    : "bg-gradient-to-r from-[#03587f] to-[#024666] hover:from-[#024666] hover:to-[#013344] shadow-lg hover:shadow-xl"
                 }`}
               >
                 {submitting ? (

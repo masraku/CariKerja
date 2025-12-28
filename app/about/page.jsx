@@ -220,7 +220,7 @@ const AboutPage = () => {
                                 </div>
                                 <p className="text-slate-600 leading-relaxed mb-5 italic">"{t.text}"</p>
                                 <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
-                                    <div className="w-11 h-11 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                                    <div className="w-11 h-11 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-full flex items-center justify-center text-white font-semibold">
                                         {t.name.charAt(0)}
                                     </div>
                                     <div>

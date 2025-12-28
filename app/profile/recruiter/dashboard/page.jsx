@@ -159,7 +159,7 @@ export default function RecruiterDashboard() {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
             <div className="flex gap-6">
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-4xl overflow-hidden shadow-lg shadow-blue-500/20">
+              <div className="w-24 h-24 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-2xl flex items-center justify-center text-white text-4xl overflow-hidden shadow-lg shadow-blue-500/20">
                 {company.logo ? (
                   <img
                     src={company.logo}

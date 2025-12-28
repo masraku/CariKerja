@@ -168,7 +168,7 @@ export default function JobseekerInterviewDetailPage() {
           <div className={`rounded-lg p-6 mb-6 ${
             canJoin 
               ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white' 
-              : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white'
+              : 'bg-gradient-to-r from-[#03587f] to-[#024666] text-white'
           }`}>
             <div className="flex items-center justify-between">
               <div>
@@ -366,7 +366,7 @@ export default function JobseekerInterviewDetailPage() {
             <h2 className="text-xl font-bold text-gray-900 mb-4">Kontak Rekruter</h2>
             
             <div className="flex items-start gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-lg font-bold">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-full flex items-center justify-center text-white text-lg font-bold">
                 <User className="w-6 h-6" />
               </div>
               <div>

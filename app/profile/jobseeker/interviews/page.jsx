@@ -349,7 +349,7 @@ export default function JobseekerInterviewsPage() {
                                     <div className="flex flex-col md:flex-row gap-6">
                                         {/* Company Logo */}
                                         <div className="flex-shrink-0">
-                                            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-3xl overflow-hidden">
+                                            <div className="w-16 h-16 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-xl flex items-center justify-center text-3xl overflow-hidden">
                                                 {interview.jobs?.company?.logo ? (
                                                     <img src={interview.jobs.company.logo} alt={interview.jobs.company.name} className="w-full h-full object-cover" />
                                                 ) : (
@@ -435,7 +435,7 @@ export default function JobseekerInterviewsPage() {
                                 <div key={interview.participantId} className="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-300 rounded-2xl p-6 shadow-lg">
                                     <div className="flex flex-col md:flex-row gap-6">
                                         <div className="flex-shrink-0">
-                                            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-3xl overflow-hidden">
+                                            <div className="w-16 h-16 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-xl flex items-center justify-center text-3xl overflow-hidden">
                                                 {interview.jobs?.company?.logo ? (
                                                     <img src={interview.jobs.company.logo} alt={interview.jobs.company.name} className="w-full h-full object-cover" />
                                                 ) : (
@@ -487,7 +487,7 @@ export default function JobseekerInterviewsPage() {
                                 <div key={interview.participantId} className="bg-white rounded-2xl shadow-lg p-6 border-2 border-green-200">
                                     <div className="flex flex-col md:flex-row gap-6">
                                         <div className="flex-shrink-0">
-                                            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-3xl overflow-hidden">
+                                            <div className="w-16 h-16 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-xl flex items-center justify-center text-3xl overflow-hidden">
                                                 {interview.jobs?.company?.logo ? (
                                                     <img src={interview.jobs.company.logo} alt={interview.jobs.company.name} className="w-full h-full object-cover" />
                                                 ) : (
@@ -604,7 +604,7 @@ export default function JobseekerInterviewsPage() {
                            Anda belum memiliki jadwal interview. Terus lamar pekerjaan untuk mendapatkan interview!
                         </p>
                         <Link href="/jobs">
-                            <button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition font-semibold">
+                            <button className="bg-gradient-to-r from-[#03587f] to-[#024666] text-white px-6 py-3 rounded-lg hover:from-[#024666] hover:to-[#013344] transition font-semibold">
                                 Cari Lowongan
                             </button>
                         </Link>

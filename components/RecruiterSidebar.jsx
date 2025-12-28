@@ -56,7 +56,7 @@ export default function RecruiterSidebar() {
           href="/profile/recruiter/dashboard"
           className="flex items-center gap-2"
         >
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-900/20 overflow-hidden">
+          <div className="w-10 h-10 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-lg flex items-center justify-center shadow-lg shadow-[#03587f]/20 overflow-hidden">
             {user?.company?.logo ? (
               <img
                 src={user.company.logo}
@@ -113,7 +113,7 @@ export default function RecruiterSidebar() {
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                     isActive
-                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md"
+                      ? "bg-gradient-to-r from-[#03587f] to-[#024666] text-white shadow-md"
                       : "text-slate-400 hover:bg-slate-800 hover:text-white"
                   }`}
                 >

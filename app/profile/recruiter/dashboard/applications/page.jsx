@@ -175,7 +175,7 @@ export default function AllApplicationsPage() {
         <div className="flex items-center gap-4">
           {/* Photo */}
           <div className="flex-shrink-0">
-            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold overflow-hidden">
+            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-[#03587f] to-[#024666] flex items-center justify-center text-white text-xl font-bold overflow-hidden">
               {application.jobseekers.photo ? (
                 <img
                   src={application.jobseekers.photo}

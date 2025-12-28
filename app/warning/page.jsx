@@ -769,7 +769,7 @@ const WarningPage = () => {
         </div>
 
         {/* Contact Support */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-xl p-8 text-white text-center mt-8">
+        <div className="bg-gradient-to-r from-[#03587f] to-[#024666] rounded-2xl shadow-xl p-8 text-white text-center mt-8">
           <h2 className="text-3xl font-bold mb-4">Masih Ada Pertanyaan?</h2>
           <p className="text-xl text-indigo-100 mb-6 max-w-2xl mx-auto">
             Tim support kami siap membantu Anda 24/7

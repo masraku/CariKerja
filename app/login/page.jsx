@@ -796,7 +796,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700">
+        <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-[#03587f] to-[#024666]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-white mx-auto mb-4"></div>
             <p className="text-white">Memuat halaman...</p>

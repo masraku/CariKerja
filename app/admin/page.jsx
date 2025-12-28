@@ -267,7 +267,7 @@ export default function AdminDashboard() {
                         href="/admin/jobseekers"
                         className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-lg hover:border-blue-200 transition group"
                     >
-                        <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-105 transition">
+                        <div className="w-14 h-14 bg-gradient-to-br from-[#03587f] to-[#046a96] rounded-2xl flex items-center justify-center mb-4 group-hover:scale-105 transition">
                             <Users className="w-7 h-7 text-white" />
                         </div>
                         <h3 className="font-semibold text-slate-800 mb-1">Kelola Jobseeker</h3>

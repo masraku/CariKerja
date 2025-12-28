@@ -719,7 +719,7 @@ export default function JobDetailPage() {
               </div>
             )}
             <div className="relative">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-lg font-semibold overflow-hidden">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#03587f] to-[#024666] flex items-center justify-center text-white text-lg font-semibold overflow-hidden">
                 {application.jobseekers?.photo ? (
                   <img
                     src={application.jobseekers.photo}
@@ -1601,7 +1601,7 @@ export default function JobDetailPage() {
       {applicantModal.isOpen && applicantModal.application && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
-            <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-blue-600 to-indigo-600">
+            <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-[#03587f] to-[#024666]">
               <h3 className="text-lg font-bold text-white">Detail Pelamar</h3>
               <button
                 type="button"
@@ -1616,7 +1616,7 @@ export default function JobDetailPage() {
             <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
               {/* Applicant Header */}
               <div className="flex items-start gap-4 mb-6">
-                <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold overflow-hidden flex-shrink-0">
+                <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-[#03587f] to-[#024666] flex items-center justify-center text-white text-2xl font-bold overflow-hidden flex-shrink-0">
                   {applicantModal.application.jobseekers?.photo ? (
                     <img
                       src={applicantModal.application.jobseekers.photo}

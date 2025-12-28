@@ -137,7 +137,7 @@ const Header = () => {
                         : user.role}
                     </span>
                   </div>
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-sm overflow-hidden">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#03587f] to-[#024666] flex items-center justify-center text-white font-bold shadow-sm overflow-hidden">
                     {(user.role === "JOBSEEKER" && user.jobseeker?.photo) ||
                     (user.role === "RECRUITER" &&
                       (user.company?.logo || user.recruiter?.photo)) ? (

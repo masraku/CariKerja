@@ -38,7 +38,7 @@ export default function AdminSidebar() {
       {/* Logo */}
       <div className="p-6 border-b border-gray-800">
         <Link href="/admin" className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-[#03587f] rounded-lg flex items-center justify-center">
             <CheckCircle className="w-6 h-6" />
           </div>
           <div>
@@ -66,7 +66,7 @@ export default function AdminSidebar() {
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                     isActive
-                      ? "bg-blue-600 text-white"
+                      ? "bg-[#03587f] text-white"
                       : "text-gray-300 hover:bg-gray-800"
                   }`}
                 >

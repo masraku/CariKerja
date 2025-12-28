@@ -183,7 +183,7 @@ function JobseekerProfileContent() {
       icon: User,
       color: "text-blue-600",
       bg: "bg-blue-100",
-      gradient: "from-blue-500 to-indigo-600",
+      gradient: "from-[#03587f] to-[#024666]",
     },
     {
       number: 2,
@@ -818,7 +818,7 @@ function JobseekerProfileContent() {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Gradient Header Background */}
-      <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 pt-24 pb-12 rounded-b-[40px] shadow-2xl">
+      <div className="bg-gradient-to-br from-[#03587f] via-[#046a96] to-[#024666] pt-24 pb-12 rounded-b-[40px] shadow-2xl">
         <div className="container mx-auto px-4 max-w-7xl">
           {/* Header */}
           <div className="flex items-center justify-between mb-8 text-white">
@@ -926,7 +926,7 @@ function JobseekerProfileContent() {
             </div>
 
             {/* Quick Stats or Promo */}
-            <div className="hidden lg:block bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden group">
+            <div className="hidden lg:block bg-gradient-to-br from-[#03587f] to-[#024666] rounded-2xl p-5 text-white shadow-lg relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-16 -mt-16 group-hover:bg-white/20 transition-all duration-700" />
               <div className="relative z-10">
                 <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm mb-3">

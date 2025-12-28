@@ -151,7 +151,7 @@ export default function CompanyProfilePage() {
     <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       {/* Hero Banner */}
       <div className="relative h-64 lg:h-80 bg-blue-600 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-900 opacity-90" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#03587f] to-[#024666] opacity-90" />
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')] bg-cover bg-center mix-blend-overlay opacity-20" />
 
         <div className="absolute top-6 left-4 lg:left-8 z-10">
@@ -534,7 +534,7 @@ export default function CompanyProfilePage() {
                           className="p-6 border border-gray-100 rounded-2xl bg-gray-50/50"
                         >
                           <div className="flex items-start gap-4 mb-4">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold shadow-md">
+                            <div className="w-10 h-10 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-full flex items-center justify-center text-white font-bold shadow-md">
                               {review.jobseeker?.firstName?.charAt(0) || "U"}
                             </div>
                             <div className="flex-1">

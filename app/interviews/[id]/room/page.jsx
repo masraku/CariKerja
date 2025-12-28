@@ -187,7 +187,7 @@ export default function InterviewRoomPage() {
                 {/* Main Card */}
                 <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-8">
+                    <div className="bg-gradient-to-r from-[#03587f] to-[#024666] text-white p-8">
                         <div className="flex items-center gap-3 mb-4">
                             <Video className="w-8 h-8" />
                             <h1 className="text-3xl font-bold">Interview Room</h1>
@@ -239,7 +239,7 @@ export default function InterviewRoomPage() {
                                         { label: 'Menit', value: timeLeft.minutes },
                                         { label: 'Detik', value: timeLeft.seconds }
                                     ].map((item) => (
-                                        <div key={item.label} className="bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl p-6 text-center">
+                                        <div key={item.label} className="bg-gradient-to-br from-[#03587f] to-[#024666] rounded-2xl p-6 text-center">
                                             <div className="text-4xl font-bold text-white mb-2">
                                                 {item.value.toString().padStart(2, '0')}
                                             </div>

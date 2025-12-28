@@ -373,7 +373,7 @@ export default function AdminJobseekersPage() {
                         className="w-14 h-14 rounded-xl object-cover"
                       />
                     ) : (
-                      <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                      <div className="w-14 h-14 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-xl flex items-center justify-center text-white font-bold text-lg">
                         {js.firstName?.charAt(0) || "U"}
                       </div>
                     )}

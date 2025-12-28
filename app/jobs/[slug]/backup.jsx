@@ -292,7 +292,7 @@ export default function JobDetailPage() {
                         <div className="bg-white rounded-lg shadow-sm p-6">
                             <div className="flex items-start justify-between mb-4">
                                 <div className="flex gap-4 flex-1">
-                                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-2xl flex-shrink-0 overflow-hidden">
+                                    <div className="w-16 h-16 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-lg flex items-center justify-center text-white text-2xl flex-shrink-0 overflow-hidden">
                                         {job.company.logo ? (
                                             <img
                                                 src={job.company.logo}
@@ -454,7 +454,7 @@ export default function JobDetailPage() {
                                                     className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
                                                 />
 
-                                                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold overflow-hidden flex-shrink-0">
+                                                <div className="w-12 h-12 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-full flex items-center justify-center text-white font-bold overflow-hidden flex-shrink-0">
                                                     {application.jobseeker.photo ? (
                                                         <img
                                                             src={application.jobseeker.photo}

@@ -602,7 +602,7 @@ Terima kasih dan sampai jumpa!`
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-3 flex-1">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold overflow-hidden flex-shrink-0">
+                        <div className="w-10 h-10 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-full flex items-center justify-center text-white font-bold overflow-hidden flex-shrink-0">
                           {application.jobseeker?.photo ? (
                             <img
                               src={application.jobseeker.photo}

@@ -398,7 +398,7 @@ export default function JobseekerApplicationsPage() {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex gap-4 flex-1">
                       {/* Company Logo */}
-                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-2xl flex-shrink-0">
+                      <div className="w-16 h-16 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-lg flex items-center justify-center text-white text-2xl flex-shrink-0">
                         {application.jobs.companies.logo ? (
                           <img
                             src={application.jobs.companies.logo}
@@ -516,7 +516,7 @@ export default function JobseekerApplicationsPage() {
                 {/* Job Info */}
                 <div className="mb-6">
                   <div className="flex gap-4 mb-4">
-                    <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-3xl">
+                    <div className="w-20 h-20 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-lg flex items-center justify-center text-white text-3xl">
                       {selectedApplication.jobs.companies.logo ? (
                         <img
                           src={selectedApplication.jobs.companies.logo}

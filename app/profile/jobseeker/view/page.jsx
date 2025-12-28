@@ -194,7 +194,7 @@ const ViewProfilePage = () => {
             {/* Profile Card */}
             <div className="bg-white rounded-3xl shadow-lg overflow-hidden">
               {/* Header Background */}
-              <div className="h-24 bg-gradient-to-br from-blue-600 to-indigo-700 relative">
+              <div className="h-24 bg-gradient-to-br from-[#03587f] to-[#024666] relative">
                 <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2">
                   <div className="w-24 h-24 rounded-2xl border-4 border-white bg-white shadow-lg overflow-hidden">
                     {profile.photo ? (

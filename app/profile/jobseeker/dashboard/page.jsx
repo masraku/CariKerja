@@ -214,7 +214,7 @@ const JobseekerDashboard = () => {
     <div className="min-h-screen bg-gray-100 pt-24 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Hero Card */}
-        <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-3xl p-6 md:p-8 shadow-2xl shadow-blue-500/20 relative overflow-hidden mb-8">
+        <div className="bg-gradient-to-br from-[#03587f] via-[#046a96] to-[#024666] rounded-3xl p-6 md:p-8 shadow-2xl shadow-blue-500/20 relative overflow-hidden mb-8">
           {/* Abstract Shapes */}
           <div className="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-400/10 rounded-full blur-2xl -ml-10 -mb-10"></div>
@@ -459,7 +459,7 @@ const JobseekerDashboard = () => {
               <div className="space-y-3">
                 <button
                   onClick={() => router.push("/jobs")}
-                  className="w-full flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-200 hover:shadow-xl hover:-translate-y-0.5 transition group"
+                  className="w-full flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-[#03587f] to-[#024666] text-white shadow-lg shadow-blue-200 hover:shadow-xl hover:-translate-y-0.5 transition group"
                 >
                   <span className="font-semibold flex items-center gap-3">
                     <Search className="w-5 h-5" /> Cari Lowongan

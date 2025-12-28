@@ -1333,7 +1333,7 @@ export default function PostJobPage() {
 
                 <div className="p-6">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-2xl overflow-hidden">
+                    <div className="w-16 h-16 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-xl flex items-center justify-center text-2xl overflow-hidden">
                       {companyProfile?.logo ? (
                         <img
                           src={companyProfile.logo}

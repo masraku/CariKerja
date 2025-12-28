@@ -538,7 +538,7 @@ export default function RecruiterInterviewsPage() {
                             href={interview.meetingUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition flex items-center gap-2 shadow-lg"
+                            className="px-4 py-2 bg-gradient-to-r from-[#03587f] to-[#024666] text-white rounded-lg hover:from-[#024666] hover:to-[#013344] transition flex items-center gap-2 shadow-lg"
                           >
                             <Video className="w-4 h-4" />
                             Masuk Interview
