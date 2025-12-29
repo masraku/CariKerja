@@ -115,6 +115,8 @@ export default function JobDetailPage() {
         },
         body: JSON.stringify({
           cv_url: application.jobseekers?.cvUrl,
+          cv_skills: application.jobseekers?.skills || [],
+          cv_title: application.jobseekers?.currentTitle || "",
           job_requirements: {
             title: job?.title,
             description: job?.description,
@@ -479,8 +481,7 @@ export default function JobDetailPage() {
             app.id === application.id ? { ...app, status: "REVIEWING" } : app
           )
         );
-      } catch (error) {
-      }
+      } catch (error) {}
     }
     // Open modal instead of navigating
     setApplicantModal({ isOpen: true, application });
@@ -744,7 +745,7 @@ export default function JobDetailPage() {
                 {application.jobseekers?.lastName}
               </h3>
               <p className="text-sm text-gray-500">
-                {application.jobseekers?.currentTitle || "Job Seeker"}
+                {application.jobseekers?.currentTitle || "Pencaker"}
               </p>
             </div>
           </div>
@@ -1636,7 +1637,7 @@ export default function JobDetailPage() {
                   </h2>
                   <p className="text-gray-600">
                     {applicantModal.application.jobseekers?.currentTitle ||
-                      "Job Seeker"}
+                      "Pencaker"}
                   </p>
                   <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                     <div className="flex items-center gap-1">

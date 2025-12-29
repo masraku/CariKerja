@@ -161,7 +161,6 @@ export default function ApplyJobPage() {
         router.push("/profile/jobseeker/applications");
       });
     } catch (error) {
-
       if (
         error.message.includes("sudah melamar") ||
         error.message.includes("already applied")
@@ -330,9 +329,11 @@ export default function ApplyJobPage() {
                     </p>
                   </div>
                   <div>
-                    <span className="text-gray-500">Kota:</span>
+                    <span className="text-gray-500">Alamat:</span>
                     <p className="font-medium text-gray-900">
-                      {profile.city || "-"}
+                      {profile.kelurahan && profile.kecamatan
+                        ? `${profile.kelurahan}, ${profile.kecamatan}`
+                        : profile.city || "-"}
                     </p>
                   </div>
                 </div>

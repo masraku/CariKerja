@@ -304,18 +304,28 @@ async function handleSkillMatching(request) {
         } catch (externalError) {
         }
 
-        // Fallback: Simple skill-based matching (EXISTING LOGIC)
-        const cvSkills = body.cv_skills || []
+        // Fallback: Simple skill-based matching (IMPROVED LOGIC)
+        // Extract skills from cv_skills array (can be array of objects or strings)
+        let cvSkills = body.cv_skills || []
+        if (cvSkills.length > 0 && typeof cvSkills[0] === 'object') {
+            cvSkills = cvSkills.map(s => s.name || s).filter(Boolean)
+        }
+        
+        const cvTitle = (body.cv_title || '').toLowerCase()
         const jobRequirements = body.job_requirements || {}
         const jobSkills = jobRequirements.skills || []
-        const jobTitle = jobRequirements.title || ''
+        const jobTitle = (jobRequirements.title || '').toLowerCase()
         const jobDesc = jobRequirements.description || ''
         const requirements = jobRequirements.requirements || ''
 
+        // Normalize all skills to lowercase for comparison
+        const normalizedCvSkills = cvSkills.map(s => s.toLowerCase())
+        const normalizedJobSkills = jobSkills.map(s => s.toLowerCase())
+
         // Extract keywords from job info
         const jobKeywords = [
-            ...jobSkills,
-            ...jobTitle.toLowerCase().split(/\s+/),
+            ...normalizedJobSkills,
+            ...jobTitle.split(/\s+/),
             ...extractKeywords(jobDesc),
             ...extractKeywords(requirements)
         ].filter(k => k.length > 2)
@@ -324,21 +334,66 @@ async function handleSkillMatching(request) {
         let matchCount = 0
         const highlights = []
         
-        cvSkills.forEach(skill => {
-            const skillLower = skill.toLowerCase()
-            if (jobKeywords.some(kw => kw.includes(skillLower) || skillLower.includes(kw))) {
+        // Check skill matches
+        normalizedCvSkills.forEach((skillLower, index) => {
+            if (normalizedJobSkills.some(reqSkill => 
+                reqSkill.includes(skillLower) || skillLower.includes(reqSkill)
+            )) {
                 matchCount++
-                highlights.push(skill)
+                highlights.push(cvSkills[index]) // Use original casing
+            } else if (jobKeywords.some(kw => 
+                kw.includes(skillLower) || skillLower.includes(kw)
+            )) {
+                matchCount += 0.5 // Partial match for general keywords
+                highlights.push(cvSkills[index])
             }
         })
 
-        const maxPossible = Math.max(jobKeywords.length, cvSkills.length, 1)
-        const matchScore = Math.min(100, Math.round((matchCount / maxPossible) * 100) + 20)
+        // Bonus for title match (e.g., "fullstack developer" -> "frontend developer")
+        let titleBonus = 0
+        const titleWords = jobTitle.split(/\s+/).filter(w => w.length > 2)
+        const cvTitleWords = cvTitle.split(/\s+/).filter(w => w.length > 2)
+        
+        cvTitleWords.forEach(word => {
+            if (titleWords.some(tw => tw.includes(word) || word.includes(tw))) {
+                titleBonus += 10
+            }
+        })
+        
+        // Common tech role matches
+        const roleMatches = {
+            'fullstack': ['frontend', 'backend', 'full-stack', 'full stack'],
+            'frontend': ['react', 'vue', 'angular', 'javascript', 'web'],
+            'backend': ['node', 'java', 'python', 'api', 'server'],
+            'developer': ['engineer', 'programmer', 'coder'],
+            'engineer': ['developer', 'programmer'],
+        }
+        
+        Object.entries(roleMatches).forEach(([key, values]) => {
+            if (cvTitle.includes(key) && values.some(v => jobTitle.includes(v))) {
+                titleBonus += 15
+            }
+            if (jobTitle.includes(key) && values.some(v => cvTitle.includes(v))) {
+                titleBonus += 15
+            }
+        })
+
+        const maxPossible = Math.max(normalizedJobSkills.length, 1)
+        let matchScore = Math.round((matchCount / maxPossible) * 60) + 20 + Math.min(titleBonus, 25)
+        matchScore = Math.min(100, Math.max(0, matchScore))
 
         return NextResponse.json({
             match_score: matchScore,
             highlights: highlights.slice(0, 5),
-            source: 'fallback'
+            source: 'fallback',
+            debug: {
+                cvSkillsCount: cvSkills.length,
+                jobSkillsCount: jobSkills.length,
+                matchCount,
+                titleBonus,
+                cvTitle,
+                jobTitle
+            }
         })
         
     } catch (error) {

@@ -619,8 +619,7 @@ Terima kasih dan sampai jumpa!`
                             {application.jobseeker?.lastName}
                           </h4>
                           <p className="text-xs text-gray-600 truncate">
-                            {application.jobseeker?.currentTitle ||
-                              "Job Seeker"}
+                            {application.jobseeker?.currentTitle || "Pencaker"}
                           </p>
                         </div>
                       </div>
