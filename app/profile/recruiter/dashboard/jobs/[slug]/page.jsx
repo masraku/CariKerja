@@ -91,12 +91,11 @@ export default function JobDetailPage() {
   // Fetch AI recommendations for applications
   useEffect(() => {
     if (applications.length > 0 && job) {
+      // Clear old recommendations to force refetch with latest job skills
+      setAiRecommendations({});
+
       applications.forEach((app) => {
-        if (
-          app.jobseekers?.cvUrl &&
-          !aiRecommendations[app.id] &&
-          !loadingAI[app.id]
-        ) {
+        if (app.jobseekers?.cvUrl && !loadingAI[app.id]) {
           fetchAIRecommendation(app);
         }
       });
@@ -134,7 +133,7 @@ export default function JobDetailPage() {
         setAiRecommendations((prev) => ({
           ...prev,
           [application.id]: {
-            isRecommended: data.match_score >= 80,
+            isRecommended: data.match_score >= 1,
             score: data.match_score,
             highlights: data.highlights || [],
           },
@@ -951,7 +950,7 @@ export default function JobDetailPage() {
                   e.stopPropagation();
                   handleViewApplication(application);
                 }}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition text-sm font-medium"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-[#03587f] text-white rounded-xl hover:bg-[#024666] transition text-sm font-medium"
               >
                 <Eye className="w-4 h-4" />
                 Lihat
@@ -1546,9 +1545,93 @@ export default function JobDetailPage() {
                     >
                       Sebelumnya
                     </button>
-                    <div className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">
-                      Halaman {currentPage} / {totalPages}
+
+                    {/* Page Numbers */}
+                    <div className="flex items-center gap-1">
+                      {(() => {
+                        const pages = [];
+                        const showEllipsis = totalPages > 7;
+
+                        if (!showEllipsis) {
+                          // Show all pages if <= 7
+                          for (let i = 1; i <= totalPages; i++) {
+                            pages.push(i);
+                          }
+                        } else {
+                          // Smart pagination with ellipsis
+                          if (currentPage <= 4) {
+                            pages.push(1, 2, 3, 4, 5, "...", totalPages);
+                          } else if (currentPage >= totalPages - 3) {
+                            pages.push(
+                              1,
+                              "...",
+                              totalPages - 4,
+                              totalPages - 3,
+                              totalPages - 2,
+                              totalPages - 1,
+                              totalPages
+                            );
+                          } else {
+                            pages.push(
+                              1,
+                              "...",
+                              currentPage - 1,
+                              currentPage,
+                              currentPage + 1,
+                              "...",
+                              totalPages
+                            );
+                          }
+                        }
+
+                        return pages.map((page, idx) =>
+                          page === "..." ? (
+                            <span
+                              key={`ellipsis-${idx}`}
+                              className="px-2 text-gray-400"
+                            >
+                              ...
+                            </span>
+                          ) : (
+                            <button
+                              key={page}
+                              onClick={() => setCurrentPage(page)}
+                              className={`w-10 h-10 rounded-lg text-sm font-medium transition ${
+                                currentPage === page
+                                  ? "bg-[#03587f] text-white"
+                                  : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          )
+                        );
+                      })()}
                     </div>
+
+                    {/* Go to page input - only show if more than 7 pages */}
+                    {totalPages > 7 && (
+                      <div className="flex items-center gap-2 ml-2">
+                        <span className="text-sm text-gray-500">Ke:</span>
+                        <input
+                          type="number"
+                          min="1"
+                          max={totalPages}
+                          placeholder="#"
+                          className="w-14 h-10 px-2 text-center text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#03587f] focus:border-transparent"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              const val = parseInt(e.target.value);
+                              if (val >= 1 && val <= totalPages) {
+                                setCurrentPage(val);
+                                e.target.value = "";
+                              }
+                            }
+                          }}
+                        />
+                      </div>
+                    )}
+
                     <button
                       onClick={() =>
                         setCurrentPage((p) => Math.min(totalPages, p + 1))

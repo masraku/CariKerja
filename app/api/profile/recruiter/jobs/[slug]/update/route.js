@@ -120,6 +120,37 @@ export async function PUT(request, { params }) {
       }
     })
 
+    // Update skills if provided
+    if (skills && Array.isArray(skills)) {
+      // Delete old job_skills
+      await prisma.job_skills.deleteMany({
+        where: { jobId: existingJob.id }
+      })
+
+      // Insert new skills
+      for (const skillName of skills) {
+        // Find or create skill
+        let skill = await prisma.skills.findFirst({
+          where: { name: { equals: skillName, mode: 'insensitive' } }
+        })
+
+        if (!skill) {
+          skill = await prisma.skills.create({
+            data: { name: skillName }
+          })
+        }
+
+        // Create job_skill relation
+        await prisma.job_skills.create({
+          data: {
+            jobId: existingJob.id,
+            skillId: skill.id,
+            isRequired: true
+          }
+        })
+      }
+    }
+
     return NextResponse.json({
       success: true,
       job: updatedJob,

@@ -457,10 +457,82 @@ export default function JobDetailPage() {
                 </div>
                 Kualifikasi
               </h2>
-              <div
-                className="prose prose-slate max-w-none text-slate-600 leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: job.requirements }}
-              />
+
+              {/* Skills Required */}
+              {job.skills && job.skills.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                    Skill yang Dibutuhkan
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {job.skills.map((skill, index) => (
+                      <span
+                        key={skill.id || index}
+                        className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 ${
+                          skill.isRequired
+                            ? "bg-blue-50 text-blue-700 border border-blue-100"
+                            : "bg-slate-50 text-slate-600 border border-slate-100"
+                        }`}
+                      >
+                        {skill.isRequired && (
+                          <CheckCircle className="w-4 h-4" />
+                        )}
+                        {skill.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Education & Experience */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                {job.educationLevel && (
+                  <div className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                    <GraduationCap className="w-5 h-5 text-purple-500 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs text-slate-500 uppercase font-semibold">
+                        Pendidikan
+                      </p>
+                      <p className="text-sm font-medium text-slate-900">
+                        Min. {job.educationLevel}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {job.minExperience !== null &&
+                  job.minExperience !== undefined && (
+                    <div className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                      <Briefcase className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                      <div>
+                        <p className="text-xs text-slate-500 uppercase font-semibold">
+                          Pengalaman
+                        </p>
+                        <p className="text-sm font-medium text-slate-900">
+                          {job.minExperience === 0
+                            ? "Fresh Graduate"
+                            : `Min. ${job.minExperience} Tahun`}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+              </div>
+
+              {/* Requirements Text */}
+              {job.requirements && (
+                <div
+                  className="prose prose-slate max-w-none text-slate-600 leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: job.requirements }}
+                />
+              )}
+
+              {/* Empty State */}
+              {(!job.skills || job.skills.length === 0) &&
+                !job.requirements &&
+                !job.educationLevel && (
+                  <p className="text-slate-400 italic">
+                    Belum ada kualifikasi yang ditentukan.
+                  </p>
+                )}
             </div>
 
             {/* Benefits */}

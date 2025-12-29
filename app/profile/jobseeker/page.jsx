@@ -1057,7 +1057,7 @@ function JobseekerProfileContent() {
                         setCurrentStep((prev) => prev + 1);
                         window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
-                      className="flex items-center gap-2 px-8 py-3 bg-gray-900 text-white rounded-xl hover:bg-black transition-all shadow-lg shadow-gray-900/20 font-semibold hover:-translate-y-0.5 active:translate-y-0"
+                      className="flex items-center gap-2 px-8 py-3 bg-[#03587f] text-white rounded-xl hover:bg-[#024666] transition-all shadow-lg shadow-[#03587f]/20 font-semibold hover:-translate-y-0.5 active:translate-y-0"
                     >
                       Selanjutnya
                       <ChevronRight className="w-4 h-4" />
@@ -1066,7 +1066,7 @@ function JobseekerProfileContent() {
                     <button
                       onClick={handleSubmit}
                       disabled={isSaving}
-                      className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white rounded-xl hover:shadow-xl hover:shadow-blue-500/30 transition-all hover:-translate-y-0.5 active:translate-y-0 font-bold tracking-wide"
+                      className="flex items-center gap-2 px-8 py-3 bg-[#03587f] hover:bg-[#024666] text-white rounded-xl hover:shadow-xl hover:shadow-[#03587f]/30 transition-all hover:-translate-y-0.5 active:translate-y-0 font-bold tracking-wide"
                     >
                       {isSaving ? (
                         <>
@@ -1076,7 +1076,7 @@ function JobseekerProfileContent() {
                       ) : (
                         <>
                           <Save className="w-4 h-4" />
-                          {isEditMode ? "Update Profile" : "Simpan Profile"}
+                          {isEditMode ? "Perbarui Profile" : "Simpan Profile"}
                         </>
                       )}
                     </button>

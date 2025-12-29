@@ -435,6 +435,64 @@ export default function AdminJobDetailPage() {
               )}
             </div>
 
+            {/* Kualifikasi & Skills */}
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+              <h3 className="font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <GraduationCap className="w-5 h-5 text-indigo-500" />
+                Kualifikasi & Skill
+              </h3>
+
+              {/* Skills Required */}
+              {job.skills && job.skills.length > 0 ? (
+                <div className="mb-6">
+                  <p className="text-xs text-gray-500 uppercase font-semibold mb-3">
+                    Skill yang Dibutuhkan
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {job.skills.map((skill, idx) => (
+                      <span
+                        key={idx}
+                        className="px-4 py-2 rounded-xl text-sm font-medium bg-indigo-50 text-indigo-700 border border-indigo-100"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-gray-400 italic mb-4">
+                  Tidak ada skill yang ditentukan.
+                </p>
+              )}
+
+              {/* Education & Experience */}
+              <div className="grid grid-cols-2 gap-4">
+                {job.educationLevel && (
+                  <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">
+                      Pendidikan Min.
+                    </p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {job.educationLevel}
+                    </p>
+                  </div>
+                )}
+                {job.minExperience !== null &&
+                  job.minExperience !== undefined && (
+                    <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+                      <p className="text-xs text-gray-500 uppercase font-semibold mb-1">
+                        Pengalaman
+                      </p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {job.minExperience === 0
+                          ? "Fresh Graduate"
+                          : `Min. ${job.minExperience} Tahun`}
+                      </p>
+                    </div>
+                  )}
+              </div>
+            </div>
+
             {/* Benefits */}
             {job.benefits && job.benefits.length > 0 && (
               <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">

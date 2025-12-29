@@ -280,7 +280,7 @@ const ViewProfilePage = () => {
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => router.push("/profile/jobseeker?mode=edit")}
-                className="w-full py-3.5 bg-blue-600 text-white rounded-2xl font-semibold shadow-lg hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-[#03587f] text-white rounded-2xl font-semibold shadow-lg hover:bg-[#024666] transition flex items-center justify-center gap-2"
               >
                 <Edit size={18} /> Edit Profil
               </button>

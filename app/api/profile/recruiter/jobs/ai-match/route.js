@@ -15,17 +15,9 @@ const supabase = createClient(
 export async function POST(request) {
     try {
         const contentType = request.headers.get('content-type')
-        
-        // ============================================
-        // SCENARIO 1: CV Upload (multipart/form-data)
-        // ============================================
         if (contentType?.includes('multipart/form-data')) {
             return await handleCVUpload(request)
         }
-        
-        // ============================================
-        // SCENARIO 2: Skill Matching (application/json) - EXISTING
-        // ============================================
         return await handleSkillMatching(request)
         
     } catch (error) {
@@ -33,7 +25,7 @@ export async function POST(request) {
             { 
                 success: false,
                 error: error.message || 'Failed to process',
-                match_score: 80, 
+                match_score: 1, 
                 highlights: [] 
             },
             { status: 500 }
@@ -41,9 +33,6 @@ export async function POST(request) {
     }
 }
 
-// ============================================
-// NEW: Handle CV Upload + Python API Matching
-// ============================================
 async function handleCVUpload(request) {
     try {
         // 1. Parse form data
@@ -263,9 +252,7 @@ async function handleCVUpload(request) {
     }
 }
 
-// ============================================
-// EXISTING: Handle Skill Matching (JSON)
-// ============================================
+
 async function handleSkillMatching(request) {
     try {
         const body = await request.json()
@@ -273,14 +260,14 @@ async function handleSkillMatching(request) {
         const jobTitle = body.job_requirements?.title || ''
         const jobSkills = body.job_requirements?.skills || []
         const cvUrl = body.cv_url || ''
-        
-        // ============================================
-        // PRIMARY: Python API (Parses CV, extracts skills, matches)
-        // ============================================
+
         try {
             const pythonApiUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL
             
             if (pythonApiUrl && cvUrl) {
+                console.log('[AI-MATCH] Calling Python API:', pythonApiUrl)
+                console.log('[AI-MATCH] Request payload:', { uri_cv: cvUrl, job_title: jobTitle, required_skill: jobSkills })
+                
                 const response = await fetch(`${pythonApiUrl}/api/match`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -291,54 +278,49 @@ async function handleSkillMatching(request) {
                     }),
                     signal: AbortSignal.timeout(10000) // 10 second timeout
                 })
+                
+                console.log('[AI-MATCH] Python response status:', response.status)
 
                 if (response.ok) {
                     const data = await response.json()
-                    
-                    let matchScore = data.persentase ? parseInt(data.persentase) : 50
+                    let matchScore = data.persentase !== undefined ? parseInt(data.persentase) : 0
                     const highlights = data.skill || []
-                    const pythonStatus = data.status || 'UNKNOWN'
-                    
-                    // NO BLIND BOOST - Trust Python's actual matching score
-                    // Python compares CV skills vs Job Title/Description/Required Skills
-                    // If they're unrelated (Fullstack -> Sablon Sepatu), Python gives low score
-                    
-                    // Only boost if Python EXPLICITLY says RECOMMENDED
-                    // This means Python's internal AI determined it's a good match
+                    const pythonStatus = data.status || (matchScore > 60 ? 'POTENTIAL' : 'NOT_RECOMMENDED')
                     if (pythonStatus === 'RECOMMENDED') {
-                        matchScore = Math.max(matchScore, 75)
+                        matchScore = Math.max(matchScore, 85) 
                     }
                     
-                    // Warning flag if recruiter didn't set skill requirements
                     const noJobSkillsWarning = jobSkills.length === 0
                     
                     return NextResponse.json({
                         match_score: Math.min(matchScore, 100),
                         highlights: highlights,
                         source: 'python_api',
-                        candidate_name: data.nama,
                         status: pythonStatus,
+                        cv_parsed: {
+                            nama: data.nama || null,
+                            email: data.email || null,
+                            no_telepon: data.no_telepon || data.phone || null,
+                            skills_extracted: data.skill || [],
+                            raw_text_preview: data.raw_text ? data.raw_text.substring(0, 500) : null
+                        },
+                        
+                        // Debug info
                         debug: {
                             cvSkillsCount: highlights.length,
                             jobSkillsCount: jobSkills.length,
                             matchCount: highlights.length,
                             pythonRawScore: data.persentase,
                             pythonStatus: pythonStatus,
-                            noJobSkillsWarning: noJobSkillsWarning
+                            noJobSkillsWarning: noJobSkillsWarning,
+                            pythonFullResponse: data // Include full Python response for debugging
                         }
                     })
                 }
             }
         } catch (externalError) {
-            // Python API failed, continue to fallback
+            console.error('[AI-MATCH] Python API Error:', externalError.message || externalError)
         }
-
-        // ============================================
-        // FALLBACK: Minimal matching when Python is unavailable
-        // ============================================
-        // Since we don't have manual skill input from jobseeker,
-        // and Python failed to parse the CV, we return a neutral score.
-        
         return NextResponse.json({
             match_score: 50, // Neutral - unable to analyze
             highlights: [],
@@ -350,7 +332,7 @@ async function handleSkillMatching(request) {
                 reason: 'Python API unavailable and no manual skill data'
             }
         })
-        
+
     } catch (error) {
         return NextResponse.json(
             { 
