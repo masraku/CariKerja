@@ -589,7 +589,7 @@ function JobseekerProfileContent() {
     try {
       setIsUploading(true);
       setUploadProgress({ [`diploma-${index}`]: 50 });
-      const result = await uploadFile(file, "jobseeker-diploma");
+      const result = await uploadFile(file, "ijazah");
       handleArrayChange(index, "diplomaFile", file, "educations");
       handleArrayChange(index, "diplomaFileName", file.name, "educations");
       handleArrayChange(index, "diplomaUrl", result.url, "educations");
@@ -612,7 +612,7 @@ function JobseekerProfileContent() {
     try {
       setIsUploading(true);
       setUploadProgress({ [`cert-${index}`]: 50 });
-      const result = await uploadFile(file, "jobseeker-certificate");
+      const result = await uploadFile(file, "sertifikat");
       handleArrayChange(index, "certificateFile", file, "certifications");
       handleArrayChange(
         index,
