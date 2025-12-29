@@ -121,12 +121,12 @@ export async function POST(request) {
         slug: slug,
         email: companyEmail.toLowerCase(),
         phone: contactPersonPhone,
-        address: '', // Empty - akan diisi saat profile completion
-        city: '',
-        province: '',
+        address: '-', // Placeholder - akan diisi saat profile completion
+        city: 'Cirebon', // Default Cirebon
+        province: 'Jawa Barat', // Default Jawa Barat
         website: null,
-        industry: '',
-        companySize: '',
+        industry: 'Other', // Default - akan diisi saat profile completion
+        companySize: '1-10', // Default - akan diisi saat profile completion
         status: 'PENDING_VERIFICATION',
         verified: false,
         updatedAt: new Date()
@@ -176,6 +176,7 @@ export async function POST(request) {
     )
 
   } catch (error) {
+    console.error('Registration error:', error)
     
     // Handle specific Prisma errors
     if (error.code === 'P2002') {
@@ -188,7 +189,7 @@ export async function POST(request) {
     return NextResponse.json(
       { 
         error: 'Terjadi kesalahan saat registrasi',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        details: error.message
       },
       { status: 500 }
     )

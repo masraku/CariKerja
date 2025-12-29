@@ -600,11 +600,7 @@ function LoginContent() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className={`w-full py-3 rounded-lg font-bold text-white transition-all transform hover:-translate-y-0.5 ${
-                    registerRole === "recruiter"
-                      ? "bg-purple-600 hover:bg-purple-700"
-                      : "bg-[#03587f] hover:bg-[#024666]"
-                  }`}
+                  className="w-full py-3 rounded-lg font-bold text-white transition-all transform hover:-translate-y-0.5 bg-[#03587f] hover:bg-[#024666]"
                 >
                   {isLoading ? "Memproses..." : "Daftar Sekarang"}
                 </button>

@@ -209,52 +209,60 @@ export async function POST(request) {
 
     // Handle educations
     if (educations && educations.length > 0) {
+      // Filter only valid educations with required fields
+      const validEducations = educations.filter(edu => 
+        edu.institution && edu.degree && edu.fieldOfStudy && edu.level
+      )
+      
       await prisma.educations.deleteMany({
         where: { jobseekerId: jobseeker.id }
       })
 
-      await prisma.educations.createMany({
-        data: educations.map(edu => ({
-          id: crypto.randomUUID(),
-          jobseekerId: jobseeker.id,
-          institution: edu.institution,
-          degree: edu.degree,
-          fieldOfStudy: edu.fieldOfStudy,
-          level: edu.level,
-          startDate: edu.startDate ? new Date(edu.startDate + '-01') : null,
-          endDate: edu.endDate ? new Date(edu.endDate + '-01') : null,
-          gpa: edu.gpa ? parseFloat(edu.gpa) : null,
-          isCurrent: edu.isCurrent || false,
-          diplomaUrl: edu.diplomaUrl || null,
-          updatedAt: new Date()
-        }))
-      })
+      if (validEducations.length > 0) {
+        await prisma.educations.createMany({
+          data: validEducations.map(edu => ({
+            id: crypto.randomUUID(),
+            jobseekerId: jobseeker.id,
+            institution: edu.institution,
+            degree: edu.degree,
+            fieldOfStudy: edu.fieldOfStudy,
+            level: edu.level,
+            startDate: edu.startDate ? new Date(edu.startDate + '-01') : null,
+            endDate: edu.endDate ? new Date(edu.endDate + '-01') : null,
+            gpa: edu.gpa ? parseFloat(edu.gpa) : null,
+            isCurrent: edu.isCurrent || false,
+            diplomaUrl: edu.diplomaUrl || null,
+            updatedAt: new Date()
+          }))
+        })
+      }
     }
 
     // Handle work experiences
-    if (experiences && experiences.length > 0 && experiences[0].company) {
+    if (experiences && experiences.length > 0) {
+      // Filter only valid experiences with required fields
+      const validExperiences = experiences.filter(exp => exp.company && exp.position)
+      
       await prisma.work_experiences.deleteMany({
         where: { jobseekerId: jobseeker.id }
       })
 
-      for (const exp of experiences) {
-        if (exp.company) {
-          await prisma.work_experiences.create({
-            data: {
-              id: crypto.randomUUID(),
-              jobseekerId: jobseeker.id,
-              company: exp.company,
-              position: exp.position,
-              location: exp.location,
-              startDate: exp.startDate ? new Date(exp.startDate + '-01') : null,
-              endDate: exp.endDate ? new Date(exp.endDate + '-01') : null,
-              isCurrent: exp.isCurrent || false,
-              description: exp.description,
-              achievements: exp.achievements || [],
-              updatedAt: new Date()
-            }
-          })
-        }
+      for (const exp of validExperiences) {
+        await prisma.work_experiences.create({
+          data: {
+            id: crypto.randomUUID(),
+            jobseekerId: jobseeker.id,
+            company: exp.company,
+            position: exp.position,
+            location: exp.location,
+            startDate: exp.startDate ? new Date(exp.startDate + '-01') : null,
+            endDate: exp.endDate ? new Date(exp.endDate + '-01') : null,
+            isCurrent: exp.isCurrent || false,
+            description: exp.description,
+            achievements: exp.achievements || [],
+            updatedAt: new Date()
+          }
+        })
       }
     }
 
@@ -297,15 +305,17 @@ export async function POST(request) {
     }
 
     // Handle certifications
-    if (certifications && certifications.length > 0 && certifications[0].name) {
+    if (certifications && certifications.length > 0) {
+      // Filter only valid certifications with required fields
+      const validCertifications = certifications.filter(cert => cert.name && cert.issuingOrganization)
+      
       await prisma.certifications.deleteMany({
         where: { jobseekerId: jobseeker.id }
       })
 
-      await prisma.certifications.createMany({
-        data: certifications
-          .filter(cert => cert.name)
-          .map(cert => ({
+      if (validCertifications.length > 0) {
+        await prisma.certifications.createMany({
+          data: validCertifications.map(cert => ({
             id: crypto.randomUUID(),
             jobseekerId: jobseeker.id,
             name: cert.name,
@@ -317,7 +327,8 @@ export async function POST(request) {
             certificateUrl: cert.certificateUrl || null,
             updatedAt: new Date()
           }))
-      })
+        })
+      }
     }
 
     // Fetch complete profile - UPDATED INCLUDES
