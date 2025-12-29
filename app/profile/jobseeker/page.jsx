@@ -239,6 +239,10 @@ function JobseekerProfileContent() {
           province: profile.province || "",
           postalCode: profile.postalCode || "",
 
+          // Alamat Cirebon
+          kecamatan: profile.kecamatan || "",
+          kelurahan: profile.kelurahan || "",
+
           // Professional Info
           currentTitle: profile.currentTitle || "",
           summary: profile.summary || "",
@@ -254,6 +258,20 @@ function JobseekerProfileContent() {
           ktpFileName: profile.ktpUrl ? "KTP.pdf" : "",
           ak1Url: profile.ak1Url || "",
           ak1FileName: profile.ak1Url ? "Kartu AK-1.pdf" : "",
+          ijazahUrl: profile.ijazahUrl || "",
+          ijazahFileName: profile.ijazahUrl ? "Ijazah.pdf" : "",
+          sertifikatUrl: profile.sertifikatUrl || "",
+          sertifikatFileName: profile.sertifikatUrl ? "Sertifikat.pdf" : "",
+          suratPengalamanUrl: profile.suratPengalamanUrl || "",
+          suratPengalamanFileName: profile.suratPengalamanUrl
+            ? "Surat Pengalaman.pdf"
+            : "",
+
+          // Simplified Education (Step 1)
+          lastEducationLevel: profile.lastEducationLevel || "",
+          lastEducationInstitution: profile.lastEducationInstitution || "",
+          lastEducationMajor: profile.lastEducationMajor || "",
+          graduationYear: profile.graduationYear?.toString() || "",
 
           // Education
           educations:
