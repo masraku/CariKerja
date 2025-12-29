@@ -297,32 +297,34 @@ async function handleSkillMatching(request) {
                     
                     let matchScore = data.persentase ? parseInt(data.persentase) : 50
                     const highlights = data.skill || []
+                    const pythonStatus = data.status || 'UNKNOWN'
                     
-                    // BOOST LOGIC: If Python found skills but recruiter didn't set explicit requirements,
-                    // we boost the score because Python successfully analyzed the CV
-                    if (highlights.length > 0 && jobSkills.length === 0) {
-                        // Python found relevant skills even without explicit job requirements
-                        // This means good job title/description matching
-                        matchScore = Math.max(matchScore, 75 + Math.min(highlights.length * 5, 20))
+                    // NO BLIND BOOST - Trust Python's actual matching score
+                    // Python compares CV skills vs Job Title/Description/Required Skills
+                    // If they're unrelated (Fullstack -> Sablon Sepatu), Python gives low score
+                    
+                    // Only boost if Python EXPLICITLY says RECOMMENDED
+                    // This means Python's internal AI determined it's a good match
+                    if (pythonStatus === 'RECOMMENDED') {
+                        matchScore = Math.max(matchScore, 75)
                     }
                     
-                    // If Python explicitly says RECOMMENDED, trust it
-                    if (data.status === 'RECOMMENDED') {
-                        matchScore = Math.max(matchScore, 80)
-                    }
+                    // Warning flag if recruiter didn't set skill requirements
+                    const noJobSkillsWarning = jobSkills.length === 0
                     
                     return NextResponse.json({
                         match_score: Math.min(matchScore, 100),
                         highlights: highlights,
                         source: 'python_api',
                         candidate_name: data.nama,
-                        status: data.status,
+                        status: pythonStatus,
                         debug: {
                             cvSkillsCount: highlights.length,
                             jobSkillsCount: jobSkills.length,
                             matchCount: highlights.length,
                             pythonRawScore: data.persentase,
-                            boosted: jobSkills.length === 0 && highlights.length > 0
+                            pythonStatus: pythonStatus,
+                            noJobSkillsWarning: noJobSkillsWarning
                         }
                     })
                 }
