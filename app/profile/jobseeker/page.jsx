@@ -403,7 +403,7 @@ function JobseekerProfileContent() {
         setFormData((prev) => ({ ...prev, photoPreview: reader.result }));
       reader.readAsDataURL(file);
       setUploadProgress({ photo: 50 });
-      const result = await uploadFile(file, "Profile");
+      const result = await uploadFile(file, "jobseeker-photo");
       setFormData((prev) => ({ ...prev, photo: result.url, photoFile: file }));
       setUploadProgress({ photo: 100 });
       Swal.fire({
@@ -427,7 +427,7 @@ function JobseekerProfileContent() {
     try {
       setIsUploading(true);
       setUploadProgress({ cv: 50 });
-      const result = await uploadFile(file, "jobseeker-cv");
+      const result = await uploadFile(file, "cv");
       setFormData((prev) => ({
         ...prev,
         cvFile: file,
@@ -454,7 +454,7 @@ function JobseekerProfileContent() {
     try {
       setIsUploading(true);
       setUploadProgress({ ktp: 50 });
-      const result = await uploadFile(file, "jobseeker-documents");
+      const result = await uploadFile(file, "ktp");
       setFormData((prev) => ({
         ...prev,
         ktpFile: file,
@@ -481,7 +481,7 @@ function JobseekerProfileContent() {
     try {
       setIsUploading(true);
       setUploadProgress({ ak1: 50 });
-      const result = await uploadFile(file, "jobseeker-documents");
+      const result = await uploadFile(file, "ak1");
       setFormData((prev) => ({
         ...prev,
         ak1File: file,
@@ -508,7 +508,7 @@ function JobseekerProfileContent() {
     try {
       setIsUploading(true);
       setUploadProgress({ sertifikat: 50 });
-      const result = await uploadFile(file, "jobseeker-documents");
+      const result = await uploadFile(file, "sertifikat");
       setFormData((prev) => ({
         ...prev,
         sertifikatFile: file,
@@ -535,7 +535,7 @@ function JobseekerProfileContent() {
     try {
       setIsUploading(true);
       setUploadProgress({ ijazah: 50 });
-      const result = await uploadFile(file, "jobseeker-documents");
+      const result = await uploadFile(file, "ijazah");
       setFormData((prev) => ({
         ...prev,
         ijazahFile: file,
@@ -562,7 +562,7 @@ function JobseekerProfileContent() {
     try {
       setIsUploading(true);
       setUploadProgress({ suratPengalaman: 50 });
-      const result = await uploadFile(file, "jobseeker-documents");
+      const result = await uploadFile(file, "resume");
       setFormData((prev) => ({
         ...prev,
         suratPengalamanFile: file,
