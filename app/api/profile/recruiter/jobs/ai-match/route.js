@@ -270,135 +270,93 @@ async function handleSkillMatching(request) {
     try {
         const body = await request.json()
         
-        // Try external Python API first
+        const jobTitle = body.job_requirements?.title || ''
+        const jobSkills = body.job_requirements?.skills || []
+        const cvUrl = body.cv_url || ''
+        
+        // ============================================
+        // PRIMARY: Python API (Parses CV, extracts skills, matches)
+        // ============================================
         try {
             const pythonApiUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL
             
-            if (pythonApiUrl) {
-                
+            if (pythonApiUrl && cvUrl) {
                 const response = await fetch(`${pythonApiUrl}/api/match`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        // Map existing format ke Python API format
-                        uri_cv: body.cv_url || '',
-                        job_title: body.job_requirements?.title || '',
-                        required_skill: body.job_requirements?.skills || []
+                        uri_cv: cvUrl,
+                        job_title: jobTitle,
+                        required_skill: jobSkills
                     }),
-                    signal: AbortSignal.timeout(5000) // 5 second timeout
+                    signal: AbortSignal.timeout(10000) // 10 second timeout
                 })
 
                 if (response.ok) {
                     const data = await response.json()
                     
-                    // Transform Python response ke format existing
+                    let matchScore = data.persentase ? parseInt(data.persentase) : 50
+                    const highlights = data.skill || []
+                    
+                    // BOOST LOGIC: If Python found skills but recruiter didn't set explicit requirements,
+                    // we boost the score because Python successfully analyzed the CV
+                    if (highlights.length > 0 && jobSkills.length === 0) {
+                        // Python found relevant skills even without explicit job requirements
+                        // This means good job title/description matching
+                        matchScore = Math.max(matchScore, 75 + Math.min(highlights.length * 5, 20))
+                    }
+                    
+                    // If Python explicitly says RECOMMENDED, trust it
+                    if (data.status === 'RECOMMENDED') {
+                        matchScore = Math.max(matchScore, 80)
+                    }
+                    
                     return NextResponse.json({
-                        match_score: data.persentase ? parseInt(data.persentase) : 50,
-                        highlights: data.skill || [],
+                        match_score: Math.min(matchScore, 100),
+                        highlights: highlights,
                         source: 'python_api',
                         candidate_name: data.nama,
-                        status: data.status
+                        status: data.status,
+                        debug: {
+                            cvSkillsCount: highlights.length,
+                            jobSkillsCount: jobSkills.length,
+                            matchCount: highlights.length,
+                            pythonRawScore: data.persentase,
+                            boosted: jobSkills.length === 0 && highlights.length > 0
+                        }
                     })
                 }
             }
         } catch (externalError) {
+            // Python API failed, continue to fallback
         }
 
-        // Fallback: Simple skill-based matching (IMPROVED LOGIC)
-        // Extract skills from cv_skills array (can be array of objects or strings)
-        let cvSkills = body.cv_skills || []
-        if (cvSkills.length > 0 && typeof cvSkills[0] === 'object') {
-            cvSkills = cvSkills.map(s => s.name || s).filter(Boolean)
-        }
+        // ============================================
+        // FALLBACK: Minimal matching when Python is unavailable
+        // ============================================
+        // Since we don't have manual skill input from jobseeker,
+        // and Python failed to parse the CV, we return a neutral score.
         
-        const cvTitle = (body.cv_title || '').toLowerCase()
-        const jobRequirements = body.job_requirements || {}
-        const jobSkills = jobRequirements.skills || []
-        const jobTitle = (jobRequirements.title || '').toLowerCase()
-        const jobDesc = jobRequirements.description || ''
-        const requirements = jobRequirements.requirements || ''
-
-        // Normalize all skills to lowercase for comparison
-        const normalizedCvSkills = cvSkills.map(s => s.toLowerCase())
-        const normalizedJobSkills = jobSkills.map(s => s.toLowerCase())
-
-        // Extract keywords from job info
-        const jobKeywords = [
-            ...normalizedJobSkills,
-            ...jobTitle.split(/\s+/),
-            ...extractKeywords(jobDesc),
-            ...extractKeywords(requirements)
-        ].filter(k => k.length > 2)
-
-        // Calculate match score
-        let matchCount = 0
-        const highlights = []
-        
-        // Check skill matches
-        normalizedCvSkills.forEach((skillLower, index) => {
-            if (normalizedJobSkills.some(reqSkill => 
-                reqSkill.includes(skillLower) || skillLower.includes(reqSkill)
-            )) {
-                matchCount++
-                highlights.push(cvSkills[index]) // Use original casing
-            } else if (jobKeywords.some(kw => 
-                kw.includes(skillLower) || skillLower.includes(kw)
-            )) {
-                matchCount += 0.5 // Partial match for general keywords
-                highlights.push(cvSkills[index])
-            }
-        })
-
-        // Bonus for title match (e.g., "fullstack developer" -> "frontend developer")
-        let titleBonus = 0
-        const titleWords = jobTitle.split(/\s+/).filter(w => w.length > 2)
-        const cvTitleWords = cvTitle.split(/\s+/).filter(w => w.length > 2)
-        
-        cvTitleWords.forEach(word => {
-            if (titleWords.some(tw => tw.includes(word) || word.includes(tw))) {
-                titleBonus += 10
-            }
-        })
-        
-        // Common tech role matches
-        const roleMatches = {
-            'fullstack': ['frontend', 'backend', 'full-stack', 'full stack'],
-            'frontend': ['react', 'vue', 'angular', 'javascript', 'web'],
-            'backend': ['node', 'java', 'python', 'api', 'server'],
-            'developer': ['engineer', 'programmer', 'coder'],
-            'engineer': ['developer', 'programmer'],
-        }
-        
-        Object.entries(roleMatches).forEach(([key, values]) => {
-            if (cvTitle.includes(key) && values.some(v => jobTitle.includes(v))) {
-                titleBonus += 15
-            }
-            if (jobTitle.includes(key) && values.some(v => cvTitle.includes(v))) {
-                titleBonus += 15
-            }
-        })
-
-        const maxPossible = Math.max(normalizedJobSkills.length, 1)
-        let matchScore = Math.round((matchCount / maxPossible) * 60) + 40 + Math.min(titleBonus, 25)
-        matchScore = Math.min(100, Math.max(0, matchScore))
-
         return NextResponse.json({
-            match_score: matchScore,
-            highlights: highlights.slice(0, 5),
-            source: 'fallback',
+            match_score: 50, // Neutral - unable to analyze
+            highlights: [],
+            source: 'fallback_neutral',
             debug: {
-                cvSkillsCount: cvSkills.length,
+                cvSkillsCount: 0,
                 jobSkillsCount: jobSkills.length,
-                matchCount,
-                titleBonus,
-                cvTitle,
-                jobTitle
+                matchCount: 0,
+                reason: 'Python API unavailable and no manual skill data'
             }
         })
         
     } catch (error) {
         return NextResponse.json(
-            { error: 'Failed to process', match_score: 50, highlights: [] },
+            { 
+                error: 'Failed to process', 
+                match_score: 50, 
+                highlights: [],
+                source: 'error'
+            },
             { status: 200 }
         )
     }
