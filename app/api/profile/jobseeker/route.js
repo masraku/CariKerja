@@ -125,27 +125,34 @@ export async function POST(request) {
       )
     }
 
-    // Calculate profile completeness
-    const totalFields = 15
+    // Calculate profile completeness - Based on simplified 2-step form
+    // Step 1: Data Diri (Personal + Address + Contact + Education + Summary)
+    // Step 2: Dokumen (CV, KTP, AK1, Ijazah - required; Sertifikat, Surat Pengalaman - optional)
+    const totalFields = 12 // Reduced to match actual form fields
     let filledFields = 0
     
+    // Personal Info (Step 1)
     if (photo) filledFields++
-    if (firstName && lastName) filledFields++
+    if (firstName) filledFields++ // lastName is optional
     if (dateOfBirth) filledFields++
     if (gender) filledFields++
-    if (religion) filledFields++
     if (phone) filledFields++
-    if (address && city && province) filledFields++
-    if (summary) filledFields++
-    if (cvUrl) filledFields++
-    if (educations && educations.length > 0) filledFields++
-    if (experiences && experiences.length > 0) filledFields++
-    if (skills && skills.length > 0) filledFields++
-    if (desiredJobTitle) filledFields++
-    if (desiredSalaryMin && desiredSalaryMax) filledFields++
-    if (preferredJobType) filledFields++
+    if (kecamatan && kelurahan) filledFields++ // Cirebon address
+    if (lastEducationLevel && lastEducationInstitution) filledFields++ // Simplified education
     
-    const completeness = Math.round((filledFields / totalFields) * 100)
+    // Documents (Step 2) - Required documents
+    if (cvUrl) filledFields++
+    if (ktpUrl) filledFields++
+    if (ak1Url) filledFields++
+    if (ijazahUrl) filledFields++
+    
+    // Optional bonus (not counted in total, but can add to percentage)
+    let bonusFields = 0
+    if (summary) bonusFields++
+    if (sertifikatUrl) bonusFields++
+    if (suratPengalamanUrl) bonusFields++
+    
+    const completeness = Math.min(100, Math.round(((filledFields + (bonusFields * 0.5)) / totalFields) * 100))
 
     // Update jobseeker profile
     const jobseeker = await prisma.jobseekers.update({

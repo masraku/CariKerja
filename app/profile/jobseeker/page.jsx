@@ -727,6 +727,7 @@ function JobseekerProfileContent() {
       const response = await fetch("/api/profile/jobseeker", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 
