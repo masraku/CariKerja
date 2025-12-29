@@ -333,25 +333,44 @@ export async function POST(request) {
 
         // ============ GENERIC UPLOAD ============
         } else {
-            const recruiter = await prisma.recruiters.findUnique({
+            // Try to find recruiter first
+            let recruiter = await prisma.recruiters.findUnique({
                 where: { userId: user.id },
                 select: { id: true, companyId: true }
             })
 
-            if (!recruiter) {
-                return NextResponse.json(
-                    { error: 'Profile not found' },
-                    { status: 404 }
-                )
+            let jobseeker = null
+            let uploadFolder = folder || 'misc'
+            let filePath = ''
+            let uploadBucket = targetBucket
+
+            if (recruiter) {
+                // Recruiter path
+                const fileExt = file.name.split('.').pop()
+                const fileName = `${Date.now()}.${fileExt}`
+                filePath = `${uploadFolder}/${recruiter.companyId || recruiter.id}/${fileName}`
+            } else {
+                // Try jobseeker
+                jobseeker = await prisma.jobseekers.findUnique({
+                    where: { userId: user.id },
+                    select: { id: true }
+                })
+
+                if (!jobseeker) {
+                    return NextResponse.json(
+                        { error: 'Profile not found. Please complete your profile first.' },
+                        { status: 404 }
+                    )
+                }
+
+                // Jobseeker path
+                const fileExt = file.name.split('.').pop()
+                const fileName = `${Date.now()}.${fileExt}`
+                filePath = `jobseeker/${jobseeker.id}/${uploadFolder}/${fileName}`
             }
 
-            const uploadFolder = folder || 'misc'
-            const fileExt = file.name.split('.').pop()
-            const fileName = `${Date.now()}.${fileExt}`
-            const filePath = `${uploadFolder}/${recruiter.companyId || recruiter.id}/${fileName}`
-
             const { data, error } = await supabaseAdmin.storage
-                .from(targetBucket)
+                .from(uploadBucket)
                 .upload(filePath, file, {
                     cacheControl: '3600',
                     upsert: true
@@ -366,7 +385,7 @@ export async function POST(request) {
             }
 
             const { data: { publicUrl } } = supabaseAdmin.storage
-                .from(targetBucket)
+                .from(uploadBucket)
                 .getPublicUrl(filePath)
 
             photoUrl = publicUrl
