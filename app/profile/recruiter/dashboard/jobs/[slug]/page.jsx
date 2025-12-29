@@ -688,13 +688,31 @@ export default function JobDetailPage() {
           <div class="text-xs text-center text-gray-400 pt-2 border-t">
             <details>
                 <summary class="cursor-pointer hover:text-gray-600">Debug Info</summary>
-                <div class="mt-2 text-left bg-gray-100 p-2 rounded">
-                    <p>JS Title: ${recommendation.debug?.cvTitle || "-"}</p>
-                    <p>Job Title: ${recommendation.debug?.jobTitle || "-"}</p>
-                    <p>Title Bonus: ${recommendation.debug?.titleBonus || 0}</p>
-                    <p>Skills Matched: ${
+                <div class="mt-2 text-left bg-gray-100 p-2 rounded relative">
+                    <p class="font-mono text-[10px] mb-1">DATA DIAGNOSTICS:</p>
+                    <p>JS Title: <span class="font-semibold">${
+                      recommendation.debug?.cvTitle || "-(Empty)"
+                    }</span></p>
+                    <p>Job Title: <span class="font-semibold">${
+                      recommendation.debug?.jobTitle || "-(Empty)"
+                    }</span></p>
+                    <div class="my-1 border-t border-gray-200"></div>
+                    <p>CV Skills Found: <span class="font-semibold">${
+                      recommendation.debug?.cvSkillsCount || 0
+                    }</span></p>
+                    <p>Job Skills Found: <span class="font-semibold">${
+                      recommendation.debug?.jobSkillsCount || 0
+                    }</span></p>
+                    <p>Matches: <span class="font-semibold">${
                       recommendation.debug?.matchCount || 0
-                    }/${recommendation.debug?.jobSkillsCount || 0}</p>
+                    }</span></p>
+                    
+                    ${
+                      recommendation.debug?.jobSkillsCount === 0 ||
+                      recommendation.debug?.cvSkillsCount === 0
+                        ? '<p class="text-red-500 mt-1 italic">⚠️ Lowongan atau Pelamar tidak memiliki skill eksplisit di database.</p>'
+                        : ""
+                    }
                 </div>
             </details>
           </div>
