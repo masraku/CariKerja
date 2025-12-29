@@ -1,7 +1,39 @@
 import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/authHelper'
-import { uploadFileToSupabase, supabaseAdmin } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 import { prisma } from '@/lib/prisma'
+
+function getBucketName(type, bucket) {
+    // Photo types -> Profile bucket
+    if (type === 'recruiter-photo' || type === 'jobseeker-photo' || type === 'company-gallery') {
+        return 'Profile'
+    }
+    
+    // Ijazah/Diploma -> Ijazah bucket
+    if (bucket?.includes('diploma') || bucket?.includes('ijazah')) {
+        return 'Ijazah'
+    }
+    
+    // CV, AK1, Sertifikat, KTP -> Resume bucket
+    if (bucket?.includes('cv') || bucket?.includes('ak1') || 
+        bucket?.includes('sertifikat') || bucket?.includes('certificate') ||
+        bucket?.includes('ktp') || bucket?.includes('resume')) {
+        return 'Resume'
+    }
+    
+    // Job photos -> Lowongan bucket
+    if (type === 'job-photo' || bucket?.includes('job') || bucket?.includes('lowongan')) {
+        return 'Lowongan'
+    }
+    
+    // Default jobseeker photo -> Profile
+    if (bucket?.includes('photo')) {
+        return 'Profile'
+    }
+    
+    // Default to Profile for other cases
+    return 'Profile'
+}
 
 export async function POST(request) {
     try {
@@ -19,8 +51,9 @@ export async function POST(request) {
         const formData = await request.formData()
         const file = formData.get('file')
         const type = formData.get('type')
-        const bucket = formData.get('bucket') // 'jobseeker-photos', 'jobseeker-cv', etc.
-        const companyId = formData.get('companyId') // For company gallery uploads
+        const bucket = formData.get('bucket')
+        const companyId = formData.get('companyId')
+        const folder = formData.get('folder')
 
         if (!file) {
             return NextResponse.json(
@@ -33,9 +66,11 @@ export async function POST(request) {
         const isDocument = bucket?.includes('cv') || 
                           bucket?.includes('diploma') || 
                           bucket?.includes('certificate') ||
-                          bucket?.includes('documents') ||
+                          bucket?.includes('sertifikat') ||
+                          bucket?.includes('ijazah') ||
                           bucket?.includes('ktp') ||
-                          bucket?.includes('ak1')
+                          bucket?.includes('ak1') ||
+                          bucket?.includes('resume')
         
         if (isDocument) {
             // Allow PDF and Images for documents
@@ -65,9 +100,10 @@ export async function POST(request) {
         }
 
         let photoUrl
+        const targetBucket = getBucketName(type, bucket)
 
+        // ============ RECRUITER PHOTO ============
         if (type === 'recruiter-photo') {
-            // Get recruiter ID
             const recruiter = await prisma.recruiters.findUnique({
                 where: { userId: user.id },
                 select: { id: true }
@@ -80,45 +116,44 @@ export async function POST(request) {
                 )
             }
 
-            // Upload to Supabase
             const fileExt = file.name.split('.').pop()
             const fileName = `profile.${fileExt}`
-            const filePath = `recruiter-photos/${recruiter.id}/${fileName}`
+            const filePath = `recruiter/${recruiter.id}/${fileName}`
 
             // Delete old photo first
             await supabaseAdmin.storage
-                .from('Profile')
+                .from(targetBucket)
                 .remove([filePath])
                 .catch(() => {})
 
             // Upload new photo
             const { data, error } = await supabaseAdmin.storage
-                .from('Profile')
+                .from(targetBucket)
                 .upload(filePath, file, {
                     cacheControl: '3600',
                     upsert: true
                 })
 
             if (error) {
+                console.error('Upload error:', error)
                 return NextResponse.json(
                     { error: `Failed to upload: ${error.message}` },
                     { status: 500 }
                 )
             }
 
-            // Get public URL
             const { data: { publicUrl } } = supabaseAdmin.storage
-                .from('Profile')
+                .from(targetBucket)
                 .getPublicUrl(filePath)
 
             photoUrl = publicUrl
 
-            // Update database
             await prisma.recruiters.update({
                 where: { id: recruiter.id },
                 data: { photoUrl }
             })
 
+        // ============ COMPANY GALLERY ============
         } else if (type === 'company-gallery') {
             if (!companyId) {
                 return NextResponse.json(
@@ -127,7 +162,6 @@ export async function POST(request) {
                 )
             }
 
-            // Verify recruiter has access to this company
             const recruiter = await prisma.recruiters.findUnique({
                 where: { userId: user.id },
                 select: { companyId: true }
@@ -140,7 +174,6 @@ export async function POST(request) {
                 )
             }
 
-            // Check gallery limit
             const company = await prisma.companies.findUnique({
                 where: { id: companyId },
                 select: { gallery: true }
@@ -153,32 +186,30 @@ export async function POST(request) {
                 )
             }
 
-            // Upload to Supabase
             const fileExt = file.name.split('.').pop()
             const fileName = `${Date.now()}.${fileExt}`
-            const filePath = `company-gallery/${companyId}/${fileName}`
+            const filePath = `company/${companyId}/gallery/${fileName}`
 
             const { data, error } = await supabaseAdmin.storage
-                .from('Profile')
+                .from(targetBucket)
                 .upload(filePath, file, {
                     cacheControl: '3600'
                 })
 
             if (error) {
+                console.error('Upload error:', error)
                 return NextResponse.json(
                     { error: `Failed to upload: ${error.message}` },
                     { status: 500 }
                 )
             }
 
-            // Get public URL
             const { data: { publicUrl } } = supabaseAdmin.storage
-                .from('Profile')
+                .from(targetBucket)
                 .getPublicUrl(filePath)
 
             photoUrl = publicUrl
 
-            // Update database - add to gallery
             await prisma.companies.update({
                 where: { id: companyId },
                 data: {
@@ -188,10 +219,57 @@ export async function POST(request) {
                 }
             })
 
-        } else if (bucket && (bucket === 'Profile' || bucket.includes('jobseeker') || bucket.includes('cv') || bucket.includes('diploma') || bucket.includes('certificate') || bucket.includes('photo'))) {
-            // Jobseeker Uploads (CV, Diploma, Certificate, Photo)
-            
-            // Get jobseeker ID
+        // ============ JOB PHOTO (Lowongan) ============
+        } else if (type === 'job-photo' || folder === 'job-photos' || bucket?.includes('lowongan')) {
+            const recruiter = await prisma.recruiters.findUnique({
+                where: { userId: user.id },
+                select: { id: true, companyId: true }
+            })
+
+            if (!recruiter) {
+                return NextResponse.json(
+                    { error: 'Recruiter profile not found' },
+                    { status: 404 }
+                )
+            }
+
+            const fileExt = file.name.split('.').pop()
+            const fileName = `${Date.now()}.${fileExt}`
+            const filePath = `${recruiter.companyId}/${fileName}`
+
+            const { data, error } = await supabaseAdmin.storage
+                .from('Lowongan')
+                .upload(filePath, file, {
+                    cacheControl: '3600',
+                    upsert: true
+                })
+
+            if (error) {
+                console.error('Upload error:', error)
+                return NextResponse.json(
+                    { error: `Failed to upload: ${error.message}` },
+                    { status: 500 }
+                )
+            }
+
+            const { data: { publicUrl } } = supabaseAdmin.storage
+                .from('Lowongan')
+                .getPublicUrl(filePath)
+
+            photoUrl = publicUrl
+
+        // ============ JOBSEEKER UPLOADS ============
+        } else if (bucket && (
+            bucket.includes('photo') || 
+            bucket.includes('cv') || 
+            bucket.includes('diploma') || 
+            bucket.includes('ijazah') ||
+            bucket.includes('certificate') ||
+            bucket.includes('sertifikat') ||
+            bucket.includes('ktp') ||
+            bucket.includes('ak1') ||
+            bucket.includes('resume')
+        )) {
             const jobseeker = await prisma.jobseekers.findUnique({
                 where: { userId: user.id },
                 select: { id: true }
@@ -204,40 +282,57 @@ export async function POST(request) {
                 )
             }
 
-            // Determine folder path
-            // bucket example: 'jobseeker-cv', 'jobseeker-diploma', 'jobseeker-photo'
-            const folder = bucket.replace('jobseeker-', '')
-            const fileExt = file.name.split('.').pop()
-            const fileName = `${folder}-${Date.now()}.${fileExt}`
-            const filePath = `jobseekers/${jobseeker.id}/${folder}/${fileName}`
+            // Determine folder and bucket
+            let folderName = 'misc'
+            let uploadBucket = targetBucket
+            
+            if (bucket.includes('photo')) {
+                folderName = 'photo'
+                uploadBucket = 'Profile'
+            } else if (bucket.includes('cv') || bucket.includes('resume')) {
+                folderName = 'cv'
+                uploadBucket = 'Resume'
+            } else if (bucket.includes('diploma') || bucket.includes('ijazah')) {
+                folderName = 'ijazah'
+                uploadBucket = 'Ijazah'
+            } else if (bucket.includes('certificate') || bucket.includes('sertifikat')) {
+                folderName = 'sertifikat'
+                uploadBucket = 'Resume'
+            } else if (bucket.includes('ktp')) {
+                folderName = 'ktp'
+                uploadBucket = 'Resume'
+            } else if (bucket.includes('ak1')) {
+                folderName = 'ak1'
+                uploadBucket = 'Resume'
+            }
 
-            // Upload to Supabase
+            const fileExt = file.name.split('.').pop()
+            const fileName = `${folderName}-${Date.now()}.${fileExt}`
+            const filePath = `jobseeker/${jobseeker.id}/${folderName}/${fileName}`
+
             const { data, error } = await supabaseAdmin.storage
-                .from('Profile')
+                .from(uploadBucket)
                 .upload(filePath, file, {
                     cacheControl: '3600',
                     upsert: true
                 })
 
             if (error) {
+                console.error('Upload error:', error)
                 return NextResponse.json(
                     { error: `Failed to upload: ${error.message}` },
                     { status: 500 }
                 )
             }
 
-            // Get public URL
             const { data: { publicUrl } } = supabaseAdmin.storage
-                .from('Profile')
+                .from(uploadBucket)
                 .getPublicUrl(filePath)
 
             photoUrl = publicUrl
 
+        // ============ GENERIC UPLOAD ============
         } else {
-            // Generic upload (e.g., job photos)
-            const folder = formData.get('folder') || 'misc'
-            
-            // Get recruiter ID for job photos
             const recruiter = await prisma.recruiters.findUnique({
                 where: { userId: user.id },
                 select: { id: true, companyId: true }
@@ -250,28 +345,28 @@ export async function POST(request) {
                 )
             }
 
+            const uploadFolder = folder || 'misc'
             const fileExt = file.name.split('.').pop()
             const fileName = `${Date.now()}.${fileExt}`
-            const filePath = `${folder}/${recruiter.companyId || recruiter.id}/${fileName}`
+            const filePath = `${uploadFolder}/${recruiter.companyId || recruiter.id}/${fileName}`
 
-            // Upload to Supabase
             const { data, error } = await supabaseAdmin.storage
-                .from('Profile')
+                .from(targetBucket)
                 .upload(filePath, file, {
                     cacheControl: '3600',
                     upsert: true
                 })
 
             if (error) {
+                console.error('Upload error:', error)
                 return NextResponse.json(
                     { error: `Failed to upload: ${error.message}` },
                     { status: 500 }
                 )
             }
 
-            // Get public URL
             const { data: { publicUrl } } = supabaseAdmin.storage
-                .from('Profile')
+                .from(targetBucket)
                 .getPublicUrl(filePath)
 
             photoUrl = publicUrl
@@ -280,12 +375,14 @@ export async function POST(request) {
         return NextResponse.json({
             success: true,
             url: photoUrl,
+            bucket: targetBucket,
             message: 'File uploaded successfully'
         })
 
     } catch (error) {
+        console.error('Upload error:', error)
         return NextResponse.json(
-            { error: 'Failed to upload file' },
+            { error: 'Failed to upload file', details: error.message },
             { status: 500 }
         )
     }
@@ -304,7 +401,7 @@ export async function DELETE(request) {
         }
 
         const { user } = auth
-        const { photoUrl, companyId } = await request.json()
+        const { photoUrl, companyId, bucket: bucketName } = await request.json()
 
         if (!photoUrl || !companyId) {
             return NextResponse.json(
@@ -326,14 +423,17 @@ export async function DELETE(request) {
             )
         }
 
+        // Determine bucket from URL or parameter
+        const targetBucket = bucketName || 'Profile'
+
         // Extract filename from URL
         const urlParts = photoUrl.split('/')
         const fileName = urlParts[urlParts.length - 1]
-        const filePath = `company-gallery/${companyId}/${fileName}`
+        const filePath = `company/${companyId}/gallery/${fileName}`
 
         // Delete from Supabase
         await supabaseAdmin.storage
-            .from('Profile')
+            .from(targetBucket)
             .remove([filePath])
 
         // Remove from database
@@ -355,6 +455,7 @@ export async function DELETE(request) {
         })
 
     } catch (error) {
+        console.error('Delete error:', error)
         return NextResponse.json(
             { error: 'Failed to delete photo' },
             { status: 500 }

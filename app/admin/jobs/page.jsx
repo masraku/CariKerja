@@ -259,10 +259,10 @@ export default function AdminJobsPage() {
               <div className="text-slate-300 text-xs mt-1">Aktif</div>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-              <div className="text-3xl font-bold text-blue-400">
-                {stats?.totalApplications || 0}
+              <div className="text-3xl font-bold text-red-400">
+                {stats?.rejected || 0}
               </div>
-              <div className="text-slate-300 text-xs mt-1">Total Lamaran</div>
+              <div className="text-slate-300 text-xs mt-1">Ditolak</div>
             </div>
           </div>
         </div>
