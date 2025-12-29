@@ -134,10 +134,9 @@ export default function JobDetailPage() {
         setAiRecommendations((prev) => ({
           ...prev,
           [application.id]: {
-            isRecommended: data.match_score >= 50,
+            isRecommended: data.match_score >= 80,
             score: data.match_score,
             highlights: data.highlights || [],
-            debug: data.debug,
           },
         }));
       }
@@ -683,56 +682,8 @@ export default function JobDetailPage() {
               }
             </ul>
           </div>
-          
-          
-          <div class="text-xs text-center text-gray-400 pt-2 border-t">
-            <details>
-                <summary class="cursor-pointer hover:text-gray-600">Debug Info</summary>
-                <div class="mt-2 text-left bg-gray-100 p-3 rounded-lg">
-                    <p class="font-mono text-[10px] mb-2 text-gray-500">PYTHON AI DIAGNOSTICS:</p>
-                    <div class="space-y-1">
-                        <p class="flex justify-between">
-                            <span class="text-gray-600">CV Skills Extracted:</span>
-                            <span class="font-bold text-blue-600">${
-                              recommendation.debug?.cvSkillsCount || 0
-                            }</span>
-                        </p>
-                        <p class="flex justify-between">
-                            <span class="text-gray-600">Job Skills Required:</span>
-                            <span class="font-bold ${
-                              recommendation.debug?.jobSkillsCount === 0
-                                ? "text-orange-500"
-                                : "text-green-600"
-                            }">${
-        recommendation.debug?.jobSkillsCount || 0
-      }</span>
-                        </p>
-                        <p class="flex justify-between">
-                            <span class="text-gray-600">Matched:</span>
-                            <span class="font-bold text-green-600">${
-                              recommendation.debug?.matchCount || 0
-                            }</span>
-                        </p>
-                        ${
-                          recommendation.debug?.boosted
-                            ? '<p class="text-xs text-amber-600 mt-2 flex items-center gap-1"><span>🚀</span> Score boosted (no explicit job skills set)</p>'
-                            : ""
-                        }
-                        ${
-                          recommendation.debug?.pythonRawScore
-                            ? '<p class="text-xs text-gray-400 mt-1">Raw Python Score: ' +
-                              recommendation.debug.pythonRawScore +
-                              "</p>"
-                            : ""
-                        }
-                    </div>
-                    ${
-                      recommendation.debug?.jobSkillsCount === 0
-                        ? '<p class="text-orange-500 text-xs mt-2 italic">💡 Recruiter belum set skill requirements di lowongan.</p>'
-                        : ""
-                    }
-                </div>
-            </details>
+          <div class="text-xs text-center text-gray-400 pt-3 border-t">
+            Analisis berdasarkan skill di CV dan kebutuhan lowongan.
           </div>
         </div>
       `,

@@ -33,7 +33,7 @@ export async function POST(request) {
             { 
                 success: false,
                 error: error.message || 'Failed to process',
-                match_score: 50, 
+                match_score: 80, 
                 highlights: [] 
             },
             { status: 500 }
