@@ -688,29 +688,47 @@ export default function JobDetailPage() {
           <div class="text-xs text-center text-gray-400 pt-2 border-t">
             <details>
                 <summary class="cursor-pointer hover:text-gray-600">Debug Info</summary>
-                <div class="mt-2 text-left bg-gray-100 p-2 rounded relative">
-                    <p class="font-mono text-[10px] mb-1">DATA DIAGNOSTICS:</p>
-                    <p>JS Title: <span class="font-semibold">${
-                      recommendation.debug?.cvTitle || "-(Empty)"
-                    }</span></p>
-                    <p>Job Title: <span class="font-semibold">${
-                      recommendation.debug?.jobTitle || "-(Empty)"
-                    }</span></p>
-                    <div class="my-1 border-t border-gray-200"></div>
-                    <p>CV Skills Found: <span class="font-semibold">${
-                      recommendation.debug?.cvSkillsCount || 0
-                    }</span></p>
-                    <p>Job Skills Found: <span class="font-semibold">${
-                      recommendation.debug?.jobSkillsCount || 0
-                    }</span></p>
-                    <p>Matches: <span class="font-semibold">${
-                      recommendation.debug?.matchCount || 0
-                    }</span></p>
-                    
+                <div class="mt-2 text-left bg-gray-100 p-3 rounded-lg">
+                    <p class="font-mono text-[10px] mb-2 text-gray-500">PYTHON AI DIAGNOSTICS:</p>
+                    <div class="space-y-1">
+                        <p class="flex justify-between">
+                            <span class="text-gray-600">CV Skills Extracted:</span>
+                            <span class="font-bold text-blue-600">${
+                              recommendation.debug?.cvSkillsCount || 0
+                            }</span>
+                        </p>
+                        <p class="flex justify-between">
+                            <span class="text-gray-600">Job Skills Required:</span>
+                            <span class="font-bold ${
+                              recommendation.debug?.jobSkillsCount === 0
+                                ? "text-orange-500"
+                                : "text-green-600"
+                            }">${
+        recommendation.debug?.jobSkillsCount || 0
+      }</span>
+                        </p>
+                        <p class="flex justify-between">
+                            <span class="text-gray-600">Matched:</span>
+                            <span class="font-bold text-green-600">${
+                              recommendation.debug?.matchCount || 0
+                            }</span>
+                        </p>
+                        ${
+                          recommendation.debug?.boosted
+                            ? '<p class="text-xs text-amber-600 mt-2 flex items-center gap-1"><span>🚀</span> Score boosted (no explicit job skills set)</p>'
+                            : ""
+                        }
+                        ${
+                          recommendation.debug?.pythonRawScore
+                            ? '<p class="text-xs text-gray-400 mt-1">Raw Python Score: ' +
+                              recommendation.debug.pythonRawScore +
+                              "</p>"
+                            : ""
+                        }
+                    </div>
                     ${
-                      recommendation.debug?.jobSkillsCount === 0 ||
-                      recommendation.debug?.cvSkillsCount === 0
-                        ? '<p class="text-red-500 mt-1 italic">⚠️ Lowongan atau Pelamar tidak memiliki skill eksplisit di database.</p>'
+                      recommendation.debug?.jobSkillsCount === 0
+                        ? '<p class="text-orange-500 text-xs mt-2 italic">💡 Recruiter belum set skill requirements di lowongan.</p>'
                         : ""
                     }
                 </div>
