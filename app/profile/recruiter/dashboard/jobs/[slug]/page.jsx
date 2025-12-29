@@ -134,7 +134,7 @@ export default function JobDetailPage() {
         setAiRecommendations((prev) => ({
           ...prev,
           [application.id]: {
-            isRecommended: data.match_score >= 70,
+            isRecommended: data.match_score >= 50,
             score: data.match_score,
             highlights: data.highlights || [],
           },

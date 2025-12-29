@@ -379,7 +379,7 @@ async function handleSkillMatching(request) {
         })
 
         const maxPossible = Math.max(normalizedJobSkills.length, 1)
-        let matchScore = Math.round((matchCount / maxPossible) * 60) + 20 + Math.min(titleBonus, 25)
+        let matchScore = Math.round((matchCount / maxPossible) * 60) + 40 + Math.min(titleBonus, 25)
         matchScore = Math.min(100, Math.max(0, matchScore))
 
         return NextResponse.json({
