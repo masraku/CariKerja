@@ -628,6 +628,77 @@ export default function JobDetailPage() {
     }
   };
 
+  // Handle show AI match details
+  const handleShowAIMatchDetails = (application, recommendation) => {
+    Swal.fire({
+      title: `<div class="flex items-center gap-2 justify-center text-amber-600 font-bold"><span class="text-2xl">✨</span> AI Match Analysis</div>`,
+      html: `
+        <div class="text-left space-y-5 px-2">
+          <div class="bg-amber-50 rounded-xl p-5 border border-amber-100">
+             <div class="flex justify-between items-center mb-2">
+                <span class="text-gray-600 font-medium">Match Score</span>
+                <span class="text-3xl font-bold text-amber-600">${
+                  recommendation.score
+                }<span class="text-base font-normal text-gray-500">%</span></span>
+             </div>
+             <div class="w-full bg-gray-200 rounded-full h-3">
+                <div class="bg-amber-500 h-3 rounded-full transition-all duration-1000" style="width: ${
+                  recommendation.score
+                }%"></div>
+             </div>
+             <p class="text-xs text-amber-700 mt-2 font-medium text-center">
+                ${
+                  recommendation.score >= 80
+                    ? "Excellent Match! Highly Recommended"
+                    : recommendation.score >= 60
+                    ? "Good Match with Potential"
+                    : "Partial Match"
+                }
+             </p>
+          </div>
+          
+          <div>
+            <h4 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                <span class="w-1 h-6 bg-blue-500 rounded-full"></span>
+                Why this match?
+            </h4>
+            <ul class="space-y-2 bg-gray-50 p-4 rounded-xl border border-gray-100">
+              ${
+                recommendation.highlights &&
+                recommendation.highlights.length > 0
+                  ? recommendation.highlights
+                      .map(
+                        (h) => `
+                <li class="flex items-start gap-2 text-sm text-gray-700">
+                  <span class="mt-0.5 text-green-500 flex-shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                  </span>
+                  <span>Matched skill: <strong class="text-gray-900">${h}</strong></span>
+                </li>
+              `
+                      )
+                      .join("")
+                  : '<li class="text-sm text-gray-500 italic">Matching based on general profile, job title relevance, and keyword analysis.</li>'
+              }
+            </ul>
+          </div>
+          
+          <div class="text-xs text-center text-gray-400 pt-2 border-t">
+            Analysis based on profile skills, job title, and CV keywords.
+          </div>
+        </div>
+      `,
+      showConfirmButton: false,
+      showCloseButton: true,
+      width: "500px",
+      customClass: {
+        popup: "rounded-3xl shadow-xl",
+        closeButton: "focus:outline-none",
+      },
+      buttonsStyling: false,
+    });
+  };
+
   // Handle delete application
   const handleDeleteApplication = async (applicationId, applicantName) => {
     const result = await Swal.fire({
@@ -749,7 +820,24 @@ export default function JobDetailPage() {
               </p>
             </div>
           </div>
-          {getStatusBadge(application.status)}
+          <div className="flex flex-col items-end gap-2">
+            {getStatusBadge(application.status)}
+            {aiRecommendations[application.id]?.isRecommended && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleShowAIMatchDetails(
+                    application,
+                    aiRecommendations[application.id]
+                  );
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-100 to-orange-100 border border-amber-200 text-amber-800 rounded-full text-xs font-semibold hover:from-amber-200 hover:to-orange-200 transition shadow-sm animate-fade-in"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                AI Recommended ({aiRecommendations[application.id].score}%)
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Skills */}
