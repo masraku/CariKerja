@@ -137,6 +137,7 @@ export default function JobDetailPage() {
             isRecommended: data.match_score >= 50,
             score: data.match_score,
             highlights: data.highlights || [],
+            debug: data.debug,
           },
         }));
       }
@@ -683,8 +684,19 @@ export default function JobDetailPage() {
             </ul>
           </div>
           
+          
           <div class="text-xs text-center text-gray-400 pt-2 border-t">
-            Analysis based on profile skills, job title, and CV keywords.
+            <details>
+                <summary class="cursor-pointer hover:text-gray-600">Debug Info</summary>
+                <div class="mt-2 text-left bg-gray-100 p-2 rounded">
+                    <p>JS Title: ${recommendation.debug?.cvTitle || "-"}</p>
+                    <p>Job Title: ${recommendation.debug?.jobTitle || "-"}</p>
+                    <p>Title Bonus: ${recommendation.debug?.titleBonus || 0}</p>
+                    <p>Skills Matched: ${
+                      recommendation.debug?.matchCount || 0
+                    }/${recommendation.debug?.jobSkillsCount || 0}</p>
+                </div>
+            </details>
           </div>
         </div>
       `,
