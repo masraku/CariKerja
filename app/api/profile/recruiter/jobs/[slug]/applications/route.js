@@ -39,9 +39,14 @@ export async function GET(request, { params }) {
       )
     }
 
-    // Get all applications with jobseeker details
+    // Get all applications with jobseeker details (excluding WITHDRAWN)
     const applications = await prisma.applications.findMany({
-      where: { jobId: job.id },
+      where: { 
+        jobId: job.id,
+        status: {
+          not: 'WITHDRAWN' // Don't show withdrawn applications to recruiter
+        }
+      },
       include: {
         jobseekers: {
           include: {
