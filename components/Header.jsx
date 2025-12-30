@@ -57,8 +57,7 @@ const Header = () => {
     try {
       await logout();
       router.push("/login");
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const getInitials = (name) => {
@@ -97,7 +96,7 @@ const Header = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1 bg-white/50 backdrop-blur-sm px-2 py-1.5 rounded-full border border-slate-200/50 shadow-sm">
+          <nav className="hidden lg:flex items-center gap-1 bg-white/50 backdrop-blur-sm px-2 py-1.5 rounded-full border border-slate-200/50 shadow-sm">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -114,7 +113,7 @@ const Header = () => {
           </nav>
 
           {/* Auth Buttons / User Menu */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-4">
             {loading ? (
               <div className="w-8 h-8 rounded-full bg-slate-200 animate-pulse" />
             ) : user ? (
@@ -265,10 +264,10 @@ const Header = () => {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button - Show on lg and below */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+            className="lg:hidden p-2.5 text-slate-600 bg-white/90 backdrop-blur-md rounded-xl shadow-sm border border-slate-200/50 hover:bg-white transition-all active:scale-95"
           >
             {isMobileMenuOpen ? (
               <X className="w-6 h-6" />
@@ -281,7 +280,7 @@ const Header = () => {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-white border-t border-slate-100 shadow-xl p-4 animate-in slide-in-from-top-5">
+        <div className="lg:hidden absolute top-full left-0 right-0 bg-white border-t border-slate-100 shadow-xl p-4 animate-in slide-in-from-top-5">
           <nav className="flex flex-col gap-2">
             {navLinks.map((link) => (
               <Link

@@ -87,8 +87,8 @@ export async function POST(request, { params }) {
                 type: 'APPLICATION_UPDATE',
                 title: '📅 Request Reschedule Interview',
                 message: `${jobseeker.firstName} ${jobseeker.lastName} meminta perubahan jadwal interview untuk posisi ${application.jobs.title}. Alasan: ${reason}`,
-                link: `/profile/recruiter/dashboard/jobs/${application.jobs.slug}/applications/${application.id}`,
-                actionUrl: `/profile/recruiter/dashboard/jobs/${application.jobs.slug}/applications/${application.id}`,
+                link: `/profile/recruiter/dashboard/interviews`,
+                actionUrl: `/profile/recruiter/dashboard/interviews`,
                 metadata: {
                     applicationId: application.id,
                     jobTitle: application.jobs.title,
@@ -98,6 +98,24 @@ export async function POST(request, { params }) {
                 }
             }
         })
+
+        // Find and update interview participant status to RESCHEDULE_REQUESTED
+        const participant = await prisma.interview_participants.findFirst({
+            where: {
+                applicationId: application.id
+            }
+        })
+
+        if (participant) {
+            await prisma.interview_participants.update({
+                where: { id: participant.id },
+                data: {
+                    status: 'RESCHEDULE_REQUESTED',
+                    responseMessage: reason,
+                    respondedAt: new Date()
+                }
+            })
+        }
 
         // Update application with reschedule request note
         await prisma.applications.update({
