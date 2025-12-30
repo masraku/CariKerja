@@ -307,13 +307,17 @@ export default function JobDetailPage() {
     const selectedApps = filteredApplications.filter((app) =>
       selectedApplications.includes(app.id)
     );
-    const validApps = selectedApps.filter((app) => app.status === "REVIEWING");
+    const validApps = selectedApps.filter((app) =>
+      ["REVIEWING", "INTERVIEW_SCHEDULED", "INTERVIEW_COMPLETED"].includes(
+        app.status
+      )
+    );
 
     if (validApps.length === 0) {
       Swal.fire({
         icon: "warning",
         title: "Tidak Ada Kandidat Valid",
-        text: 'Hanya kandidat dengan status "Sedang Ditinjau" yang bisa dipindahkan ke Lolos Seleksi.',
+        text: 'Hanya kandidat dengan status "Sedang Ditinjau" atau dalam tahap interview yang bisa dipindahkan ke Lolos Seleksi.',
         confirmButtonColor: "#9333ea",
       });
       return;

@@ -13,13 +13,14 @@ import {
   Loader2,
   Video,
   ArrowLeft,
-  Bell,
   RefreshCw,
   Trash2,
-  Eye,
   Check,
   X,
   ExternalLink,
+  MapPin,
+  PlayCircle,
+  AlertTriangle,
 } from "lucide-react";
 
 export default function RecruiterInterviewsPage() {
@@ -28,6 +29,7 @@ export default function RecruiterInterviewsPage() {
   const [interviews, setInterviews] = useState([]);
   const [stats, setStats] = useState(null);
   const [activeFilter, setActiveFilter] = useState("all");
+  const [processingId, setProcessingId] = useState(null); // To track which item is being processed
 
   useEffect(() => {
     loadInterviews();
@@ -63,15 +65,97 @@ export default function RecruiterInterviewsPage() {
     }
   };
 
-  // Handle approve reschedule - redirect to reschedule page
+  // Helper to check if interview has started
+  const isInterviewStarted = (scheduledAt) => {
+    const now = new Date();
+    const start = new Date(scheduledAt);
+    return now >= start;
+  };
+
+  // Handle Application Status Update (Accept/Reject Candidate)
+  const handleUpdateApplicationStatus = async (
+    applicationId,
+    newStatus,
+    candidateName
+  ) => {
+    const actionText = newStatus === "ACCEPTED" ? "Terima" : "Tolak";
+    const color = newStatus === "ACCEPTED" ? "#10b981" : "#ef4444";
+
+    const result = await Swal.fire({
+      title: `${actionText} Kandidat?`,
+      text: `Anda akan me-${actionText.toLowerCase()} lamaran ${candidateName}.`,
+      icon: newStatus === "ACCEPTED" ? "question" : "warning",
+      showCancelButton: true,
+      confirmButtonColor: color,
+      confirmButtonText: `Ya, ${actionText}`,
+      cancelButtonText: "Batal",
+      input: newStatus === "REJECTED" ? "textarea" : undefined,
+      inputPlaceholder:
+        newStatus === "REJECTED" ? "Alasan penolakan..." : undefined,
+      inputValidator: (value) => {
+        if (newStatus === "REJECTED" && !value) {
+          return "Mohon isi alasan penolakan";
+        }
+      },
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      setProcessingId(applicationId);
+      const token = localStorage.getItem("token");
+
+      const body = { status: newStatus };
+      if (newStatus === "REJECTED") {
+        body.reason = result.value; // Assuming API accepts reason/notes
+        body.recruiterNotes = result.value;
+      }
+
+      const response = await fetch(
+        `/api/profile/recruiter/applications/${applicationId}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+        }
+      );
+
+      if (response.ok) {
+        Swal.fire({
+          icon: "success",
+          title: "Berhasil",
+          text: `Kandidat berhasil di-${actionText.toLowerCase()}`,
+          timer: 1500,
+          showConfirmButton: false,
+        });
+        loadInterviews(); // Reload to reflect changes
+      } else {
+        throw new Error("Gagal mengupdate status");
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.message,
+      });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  // Handle approve reschedule
   const handleApproveReschedule = (interview, participant) => {
     router.push(
       `/profile/recruiter/dashboard/interview/reschedule?interviewId=${interview.id}&participantId=${participant.id}`
     );
   };
 
-  // Handle reject reschedule - mark as failed
+  // Handle reject reschedule
   const handleRejectReschedule = async (interview, participant) => {
+    // ... existing logic ...
     const result = await Swal.fire({
       title: "Tolak Permintaan Reschedule?",
       html: `
@@ -89,9 +173,9 @@ export default function RecruiterInterviewsPage() {
     if (!result.isConfirmed) return;
 
     try {
+      setProcessingId(participant.id);
       const token = localStorage.getItem("token");
 
-      // Update participant status to DECLINED (rejected)
       const response = await fetch(
         `/api/profile/recruiter/interviews/${interview.id}/participants/${participant.id}`,
         {
@@ -111,36 +195,29 @@ export default function RecruiterInterviewsPage() {
         Swal.fire({
           icon: "success",
           title: "Reschedule Ditolak",
-          text: "Interview kandidat ini telah dibatalkan",
-          timer: 2000,
+          timer: 1500,
           showConfirmButton: false,
         });
         loadInterviews();
       } else {
-        const data = await response.json();
-        throw new Error(data.error);
+        throw new Error("Gagal menolak reschedule");
       }
     } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Gagal",
-        text: error.message || "Gagal menolak reschedule",
-      });
+      Swal.fire({ icon: "error", title: "Gagal", text: error.message });
+    } finally {
+      setProcessingId(null);
     }
   };
 
-  // Handle delete interview - mark as rejected
+  // Handle delete interview
   const handleDeleteInterview = async (interview) => {
+    // ... existing logic ...
     const result = await Swal.fire({
       title: "Hapus Interview?",
-      html: `
-                <p>Menghapus interview akan otomatis menolak semua kandidat yang tergabung.</p>
-                <p class="text-red-600 mt-2 font-semibold">Interview: ${interview.title}</p>
-            `,
+      text: "Menghapus interview akan otomatis menolak semua kandidat yang tergabung.",
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Ya, Hapus",
-      cancelButtonText: "Batal",
       confirmButtonColor: "#ef4444",
     });
 
@@ -148,91 +225,25 @@ export default function RecruiterInterviewsPage() {
 
     try {
       const token = localStorage.getItem("token");
-
-      const response = await fetch(
-        `/api/profile/recruiter/interviews/${interview.id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.ok) {
-        Swal.fire({
-          icon: "success",
-          title: "Interview Dihapus",
-          text: "Semua kandidat terkait telah ditolak",
-          timer: 2000,
-          showConfirmButton: false,
-        });
-        loadInterviews();
-      } else {
-        const data = await response.json();
-        throw new Error(data.error);
-      }
-    } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Gagal",
-        text: error.message || "Gagal menghapus interview",
+      await fetch(`/api/profile/recruiter/interviews/${interview.id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
       });
+      loadInterviews();
+    } catch (error) {
+      Swal.fire({ icon: "error", title: "Error" });
     }
   };
 
-  // Handle mark as complete
   const handleMarkComplete = async (interview) => {
-    const result = await Swal.fire({
-      title: "Selesaikan Interview?",
-      text: "Tandai interview ini sebagai selesai?",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Ya, Selesai",
-      cancelButtonText: "Batal",
-      confirmButtonColor: "#10b981",
-    });
-
-    if (!result.isConfirmed) return;
-
-    try {
-      const token = localStorage.getItem("token");
-
-      const response = await fetch(
-        `/api/profile/recruiter/interviews/${interview.id}/complete`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.ok) {
-        Swal.fire({
-          icon: "success",
-          title: "Interview Selesai",
-          text: "Status aplikasi kandidat telah diperbarui",
-          timer: 2000,
-          showConfirmButton: false,
-        });
-        loadInterviews();
-      } else {
-        const data = await response.json();
-        throw new Error(data.error);
-      }
-    } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Gagal",
-        text: error.message || "Gagal menyelesaikan interview",
-      });
-    }
+    // Use the new Room logic API or just redirect to Room?
+    // Redirect to room is better as user wants "Masuk Room" experience
+    router.push(`/profile/recruiter/dashboard/interview/room/${interview.id}`);
   };
 
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString("id-ID", {
-      weekday: "short",
+      weekday: "long",
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -246,7 +257,7 @@ export default function RecruiterInterviewsPage() {
     });
   };
 
-  // Filter interviews
+  // ... Filter logic ...
   const getFilteredInterviews = () => {
     if (activeFilter === "all") return interviews;
     if (activeFilter === "scheduled")
@@ -263,8 +274,6 @@ export default function RecruiterInterviewsPage() {
   };
 
   const filteredInterviews = getFilteredInterviews();
-
-  // Count reschedule requests
   const rescheduleCount = interviews.reduce((count, interview) => {
     return (
       count +
@@ -277,10 +286,7 @@ export default function RecruiterInterviewsPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Memuat interview...</p>
-        </div>
+        <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
       </div>
     );
   }
@@ -289,14 +295,14 @@ export default function RecruiterInterviewsPage() {
     <div className="min-h-screen bg-gray-50 pb-8">
       <div className="container mx-auto px-4 max-w-6xl">
         {/* Header */}
-        <div className="mb-6">
-          <Link href="/profile/recruiter/dashboard">
-            <button className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition mb-4">
-              <ArrowLeft className="w-5 h-5" />
-              Kembali ke Dashboard
-            </button>
+        <div className="mb-6 pt-6">
+          <Link
+            href="/profile/recruiter/dashboard"
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-blue-600 transition mb-4"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Kembali ke Dashboard
           </Link>
-
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Kelola Interview
           </h1>
@@ -305,317 +311,144 @@ export default function RecruiterInterviewsPage() {
           </p>
         </div>
 
-        {/* Stats - Clickable Cards */}
+        {/* Stats Filter Tabs (Simplified for brevity, same layout) */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          {/* Total */}
-          <button
+          <StatsButton
+            active={activeFilter === "all"}
             onClick={() => setActiveFilter("all")}
-            className={`rounded-xl shadow-sm p-4 transition-all ${
-              activeFilter === "all"
-                ? "bg-blue-600 text-white ring-2 ring-blue-600 ring-offset-2"
-                : "bg-white hover:bg-blue-50 border border-gray-200"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div className="text-left">
-                <p
-                  className={`text-xs font-medium ${
-                    activeFilter === "all" ? "text-blue-100" : "text-gray-500"
-                  }`}
-                >
-                  Total
-                </p>
-                <p className="text-2xl font-bold">{stats?.total || 0}</p>
-              </div>
-              <Calendar
-                className={`w-8 h-8 ${
-                  activeFilter === "all" ? "text-blue-200" : "text-blue-600"
-                }`}
-              />
-            </div>
-          </button>
-
-          {/* Scheduled */}
-          <button
+            color="blue"
+            label="Total"
+            value={stats?.total || 0}
+            icon={Calendar}
+          />
+          <StatsButton
+            active={activeFilter === "scheduled"}
             onClick={() => setActiveFilter("scheduled")}
-            className={`rounded-xl shadow-sm p-4 transition-all ${
-              activeFilter === "scheduled"
-                ? "bg-green-600 text-white ring-2 ring-green-600 ring-offset-2"
-                : "bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 hover:border-green-400"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div className="text-left">
-                <p
-                  className={`text-xs font-medium ${
-                    activeFilter === "scheduled"
-                      ? "text-green-100"
-                      : "text-green-700"
-                  }`}
-                >
-                  Terjadwal
-                </p>
-                <p
-                  className={`text-2xl font-bold ${
-                    activeFilter === "scheduled"
-                      ? "text-white"
-                      : "text-green-900"
-                  }`}
-                >
-                  {stats?.scheduled || 0}
-                </p>
-              </div>
-              <CheckCircle
-                className={`w-8 h-8 ${
-                  activeFilter === "scheduled"
-                    ? "text-green-200"
-                    : "text-green-600"
-                }`}
-              />
-            </div>
-          </button>
-
-          {/* Reschedule Requests */}
-          <button
+            color="green"
+            label="Terjadwal"
+            value={stats?.scheduled || 0}
+            icon={CheckCircle}
+          />
+          <StatsButton
+            active={activeFilter === "reschedule"}
             onClick={() => setActiveFilter("reschedule")}
-            className={`rounded-xl shadow-sm p-4 transition-all relative ${
-              activeFilter === "reschedule"
-                ? "bg-orange-500 text-white ring-2 ring-orange-500 ring-offset-2"
-                : "bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 hover:border-orange-400"
-            }`}
-          >
-            {rescheduleCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center animate-pulse">
-                {rescheduleCount}
-              </span>
-            )}
-            <div className="flex items-center justify-between">
-              <div className="text-left">
-                <p
-                  className={`text-xs font-medium ${
-                    activeFilter === "reschedule"
-                      ? "text-orange-100"
-                      : "text-orange-700"
-                  }`}
-                >
-                  Reschedule
-                </p>
-                <p
-                  className={`text-2xl font-bold ${
-                    activeFilter === "reschedule"
-                      ? "text-white"
-                      : "text-orange-900"
-                  }`}
-                >
-                  {rescheduleCount}
-                </p>
-              </div>
-              <RefreshCw
-                className={`w-8 h-8 ${
-                  activeFilter === "reschedule"
-                    ? "text-orange-200"
-                    : "text-orange-600"
-                }`}
-              />
-            </div>
-          </button>
-
-          {/* Completed */}
-          <button
+            color="orange"
+            label="Reschedule"
+            value={rescheduleCount}
+            icon={RefreshCw}
+            badge={rescheduleCount > 0 ? rescheduleCount : null}
+          />
+          <StatsButton
+            active={activeFilter === "completed"}
             onClick={() => setActiveFilter("completed")}
-            className={`rounded-xl shadow-sm p-4 transition-all ${
-              activeFilter === "completed"
-                ? "bg-purple-600 text-white ring-2 ring-purple-600 ring-offset-2"
-                : "bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 hover:border-purple-400"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div className="text-left">
-                <p
-                  className={`text-xs font-medium ${
-                    activeFilter === "completed"
-                      ? "text-purple-100"
-                      : "text-purple-700"
-                  }`}
-                >
-                  Selesai
-                </p>
-                <p
-                  className={`text-2xl font-bold ${
-                    activeFilter === "completed"
-                      ? "text-white"
-                      : "text-purple-900"
-                  }`}
-                >
-                  {stats?.completed || 0}
-                </p>
-              </div>
-              <Check
-                className={`w-8 h-8 ${
-                  activeFilter === "completed"
-                    ? "text-purple-200"
-                    : "text-purple-600"
-                }`}
-              />
-            </div>
-          </button>
-
-          {/* Cancelled */}
-          <button
+            color="purple"
+            label="Selesai"
+            value={stats?.completed || 0}
+            icon={Check}
+          />
+          <StatsButton
+            active={activeFilter === "cancelled"}
             onClick={() => setActiveFilter("cancelled")}
-            className={`rounded-xl shadow-sm p-4 transition-all ${
-              activeFilter === "cancelled"
-                ? "bg-gray-600 text-white ring-2 ring-gray-600 ring-offset-2"
-                : "bg-gray-100 border border-gray-200 hover:border-gray-400"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div className="text-left">
-                <p
-                  className={`text-xs font-medium ${
-                    activeFilter === "cancelled"
-                      ? "text-gray-300"
-                      : "text-gray-600"
-                  }`}
-                >
-                  Dibatalkan
-                </p>
-                <p className="text-2xl font-bold">{stats?.cancelled || 0}</p>
-              </div>
-              <XCircle
-                className={`w-8 h-8 ${
-                  activeFilter === "cancelled"
-                    ? "text-gray-400"
-                    : "text-gray-400"
-                }`}
-              />
-            </div>
-          </button>
+            color="gray"
+            label="Dibatalkan"
+            value={stats?.cancelled || 0}
+            icon={XCircle}
+          />
         </div>
 
         {/* Interview List */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           {filteredInterviews.map((interview) => {
+            const isStarted = isInterviewStarted(interview.scheduledAt);
+            const isCompleted = interview.status === "COMPLETED";
             const rescheduleParticipants =
               interview.participants?.filter(
                 (p) => p.status === "RESCHEDULE_REQUESTED"
               ) || [];
-            const hasRescheduleRequest = rescheduleParticipants.length > 0;
 
             return (
               <div
                 key={interview.id}
-                className={`bg-white rounded-2xl shadow-lg p-6 border-2 ${
-                  hasRescheduleRequest ? "border-orange-300" : "border-gray-200"
-                }`}
+                className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow duration-300"
               >
-                {/* Interview Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">
-                      {interview.title}
-                    </h3>
-                    <div className="flex items-center gap-4 text-gray-600 mt-1">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        {formatDate(interview.scheduledAt)}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {formatTime(interview.scheduledAt)} WIB
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Users className="w-4 h-4" />
-                        {interview.participants?.length || 0} kandidat
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 mt-4 md:mt-0">
-                    {interview.status === "SCHEDULED" && (
-                      <>
-                        {interview.meetingUrl && (
-                          <a
-                            href={interview.meetingUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-4 py-2 bg-gradient-to-r from-[#03587f] to-[#024666] text-white rounded-lg hover:from-[#024666] hover:to-[#013344] transition flex items-center gap-2 shadow-lg"
-                          >
-                            <Video className="w-4 h-4" />
-                            Masuk Interview
-                            <ExternalLink className="w-4 h-4" />
-                          </a>
+                {/* Header Content */}
+                <div className="p-6">
+                  <div className="flex flex-col md:flex-row justify-between mb-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        {interview.title}
+                        {interview.status === "CANCELLED" && (
+                          <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">
+                            Dibatalkan
+                          </span>
                         )}
-                        <button
-                          onClick={() => handleMarkComplete(interview)}
-                          className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition flex items-center gap-2"
-                        >
-                          <Check className="w-4 h-4" />
-                          Selesai
-                        </button>
+                        {isCompleted && (
+                          <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded">
+                            Selesai
+                          </span>
+                        )}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-4 text-gray-600 mt-2 text-sm">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />{" "}
+                          {formatDate(interview.scheduledAt)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-4 h-4" />{" "}
+                          {formatTime(interview.scheduledAt)} WIB
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Users className="w-4 h-4" />{" "}
+                          {interview.participants?.length || 0} kandidat
+                        </span>
+                        {interview.meetingType === "In Person" ? (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-4 h-4" /> Tatap Muka
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1">
+                            <Video className="w-4 h-4" /> Online
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Status Badge for Interview */}
+                    <div className="mt-4 md:mt-0">
+                      {/* You can put Delete button here for Scheduled interviews */}
+                      {interview.status === "SCHEDULED" && !isStarted && (
                         <button
                           onClick={() => handleDeleteInterview(interview)}
-                          className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition flex items-center gap-2"
+                          className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition"
+                          title="Batalkan Interview"
                         >
-                          <Trash2 className="w-4 h-4" />
-                          Hapus
+                          <Trash2 className="w-5 h-5" />
                         </button>
-                      </>
-                    )}
-                    {interview.status === "COMPLETED" && (
-                      <span className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4" />
-                        Selesai
-                      </span>
-                    )}
-                    {interview.status === "CANCELLED" && (
-                      <span className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg flex items-center gap-2">
-                        <XCircle className="w-4 h-4" />
-                        Dibatalkan
-                      </span>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                {/* Reschedule Requests */}
-                {hasRescheduleRequest && (
-                  <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-4">
-                    <h4 className="font-bold text-orange-800 mb-3 flex items-center gap-2">
-                      <RefreshCw className="w-5 h-5" />
-                      Permintaan Reschedule ({rescheduleParticipants.length})
-                    </h4>
-                    <div className="space-y-3">
+                  {/* Reschedule Alerts */}
+                  {rescheduleParticipants.length > 0 && (
+                    <div className="mb-6 bg-orange-50 border border-orange-200 rounded-xl p-4">
+                      <h4 className="font-bold text-orange-800 text-sm mb-2 flex items-center">
+                        <AlertTriangle className="w-4 h-4 mr-2" /> Permintaan
+                        Reschedule
+                      </h4>
                       {rescheduleParticipants.map((participant) => (
                         <div
                           key={participant.id}
-                          className="bg-white rounded-lg p-4 border border-orange-200"
+                          className="bg-white p-3 rounded-lg border border-orange-100 mb-2 last:mb-0"
                         >
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                                {participant.jobseeker?.photo ? (
-                                  <img
-                                    src={participant.jobseeker.photo}
-                                    alt=""
-                                    className="w-10 h-10 rounded-full object-cover"
-                                  />
-                                ) : (
-                                  <span className="text-orange-600 font-bold">
-                                    {participant.jobseeker?.firstName?.charAt(
-                                      0
-                                    ) || "?"}
-                                  </span>
-                                )}
-                              </div>
-                              <div>
-                                <p className="font-semibold text-gray-900">
-                                  {participant.jobseeker?.firstName}{" "}
-                                  {participant.jobseeker?.lastName}
-                                </p>
-                                <p className="text-sm text-gray-500">
-                                  {participant.jobseeker?.currentTitle ||
-                                    "Kandidat"}
-                                </p>
-                              </div>
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-semibold text-gray-900 text-sm">
+                                {participant.jobseeker?.firstName}{" "}
+                                {participant.jobseeker?.lastName}
+                              </p>
+                              <p className="text-orange-600 text-xs mt-1">
+                                "{participant.responseMessage}"
+                              </p>
                             </div>
                             <div className="flex gap-2">
                               <button
@@ -625,102 +458,167 @@ export default function RecruiterInterviewsPage() {
                                     participant
                                   )
                                 }
-                                className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm flex items-center gap-1"
+                                className="text-xs bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700"
                               >
-                                <Check className="w-4 h-4" />
-                                Jadwalkan Ulang
+                                Terima
                               </button>
                               <button
                                 onClick={() =>
                                   handleRejectReschedule(interview, participant)
                                 }
-                                className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm flex items-center gap-1"
+                                className="text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg hover:bg-red-700"
                               >
-                                <X className="w-4 h-4" />
                                 Tolak
                               </button>
                             </div>
                           </div>
-                          {participant.responseMessage && (
-                            <div className="mt-3 p-3 bg-orange-50 rounded-lg">
-                              <p className="text-sm text-orange-800">
-                                <strong>Alasan:</strong>{" "}
-                                {participant.responseMessage}
-                              </p>
-                            </div>
-                          )}
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Participants List */}
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-gray-700 mb-2">
-                    Kandidat:
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {/* Candidates List */}
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-gray-700 text-sm">
+                      Daftar Kandidat:
+                    </h4>
                     {interview.participants
                       ?.filter((p) => p.status !== "RESCHEDULE_REQUESTED")
-                      .map((participant) => (
-                        <div
-                          key={participant.id}
-                          className="flex items-center justify-between bg-gray-50 rounded-lg p-3"
-                        >
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                              {participant.jobseeker?.photo ? (
-                                <img
-                                  src={participant.jobseeker.photo}
-                                  alt=""
-                                  className="w-8 h-8 rounded-full object-cover"
-                                />
-                              ) : (
-                                <span className="text-gray-600 text-sm font-bold">
-                                  {participant.jobseeker?.firstName?.charAt(
-                                    0
-                                  ) || "?"}
-                                </span>
-                              )}
-                            </div>
-                            <span className="text-gray-800">
-                              {participant.jobseeker?.firstName}{" "}
-                              {participant.jobseeker?.lastName}
-                            </span>
-                          </div>
-                          <span
-                            className={`text-xs px-2 py-1 rounded-full ${
-                              participant.status === "ACCEPTED"
-                                ? "bg-green-100 text-green-700"
-                                : participant.status === "DECLINED"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-yellow-100 text-yellow-700"
-                            }`}
+                      .map((participant) => {
+                        const appStatus = participant.applications?.status; // Check application status if available, fallback to participant status logic
+                        let displayStatus = "Pending";
+                        let statusColor = "bg-yellow-100 text-yellow-700";
+
+                        if (participant.status === "ACCEPTED") {
+                          displayStatus = "Siap Interview";
+                          statusColor = "bg-blue-100 text-blue-700";
+                        } else if (participant.status === "DECLINED") {
+                          displayStatus = "Menolak";
+                          statusColor = "bg-red-100 text-red-700";
+                        } else if (participant.status === "COMPLETED") {
+                          displayStatus = "Interview Selesai";
+                          statusColor = "bg-green-100 text-green-700";
+                        }
+
+                        // Override if application status is final
+                        if (appStatus === "ACCEPTED") {
+                          displayStatus = "Diterima Bekerja";
+                          statusColor = "bg-green-600 text-white";
+                        } else if (appStatus === "REJECTED") {
+                          displayStatus = "Ditolak";
+                          statusColor = "bg-red-600 text-white";
+                        }
+
+                        return (
+                          <div
+                            key={participant.id}
+                            className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 gap-4"
                           >
-                            {participant.status === "ACCEPTED"
-                              ? "Hadir"
-                              : participant.status === "DECLINED"
-                              ? "Tidak Hadir"
-                              : "Pending"}
-                          </span>
-                        </div>
-                      ))}
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+                                {participant.jobseeker?.photo ? (
+                                  <img
+                                    src={participant.jobseeker.photo}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center font-bold text-gray-400">
+                                    {participant.jobseeker?.firstName?.[0]}
+                                  </div>
+                                )}
+                              </div>
+                              <div>
+                                <p className="font-semibold text-gray-900 text-sm">
+                                  {participant.jobseeker?.firstName}{" "}
+                                  {participant.jobseeker?.lastName}
+                                </p>
+                                <span
+                                  className={`text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded-full ${statusColor}`}
+                                >
+                                  {displayStatus}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Actions for Candidates (Accept/Reject) - Only if Interview Completed and Application Status is not yet final */}
+                            {isCompleted &&
+                              appStatus !== "ACCEPTED" &&
+                              appStatus !== "REJECTED" && (
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() =>
+                                      handleUpdateApplicationStatus(
+                                        participant.applicationId,
+                                        "ACCEPTED",
+                                        participant.jobseeker.firstName
+                                      )
+                                    }
+                                    disabled={
+                                      processingId === participant.applicationId
+                                    }
+                                    className="px-3 py-1.5 bg-green-100 text-green-700 text-xs font-bold rounded-lg hover:bg-green-200 transition flex items-center gap-1"
+                                  >
+                                    <Check className="w-3 h-3" /> Terima
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      handleUpdateApplicationStatus(
+                                        participant.applicationId,
+                                        "REJECTED",
+                                        participant.jobseeker.firstName
+                                      )
+                                    }
+                                    disabled={
+                                      processingId === participant.applicationId
+                                    }
+                                    className="px-3 py-1.5 bg-red-100 text-red-700 text-xs font-bold rounded-lg hover:bg-red-200 transition flex items-center gap-1"
+                                  >
+                                    <X className="w-3 h-3" /> Tolak
+                                  </button>
+                                </div>
+                              )}
+                          </div>
+                        );
+                      })}
                   </div>
                 </div>
 
-                {/* Meeting Link */}
-                {interview.meetingUrl && interview.status === "SCHEDULED" && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <a
-                      href={interview.meetingUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800"
-                    >
-                      <Video className="w-5 h-5" />
-                      Join Meeting
-                    </a>
+                {/* Footer Actions - ALWAYS AT BOTTOM */}
+                {interview.status === "SCHEDULED" && (
+                  <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 flex flex-wrap justify-end gap-3">
+                    {isStarted ? (
+                      <>
+                        {/* Started Actions */}
+                        {interview.meetingUrl && (
+                          <Link
+                            href={`/profile/recruiter/dashboard/interview/room/${interview.id}`}
+                            className="flex items-center gap-2 px-5 py-2.5 bg-white border border-blue-600 text-blue-600 font-bold rounded-xl hover:bg-blue-50 transition shadow-sm"
+                          >
+                            <Video className="w-4 h-4" /> Masuk Room
+                          </Link>
+                        )}
+                        <Link
+                          href={`/profile/recruiter/dashboard/interview/room/${interview.id}`}
+                          className="flex items-center gap-2 px-5 py-2.5 bg-[#00A753] text-white font-bold rounded-xl hover:bg-[#00964b] transition shadow-md"
+                        >
+                          <CheckCircle className="w-4 h-4" /> Selesaikan
+                          Interview
+                        </Link>
+                      </>
+                    ) : (
+                      /* Not Started Actions */
+                      <div className="flex items-center justify-between w-full">
+                        <span className="text-sm text-gray-500 italic flex items-center gap-2">
+                          <Clock className="w-4 h-4" /> Belum dimulai
+                        </span>
+                        <Link
+                          href={`/profile/recruiter/dashboard/interview/reschedule?interviewId=${interview.id}`}
+                          className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                        >
+                          Edit Jadwal
+                        </Link>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -730,7 +628,7 @@ export default function RecruiterInterviewsPage() {
 
         {/* Empty State */}
         {filteredInterviews.length === 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
+          <div className="bg-white rounded-2xl shadow-lg p-12 text-center mt-8">
             <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-gray-900 mb-2">
               Tidak Ada Interview
@@ -744,5 +642,98 @@ export default function RecruiterInterviewsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+// Stats Button Component
+function StatsButton({
+  active,
+  onClick,
+  color,
+  label,
+  value,
+  icon: Icon,
+  badge,
+}) {
+  const colorStyles = {
+    blue: {
+      active: "bg-blue-600 text-white ring-2 ring-blue-600 ring-offset-2",
+      inactive: "bg-white hover:bg-blue-50 border border-gray-200",
+      iconActive: "text-blue-200",
+      iconInactive: "text-blue-600",
+      textActive: "text-blue-100",
+      textInactive: "text-gray-500",
+    },
+    green: {
+      active: "bg-green-600 text-white ring-2 ring-green-600 ring-offset-2",
+      inactive:
+        "bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 hover:border-green-400",
+      iconActive: "text-green-200",
+      iconInactive: "text-green-600",
+      textActive: "text-green-100",
+      textInactive: "text-green-700",
+    },
+    orange: {
+      active: "bg-orange-500 text-white ring-2 ring-orange-500 ring-offset-2",
+      inactive:
+        "bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 hover:border-orange-400",
+      iconActive: "text-orange-200",
+      iconInactive: "text-orange-600",
+      textActive: "text-orange-100",
+      textInactive: "text-orange-700",
+    },
+    purple: {
+      active: "bg-purple-600 text-white ring-2 ring-purple-600 ring-offset-2",
+      inactive:
+        "bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 hover:border-purple-400",
+      iconActive: "text-purple-200",
+      iconInactive: "text-purple-600",
+      textActive: "text-purple-100",
+      textInactive: "text-purple-700",
+    },
+    gray: {
+      active: "bg-gray-600 text-white ring-2 ring-gray-600 ring-offset-2",
+      inactive: "bg-gray-100 border border-gray-200 hover:border-gray-400",
+      iconActive: "text-gray-300",
+      iconInactive: "text-gray-400",
+      textActive: "text-gray-300",
+      textInactive: "text-gray-600",
+    },
+  };
+
+  const style = colorStyles[color] || colorStyles.blue;
+
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-xl shadow-sm p-4 transition-all relative text-left ${
+        active ? style.active : style.inactive
+      }`}
+    >
+      {badge && (
+        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center animate-pulse border-2 border-white">
+          {badge}
+        </span>
+      )}
+      <div className="flex items-center justify-between">
+        <div>
+          <p
+            className={`text-xs font-medium ${
+              active ? style.textActive : style.textInactive
+            }`}
+          >
+            {label}
+          </p>
+          <p className={`text-2xl font-bold ${active ? "text-white" : ""}`}>
+            {value}
+          </p>
+        </div>
+        <Icon
+          className={`w-8 h-8 ${
+            active ? style.iconActive : style.iconInactive
+          }`}
+        />
+      </div>
+    </button>
   );
 }
