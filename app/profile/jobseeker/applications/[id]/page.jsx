@@ -204,6 +204,7 @@ export default function ApplicationDetailPage() {
       setUploadingLetter(true);
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("bucket", "resignation"); // Specify bucket to allow PDF upload
 
       const token = localStorage.getItem("token");
       const response = await fetch("/api/upload", {

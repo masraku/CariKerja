@@ -17,7 +17,7 @@ function getBucketName(type, bucket) {
     // CV, AK1, Sertifikat, KTP -> Resume bucket
     if (bucket?.includes('cv') || bucket?.includes('ak1') || 
         bucket?.includes('sertifikat') || bucket?.includes('certificate') ||
-        bucket?.includes('ktp') || bucket?.includes('resume')) {
+        bucket?.includes('ktp') || bucket?.includes('resume') || bucket?.includes('resignation')) {
         return 'Resume'
     }
     
@@ -70,6 +70,7 @@ export async function POST(request) {
                           bucket?.includes('ijazah') ||
                           bucket?.includes('ktp') ||
                           bucket?.includes('ak1') ||
+                          bucket?.includes('resignation') ||
                           bucket?.includes('resume')
         
         if (isDocument) {
@@ -268,6 +269,7 @@ export async function POST(request) {
             bucket.includes('sertifikat') ||
             bucket.includes('ktp') ||
             bucket.includes('ak1') ||
+            bucket.includes('resignation') ||
             bucket.includes('resume')
         )) {
             const jobseeker = await prisma.jobseekers.findUnique({
@@ -303,6 +305,9 @@ export async function POST(request) {
                 uploadBucket = 'Resume'
             } else if (bucket.includes('ak1')) {
                 folderName = 'ak1'
+                uploadBucket = 'Resume'
+            } else if (bucket.includes('resignation')) {
+                folderName = 'resignation'
                 uploadBucket = 'Resume'
             }
 
