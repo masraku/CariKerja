@@ -34,14 +34,27 @@ export default function ResignationsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [processingId, setProcessingId] = useState(null);
+  const [listLoading, setListLoading] = useState(false);
 
+  // Initial load
   useEffect(() => {
-    loadResignations();
+    loadResignations(true);
+  }, []);
+
+  // Filter change - only refresh list
+  useEffect(() => {
+    if (!loading) {
+      loadResignations(false);
+    }
   }, [statusFilter]);
 
-  const loadResignations = async () => {
+  const loadResignations = async (isInitial = false) => {
     try {
-      setLoading(true);
+      if (isInitial) {
+        setLoading(true);
+      } else {
+        setListLoading(true);
+      }
       const token = localStorage.getItem("token");
 
       const params = new URLSearchParams();
@@ -58,9 +71,11 @@ export default function ResignationsPage() {
       const data = await response.json();
       if (data.success) {
         setResignations(data.resignations || []);
-        setStats(
-          data.stats || { total: 0, pending: 0, approved: 0, rejected: 0 }
-        );
+        if (isInitial) {
+          setStats(
+            data.stats || { total: 0, pending: 0, approved: 0, rejected: 0 }
+          );
+        }
       }
     } catch (error) {
       Swal.fire({
@@ -70,6 +85,7 @@ export default function ResignationsPage() {
       });
     } finally {
       setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -331,7 +347,12 @@ export default function ResignationsPage() {
         </div>
 
         {/* List */}
-        {filteredResignations.length === 0 ? (
+        {listLoading ? (
+          <div className="bg-white rounded-xl shadow-sm p-12 text-center">
+            <Loader2 className="w-10 h-10 text-orange-500 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Memuat data...</p>
+          </div>
+        ) : filteredResignations.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm p-12 text-center">
             <LogOut className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
