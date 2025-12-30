@@ -40,6 +40,14 @@ export default function JobDetailPage() {
   const [stats, setStats] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    // Sync with client time and update every minute for interview status
+    setCurrentTime(new Date());
+    const timer = setInterval(() => setCurrentTime(new Date()), 10000); // Check every 10s
+    return () => clearInterval(timer);
+  }, []);
   const [filteredApplications, setFilteredApplications] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedApplications, setSelectedApplications] = useState([]);
@@ -1075,19 +1083,39 @@ export default function JobDetailPage() {
                   Cek Jadwal
                 </Link>
               ) : (
-                application.interview?.meetingUrl && (
-                  <a
-                    href={application.interview.meetingUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition text-sm font-medium shadow-lg"
-                  >
-                    <Video className="w-4 h-4" />
-                    Masuk Interview
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                )
+                <>
+                  {/* Interview Actions - synced with Interview List Page */}
+                  {application.interview?.meetingUrl && (
+                    <a
+                      href={application.interview.meetingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white border border-blue-600 text-blue-600 rounded-xl hover:bg-blue-50 transition text-sm font-bold shadow-sm ${
+                        currentTime >=
+                        new Date(application.interview.scheduledAt)
+                          ? ""
+                          : "opacity-100"
+                      }`}
+                    >
+                      <Video className="w-4 h-4" />
+                      Masuk Interview
+                    </a>
+                  )}
+
+                  {/* Finish Button - Only shows if time passed */}
+                  {currentTime >=
+                    new Date(application.interview?.scheduledAt) && (
+                    <Link
+                      href={`/profile/recruiter/dashboard/interview/room/${application.interview?.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-[#00A753] text-white rounded-xl hover:bg-[#00964b] transition text-sm font-bold shadow-lg"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Selesaikan
+                    </Link>
+                  )}
+                </>
               )}
               <button
                 onClick={(e) => {
