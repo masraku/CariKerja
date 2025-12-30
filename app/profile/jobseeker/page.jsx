@@ -171,6 +171,10 @@ function JobseekerProfileContent() {
     preferredJobType: "",
     willingToRelocate: false,
     availableFrom: "",
+
+    // Disability
+    hasDisability: false,
+    disabilityType: "",
   });
 
   // Steps configuration (simplified to 2 steps)
@@ -374,6 +378,10 @@ function JobseekerProfileContent() {
           preferredJobType: profile.preferredJobType || "",
           willingToRelocate: profile.willingToRelocate || false,
           availableFrom: formatDate(profile.availableFrom) || "",
+
+          // Disability
+          hasDisability: profile.hasDisability || false,
+          disabilityType: profile.disabilityType || "",
         });
       }
     } catch (error) {

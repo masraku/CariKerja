@@ -214,6 +214,12 @@ export default function AdminJobseekerDetail() {
                     Profil Lengkap
                   </span>
                 )}
+                {profile.hasDisability && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 text-white rounded-full text-xs font-bold">
+                    ♿ Disabilitas
+                    {profile.disabilityType && `: ${profile.disabilityType}`}
+                  </span>
+                )}
               </div>
             </div>
           </div>

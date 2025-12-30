@@ -350,6 +350,8 @@ model jobseekers {
   lastEducationMajor       String?
   sertifikatUrl            String?
   suratPengalamanUrl       String?
+  hasDisability            Boolean            @default(false)
+  disabilityType           String?
   applications             applications[]
   certifications           certifications[]
   educations               educations[]

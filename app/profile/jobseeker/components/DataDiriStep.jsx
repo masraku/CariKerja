@@ -434,6 +434,81 @@ export default function DataDiriStep({
           </div>
         </div>
       </div>
+
+      {/* ====== INFORMASI DISABILITAS ====== */}
+      <div className="bg-orange-50 rounded-2xl p-6 space-y-4 border border-orange-200">
+        <h3 className="font-bold text-gray-800 flex items-center gap-2 text-lg">
+          <span className="text-xl">♿</span>
+          Informasi Disabilitas
+        </h3>
+        <p className="text-sm text-gray-600">
+          Informasi ini bersifat opsional dan membantu kami menghubungkan Anda
+          dengan lowongan yang ramah disabilitas.
+        </p>
+
+        <div className="space-y-4">
+          {/* Checkbox Disabilitas */}
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              name="hasDisability"
+              id="hasDisability"
+              checked={formData.hasDisability || false}
+              onChange={handleInputChange}
+              className="w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+            />
+            <label
+              htmlFor="hasDisability"
+              className="text-gray-700 font-medium"
+            >
+              Saya adalah penyandang disabilitas
+            </label>
+          </div>
+
+          {/* Jenis Disabilitas - Tampil jika checkbox dicentang */}
+          {formData.hasDisability && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Jenis Disabilitas
+              </label>
+              <select
+                name="disabilityType"
+                value={formData.disabilityType || ""}
+                onChange={handleInputChange}
+                className="w-full text-gray-900 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              >
+                <option value="">Pilih Jenis Disabilitas</option>
+                <option value="Tuna Netra">
+                  Tuna Netra (Gangguan Penglihatan)
+                </option>
+                <option value="Tuna Rungu">
+                  Tuna Rungu (Gangguan Pendengaran)
+                </option>
+                <option value="Tuna Wicara">
+                  Tuna Wicara (Gangguan Bicara)
+                </option>
+                <option value="Tuna Daksa">
+                  Tuna Daksa (Disabilitas Fisik)
+                </option>
+                <option value="Tuna Grahita">
+                  Tuna Grahita (Disabilitas Intelektual)
+                </option>
+                <option value="Tuna Laras">
+                  Tuna Laras (Gangguan Emosi/Perilaku)
+                </option>
+                <option value="Disabilitas Ganda">
+                  Disabilitas Ganda/Majemuk
+                </option>
+                <option value="Lainnya">Lainnya</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-2">
+                Informasi ini akan membantu recruiter menyesuaikan lingkungan
+                kerja untuk Anda
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
       <div className="bg-gray-50 rounded-2xl p-6 space-y-4">
         <h3 className="font-bold text-gray-800 flex items-center gap-2 text-lg">
           <FileText className="w-5 h-5 text-indigo-600" />

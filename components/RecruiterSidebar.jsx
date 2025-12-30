@@ -35,9 +35,9 @@ export default function RecruiterSidebar() {
       href: "/profile/recruiter/dashboard/jobs",
     },
     {
-      icon: Users,
-      label: "Pelamar",
-      href: "/profile/recruiter/dashboard/applications",
+      icon: LogOut,
+      label: "Pengajuan Resign",
+      href: "/profile/recruiter/dashboard/resignations",
     },
     { icon: User, label: "Profil Perusahaan", href: "/profile/recruiter" },
   ];
@@ -96,11 +96,11 @@ export default function RecruiterSidebar() {
                 "/profile/recruiter/dashboard/jobs"
               );
             } else if (
-              item.href === "/profile/recruiter/dashboard/applications"
+              item.href === "/profile/recruiter/dashboard/resignations"
             ) {
-              // Applications active for /dashboard/applications
+              // Resignations active for /dashboard/resignations
               isActive = pathname.startsWith(
-                "/profile/recruiter/dashboard/applications"
+                "/profile/recruiter/dashboard/resignations"
               );
             } else {
               // Other items: exact match

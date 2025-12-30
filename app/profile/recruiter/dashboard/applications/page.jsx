@@ -218,6 +218,11 @@ export default function AllApplicationsPage() {
                   {application.jobs.location}
                 </span>
               )}
+              {application.jobseekers.hasDisability && (
+                <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                  ♿ Disabilitas
+                </span>
+              )}
             </div>
           </div>
 
