@@ -467,43 +467,21 @@ export default function DataDiriStep({
 
           {/* Jenis Disabilitas - Tampil jika checkbox dicentang */}
           {formData.hasDisability && (
-            <div>
+            <div className="mt-4">
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Jenis Disabilitas
+                Jenis/Deskripsi Disabilitas
               </label>
-              <select
+              <textarea
                 name="disabilityType"
                 value={formData.disabilityType || ""}
                 onChange={handleInputChange}
-                className="w-full text-gray-900 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              >
-                <option value="">Pilih Jenis Disabilitas</option>
-                <option value="Tuna Netra">
-                  Tuna Netra (Gangguan Penglihatan)
-                </option>
-                <option value="Tuna Rungu">
-                  Tuna Rungu (Gangguan Pendengaran)
-                </option>
-                <option value="Tuna Wicara">
-                  Tuna Wicara (Gangguan Bicara)
-                </option>
-                <option value="Tuna Daksa">
-                  Tuna Daksa (Disabilitas Fisik)
-                </option>
-                <option value="Tuna Grahita">
-                  Tuna Grahita (Disabilitas Intelektual)
-                </option>
-                <option value="Tuna Laras">
-                  Tuna Laras (Gangguan Emosi/Perilaku)
-                </option>
-                <option value="Disabilitas Ganda">
-                  Disabilitas Ganda/Majemuk
-                </option>
-                <option value="Lainnya">Lainnya</option>
-              </select>
+                rows={3}
+                className="w-full text-gray-900 px-4 py-3 border border-orange-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                placeholder="Contoh: Tuna rungu, Tuna daksa ringan, Tuna netra dengan alat bantu, dll."
+              />
               <p className="text-xs text-gray-500 mt-2">
-                Informasi ini akan membantu recruiter menyesuaikan lingkungan
-                kerja untuk Anda
+                Jelaskan jenis disabilitas Anda agar recruiter dapat
+                menyesuaikan lingkungan kerja untuk Anda
               </p>
             </div>
           )}
