@@ -371,23 +371,38 @@ export default function JobDetailPage() {
           <div className="lg:col-span-2 space-y-8">
             {/* Disability Friendly Prominent Banner */}
             {job.isDisabilityFriendly && (
-              <div className="bg-gradient-to-r from-green-600 to-green-500 rounded-3xl p-6 shadow-lg shadow-green-500/20 text-white flex flex-col sm:flex-row items-center gap-6 animate-in slide-in-from-bottom-2">
-                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <Accessibility className="w-8 h-8" />
+              <div className="bg-gradient-to-r from-green-600 to-green-500 rounded-3xl p-6 shadow-lg shadow-green-500/20 text-white animate-in slide-in-from-bottom-2">
+                <div className="flex flex-col sm:flex-row items-center gap-6">
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center flex-shrink-0">
+                    <Accessibility className="w-8 h-8" />
+                  </div>
+                  <div className="flex-1 text-center sm:text-left">
+                    <h3 className="font-bold text-xl leading-tight mb-1">
+                      Ramah Disabilitas
+                    </h3>
+                    <p className="text-green-50 opacity-90">
+                      Lowongan ini terbuka dan inklusif untuk teman-teman
+                      difabel.
+                    </p>
+                  </div>
+                  <div className="hidden sm:block">
+                    <span className="px-4 py-2 bg-white/20 rounded-xl text-sm font-bold backdrop-blur-md border border-white/10">
+                      Inclusive Job
+                    </span>
+                  </div>
                 </div>
-                <div className="flex-1 text-center sm:text-left">
-                  <h3 className="font-bold text-xl leading-tight mb-1">
-                    Ramah Disabilitas
-                  </h3>
-                  <p className="text-green-50 opacity-90">
-                    Lowongan ini terbuka dan inklusif untuk teman-teman difabel.
-                  </p>
-                </div>
-                <div className="hidden sm:block">
-                  <span className="px-4 py-2 bg-white/20 rounded-xl text-sm font-bold backdrop-blur-md border border-white/10">
-                    Inclusive Job
-                  </span>
-                </div>
+
+                {/* Disability Description */}
+                {job.disabilityDescription && (
+                  <div className="mt-4 pt-4 border-t border-white/20">
+                    <p className="text-sm font-semibold text-green-100 mb-2">
+                      Jenis Disabilitas yang Dapat Melamar:
+                    </p>
+                    <p className="text-green-50 bg-white/10 rounded-xl px-4 py-3">
+                      {job.disabilityDescription}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 

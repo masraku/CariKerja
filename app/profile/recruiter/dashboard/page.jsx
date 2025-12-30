@@ -21,6 +21,7 @@ import {
   Plus,
   ArrowRight,
   AlertCircle,
+  LogOut,
 } from "lucide-react";
 
 export default function RecruiterDashboard() {
@@ -350,7 +351,7 @@ export default function RecruiterDashboard() {
           {/* Left Col: Actions & Jobs */}
           <div className="lg:col-span-2 space-y-8">
             {/* Actions */}
-            <div className="grid sm:grid-cols-3 gap-4">
+            <div className="grid sm:grid-cols-4 gap-4">
               <button
                 onClick={() => router.push("/profile/recruiter/post-job")}
                 disabled={
@@ -402,6 +403,24 @@ export default function RecruiterDashboard() {
                 <h3 className="font-bold text-gray-900">Kelola Pelamar</h3>
                 <p className="text-sm text-gray-500 mt-1">
                   Review lamaran masuk
+                </p>
+              </button>
+
+              <button
+                onClick={() =>
+                  router.push("/profile/recruiter/dashboard/resignations")
+                }
+                className="p-4 bg-white border border-gray-200 rounded-2xl hover:border-orange-400 hover:shadow-md transition-all group text-left relative overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <LogOut className="w-16 h-16 text-orange-600" />
+                </div>
+                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 mb-3 group-hover:scale-110 transition-transform">
+                  <LogOut className="w-5 h-5" />
+                </div>
+                <h3 className="font-bold text-gray-900">Pengajuan Resign</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Kelola pengunduran diri
                 </p>
               </button>
             </div>

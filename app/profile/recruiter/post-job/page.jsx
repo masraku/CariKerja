@@ -135,6 +135,7 @@ export default function PostJobPage() {
     isShift: false,
     shiftCount: "",
     isDisabilityFriendly: false,
+    disabilityDescription: "",
 
     // Review & Deadline (Step 3)
     applicationDeadline: "",
@@ -1291,6 +1292,9 @@ export default function PostJobPage() {
                         setFormData((prev) => ({
                           ...prev,
                           isDisabilityFriendly: e.target.checked,
+                          disabilityDescription: e.target.checked
+                            ? prev.disabilityDescription
+                            : "",
                         }))
                       }
                       className="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
@@ -1306,6 +1310,32 @@ export default function PostJobPage() {
                     Centang jika posisi ini dapat diisi oleh penyandang
                     disabilitas
                   </p>
+
+                  {/* Disability Description Input */}
+                  {formData.isDisabilityFriendly && (
+                    <div className="mt-4 ml-8">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Jenis Disabilitas yang Dapat Melamar
+                      </label>
+                      <textarea
+                        name="disabilityDescription"
+                        value={formData.disabilityDescription}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            disabilityDescription: e.target.value,
+                          }))
+                        }
+                        rows={3}
+                        className="w-full text-gray-900 px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                        placeholder="Contoh: Tuna rungu, Tuna daksa ringan, Tuna netra dengan alat bantu, dll."
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Jelaskan jenis disabilitas apa saja yang dapat melamar
+                        untuk posisi ini
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

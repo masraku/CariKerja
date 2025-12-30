@@ -64,7 +64,9 @@ export async function GET(request, context) {
               }
             }
           }
-        }
+        },
+        // Include resignation if any
+        resignation: true
       }
     })
 
@@ -143,7 +145,8 @@ export async function GET(request, context) {
                     }
                   }
                 }
-              }
+              },
+              resignation: true
             }
           })
         }

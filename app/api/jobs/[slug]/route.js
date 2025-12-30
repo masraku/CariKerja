@@ -171,6 +171,7 @@ export async function GET(request, context) {
       isShift: job.isShift,
       shiftCount: job.shiftCount,
       isDisabilityFriendly: job.isDisabilityFriendly,
+      disabilityDescription: job.disabilityDescription,
       applicationEmail: job.applicationEmail,
       externalApply: job.externalApply,
       isFeatured: job.isFeatured,

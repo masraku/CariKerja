@@ -28,6 +28,10 @@ import {
   RefreshCw,
   ChevronRight,
   Download,
+  LogOut,
+  Upload,
+  Loader2,
+  X,
 } from "lucide-react";
 
 export default function ApplicationDetailPage() {
@@ -36,6 +40,12 @@ export default function ApplicationDetailPage() {
   const [loading, setLoading] = useState(true);
   const [application, setApplication] = useState(null);
   const [interview, setInterview] = useState(null);
+  const [showResignModal, setShowResignModal] = useState(false);
+  const [resignReason, setResignReason] = useState("");
+  const [resignLetterUrl, setResignLetterUrl] = useState("");
+  const [uploadingLetter, setUploadingLetter] = useState(false);
+  const [submittingResign, setSubmittingResign] = useState(false);
+  const [resignationStatus, setResignationStatus] = useState(null);
 
   useEffect(() => {
     if (params.id) {
@@ -102,8 +112,7 @@ export default function ApplicationDetailPage() {
         const data = await response.json();
         setInterview(data.interview);
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   // Handle Accept Offer
@@ -243,6 +252,120 @@ export default function ApplicationDetailPage() {
     }
   };
 
+  // Handle Letter Upload
+  const handleLetterUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      Swal.fire({
+        icon: "error",
+        title: "Format Salah",
+        text: "File harus dalam format PDF",
+      });
+      return;
+    }
+
+    try {
+      setUploadingLetter(true);
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (data.url) {
+        setResignLetterUrl(data.url);
+        Swal.fire({
+          icon: "success",
+          title: "Upload Berhasil",
+          text: "Surat pengunduran diri berhasil diupload",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      } else {
+        throw new Error("Upload failed");
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Upload Gagal",
+        text: "Gagal mengupload surat pengunduran diri",
+      });
+    } finally {
+      setUploadingLetter(false);
+    }
+  };
+
+  // Handle Resign Submit
+  const handleResignSubmit = async () => {
+    if (!resignReason.trim()) {
+      Swal.fire({
+        icon: "warning",
+        title: "Form Tidak Lengkap",
+        text: "Mohon isi alasan pengunduran diri",
+      });
+      return;
+    }
+
+    if (!resignLetterUrl) {
+      Swal.fire({
+        icon: "warning",
+        title: "Form Tidak Lengkap",
+        text: "Mohon upload surat pengunduran diri",
+      });
+      return;
+    }
+
+    try {
+      setSubmittingResign(true);
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/resignations/submit", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          applicationId: application.id,
+          reason: resignReason,
+          letterUrl: resignLetterUrl,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setShowResignModal(false);
+        setResignReason("");
+        setResignLetterUrl("");
+        Swal.fire({
+          icon: "success",
+          title: "Pengajuan Terkirim",
+          text: "Pengajuan pengunduran diri Anda telah dikirim dan akan diproses oleh perusahaan.",
+          confirmButtonColor: "#3b82f6",
+        });
+        loadApplicationDetail();
+      } else {
+        throw new Error(data.error || "Gagal mengajukan resign");
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: error.message || "Gagal mengajukan pengunduran diri",
+      });
+    } finally {
+      setSubmittingResign(false);
+    }
+  };
+
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString("id-ID", {
       weekday: "long",
@@ -347,6 +470,14 @@ export default function ApplicationDetailPage() {
         indicator: "bg-gray-500",
         icon: AlertCircle,
         description: "Lamaran telah ditarik.",
+        tips: [],
+      },
+      RESIGNED: {
+        label: "Resign",
+        color: "bg-orange-100 text-orange-800",
+        indicator: "bg-orange-500",
+        icon: LogOut,
+        description: "Anda telah mengundurkan diri dari posisi ini.",
         tips: [],
       },
     };
@@ -524,41 +655,87 @@ export default function ApplicationDetailPage() {
                   </div>
                 )}
 
-                {/* Accept Offer Button - Show when status is ACCEPTED and not yet responded */}
-                {application.status === "ACCEPTED" &&
-                  !application.respondedAt && (
-                    <div className="mt-6">
-                      <button
-                        onClick={handleAcceptOffer}
-                        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 rounded-2xl font-bold text-lg hover:from-green-700 hover:to-emerald-700 transition shadow-lg flex items-center justify-center gap-3"
-                      >
-                        <CheckCircle className="w-6 h-6" />
-                        Terima Tawaran Kerja
-                      </button>
-                      <p className="text-center text-gray-500 text-sm mt-2">
-                        Klik untuk mengkonfirmasi penerimaan tawaran kerja
-                      </p>
-                    </div>
-                  )}
-
-                {/* Already Accepted Notice */}
-                {application.status === "ACCEPTED" &&
-                  application.respondedAt && (
-                    <div className="mt-6 p-4 bg-green-50 rounded-xl border border-green-200">
+                {/* Accepted Notice - Auto accepted, no manual confirmation needed */}
+                {application.status === "ACCEPTED" && (
+                  <div className="mt-6 space-y-4">
+                    <div className="p-4 bg-green-50 rounded-xl border border-green-200">
                       <div className="flex items-center gap-3 text-green-700">
                         <CheckCircle className="w-6 h-6 flex-shrink-0" />
                         <div>
                           <p className="font-semibold">
-                            Tawaran Telah Diterima
+                            🎉 Selamat! Anda Diterima Bekerja
                           </p>
                           <p className="text-sm text-green-600">
-                            Anda telah menerima tawaran ini pada{" "}
-                            {formatDate(application.respondedAt)}
+                            Status Anda telah otomatis diperbarui menjadi "Sudah
+                            Bekerja"
                           </p>
+                          {application.respondedAt && (
+                            <p className="text-xs text-green-500 mt-1">
+                              Diterima pada{" "}
+                              {formatDate(application.respondedAt)}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
-                  )}
+
+                    {/* Resign Button */}
+                    {!application.resignation && (
+                      <button
+                        onClick={() => setShowResignModal(true)}
+                        className="w-full bg-white border-2 border-orange-300 text-orange-600 py-3 rounded-2xl font-semibold hover:bg-orange-50 transition flex items-center justify-center gap-2"
+                      >
+                        <LogOut className="w-5 h-5" />
+                        Ajukan Pengunduran Diri (Resign)
+                      </button>
+                    )}
+
+                    {/* Resignation Status */}
+                    {application.resignation && (
+                      <div
+                        className={`p-4 rounded-xl border ${
+                          application.resignation.status === "PENDING"
+                            ? "bg-yellow-50 border-yellow-200"
+                            : application.resignation.status === "APPROVED"
+                            ? "bg-green-50 border-green-200"
+                            : "bg-red-50 border-red-200"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <LogOut
+                            className={`w-6 h-6 ${
+                              application.resignation.status === "PENDING"
+                                ? "text-yellow-600"
+                                : application.resignation.status === "APPROVED"
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }`}
+                          />
+                          <div>
+                            <p className="font-semibold text-gray-900">
+                              Pengajuan Resign:{" "}
+                              {application.resignation.status === "PENDING"
+                                ? "Menunggu Proses"
+                                : application.resignation.status === "APPROVED"
+                                ? "Disetujui"
+                                : "Ditolak"}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Diajukan pada{" "}
+                              {formatDate(application.resignation.createdAt)}
+                            </p>
+                            {application.resignation.recruiterNotes && (
+                              <p className="text-sm text-gray-600 mt-1">
+                                <strong>Catatan:</strong>{" "}
+                                {application.resignation.recruiterNotes}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -826,6 +1003,145 @@ export default function ApplicationDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Resign Modal */}
+      {showResignModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                    <LogOut className="w-6 h-6 text-orange-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">
+                      Ajukan Pengunduran Diri
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      Isi form berikut dengan lengkap
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowResignModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-xl transition"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6">
+              {/* Reason */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Alasan Pengunduran Diri *
+                </label>
+                <textarea
+                  value={resignReason}
+                  onChange={(e) => setResignReason(e.target.value)}
+                  rows={4}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900"
+                  placeholder="Jelaskan alasan Anda mengundurkan diri dari posisi ini..."
+                />
+              </div>
+
+              {/* Upload Letter */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Surat Pengunduran Diri (PDF) *
+                </label>
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-orange-400 transition">
+                  {resignLetterUrl ? (
+                    <div className="flex items-center justify-center gap-3">
+                      <FileText className="w-8 h-8 text-green-500" />
+                      <div className="text-left">
+                        <p className="font-semibold text-gray-900">
+                          Surat berhasil diupload
+                        </p>
+                        <a
+                          href={resignLetterUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-blue-600 hover:underline"
+                        >
+                          Lihat file
+                        </a>
+                      </div>
+                      <button
+                        onClick={() => setResignLetterUrl("")}
+                        className="p-1 hover:bg-red-100 rounded-lg"
+                      >
+                        <X className="w-4 h-4 text-red-500" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        onChange={handleLetterUpload}
+                        className="hidden"
+                        disabled={uploadingLetter}
+                      />
+                      {uploadingLetter ? (
+                        <div className="flex flex-col items-center">
+                          <Loader2 className="w-10 h-10 text-orange-500 animate-spin mb-2" />
+                          <p className="text-gray-600">Mengupload...</p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center">
+                          <Upload className="w-10 h-10 text-gray-400 mb-2" />
+                          <p className="font-semibold text-gray-700">
+                            Klik untuk upload
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            Format: PDF (max 5MB)
+                          </p>
+                        </div>
+                      )}
+                    </label>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-gray-100 flex gap-3">
+              <button
+                onClick={() => setShowResignModal(false)}
+                className="flex-1 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleResignSubmit}
+                disabled={submittingResign || !resignReason || !resignLetterUrl}
+                className={`flex-1 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition ${
+                  submittingResign || !resignReason || !resignLetterUrl
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-orange-600 text-white hover:bg-orange-700"
+                }`}
+              >
+                {submittingResign ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Mengirim...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-5 h-5" />
+                    Ajukan Resign
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

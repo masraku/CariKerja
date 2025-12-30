@@ -236,6 +236,12 @@ export async function PATCH(request, context) {
       updateData.recruiterNotes = recruiterNotes
     }
 
+    // Auto-confirm when ACCEPTED - jobseeker doesn't need to confirm manually
+    if (status === 'ACCEPTED') {
+      updateData.confirmedByJobseeker = true
+      updateData.respondedAt = new Date()
+    }
+
     const updatedApplication = await prisma.applications.update({
       where: { id },
       data: updateData,
@@ -267,6 +273,19 @@ export async function PATCH(request, context) {
         }
       }
     })
+
+    // When ACCEPTED, also update jobseeker employment status
+    if (status === 'ACCEPTED') {
+      await prisma.jobseekers.update({
+        where: { id: updatedApplication.jobseekers.id },
+        data: {
+          isEmployed: true,
+          isLookingForJob: false,
+          employedAt: new Date(),
+          employedCompany: updatedApplication.jobs.companies.name
+        }
+      })
+    }
 
     // Send email notification for final decisions
     if (status === 'ACCEPTED' || status === 'REJECTED') {

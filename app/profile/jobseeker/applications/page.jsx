@@ -199,6 +199,12 @@ export default function JobseekerApplicationsPage() {
       icon: AlertCircle,
       description: "Lamaran ditarik",
     },
+    RESIGNED: {
+      label: "Resign",
+      color: "bg-orange-100 text-orange-800",
+      icon: AlertCircle,
+      description: "Mengundurkan diri",
+    },
   };
 
   // Status tabs

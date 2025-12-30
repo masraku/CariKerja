@@ -85,6 +85,7 @@ export async function POST(request) {
       isShift,
       shiftCount,
       isDisabilityFriendly,
+      disabilityDescription,
       
       // Requirements
       minExperience,
@@ -168,6 +169,7 @@ export async function POST(request) {
         isShift: isShift || false,
         shiftCount: shiftCount ? parseInt(shiftCount) : null,
         isDisabilityFriendly: isDisabilityFriendly || false,
+        disabilityDescription: disabilityDescription || null,
         jobScope: jobScope || 'DOMESTIC',
         
         // Set inactive for admin validation

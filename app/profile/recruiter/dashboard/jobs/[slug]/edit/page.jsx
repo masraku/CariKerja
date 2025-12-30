@@ -57,6 +57,7 @@ export default function EditJobPage() {
     isShift: false,
     shiftCount: "",
     isDisabilityFriendly: false,
+    disabilityDescription: "",
   });
 
   const [selectedKecamatan, setSelectedKecamatan] = useState("");
@@ -95,8 +96,7 @@ export default function EditJobPage() {
           setCompanyProfile(data.profile.companies);
         }
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   // Handle address toggle
@@ -171,6 +171,7 @@ export default function EditJobPage() {
           isShift: job.isShift || false,
           shiftCount: job.shiftCount?.toString() || "",
           isDisabilityFriendly: job.isDisabilityFriendly || false,
+          disabilityDescription: job.disabilityDescription || "",
         });
       } else {
         throw new Error("Failed to load job");
@@ -1071,7 +1072,15 @@ export default function EditJobPage() {
                       type="checkbox"
                       name="isDisabilityFriendly"
                       checked={formData.isDisabilityFriendly}
-                      onChange={handleInputChange}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          isDisabilityFriendly: e.target.checked,
+                          disabilityDescription: e.target.checked
+                            ? prev.disabilityDescription
+                            : "",
+                        }))
+                      }
                       className="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                     />
                     <div>
@@ -1083,6 +1092,32 @@ export default function EditJobPage() {
                       </span>
                     </div>
                   </label>
+
+                  {/* Disability Description Input */}
+                  {formData.isDisabilityFriendly && (
+                    <div className="mt-4 ml-8">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Jenis Disabilitas yang Dapat Melamar
+                      </label>
+                      <textarea
+                        name="disabilityDescription"
+                        value={formData.disabilityDescription}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            disabilityDescription: e.target.value,
+                          }))
+                        }
+                        rows={3}
+                        className="w-full text-gray-900 px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                        placeholder="Contoh: Tuna rungu, Tuna daksa ringan, Tuna netra dengan alat bantu, dll."
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Jelaskan jenis disabilitas apa saja yang dapat melamar
+                        untuk posisi ini
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

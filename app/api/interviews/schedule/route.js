@@ -3,8 +3,6 @@ import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
 import { v4 as uuidv4 } from 'uuid'
 
-// POST /api/interviews/schedule
-// Create a new interview and invite applicants
 export async function POST(request) {
     try {
         const authHeader = request.headers.get('authorization')

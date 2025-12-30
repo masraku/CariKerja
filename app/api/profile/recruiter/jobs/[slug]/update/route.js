@@ -55,6 +55,7 @@ export async function PUT(request, { params }) {
       isShift,
       shiftCount,
       isDisabilityFriendly,
+      disabilityDescription,
       gallery
     } = body
 
@@ -116,6 +117,7 @@ export async function PUT(request, { params }) {
         isShift: isShift || false,
         shiftCount: shiftCount ? parseInt(shiftCount) : null,
         isDisabilityFriendly: isDisabilityFriendly || false,
+        disabilityDescription: disabilityDescription || null,
         gallery: gallery || []
       }
     })

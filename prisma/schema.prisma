@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,7 +7,7 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
-        
+
 model applications {
   id                     String                   @id
   jobId                  String
@@ -41,6 +40,7 @@ model applications {
   jobs                   jobs                     @relation(fields: [jobId], references: [id], onDelete: Cascade)
   jobseekers             jobseekers               @relation(fields: [jobseekerId], references: [id], onDelete: Cascade)
   interview_participants interview_participants[]
+  resignation            resignations?
 
   @@unique([jobId, jobseekerId])
   @@index([appliedAt])
@@ -215,61 +215,62 @@ model job_skills {
 }
 
 model jobs {
-  id                   String          @id @default(cuid())
-  companyId            String
-  recruiterId          String
-  title                String
-  slug                 String          @unique
-  description          String
-  requirements         String
-  responsibilities     String
-  jobType              JobType
-  category             String
-  location             String
-  city                 String
-  province             String
-  isRemote             Boolean         @default(false)
-  salaryMin            Int?
-  salaryMax            Int?
-  salaryType           String?
-  showSalary           Boolean         @default(true)
-  benefits             String[]
-  numberOfPositions    Int             @default(1)
-  minExperience        Int?
-  maxExperience        Int?
-  educationLevel       EducationLevel?
-  applicationDeadline  DateTime?
-  applicationEmail     String?
-  applicationUrl       String?
-  externalApply        Boolean         @default(false)
-  isActive             Boolean         @default(true)
-  isFeatured           Boolean         @default(false)
-  isPremium            Boolean         @default(false)
-  viewCount            Int             @default(0)
-  applicationCount     Int             @default(0)
-  metaTitle            String?
-  metaDescription      String?
-  publishedAt          DateTime?
-  closedAt             DateTime?
-  createdAt            DateTime        @default(now())
-  updatedAt            DateTime        @updatedAt
-  status               JobStatus       @default(PENDING)
-  rejectionReason      String?
-  photo                String?
-  isDisabilityFriendly Boolean         @default(false)
-  isShift              Boolean         @default(false)
-  shiftCount           Int?
-  level                String?
-  gallery              String[]
-  holidays             String?
-  workingDays          String?
-  jobScope             JobScope        @default(DOMESTIC)
-  applications         applications[]
-  interviews           interviews[]
-  job_skills           job_skills[]
-  companies            companies       @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  recruiters           recruiters      @relation(fields: [recruiterId], references: [id])
-  saved_jobs           saved_jobs[]
+  id                    String          @id @default(cuid())
+  companyId             String
+  recruiterId           String
+  title                 String
+  slug                  String          @unique
+  description           String
+  requirements          String
+  responsibilities      String
+  jobType               JobType
+  category              String
+  location              String
+  city                  String
+  province              String
+  isRemote              Boolean         @default(false)
+  salaryMin             Int?
+  salaryMax             Int?
+  salaryType            String?
+  showSalary            Boolean         @default(true)
+  benefits              String[]
+  numberOfPositions     Int             @default(1)
+  minExperience         Int?
+  maxExperience         Int?
+  educationLevel        EducationLevel?
+  applicationDeadline   DateTime?
+  applicationEmail      String?
+  applicationUrl        String?
+  externalApply         Boolean         @default(false)
+  isActive              Boolean         @default(true)
+  isFeatured            Boolean         @default(false)
+  isPremium             Boolean         @default(false)
+  viewCount             Int             @default(0)
+  applicationCount      Int             @default(0)
+  metaTitle             String?
+  metaDescription       String?
+  publishedAt           DateTime?
+  closedAt              DateTime?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  status                JobStatus       @default(PENDING)
+  rejectionReason       String?
+  photo                 String?
+  isDisabilityFriendly  Boolean         @default(false)
+  disabilityDescription String?
+  isShift               Boolean         @default(false)
+  shiftCount            Int?
+  level                 String?
+  gallery               String[]
+  holidays              String?
+  workingDays           String?
+  jobScope              JobScope        @default(DOMESTIC)
+  applications          applications[]
+  interviews            interviews[]
+  job_skills            job_skills[]
+  companies             companies       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  recruiters            recruiters      @relation(fields: [recruiterId], references: [id])
+  saved_jobs            saved_jobs[]
 
   @@index([category])
   @@index([city])
@@ -358,6 +359,7 @@ model jobseekers {
   reviews                  reviews[]
   saved_jobs               saved_jobs[]
   work_experiences         work_experiences[]
+  resignations             resignations[]
 }
 
 model messages {
@@ -575,6 +577,33 @@ model work_experiences {
   @@index([jobseekerId])
 }
 
+model resignations {
+  id             String            @id @default(cuid())
+  applicationId  String            @unique
+  jobseekerId    String
+  reason         String
+  letterUrl      String
+  status         ResignationStatus @default(PENDING)
+  processedAt    DateTime?
+  processedBy    String?
+  recruiterNotes String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  applications applications @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  jobseekers   jobseekers   @relation(fields: [jobseekerId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([jobseekerId])
+  @@index([status])
+}
+
+enum ResignationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum ApplicationStatus {
   PENDING
   REVIEWING
@@ -584,6 +613,7 @@ enum ApplicationStatus {
   ACCEPTED
   REJECTED
   WITHDRAWN
+  RESIGNED
 }
 
 enum CompanyStatus {
