@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
 import {
   ArrowLeft,
   Users,
@@ -753,6 +754,9 @@ export default function JobDetailPage() {
     const isSelected = selectedApplications.includes(application.id);
     const canSelect = selectMode; // Allow selecting any status
 
+    const isRescheduleRequested =
+      application.participantStatus === "RESCHEDULE_REQUESTED";
+
     return (
       <div
         key={application.id}
@@ -807,6 +811,23 @@ export default function JobDetailPage() {
                     : "bg-yellow-500"
                 }`}
               ></div>
+              {/* Match Score Badge */}
+              {aiRecommendations[application.id]?.isRecommended && (
+                <div
+                  className="absolute -top-2 -right-2 bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-200 shadow-sm flex items-center gap-1 cursor-pointer hover:bg-amber-200 transition"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleShowAIMatchDetails(
+                      application,
+                      aiRecommendations[application.id]
+                    );
+                  }}
+                  title="Klik untuk melihat analisis AI"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  {Math.round(aiRecommendations[application.id].score)}%
+                </div>
+              )}
             </div>
             <div>
               <h3 className="text-base font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
@@ -820,6 +841,11 @@ export default function JobDetailPage() {
           </div>
           <div className="flex flex-col items-end gap-2">
             {getStatusBadge(application.status)}
+            {isRescheduleRequested && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 animate-pulse border border-amber-200">
+                📅 Minta Reschedule
+              </span>
+            )}
             {aiRecommendations[application.id]?.isRecommended && (
               <button
                 onClick={(e) => {
@@ -939,6 +965,18 @@ export default function JobDetailPage() {
             <Calendar className="w-3.5 h-3.5" />
             {formatDate(application.appliedAt)}
           </div>
+
+          {/* Reschedule Reason Alert */}
+          {isRescheduleRequested && application.rescheduleReason && (
+            <div className="mb-4 p-3 bg-amber-50 rounded-xl border border-amber-100">
+              <p className="text-xs font-bold text-amber-800 mb-1">
+                Alasan Reschedule:
+              </p>
+              <p className="text-xs text-amber-700 italic">
+                "{application.rescheduleReason}"
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Action Buttons - Dynamic based on status */}
@@ -1040,18 +1078,29 @@ export default function JobDetailPage() {
             </>
           ) : application.status === "INTERVIEW_SCHEDULED" ? (
             <>
-              {application.interview?.meetingUrl && (
-                <a
-                  href={application.interview.meetingUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+              {isRescheduleRequested ? (
+                <Link
+                  href="/profile/recruiter/dashboard/interviews"
                   onClick={(e) => e.stopPropagation()}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition text-sm font-medium shadow-lg"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition text-sm font-medium shadow-lg"
                 >
-                  <Video className="w-4 h-4" />
-                  Masuk Interview
-                  <ExternalLink className="w-3 h-3" />
-                </a>
+                  <Calendar className="w-4 h-4" />
+                  Cek Jadwal
+                </Link>
+              ) : (
+                application.interview?.meetingUrl && (
+                  <a
+                    href={application.interview.meetingUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition text-sm font-medium shadow-lg"
+                  >
+                    <Video className="w-4 h-4" />
+                    Masuk Interview
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )
               )}
               <button
                 onClick={(e) => {

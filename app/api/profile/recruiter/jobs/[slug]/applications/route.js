@@ -124,7 +124,10 @@ export async function GET(request, { params }) {
       const skills = jobseeker.jobseeker_skills?.map(js => js.skills?.name).filter(Boolean) || []
 
       // Get interview data if exists
-      const interview = app.interview_participants?.[0]?.interviews || null
+      const participant = app.interview_participants?.[0]
+      const interview = participant?.interviews || null
+      const participantStatus = participant?.status || null
+      const rescheduleReason = participant?.responseMessage || null
 
       return {
         ...app,
@@ -133,6 +136,8 @@ export async function GET(request, { params }) {
           skills // Add extracted skills array for easier access
         },
         interview, // Add interview data
+        participantStatus,
+        rescheduleReason,
         profileCompleteness: completenessPercentage,
         hasCV: !!jobseeker.cvUrl,
         hasExperience: jobseeker.work_experiences?.length > 0,

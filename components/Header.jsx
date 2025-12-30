@@ -337,6 +337,24 @@ const Header = () => {
                   </Link>
                 )}
 
+                {user.role === "RECRUITER" && (
+                  <Link
+                    href="/profile/recruiter/dashboard"
+                    className="px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-3"
+                  >
+                    <LayoutDashboard className="w-4 h-4" /> Dashboard Rekruter
+                  </Link>
+                )}
+
+                {user.role === "JOBSEEKER" && (
+                  <Link
+                    href="/profile/jobseeker/dashboard"
+                    className="px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-3"
+                  >
+                    <LayoutDashboard className="w-4 h-4" /> Dashboard
+                  </Link>
+                )}
+
                 {user.role !== "RECRUITER" && (
                   <Link
                     href={`/profile/${user.role.toLowerCase()}`}
