@@ -29,7 +29,15 @@ export default function RecruiterInterviewsPage() {
   const [interviews, setInterviews] = useState([]);
   const [stats, setStats] = useState(null);
   const [activeFilter, setActiveFilter] = useState("all");
-  const [processingId, setProcessingId] = useState(null); // To track which item is being processed
+  const [processingId, setProcessingId] = useState(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    // Sync with client time and update every minute
+    setCurrentTime(new Date());
+    const timer = setInterval(() => setCurrentTime(new Date()), 10000); // Check every 10s
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     loadInterviews();
@@ -67,9 +75,7 @@ export default function RecruiterInterviewsPage() {
 
   // Helper to check if interview has started
   const isInterviewStarted = (scheduledAt) => {
-    const now = new Date();
-    const start = new Date(scheduledAt);
-    return now >= start;
+    return currentTime >= new Date(scheduledAt);
   };
 
   // Handle Application Status Update (Accept/Reject Candidate)
@@ -585,10 +591,9 @@ export default function RecruiterInterviewsPage() {
 
                 {/* Footer Actions - ALWAYS AT BOTTOM */}
                 {interview.status === "SCHEDULED" && (
-                  <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 flex flex-wrap justify-end gap-3">
+                  <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 flex flex-wrap justify-end gap-3 items-center">
                     {isStarted ? (
                       <>
-                        {/* Started Actions */}
                         {interview.meetingUrl && (
                           <Link
                             href={`/profile/recruiter/dashboard/interview/room/${interview.id}`}
@@ -608,15 +613,26 @@ export default function RecruiterInterviewsPage() {
                     ) : (
                       /* Not Started Actions */
                       <div className="flex items-center justify-between w-full">
-                        <span className="text-sm text-gray-500 italic flex items-center gap-2">
-                          <Clock className="w-4 h-4" /> Belum dimulai
-                        </span>
-                        <Link
-                          href={`/profile/recruiter/dashboard/interview/reschedule?interviewId=${interview.id}`}
-                          className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                        <span
+                          className="text-sm text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg flex items-center gap-2"
+                          title={`Akan mulai pada ${formatTime(
+                            interview.scheduledAt
+                          )}`}
                         >
-                          Edit Jadwal
-                        </Link>
+                          <Clock className="w-4 h-4 text-orange-500" />
+                          <span className="font-medium text-gray-600">
+                            Mulai {formatTime(interview.scheduledAt)}
+                          </span>
+                        </span>
+
+                        <div className="flex gap-2">
+                          <Link
+                            href={`/profile/recruiter/dashboard/interview/reschedule?interviewId=${interview.id}`}
+                            className="text-sm font-medium text-blue-600 hover:text-blue-800 px-3 py-2 bg-blue-50 rounded-lg"
+                          >
+                            Edit Jadwal
+                          </Link>
+                        </div>
                       </div>
                     )}
                   </div>

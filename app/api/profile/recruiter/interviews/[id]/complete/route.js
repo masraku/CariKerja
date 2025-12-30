@@ -82,11 +82,11 @@ export async function PATCH(request, context) {
             }
         })
 
-        // Update all participants to COMPLETED status (only those who were ACCEPTED)
+        // Update all participants to COMPLETED status (ACCEPTED and PENDING/Rescheduled)
         await prisma.interview_participants.updateMany({
             where: {
                 interviewId: id,
-                status: 'ACCEPTED' // Only update accepted participants
+                status: { in: ['ACCEPTED', 'PENDING'] }
             },
             data: {
                 status: 'COMPLETED'
@@ -94,8 +94,8 @@ export async function PATCH(request, context) {
         })
 
         // Update application statuses to INTERVIEW_COMPLETED
-        const acceptedParticipants = interview.interview_participants.filter(p => p.status === 'ACCEPTED')
-        const applicationIds = acceptedParticipants.map(p => p.applicationId)
+        const participantsToUpdate = interview.interview_participants.filter(p => ['ACCEPTED', 'PENDING'].includes(p.status))
+        const applicationIds = participantsToUpdate.map(p => p.applicationId)
 
         await prisma.applications.updateMany({
             where: {
@@ -111,7 +111,7 @@ export async function PATCH(request, context) {
             message: 'Interview marked as completed successfully',
             data: {
                 interview: updatedInterview,
-                participantsUpdated: acceptedParticipants.length,
+                participantsUpdated: participantsToUpdate.length,
                 applicationsUpdated: applicationIds.length
             }
         })
