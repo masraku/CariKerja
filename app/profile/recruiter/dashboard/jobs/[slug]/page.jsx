@@ -811,23 +811,6 @@ export default function JobDetailPage() {
                     : "bg-yellow-500"
                 }`}
               ></div>
-              {/* Match Score Badge */}
-              {aiRecommendations[application.id]?.isRecommended && (
-                <div
-                  className="absolute -top-2 -right-2 bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-200 shadow-sm flex items-center gap-1 cursor-pointer hover:bg-amber-200 transition"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleShowAIMatchDetails(
-                      application,
-                      aiRecommendations[application.id]
-                    );
-                  }}
-                  title="Klik untuk melihat analisis AI"
-                >
-                  <Sparkles className="w-3 h-3" />
-                  {Math.round(aiRecommendations[application.id].score)}%
-                </div>
-              )}
             </div>
             <div>
               <h3 className="text-base font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">

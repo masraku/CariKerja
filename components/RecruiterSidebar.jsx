@@ -10,6 +10,7 @@ import {
   LogOut,
   Building2,
   User,
+  CalendarCheck,
 } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -33,6 +34,11 @@ export default function RecruiterSidebar() {
       icon: Briefcase,
       label: "Lowongan Saya",
       href: "/profile/recruiter/dashboard/jobs",
+    },
+    {
+      icon: CalendarCheck,
+      label: "Kelola Interview",
+      href: "/profile/recruiter/dashboard/interviews",
     },
     {
       icon: LogOut,
@@ -95,6 +101,15 @@ export default function RecruiterSidebar() {
               isActive = pathname.startsWith(
                 "/profile/recruiter/dashboard/jobs"
               );
+            } else if (
+              item.href === "/profile/recruiter/dashboard/interviews"
+            ) {
+              // Interviews active for /dashboard/interviews and /dashboard/interview
+              isActive =
+                pathname.startsWith(
+                  "/profile/recruiter/dashboard/interviews"
+                ) ||
+                pathname.startsWith("/profile/recruiter/dashboard/interview?");
             } else if (
               item.href === "/profile/recruiter/dashboard/resignations"
             ) {
