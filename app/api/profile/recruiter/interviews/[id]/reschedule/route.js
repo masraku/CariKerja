@@ -131,6 +131,19 @@ export async function PATCH(request, context) {
       }
     })
 
+    // Reset all participants status to PENDING so they can confirm the new schedule
+    // And clear the reschedule request message
+    await prisma.interview_participants.updateMany({
+      where: {
+        interviewId: id
+      },
+      data: {
+        status: 'PENDING',
+        responseMessage: null,
+        respondedAt: null
+      }
+    })
+
     // Send reschedule notification to all participants
     const emailPromises = interview.interview_participants.map(async (participant) => {
       try {
