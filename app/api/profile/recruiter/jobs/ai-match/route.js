@@ -25,7 +25,7 @@ export async function POST(request) {
             { 
                 success: false,
                 error: error.message || 'Failed to process',
-                match_score: 1, 
+                match_score: 0, 
                 highlights: [] 
             },
             { status: 500 }
@@ -322,14 +322,15 @@ async function handleSkillMatching(request) {
             console.error('[AI-MATCH] Python API Error:', externalError.message || externalError)
         }
         return NextResponse.json({
-            match_score: 50, // Neutral - unable to analyze
+            match_score: 0, // Fallback to 0 if analysis fails
             highlights: [],
-            source: 'fallback_neutral',
+            source: 'fallback_failed',
+            status: 'NOT_RECOMMENDED',
             debug: {
                 cvSkillsCount: 0,
                 jobSkillsCount: jobSkills.length,
                 matchCount: 0,
-                reason: 'Python API unavailable and no manual skill data'
+                reason: 'Python API unavailable or analysis failed'
             }
         })
 
@@ -337,11 +338,12 @@ async function handleSkillMatching(request) {
         return NextResponse.json(
             { 
                 error: 'Failed to process', 
-                match_score: 50, 
+                match_score: 0, 
                 highlights: [],
+                status: 'ERROR',
                 source: 'error'
             },
-            { status: 200 }
+            { status: 200 } // Keep 200 to prevent frontend crash, but indicate error in body
         )
     }
 }

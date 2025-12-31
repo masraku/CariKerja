@@ -76,7 +76,10 @@ export async function GET(request) {
                 invitedAt: p.invitedAt,
                 respondedAt: p.respondedAt,
                 jobseeker: p.applications.jobseekers,
-                applicationId: p.applicationId
+                applicationId: p.applicationId,
+                applications: {
+                    status: p.applications.status
+                }
             }))
         }))
 
