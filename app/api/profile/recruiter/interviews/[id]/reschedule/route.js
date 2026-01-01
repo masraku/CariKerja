@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireRecruiter } from '@/lib/authHelper'
 import { sendRescheduleNotification } from '@/lib/email/sendRescheduleNotification'
+import { v4 as uuidv4 } from 'uuid'
 
 // PATCH - Reschedule interview
 export async function PATCH(request, context) {
@@ -118,6 +119,7 @@ export async function PATCH(request, context) {
       // 2. Create NEW interview for this participant
       const newInterview = await prisma.interviews.create({
         data: {
+          id: uuidv4(),
           recruiterId: interview.recruiterId,
           jobId: interview.jobId,
           title: `${interview.title} (Reschedule)`,
@@ -127,7 +129,8 @@ export async function PATCH(request, context) {
           meetingUrl: meetingUrl || interview.meetingUrl,
           location: interview.location,
           description: description || interview.description,
-          status: 'SCHEDULED'
+          status: 'SCHEDULED',
+          updatedAt: new Date()
         }
       })
 
