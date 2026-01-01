@@ -277,7 +277,7 @@ Terima kasih dan sampai jumpa!`
           `,
           confirmButtonColor: "#2563EB",
         });
-        router.push("/profile/recruiter/dashboard/applications");
+        router.push(`/profile/recruiter/dashboard/jobs/${job.slug}`);
       } else {
         Swal.fire({
           icon: "error",
@@ -487,7 +487,8 @@ Terima kasih dan sampai jumpa!`
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Masukkan link meeting (Google Meet, Zoom, atau platform lainnya)
+                    Masukkan link meeting (Google Meet, Zoom, atau platform
+                    lainnya)
                   </p>
                 </div>
               )}

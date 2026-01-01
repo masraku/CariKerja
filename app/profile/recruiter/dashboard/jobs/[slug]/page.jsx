@@ -322,29 +322,38 @@ export default function JobDetailPage() {
 
   // Get selected applications info for dynamic buttons
   const getSelectedAppsInfo = () => {
-    const selectedApps = filteredApplications.filter((app) =>
+    const selected = applications.filter((app) =>
       selectedApplications.includes(app.id)
     );
-    const statuses = [...new Set(selectedApps.map((app) => app.status))];
+    const statuses = [...new Set(selected.map((app) => app.status))];
+    const pendingCount = selected.filter(
+      (app) => app.status === "PENDING"
+    ).length;
+    const reviewingCount = selected.filter(
+      (app) => app.status === "REVIEWING"
+    ).length;
+    const shortlistedCount = selected.filter(
+      (app) => app.status === "SHORTLISTED"
+    ).length;
+    const interviewScheduledCount = selected.filter(
+      (app) => app.status === "INTERVIEW_SCHEDULED"
+    ).length;
+    const interviewCompletedCount = selected.filter(
+      (app) => app.status === "INTERVIEW_COMPLETED"
+    ).length;
+
     return {
-      apps: selectedApps,
+      apps: selected, // Keep apps property for consistency with original
       statuses,
       hasPending: statuses.includes("PENDING"),
       hasReviewing: statuses.includes("REVIEWING"),
       hasShortlisted: statuses.includes("SHORTLISTED"),
       hasInterviewScheduled: statuses.includes("INTERVIEW_SCHEDULED"),
       hasInterviewCompleted: statuses.includes("INTERVIEW_COMPLETED"),
-      pendingCount: selectedApps.filter((a) => a.status === "PENDING").length,
-      reviewingCount: selectedApps.filter((a) => a.status === "REVIEWING")
-        .length,
-      shortlistedCount: selectedApps.filter((a) => a.status === "SHORTLISTED")
-        .length,
-      interviewScheduledCount: selectedApps.filter(
-        (a) => a.status === "INTERVIEW_SCHEDULED"
-      ).length,
-      interviewCompletedCount: selectedApps.filter(
-        (a) => a.status === "INTERVIEW_COMPLETED"
-      ).length,
+      pendingCount,
+      shortlistedCount,
+      interviewScheduledCount,
+      interviewCompletedCount,
     };
   };
 
@@ -1007,6 +1016,79 @@ export default function JobDetailPage() {
     1,
     Math.ceil(filteredApplications.length / itemsPerPage)
   );
+
+  const handleBulkCompleteInterview = async () => {
+    const result = await Swal.fire({
+      title: "Selesaikan Interview?",
+      text: `Anda akan menyelesaikan interview untuk ${selectedApplications.length} kandidat terpilih.`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#10B981",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Ya, Selesaikan",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        Swal.fire({
+          title: "Memproses...",
+          html: "Mohon tunggu sebentar...",
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          },
+        });
+
+        const token = localStorage.getItem("token");
+        const promises = selectedApplications.map(async (appId) => {
+          const app = applications.find((a) => a.id === appId);
+          // Need interview ID and participant ID
+          // app has interview_participants array.
+          // The current active interview should be the one responding to INTERVIEW_SCHEDULED
+          // We can use app.interview (added by API) or app.interview_participants[0]
+
+          if (!app || !app.interview || !app.interview_participants?.[0])
+            return;
+
+          const interviewId = app.interview.id;
+          const participantId = app.interview_participants[0].id;
+
+          return fetch(
+            `/api/profile/recruiter/interviews/${interviewId}/complete`,
+            {
+              method: "PATCH",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ participantId }),
+            }
+          );
+        });
+
+        await Promise.all(promises);
+
+        await Swal.fire({
+          icon: "success",
+          title: "Berhasil!",
+          text: "Status interview berhasil diperbarui.",
+          confirmButtonColor: "#2563EB",
+        });
+
+        setSelectedApplications([]);
+        setSelectMode(false);
+        loadApplications(); // Refresh list
+      } catch (error) {
+        console.error("Bulk complete error:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Gagal",
+          text: "Terjadi kesalahan saat memperbarui status.",
+          confirmButtonColor: "#2563EB",
+        });
+      }
+    }
+  };
 
   const renderApplicationCard = (application) => {
     const skills = application.jobseekers?.skills || [];
@@ -2187,6 +2269,21 @@ export default function JobDetailPage() {
                         Undang Interview{" "}
                         {info.shortlistedCount > 0 && info.statuses.length > 1
                           ? `(${info.shortlistedCount})`
+                          : ""}
+                      </button>
+                    )}
+
+                    {/* Selesaikan Interview - muncul jika ada INTERVIEW_SCHEDULED */}
+                    {info.hasInterviewScheduled && (
+                      <button
+                        onClick={handleBulkCompleteInterview}
+                        className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition font-medium shadow-lg shadow-emerald-500/30"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        Selesaikan Interview
+                        {info.interviewScheduledCount > 0 &&
+                        info.statuses.length > 1
+                          ? `(${info.interviewScheduledCount})`
                           : ""}
                       </button>
                     )}

@@ -66,15 +66,20 @@ function InterviewRoomContent() {
     }
   };
 
-  const handleCompleteInterview = async () => {
+  const handleCompleteInterview = async (participantId = null) => {
+    const isIndividual = !!participantId;
     const result = await Swal.fire({
-      title: "Selesaikan Interview?",
-      text: "Interview akan ditandai sukses dan status kandidat akan diupdate.",
+      title: isIndividual ? "Selesaikan Kandidat?" : "Selesaikan Interview?",
+      text: isIndividual
+        ? "Interview untuk kandidat ini akan ditandai selesai."
+        : "Interview akan ditandai sukses dan semua status kandidat akan diupdate.",
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#10B981", // Green
       cancelButtonColor: "#d33",
-      confirmButtonText: "Ya, Selesaikan",
+      confirmButtonText: isIndividual
+        ? "Ya, Selesaikan"
+        : "Ya, Selesaikan Semua",
       cancelButtonText: "Batal",
     });
 
@@ -90,6 +95,7 @@ function InterviewRoomContent() {
             headers: {
               Authorization: `Bearer ${token}`,
             },
+            body: JSON.stringify({ participantId }),
           }
         );
 
@@ -98,12 +104,19 @@ function InterviewRoomContent() {
         if (response.ok) {
           await Swal.fire({
             icon: "success",
-            title: "Interview Selesai!",
-            text: "Status kandidat telah diperbarui ke 'Interview Completed'. Silakan lanjutkan ke tahap review/offering.",
+            title: "Berhasil!",
+            text: isIndividual
+              ? "Status kandidat telah diperbarui."
+              : "Interview telah diselesaikan.",
             confirmButtonColor: "#2563EB",
           });
-          // Redirect to applications list or dashboard
-          router.push("/profile/recruiter/dashboard/applications");
+
+          if (isIndividual) {
+            // Reload data to reflect changes
+            loadData(id);
+          } else {
+            router.push("/profile/recruiter/dashboard/applications");
+          }
         } else {
           // Handle specific error: too early
           if (data.error && data.error.includes("before scheduled time")) {
@@ -311,6 +324,17 @@ function InterviewRoomContent() {
                       >
                         {p.status}
                       </span>
+                      {!isCompleted &&
+                        (p.status === "ACCEPTED" || p.status === "PENDING") && (
+                          <button
+                            onClick={() => handleCompleteInterview(p.id)}
+                            disabled={completing}
+                            className="ml-2 px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-medium hover:bg-green-200 transition"
+                            title="Selesaikan untuk kandidat ini"
+                          >
+                            Selesaikan
+                          </button>
+                        )}
                     </div>
                   ))}
                 </div>

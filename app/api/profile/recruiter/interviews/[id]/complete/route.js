@@ -74,7 +74,58 @@ export async function PATCH(request, context) {
             )
         }
 
-        // Update interview status
+        // Check if completing for specific participant
+        const body = await request.json().catch(() => ({}))
+        const { participantId } = body
+
+        if (participantId) {
+             // 1. Verify participant belongs to this interview
+            const participant = interview.interview_participants.find(p => p.id === participantId)
+            if (!participant) {
+                return NextResponse.json(
+                { error: 'Participant not found in this interview' },
+                { status: 404 }
+                )
+            }
+
+            // 2. Update participant status
+            await prisma.interview_participants.update({
+                where: { id: participantId },
+                data: { status: 'COMPLETED' }
+            })
+
+            // 3. Update application status
+            await prisma.applications.update({
+                where: { id: participant.applicationId },
+                data: { status: 'INTERVIEW_COMPLETED' }
+            })
+
+            // 4. Check if ALL participants are now completed
+            const allParticipants = await prisma.interview_participants.findMany({
+                where: { interviewId: id }
+            })
+            const allCompleted = allParticipants.every(p => p.status === 'COMPLETED' || p.status === 'REJECTED' || p.status === 'CANCELLED')
+
+            let interviewUpdated = false
+            if (allCompleted) {
+                await prisma.interviews.update({
+                    where: { id },
+                    data: { status: 'COMPLETED' }
+                })
+                interviewUpdated = true
+            }
+
+            return NextResponse.json({
+                success: true,
+                message: 'Participant interview marked as completed',
+                data: {
+                    participantId,
+                    interviewCompleted: interviewUpdated
+                }
+            })
+        }
+
+        // Default: Update interview status (mark ALL as completed)
         const updatedInterview = await prisma.interviews.update({
             where: { id },
             data: {

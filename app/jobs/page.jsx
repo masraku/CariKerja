@@ -229,6 +229,12 @@ const JobsPage = () => {
               <Clock className="w-3 h-3" />
               {getTimeSince(job.postedDate)}
             </span>
+            {job.hasApplied && (
+              <span className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-0.5 rounded-md font-medium border border-green-100">
+                <CheckCircle className="w-3 h-3" />
+                Dilamar
+              </span>
+            )}
           </div>
         </div>
         <button
@@ -371,13 +377,23 @@ const JobsPage = () => {
 
         {/* Action Buttons */}
         <div className="flex gap-4 mt-8">
-          <Link
-            href={`/jobs/${job.slug}`}
-            className="flex-1 flex items-center justify-center gap-2 px-8 py-4 bg-[#03587f] hover:bg-[#024666] text-white font-bold rounded-xl transition-all shadow-lg shadow-[#03587f]/20 hover:shadow-[#03587f]/30 hover:-translate-y-0.5"
-          >
-            Lamar Sekarang
-            <ArrowRight className="w-5 h-5" />
-          </Link>
+          {job.hasApplied ? (
+            <button
+              disabled
+              className="flex-1 flex items-center justify-center gap-2 px-8 py-4 bg-green-50 text-green-700 font-bold rounded-xl border border-green-200 cursor-not-allowed opacity-90"
+            >
+              <CheckCircle className="w-5 h-5" />
+              Sudah Dilamar
+            </button>
+          ) : (
+            <Link
+              href={`/jobs/${job.slug}`}
+              className="flex-1 flex items-center justify-center gap-2 px-8 py-4 bg-[#03587f] hover:bg-[#024666] text-white font-bold rounded-xl transition-all shadow-lg shadow-[#03587f]/20 hover:shadow-[#03587f]/30 hover:-translate-y-0.5"
+            >
+              Lamar Sekarang
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+          )}
           <button
             onClick={(e) => toggleSaveJob(job.id, e)}
             className={`lg:hidden px-6 py-4 rounded-xl transition-all border ${

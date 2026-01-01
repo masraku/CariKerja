@@ -31,7 +31,7 @@ function RescheduleContent() {
     date: "",
     time: "",
     duration: 60,
-    meetingType: "GOOGLE_MEET",
+    meetingType: "ONLINE",
     meetingUrl: "",
     location: "",
     description: "",
@@ -141,11 +141,7 @@ function RescheduleContent() {
       return;
     }
 
-    if (
-      (formData.meetingType === "GOOGLE_MEET" ||
-        formData.meetingType === "ZOOM") &&
-      !formData.meetingUrl
-    ) {
+    if (formData.meetingType === "ONLINE" && !formData.meetingUrl) {
       Swal.fire({
         icon: "warning",
         title: "Link Meeting Belum Diisi",
@@ -175,6 +171,7 @@ function RescheduleContent() {
             duration: parseInt(formData.duration),
             meetingUrl: formData.meetingUrl,
             description: formData.description,
+            participantId: participant ? participant.id : null,
           }),
         }
       );
@@ -310,8 +307,7 @@ function RescheduleContent() {
               </label>
               <div className="grid md:grid-cols-3 gap-4">
                 {[
-                  { value: "GOOGLE_MEET", label: "Google Meet", icon: Video },
-                  { value: "ZOOM", label: "Zoom", icon: Video },
+                  { value: "ONLINE", label: "Online", icon: Video },
                   { value: "IN_PERSON", label: "Tatap Muka", icon: MapPin },
                 ].map((type) => (
                   <label
@@ -342,8 +338,7 @@ function RescheduleContent() {
             </div>
 
             {/* Meeting URL */}
-            {(formData.meetingType === "GOOGLE_MEET" ||
-              formData.meetingType === "ZOOM") && (
+            {formData.meetingType === "ONLINE" && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Link Meeting *

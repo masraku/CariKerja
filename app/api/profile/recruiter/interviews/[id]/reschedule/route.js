@@ -102,7 +102,74 @@ export async function PATCH(request, context) {
     // Store old schedule for email notification
     const oldScheduledAt = interview.scheduledAt
 
-    // Update interview
+    // Check if rescheduling a specific participant
+    const { participantId } = body
+
+    if (participantId) {
+      // 1. Verify participant belongs to this interview
+      const participant = interview.interview_participants.find(p => p.id === participantId)
+      if (!participant) {
+        return NextResponse.json(
+          { error: 'Participant not found in this interview' },
+          { status: 404 }
+        )
+      }
+
+      // 2. Create NEW interview for this participant
+      const newInterview = await prisma.interviews.create({
+        data: {
+          recruiterId: interview.recruiterId,
+          jobId: interview.jobId,
+          title: `${interview.title} (Reschedule)`,
+          scheduledAt: new Date(scheduledAt),
+          duration: duration || interview.duration,
+          meetingType: interview.meetingType, // Inherit type
+          meetingUrl: meetingUrl || interview.meetingUrl,
+          location: interview.location,
+          description: description || interview.description,
+          status: 'SCHEDULED'
+        }
+      })
+
+      // 3. Move participant to new interview & Reset status
+      await prisma.interview_participants.update({
+        where: { id: participantId },
+        data: {
+          interviewId: newInterview.id,
+          status: 'PENDING',
+          responseMessage: null,
+          respondedAt: null
+        }
+      })
+
+      // 4. Send notification only to this participant
+       try {
+        await sendRescheduleNotification({
+          to: participant.applications.jobseekers.users.email,
+          candidateName: `${participant.applications.jobseekers.firstName} ${participant.applications.jobseekers.lastName}`,
+          jobTitle: interview.jobs.title,
+          companyName: interview.jobs.companies.name,
+          oldScheduledAt: oldScheduledAt,
+          newScheduledAt: new Date(scheduledAt),
+          duration: duration || interview.duration,
+          meetingUrl: meetingUrl || interview.meetingUrl,
+          description: description || interview.description,
+          interviewId: newInterview.id
+        })
+      } catch (emailError) {
+        console.error("Failed to send reschedule email", emailError)
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Individual interview rescheduled successfully',
+        data: {
+          interview: newInterview
+        }
+      })
+    }
+
+    // Default: Update entire interview (group reschedule)
     const updatedInterview = await prisma.interviews.update({
       where: { id },
       data: {
@@ -113,26 +180,11 @@ export async function PATCH(request, context) {
         status: 'RESCHEDULED'
       },
       include: {
-        interview_participants: {
-          include: {
-            applications: {
-              include: {
-                jobseekers: true,
-                jobs: true
-              }
-            }
-          }
-        },
-        jobs: {
-          include: {
-            companies: true
-          }
-        }
+        interview_participants: true
       }
     })
 
-    // Reset all participants status to PENDING so they can confirm the new schedule
-    // And clear the reschedule request message
+    // Reset all participants status to PENDING
     await prisma.interview_participants.updateMany({
       where: {
         interviewId: id
