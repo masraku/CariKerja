@@ -49,7 +49,24 @@ export async function GET(request, { params }) {
       },
       include: {
         jobseekers: {
-          include: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+            photo: true,
+            currentTitle: true,
+            summary: true,
+            city: true,
+            province: true,
+            cvUrl: true,
+            ktpUrl: true,
+            ak1Url: true,
+            ijazahUrl: true,
+            sertifikatUrl: true,
+            suratPengalamanUrl: true,
+            profileCompleteness: true, // Use stored value from database
             educations: true,
             work_experiences: true,
             jobseeker_skills: {
@@ -83,42 +100,12 @@ export async function GET(request, { params }) {
       }
     })
 
-    // Calculate profile completeness for each applicant
+    // Process applications with jobseeker data
     const applicationsWithCompleteness = applications.map(app => {
       const jobseeker = app.jobseekers
-      let completeness = 0
-      let totalFields = 13
 
-      // Basic info (6 fields)
-      if (jobseeker.firstName) completeness++
-      if (jobseeker.lastName) completeness++
-      if (jobseeker.phone) completeness++
-      if (jobseeker.email) completeness++
-      if (jobseeker.currentTitle) completeness++
-      if (jobseeker.summary) completeness++
-
-      // CV
-      if (jobseeker.cvUrl) completeness++
-
-      // Education
-      if (jobseeker.educations?.length > 0) completeness++
-
-      // Work Experience
-      if (jobseeker.work_experiences?.length > 0) completeness++
-
-      // Skills
-      if (jobseeker.jobseeker_skills?.length > 0) completeness++
-
-      // Certifications
-      if (jobseeker.certifications?.length > 0) completeness++
-
-      // Photo
-      if (jobseeker.photo) completeness++
-
-      // Address
-      if (jobseeker.city && jobseeker.province) completeness++
-
-      const completenessPercentage = Math.round((completeness / totalFields) * 100)
+      // Use profileCompleteness from database (already calculated when jobseeker saves profile)
+      const completenessPercentage = jobseeker.profileCompleteness || 0
 
       // Extract skill names from jobseeker_skills
       const skills = jobseeker.jobseeker_skills?.map(js => js.skills?.name).filter(Boolean) || []
@@ -174,7 +161,10 @@ export async function GET(request, { params }) {
         level: job.level,
         description: job.description,
         requirements: job.requirements,
-        skills: jobSkills
+        skills: jobSkills,
+        companyAddress: job.companies?.address,
+        companyCity: job.companies?.city,
+        companyProvince: job.companies?.province
       },
       applications: applicationsWithCompleteness,
       stats

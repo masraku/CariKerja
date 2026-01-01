@@ -161,6 +161,7 @@ export async function GET(request) {
       reviewing: applications.filter(a => a.status === 'REVIEWING').length,
       shortlisted: applications.filter(a => a.status === 'SHORTLISTED').length,
       interview: applications.filter(a => a.status === 'INTERVIEW_SCHEDULED').length,
+      interviewCompleted: applications.filter(a => a.status === 'INTERVIEW_COMPLETED').length,
       accepted: applications.filter(a => a.status === 'ACCEPTED').length,
       rejected: applications.filter(a => a.status === 'REJECTED').length
     }

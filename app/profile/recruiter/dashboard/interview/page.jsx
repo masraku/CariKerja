@@ -31,7 +31,7 @@ function ScheduleInterviewContent() {
     date: "",
     time: "",
     duration: 60,
-    meetingType: "GOOGLE_MEET",
+    meetingType: "ONLINE",
     meetingUrl: "",
     location: "",
     description: "",
@@ -135,15 +135,11 @@ function ScheduleInterviewContent() {
       return;
     }
 
-    if (
-      (formData.meetingType === "GOOGLE_MEET" ||
-        formData.meetingType === "ZOOM") &&
-      !formData.meetingUrl
-    ) {
+    if (formData.meetingType === "ONLINE" && !formData.meetingUrl) {
       Swal.fire({
         icon: "warning",
         title: "Link Meeting Belum Diisi",
-        text: "Silakan masukkan link meeting",
+        text: "Silakan masukkan link meeting (Google Meet, Zoom, dll)",
         confirmButtonColor: "#2563EB",
       });
       return;
@@ -443,10 +439,9 @@ Terima kasih dan sampai jumpa!`
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Tipe Meeting *
                 </label>
-                <div className="grid md:grid-cols-3 gap-4">
+                <div className="grid md:grid-cols-2 gap-4">
                   {[
-                    { value: "GOOGLE_MEET", label: "Google Meet", icon: Video },
-                    { value: "ZOOM", label: "Zoom", icon: Video },
+                    { value: "ONLINE", label: "Online", icon: Video },
                     { value: "IN_PERSON", label: "Tatap Muka", icon: MapPin },
                   ].map((type) => (
                     <label
@@ -477,8 +472,7 @@ Terima kasih dan sampai jumpa!`
               </div>
 
               {/* Meeting URL (for online meetings) */}
-              {(formData.meetingType === "GOOGLE_MEET" ||
-                formData.meetingType === "ZOOM") && (
+              {formData.meetingType === "ONLINE" && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Link Meeting *
@@ -489,17 +483,11 @@ Terima kasih dan sampai jumpa!`
                     value={formData.meetingUrl}
                     onChange={handleChange}
                     className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder={
-                      formData.meetingType === "GOOGLE_MEET"
-                        ? "https://meet.google.com/xxx-xxxx-xxx"
-                        : "https://zoom.us/j/xxxxxxxxx"
-                    }
+                    placeholder="https://meet.google.com/xxx atau https://zoom.us/j/xxx"
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    {formData.meetingType === "GOOGLE_MEET"
-                      ? "Masukkan link Google Meet yang sudah Anda buat"
-                      : "Masukkan link Zoom meeting Anda"}
+                    Masukkan link meeting (Google Meet, Zoom, atau platform lainnya)
                   </p>
                 </div>
               )}

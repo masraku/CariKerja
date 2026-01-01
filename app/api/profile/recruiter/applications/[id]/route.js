@@ -173,14 +173,14 @@ export async function PATCH(request, context) {
     const body = await request.json()
     const { status, recruiterNotes } = body
 
-    // Validate interview completion before accepting/rejecting
-    if (status === 'ACCEPTED' || status === 'REJECTED') {
+    // Validate interview completion before accepting (REJECTED can be done from any status)
+    if (status === 'ACCEPTED') {
       // Simply check if application status is INTERVIEW_COMPLETED
       if (application.status !== 'INTERVIEW_COMPLETED') {
         return NextResponse.json(
           { 
-            error: 'Tidak dapat menerima/menolak pelamar',
-            message: `Status aplikasi saat ini: ${application.status}. Harap mark interview sebagai complete terlebih dahulu.`
+            error: 'Tidak dapat menerima pelamar',
+            message: `Status aplikasi saat ini: ${application.status}. Harap selesaikan interview terlebih dahulu sebelum menerima kandidat.`
           },
           { status: 400 }
         )

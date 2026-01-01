@@ -20,7 +20,6 @@ import {
   CheckSquare,
   Square,
   UserPlus,
-  Trash2,
   ExternalLink,
   FileText,
   X,
@@ -40,6 +39,7 @@ export default function JobDetailPage() {
   const [stats, setStats] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [activeCategory, setActiveCategory] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -196,6 +196,16 @@ export default function JobDetailPage() {
       filtered = filtered.filter(
         (app) => aiRecommendations[app.id]?.isRecommended
       );
+    } else if (statusFilter === "SELEKSI_ALL") {
+      // Show all applications in Seleksi pipeline
+      filtered = filtered.filter((app) =>
+        ["PENDING", "REVIEWING", "SHORTLISTED"].includes(app.status)
+      );
+    } else if (statusFilter === "INTERVIEW_ALL") {
+      // Show all applications in Interview pipeline
+      filtered = filtered.filter((app) =>
+        ["INTERVIEW_SCHEDULED", "INTERVIEW_COMPLETED"].includes(app.status)
+      );
     } else if (statusFilter !== "all") {
       filtered = filtered.filter((app) => app.status === statusFilter);
     }
@@ -310,6 +320,188 @@ export default function JobDetailPage() {
     });
   };
 
+  // Get selected applications info for dynamic buttons
+  const getSelectedAppsInfo = () => {
+    const selectedApps = filteredApplications.filter((app) =>
+      selectedApplications.includes(app.id)
+    );
+    const statuses = [...new Set(selectedApps.map((app) => app.status))];
+    return {
+      apps: selectedApps,
+      statuses,
+      hasPending: statuses.includes("PENDING"),
+      hasReviewing: statuses.includes("REVIEWING"),
+      hasShortlisted: statuses.includes("SHORTLISTED"),
+      hasInterviewScheduled: statuses.includes("INTERVIEW_SCHEDULED"),
+      hasInterviewCompleted: statuses.includes("INTERVIEW_COMPLETED"),
+      pendingCount: selectedApps.filter((a) => a.status === "PENDING").length,
+      reviewingCount: selectedApps.filter((a) => a.status === "REVIEWING")
+        .length,
+      shortlistedCount: selectedApps.filter((a) => a.status === "SHORTLISTED")
+        .length,
+      interviewScheduledCount: selectedApps.filter(
+        (a) => a.status === "INTERVIEW_SCHEDULED"
+      ).length,
+      interviewCompletedCount: selectedApps.filter(
+        (a) => a.status === "INTERVIEW_COMPLETED"
+      ).length,
+    };
+  };
+
+  // Handle bulk review (PENDING -> REVIEWING)
+  const handleBulkReview = async () => {
+    const selectedApps = filteredApplications.filter((app) =>
+      selectedApplications.includes(app.id)
+    );
+    const validApps = selectedApps.filter((app) => app.status === "PENDING");
+
+    if (validApps.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "Tidak Ada Kandidat Valid",
+        text: 'Hanya kandidat dengan status "Lamaran Masuk" yang bisa dipindahkan ke Sedang Ditinjau.',
+        confirmButtonColor: "#3b82f6",
+      });
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: "Tinjau Serentak?",
+      html: `<p>Pindahkan <strong>${validApps.length} kandidat</strong> ke tahap Sedang Ditinjau?</p>`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Ya, Tinjau",
+      cancelButtonText: "Batal",
+      confirmButtonColor: "#3b82f6",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      await Promise.all(
+        validApps.map((app) =>
+          fetch(`/api/profile/recruiter/applications/${app.id}`, {
+            method: "PATCH",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ status: "REVIEWING" }),
+          })
+        )
+      );
+
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil!",
+        text: `${validApps.length} kandidat berhasil dipindahkan ke Sedang Ditinjau`,
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+      // Update local state
+      setApplications((prev) =>
+        prev.map((app) =>
+          validApps.find((v) => v.id === app.id)
+            ? { ...app, status: "REVIEWING" }
+            : app
+        )
+      );
+      setSelectedApplications([]);
+      setSelectMode(false);
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: "Gagal memindahkan kandidat",
+      });
+    }
+  };
+
+  // Handle bulk accept (INTERVIEW_COMPLETED -> ACCEPTED)
+  const handleBulkAccept = async () => {
+    const selectedApps = filteredApplications.filter((app) =>
+      selectedApplications.includes(app.id)
+    );
+    const validApps = selectedApps.filter(
+      (app) => app.status === "INTERVIEW_COMPLETED"
+    );
+
+    if (validApps.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "Tidak Ada Kandidat Valid",
+        text: 'Hanya kandidat dengan status "Selesai Interview" yang bisa diterima.',
+        confirmButtonColor: "#10b981",
+      });
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: "Terima Serentak?",
+      html: `<p>Terima <strong>${validApps.length} kandidat</strong>?</p>`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Ya, Terima",
+      cancelButtonText: "Batal",
+      confirmButtonColor: "#10b981",
+      input: "textarea",
+      inputPlaceholder: "Pesan untuk kandidat (opsional)...",
+      inputAttributes: {
+        "aria-label": "Pesan untuk kandidat",
+      },
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      await Promise.all(
+        validApps.map((app) =>
+          fetch(`/api/profile/recruiter/applications/${app.id}`, {
+            method: "PATCH",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              status: "ACCEPTED",
+              recruiterNotes: result.value || "",
+            }),
+          })
+        )
+      );
+
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil!",
+        text: `${validApps.length} kandidat berhasil diterima`,
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+      // Update local state
+      setApplications((prev) =>
+        prev.map((app) =>
+          validApps.find((v) => v.id === app.id)
+            ? { ...app, status: "ACCEPTED" }
+            : app
+        )
+      );
+      setSelectedApplications([]);
+      setSelectMode(false);
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: "Gagal menerima kandidat",
+      });
+    }
+  };
+
   // Handle bulk shortlist (REVIEWING -> SHORTLISTED)
   const handleBulkShortlist = async () => {
     const selectedApps = filteredApplications.filter((app) =>
@@ -387,18 +579,23 @@ export default function JobDetailPage() {
     }
   };
 
-  // Handle bulk delete
-  const handleBulkDelete = async () => {
+  // Handle bulk reject (tolak serentak)
+  const handleBulkReject = async () => {
     if (selectedApplications.length === 0) return;
 
     const result = await Swal.fire({
-      title: "Hapus Serentak?",
-      html: `<p>Hapus <strong>${selectedApplications.length} lamaran</strong> yang dipilih?</p>`,
+      title: "Tolak Serentak?",
+      html: `<p>Tolak <strong>${selectedApplications.length} lamaran</strong> yang dipilih?</p>`,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Ya, Hapus",
+      confirmButtonText: "Ya, Tolak",
       cancelButtonText: "Batal",
       confirmButtonColor: "#ef4444",
+      input: "textarea",
+      inputPlaceholder: "Alasan penolakan (opsional)...",
+      inputAttributes: {
+        "aria-label": "Alasan penolakan",
+      },
     });
 
     if (!result.isConfirmed) return;
@@ -409,10 +606,15 @@ export default function JobDetailPage() {
       await Promise.all(
         selectedApplications.map((appId) =>
           fetch(`/api/profile/recruiter/applications/${appId}`, {
-            method: "DELETE",
+            method: "PATCH",
             headers: {
               Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
             },
+            body: JSON.stringify({
+              status: "REJECTED",
+              recruiterNotes: result.value || "",
+            }),
           })
         )
       );
@@ -420,14 +622,18 @@ export default function JobDetailPage() {
       Swal.fire({
         icon: "success",
         title: "Berhasil!",
-        text: `${selectedApplications.length} lamaran berhasil dihapus`,
+        text: `${selectedApplications.length} lamaran berhasil ditolak`,
         timer: 2000,
         showConfirmButton: false,
       });
 
       // Update local state
       setApplications((prev) =>
-        prev.filter((app) => !selectedApplications.includes(app.id))
+        prev.map((app) =>
+          selectedApplications.includes(app.id)
+            ? { ...app, status: "REJECTED" }
+            : app
+        )
       );
       setSelectedApplications([]);
       setSelectMode(false);
@@ -435,7 +641,7 @@ export default function JobDetailPage() {
       Swal.fire({
         icon: "error",
         title: "Gagal",
-        text: "Gagal menghapus lamaran",
+        text: "Gagal menolak lamaran",
       });
     }
   };
@@ -474,8 +680,8 @@ export default function JobDetailPage() {
     );
   };
 
-  // Handle view application - open modal instead of new page
-  const handleViewApplication = async (application) => {
+  // Handle update status to REVIEWING when viewing documents or application
+  const updateStatusToReviewing = async (application) => {
     if (application.status === "PENDING") {
       try {
         const token = localStorage.getItem("token");
@@ -493,10 +699,37 @@ export default function JobDetailPage() {
             app.id === application.id ? { ...app, status: "REVIEWING" } : app
           )
         );
-      } catch (error) {}
+        return true;
+      } catch (error) {
+        console.error("Failed to update status", error);
+        return false;
+      }
     }
+    return false;
+  };
+
+  // Handle view application - open modal instead of new page
+  const handleViewApplication = async (application) => {
+    await updateStatusToReviewing(application);
     // Open modal instead of navigating
-    setApplicantModal({ isOpen: true, application });
+    setApplicantModal({
+      isOpen: true,
+      application: {
+        ...application,
+        status:
+          application.status === "PENDING" ? "REVIEWING" : application.status,
+      },
+    });
+  };
+
+  // Handle view document - update status to REVIEWING and open document
+  const handleViewDocument = async (application, url, title) => {
+    await updateStatusToReviewing(application);
+    setDocumentModal({
+      isOpen: true,
+      url: url,
+      title: title,
+    });
   };
 
   // Handle shortlist candidate (REVIEWING -> SHORTLISTED)
@@ -710,16 +943,21 @@ export default function JobDetailPage() {
     });
   };
 
-  // Handle delete application
-  const handleDeleteApplication = async (applicationId, applicantName) => {
+  // Handle reject application (tolak lamaran)
+  const handleRejectApplication = async (applicationId, applicantName) => {
     const result = await Swal.fire({
-      title: "Hapus Lamaran?",
-      html: `<p>Apakah Anda yakin ingin menghapus lamaran dari <strong>${applicantName}</strong>?</p>`,
+      title: "Tolak Lamaran?",
+      html: `<p>Apakah Anda yakin ingin menolak lamaran dari <strong>${applicantName}</strong>?</p>`,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Ya, Hapus",
+      confirmButtonText: "Ya, Tolak",
       cancelButtonText: "Batal",
       confirmButtonColor: "#ef4444",
+      input: "textarea",
+      inputPlaceholder: "Alasan penolakan (opsional)...",
+      inputAttributes: {
+        "aria-label": "Alasan penolakan",
+      },
     });
 
     if (!result.isConfirmed) return;
@@ -729,27 +967,38 @@ export default function JobDetailPage() {
       const response = await fetch(
         `/api/profile/recruiter/applications/${applicationId}`,
         {
-          method: "DELETE",
+          method: "PATCH",
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
+          body: JSON.stringify({
+            status: "REJECTED",
+            recruiterNotes: result.value || "",
+          }),
         }
       );
 
       if (response.ok) {
         Swal.fire({
           icon: "success",
-          title: "Lamaran Dihapus",
-          timer: 1500,
+          title: "Lamaran Ditolak",
+          text: "Email notifikasi telah dikirim ke pelamar.",
+          timer: 2000,
           showConfirmButton: false,
         });
-        loadApplications();
+        // Update local state
+        setApplications((prev) =>
+          prev.map((app) =>
+            app.id === applicationId ? { ...app, status: "REJECTED" } : app
+          )
+        );
       }
     } catch (error) {
       Swal.fire({
         icon: "error",
         title: "Gagal",
-        text: "Gagal menghapus lamaran",
+        text: "Gagal menolak lamaran",
       });
     }
   };
@@ -769,15 +1018,27 @@ export default function JobDetailPage() {
     const isRescheduleRequested =
       application.participantStatus === "RESCHEDULE_REQUESTED";
 
+    // Determine card background based on status
+    const getCardBackground = () => {
+      if (isSelected) {
+        return "border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/30";
+      }
+      if (application.status === "REJECTED") {
+        return "border-red-300 bg-red-100 hover:shadow-xl hover:border-red-400";
+      }
+      if (application.status === "ACCEPTED") {
+        return "border-green-300 bg-green-100 hover:shadow-xl hover:border-green-400";
+      }
+      return "border-gray-100 hover:shadow-xl hover:border-blue-100";
+    };
+
     return (
       <div
         key={application.id}
         onClick={() => canSelect && handleSelectApplication(application.id)}
-        className={`group bg-white rounded-2xl border p-5 transition-all duration-300 ${
-          isSelected
-            ? "border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/30"
-            : "border-gray-100 hover:shadow-xl hover:border-blue-100"
-        } ${canSelect ? "cursor-pointer" : ""}`}
+        className={`group rounded-2xl border p-5 transition-all duration-300 ${getCardBackground()} ${
+          canSelect ? "cursor-pointer" : ""
+        }`}
       >
         {/* Header with Avatar and Status */}
         <div className="flex items-start justify-between mb-4">
@@ -883,7 +1144,10 @@ export default function JobDetailPage() {
         {/* Documents Section */}
         {(application.jobseekers?.cvUrl ||
           application.jobseekers?.ktpUrl ||
-          application.jobseekers?.ak1Url) && (
+          application.jobseekers?.ak1Url ||
+          application.jobseekers?.ijazahUrl ||
+          application.jobseekers?.sertifikatUrl ||
+          application.jobseekers?.suratPengalamanUrl) && (
           <div className="mb-4">
             <p className="text-xs font-semibold text-gray-600 mb-2">Berkas:</p>
             <div className="flex flex-wrap gap-2">
@@ -892,11 +1156,11 @@ export default function JobDetailPage() {
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setDocumentModal({
-                      isOpen: true,
-                      url: application.jobseekers.cvUrl,
-                      title: "CV",
-                    });
+                    handleViewDocument(
+                      application,
+                      application.jobseekers.cvUrl,
+                      "CV"
+                    );
                   }}
                   className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-medium hover:bg-indigo-100 transition"
                 >
@@ -909,11 +1173,11 @@ export default function JobDetailPage() {
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setDocumentModal({
-                      isOpen: true,
-                      url: application.jobseekers.ktpUrl,
-                      title: "KTP",
-                    });
+                    handleViewDocument(
+                      application,
+                      application.jobseekers.ktpUrl,
+                      "KTP"
+                    );
                   }}
                   className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-medium hover:bg-green-100 transition"
                 >
@@ -926,16 +1190,67 @@ export default function JobDetailPage() {
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setDocumentModal({
-                      isOpen: true,
-                      url: application.jobseekers.ak1Url,
-                      title: "Kartu AK-1",
-                    });
+                    handleViewDocument(
+                      application,
+                      application.jobseekers.ak1Url,
+                      "Kartu AK-1"
+                    );
                   }}
                   className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-orange-50 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-100 transition"
                 >
                   <FileText className="w-3.5 h-3.5" />
                   AK-1
+                </button>
+              )}
+              {application.jobseekers?.ijazahUrl && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleViewDocument(
+                      application,
+                      application.jobseekers.ijazahUrl,
+                      "Ijazah"
+                    );
+                  }}
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-100 transition"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  Ijazah
+                </button>
+              )}
+              {application.jobseekers?.sertifikatUrl && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleViewDocument(
+                      application,
+                      application.jobseekers.sertifikatUrl,
+                      "Sertifikat"
+                    );
+                  }}
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-xs font-medium hover:bg-amber-100 transition"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  Sertifikat
+                </button>
+              )}
+              {application.jobseekers?.suratPengalamanUrl && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleViewDocument(
+                      application,
+                      application.jobseekers.suratPengalamanUrl,
+                      "Surat Pengalaman"
+                    );
+                  }}
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-teal-50 text-teal-700 rounded-lg text-xs font-medium hover:bg-teal-100 transition"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  Pengalaman
                 </button>
               )}
             </div>
@@ -991,14 +1306,15 @@ export default function JobDetailPage() {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleDeleteApplication(
+                  handleRejectApplication(
                     application.id,
                     `${application.jobseekers?.firstName} ${application.jobseekers?.lastName}`
                   );
                 }}
-                className="flex items-center justify-center px-3 py-2 border border-gray-200 text-gray-500 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition"
+                className="flex items-center justify-center gap-1 px-3 py-2 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition"
               >
-                <Trash2 className="w-4 h-4" />
+                <XCircle className="w-4 h-4" />
+                <span className="text-sm">Tolak</span>
               </button>
             </>
           ) : application.status === "REVIEWING" ? (
@@ -1026,14 +1342,15 @@ export default function JobDetailPage() {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleDeleteApplication(
+                  handleRejectApplication(
                     application.id,
                     `${application.jobseekers?.firstName} ${application.jobseekers?.lastName}`
                   );
                 }}
-                className="flex items-center justify-center px-3 py-2 border border-gray-200 text-gray-500 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition"
+                className="flex items-center justify-center gap-1 px-3 py-2 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition"
               >
-                <Trash2 className="w-4 h-4" />
+                <XCircle className="w-4 h-4" />
+                <span className="text-sm">Tolak</span>
               </button>
             </>
           ) : application.status === "SHORTLISTED" ? (
@@ -1061,14 +1378,15 @@ export default function JobDetailPage() {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleDeleteApplication(
+                  handleRejectApplication(
                     application.id,
                     `${application.jobseekers?.firstName} ${application.jobseekers?.lastName}`
                   );
                 }}
-                className="flex items-center justify-center px-3 py-2 border border-gray-200 text-gray-500 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition"
+                className="flex items-center justify-center gap-1 px-3 py-2 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition"
               >
-                <Trash2 className="w-4 h-4" />
+                <XCircle className="w-4 h-4" />
+                <span className="text-sm">Tolak</span>
               </button>
             </>
           ) : application.status === "INTERVIEW_SCHEDULED" ? (
@@ -1130,14 +1448,15 @@ export default function JobDetailPage() {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleDeleteApplication(
+                  handleRejectApplication(
                     application.id,
                     `${application.jobseekers?.firstName} ${application.jobseekers?.lastName}`
                   );
                 }}
-                className="flex items-center justify-center px-3 py-2 border border-gray-200 text-gray-500 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition"
+                className="flex items-center justify-center gap-1 px-3 py-2 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition"
               >
-                <Trash2 className="w-4 h-4" />
+                <XCircle className="w-4 h-4" />
+                <span className="text-sm">Tolak</span>
               </button>
             </>
           ) : application.status === "INTERVIEW_COMPLETED" ? (
@@ -1165,14 +1484,15 @@ export default function JobDetailPage() {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleDeleteApplication(
+                  handleRejectApplication(
                     application.id,
                     `${application.jobseekers?.firstName} ${application.jobseekers?.lastName}`
                   );
                 }}
-                className="flex items-center justify-center px-3 py-2 border border-gray-200 text-gray-500 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition"
+                className="flex items-center justify-center gap-1 px-3 py-2 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition"
               >
-                <Trash2 className="w-4 h-4" />
+                <XCircle className="w-4 h-4" />
+                <span className="text-sm">Tolak</span>
               </button>
             </>
           ) : application.status === "ACCEPTED" ? (
@@ -1184,6 +1504,17 @@ export default function JobDetailPage() {
               className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition text-sm font-medium"
             >
               <CheckCircle className="w-4 h-4" />
+              Lihat Detail
+            </button>
+          ) : application.status === "REJECTED" ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleViewApplication(application);
+              }}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition text-sm font-medium"
+            >
+              <Eye className="w-4 h-4" />
               Lihat Detail
             </button>
           ) : (
@@ -1201,14 +1532,15 @@ export default function JobDetailPage() {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleDeleteApplication(
+                  handleRejectApplication(
                     application.id,
                     `${application.jobseekers?.firstName} ${application.jobseekers?.lastName}`
                   );
                 }}
-                className="flex items-center justify-center px-3 py-2 border border-gray-200 text-gray-500 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition"
+                className="flex items-center justify-center gap-1 px-3 py-2 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition"
               >
-                <Trash2 className="w-4 h-4" />
+                <XCircle className="w-4 h-4" />
+                <span className="text-sm">Tolak</span>
               </button>
             </>
           )}
@@ -1249,223 +1581,269 @@ export default function JobDetailPage() {
               <div className="flex flex-wrap items-center gap-4 text-gray-600">
                 <div className="flex items-center gap-1">
                   <MapPin className="w-4 h-4" />
-                  {job.location}
+                  {(() => {
+                    // Helper to check if a value is valid (not empty, not "-")
+                    const isValid = (val) =>
+                      val && val.trim() !== "" && val !== "-";
+
+                    // 1. Try job.location
+                    if (
+                      isValid(job.location) &&
+                      job.location.length > 2 &&
+                      !job.location.startsWith("-")
+                    ) {
+                      return job.location;
+                    }
+
+                    // 2. Fallback to Company Address parts
+                    const parts = [
+                      job.companyAddress,
+                      job.companyCity,
+                      job.companyProvince,
+                    ].filter(isValid);
+
+                    return parts.length > 0
+                      ? parts.join(", ")
+                      : "Lokasi tidak tersedia";
+                  })()}
                 </div>
                 <div className="flex items-center gap-1">
                   <Briefcase className="w-4 h-4" />
-                  {job.jobType}
+                  {job.jobType === "FULL_TIME"
+                    ? "Penuh Waktu"
+                    : job.jobType === "PART_TIME"
+                    ? "Paruh Waktu"
+                    : job.jobType === "CONTRACT"
+                    ? "Kontrak"
+                    : job.jobType === "FREELANCE"
+                    ? "Freelance"
+                    : job.jobType === "INTERNSHIP"
+                    ? "Magang"
+                    : job.jobType}
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Stats Cards - 7 Cards Bahasa Indonesia */}
+        {/* Stats Cards - New 4 Card Layout */}
         {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
-            {/* Total */}
-            <button
-              onClick={() => setStatusFilter("all")}
-              className={`text-left rounded-xl p-4 transition-all ${
-                statusFilter === "all"
-                  ? "bg-gray-900 text-white ring-2 ring-gray-900 ring-offset-2"
-                  : "bg-white hover:bg-gray-50 border border-gray-200"
-              }`}
-            >
-              <p
-                className={`text-xs mb-1 ${
-                  statusFilter === "all" ? "text-gray-300" : "text-gray-500"
+          <div className="mb-8">
+            {/* Main Categories */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              {/* Total Card */}
+              <button
+                onClick={() => {
+                  setStatusFilter("all");
+                  setActiveCategory(null);
+                }}
+                className={`relative overflow-hidden rounded-2xl p-5 text-left transition-all duration-300 ${
+                  statusFilter === "all"
+                    ? "bg-gray-900 text-white shadow-lg scale-[1.02]"
+                    : "bg-white border border-gray-200 text-gray-900 hover:border-gray-400"
                 }`}
               >
-                Total
-              </p>
-              <p
-                className={`text-2xl font-bold ${
-                  statusFilter === "all" ? "text-white" : "text-gray-900"
-                }`}
-              >
-                {stats.total}
-              </p>
-            </button>
+                <div className="relative z-10">
+                  <p
+                    className={`text-sm font-medium mb-1 ${
+                      statusFilter === "all" ? "text-gray-300" : "text-gray-500"
+                    }`}
+                  >
+                    Total
+                  </p>
+                  <p className="text-4xl font-bold">{stats.total}</p>
+                </div>
+              </button>
 
-            {/* Lamaran Masuk (PENDING) */}
-            <button
-              onClick={() => setStatusFilter("PENDING")}
-              className={`text-left rounded-xl p-4 transition-all ${
-                statusFilter === "PENDING"
-                  ? "bg-yellow-500 text-white ring-2 ring-yellow-500 ring-offset-2"
-                  : "bg-yellow-50 hover:bg-yellow-100 border border-yellow-200"
-              }`}
-            >
-              <p
-                className={`text-xs mb-1 ${
-                  statusFilter === "PENDING"
-                    ? "text-yellow-100"
-                    : "text-yellow-700"
+              {/* Seleksi Card */}
+              <button
+                onClick={() => {
+                  setStatusFilter("SELEKSI_ALL");
+                  setActiveCategory("SELEKSI");
+                }}
+                className={`relative overflow-hidden rounded-2xl p-5 text-left transition-all duration-300 ${
+                  activeCategory === "SELEKSI"
+                    ? "bg-yellow-400 text-gray-900 shadow-lg scale-[1.02] ring-2 ring-yellow-400 ring-offset-2"
+                    : "bg-white border border-gray-200 text-gray-900 hover:border-yellow-400"
                 }`}
               >
-                Lamaran Masuk
-              </p>
-              <p
-                className={`text-2xl font-bold ${
-                  statusFilter === "PENDING" ? "text-white" : "text-yellow-900"
-                }`}
-              >
-                {stats.pending}
-              </p>
-            </button>
+                <div className="relative z-10">
+                  <p
+                    className={`text-sm font-medium mb-1 ${
+                      activeCategory === "SELEKSI"
+                        ? "text-yellow-900"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    Seleksi
+                  </p>
+                  <p className="text-4xl font-bold">
+                    {activeCategory === "SELEKSI"
+                      ? statusFilter === "PENDING"
+                        ? stats.pending
+                        : statusFilter === "REVIEWING"
+                        ? stats.reviewing
+                        : statusFilter === "SHORTLISTED"
+                        ? stats.shortlisted
+                        : statusFilter === "AI_RECOMMENDED"
+                        ? Object.values(aiRecommendations).filter(
+                            (r) => r.isRecommended
+                          ).length
+                        : stats.pending + stats.reviewing + stats.shortlisted
+                      : stats.pending + stats.reviewing + stats.shortlisted}
+                  </p>
+                </div>
+              </button>
 
-            {/* Rekomendasi AI */}
-            <button
-              onClick={() => setStatusFilter("AI_RECOMMENDED")}
-              className={`text-left rounded-xl p-4 transition-all relative overflow-hidden ${
-                statusFilter === "AI_RECOMMENDED"
-                  ? "bg-gradient-to-br from-amber-500 to-orange-500 text-white ring-2 ring-amber-500 ring-offset-2"
-                  : "bg-gradient-to-br from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 border border-amber-200"
-              }`}
-            >
-              <Sparkles
-                className={`absolute -right-2 -top-2 w-10 h-10 ${
-                  statusFilter === "AI_RECOMMENDED"
-                    ? "text-white/30"
-                    : "text-amber-200"
-                }`}
-              />
-              <p
-                className={`text-xs mb-1 ${
-                  statusFilter === "AI_RECOMMENDED"
-                    ? "text-amber-100"
-                    : "text-amber-700"
+              {/* Interview Card */}
+              <button
+                onClick={() => {
+                  setStatusFilter("INTERVIEW_ALL");
+                  setActiveCategory("INTERVIEW");
+                }}
+                className={`relative overflow-hidden rounded-2xl p-5 text-left transition-all duration-300 ${
+                  activeCategory === "INTERVIEW"
+                    ? "bg-blue-500 text-white shadow-lg scale-[1.02] ring-2 ring-blue-500 ring-offset-2"
+                    : "bg-white border border-gray-200 text-gray-900 hover:border-blue-500"
                 }`}
               >
-                Rekomendasi AI
-              </p>
-              <p
-                className={`text-2xl font-bold ${
-                  statusFilter === "AI_RECOMMENDED"
-                    ? "text-white"
-                    : "text-amber-900"
-                }`}
-              >
-                {
-                  Object.values(aiRecommendations).filter(
-                    (r) => r?.isRecommended
-                  ).length
-                }
-              </p>
-            </button>
+                <div className="relative z-10">
+                  <p
+                    className={`text-sm font-medium mb-1 ${
+                      activeCategory === "INTERVIEW"
+                        ? "text-blue-100"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    Interview
+                  </p>
+                  <p className="text-4xl font-bold">
+                    {activeCategory === "INTERVIEW"
+                      ? statusFilter === "INTERVIEW_SCHEDULED"
+                        ? stats.interview
+                        : statusFilter === "INTERVIEW_COMPLETED"
+                        ? stats.interviewCompleted
+                        : stats.interview + stats.interviewCompleted
+                      : stats.interview + stats.interviewCompleted}
+                  </p>
+                </div>
+              </button>
 
-            {/* Sedang Ditinjau (REVIEWING) */}
-            <button
-              onClick={() => setStatusFilter("REVIEWING")}
-              className={`text-left rounded-xl p-4 transition-all ${
-                statusFilter === "REVIEWING"
-                  ? "bg-blue-500 text-white ring-2 ring-blue-500 ring-offset-2"
-                  : "bg-blue-50 hover:bg-blue-100 border border-blue-200"
-              }`}
-            >
-              <p
-                className={`text-xs mb-1 ${
-                  statusFilter === "REVIEWING"
-                    ? "text-blue-100"
-                    : "text-blue-700"
-                }`}
-              >
-                Sedang Ditinjau
-              </p>
-              <p
-                className={`text-2xl font-bold ${
-                  statusFilter === "REVIEWING" ? "text-white" : "text-blue-900"
-                }`}
-              >
-                {stats.reviewing}
-              </p>
-            </button>
-
-            {/* Lolos Seleksi (SHORTLISTED) */}
-            <button
-              onClick={() => setStatusFilter("SHORTLISTED")}
-              className={`text-left rounded-xl p-4 transition-all ${
-                statusFilter === "SHORTLISTED"
-                  ? "bg-purple-500 text-white ring-2 ring-purple-500 ring-offset-2"
-                  : "bg-purple-50 hover:bg-purple-100 border border-purple-200"
-              }`}
-            >
-              <p
-                className={`text-xs mb-1 ${
-                  statusFilter === "SHORTLISTED"
-                    ? "text-purple-100"
-                    : "text-purple-700"
-                }`}
-              >
-                Lolos Seleksi
-              </p>
-              <p
-                className={`text-2xl font-bold ${
-                  statusFilter === "SHORTLISTED"
-                    ? "text-white"
-                    : "text-purple-900"
-                }`}
-              >
-                {stats.shortlisted || 0}
-              </p>
-            </button>
-
-            {/* Tahap Interview (INTERVIEW_SCHEDULED) */}
-            <button
-              onClick={() => setStatusFilter("INTERVIEW_SCHEDULED")}
-              className={`text-left rounded-xl p-4 transition-all ${
-                statusFilter === "INTERVIEW_SCHEDULED"
-                  ? "bg-indigo-500 text-white ring-2 ring-indigo-500 ring-offset-2"
-                  : "bg-indigo-50 hover:bg-indigo-100 border border-indigo-200"
-              }`}
-            >
-              <p
-                className={`text-xs mb-1 ${
-                  statusFilter === "INTERVIEW_SCHEDULED"
-                    ? "text-indigo-100"
-                    : "text-indigo-700"
-                }`}
-              >
-                Tahap Interview
-              </p>
-              <p
-                className={`text-2xl font-bold ${
-                  statusFilter === "INTERVIEW_SCHEDULED"
-                    ? "text-white"
-                    : "text-indigo-900"
-                }`}
-              >
-                {stats.interview}
-              </p>
-            </button>
-
-            {/* Terima (ACCEPTED) */}
-            <button
-              onClick={() => setStatusFilter("ACCEPTED")}
-              className={`text-left rounded-xl p-4 transition-all ${
-                statusFilter === "ACCEPTED"
-                  ? "bg-green-500 text-white ring-2 ring-green-500 ring-offset-2"
-                  : "bg-green-50 hover:bg-green-100 border border-green-200"
-              }`}
-            >
-              <p
-                className={`text-xs mb-1 ${
+              {/* Diterima Card */}
+              <button
+                onClick={() => {
+                  setStatusFilter("ACCEPTED");
+                  setActiveCategory(null);
+                }}
+                className={`relative overflow-hidden rounded-2xl p-5 text-left transition-all duration-300 ${
                   statusFilter === "ACCEPTED"
-                    ? "text-green-100"
-                    : "text-green-700"
+                    ? "bg-green-500 text-white shadow-lg scale-[1.02] ring-2 ring-green-500 ring-offset-2"
+                    : "bg-white border border-gray-200 text-gray-900 hover:border-green-500"
                 }`}
               >
-                Terima
-              </p>
-              <p
-                className={`text-2xl font-bold ${
-                  statusFilter === "ACCEPTED" ? "text-white" : "text-green-900"
-                }`}
-              >
-                {stats.accepted}
-              </p>
-            </button>
+                <div className="relative z-10">
+                  <p
+                    className={`text-sm font-medium mb-1 ${
+                      statusFilter === "ACCEPTED"
+                        ? "text-green-100"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    Diterima
+                  </p>
+                  <p className="text-4xl font-bold">{stats.accepted}</p>
+                </div>
+              </button>
+            </div>
+
+            {/* Sub Menus / Pipeline */}
+            <div
+              className={`transition-all duration-300 ${
+                activeCategory === "SELEKSI" || activeCategory === "INTERVIEW"
+                  ? "min-h-[60px]"
+                  : "h-0 overflow-hidden"
+              }`}
+            >
+              {activeCategory === "SELEKSI" && (
+                <div className="flex flex-wrap items-center gap-2 animate-fade-in relative z-0">
+                  <button
+                    onClick={() => setStatusFilter("PENDING")}
+                    className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+                      statusFilter === "PENDING"
+                        ? "bg-yellow-100 border-yellow-400 text-yellow-800 shadow-sm"
+                        : "bg-white border-gray-200 text-gray-600 hover:border-yellow-300 hover:bg-yellow-50"
+                    }`}
+                  >
+                    Lamaran Masuk
+                  </button>
+                  {/* Line Connector */}
+                  <div className="w-4 h-0.5 bg-gray-300"></div>
+
+                  <button
+                    onClick={() => setStatusFilter("AI_RECOMMENDED")}
+                    className={`px-4 py-2 rounded-full border text-sm font-medium transition-all flex items-center gap-2 ${
+                      statusFilter === "AI_RECOMMENDED"
+                        ? "bg-amber-100 border-amber-400 text-amber-800 shadow-sm"
+                        : "bg-white border-gray-200 text-gray-600 hover:border-amber-300 hover:bg-amber-50"
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Rekomendasi AI
+                  </button>
+                  <div className="w-4 h-0.5 bg-gray-300"></div>
+
+                  <button
+                    onClick={() => setStatusFilter("REVIEWING")}
+                    className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+                      statusFilter === "REVIEWING"
+                        ? "bg-blue-100 border-blue-400 text-blue-800 shadow-sm"
+                        : "bg-white border-gray-200 text-gray-600 hover:border-blue-300 hover:bg-blue-50"
+                    }`}
+                  >
+                    Sedang Ditinjau
+                  </button>
+                  <div className="w-4 h-0.5 bg-gray-300"></div>
+
+                  <button
+                    onClick={() => setStatusFilter("SHORTLISTED")}
+                    className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+                      statusFilter === "SHORTLISTED"
+                        ? "bg-purple-100 border-purple-400 text-purple-800 shadow-sm"
+                        : "bg-white border-gray-200 text-gray-600 hover:border-purple-300 hover:bg-purple-50"
+                    }`}
+                  >
+                    Lolos Seleksi
+                  </button>
+                </div>
+              )}
+
+              {activeCategory === "INTERVIEW" && (
+                <div className="flex flex-wrap items-center gap-2 animate-fade-in relative z-0">
+                  <button
+                    onClick={() => setStatusFilter("INTERVIEW_SCHEDULED")}
+                    className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+                      statusFilter === "INTERVIEW_SCHEDULED"
+                        ? "bg-blue-100 border-blue-400 text-blue-800 shadow-sm"
+                        : "bg-white border-gray-200 text-gray-600 hover:border-blue-300 hover:bg-blue-50"
+                    }`}
+                  >
+                    Tahap Interview
+                  </button>
+                  <div className="w-4 h-0.5 bg-gray-300"></div>
+
+                  <button
+                    onClick={() => setStatusFilter("INTERVIEW_COMPLETED")}
+                    className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+                      statusFilter === "INTERVIEW_COMPLETED"
+                        ? "bg-teal-100 border-teal-400 text-teal-800 shadow-sm"
+                        : "bg-white border-gray-200 text-gray-600 hover:border-teal-300 hover:bg-teal-50"
+                    }`}
+                  >
+                    Selesai Interview
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -1488,6 +1866,7 @@ export default function JobDetailPage() {
               <option value="REVIEWING">Sedang Ditinjau</option>
               <option value="SHORTLISTED">Lolos Seleksi</option>
               <option value="INTERVIEW_SCHEDULED">Tahap Interview</option>
+              <option value="INTERVIEW_COMPLETED">Selesai Interview</option>
               <option value="ACCEPTED">Diterima</option>
             </select>
 
@@ -1718,58 +2097,120 @@ export default function JobDetailPage() {
       </div>
 
       {/* Floating Action Bar */}
-      {selectedApplications.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
-          <div className="container mx-auto px-4 max-w-7xl">
-            <div className="flex items-center justify-between py-4">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                    <Users className="w-5 h-5 text-indigo-600" />
+      {selectedApplications.length > 0 &&
+        (() => {
+          const info = getSelectedAppsInfo();
+          return (
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
+              <div className="container mx-auto px-4 max-w-7xl">
+                <div className="flex items-center justify-between py-4">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                        <Users className="w-5 h-5 text-indigo-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">
+                          {selectedApplications.length} Kandidat Terpilih
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {info.statuses.length === 1
+                            ? `Status: ${
+                                info.statuses[0] === "PENDING"
+                                  ? "Lamaran Masuk"
+                                  : info.statuses[0] === "REVIEWING"
+                                  ? "Sedang Ditinjau"
+                                  : info.statuses[0] === "SHORTLISTED"
+                                  ? "Lolos Seleksi"
+                                  : info.statuses[0] === "INTERVIEW_SCHEDULED"
+                                  ? "Tahap Interview"
+                                  : info.statuses[0] === "INTERVIEW_COMPLETED"
+                                  ? "Selesai Interview"
+                                  : info.statuses[0]
+                              }`
+                            : `${info.statuses.length} status berbeda`}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">
-                      {selectedApplications.length} Kandidat Terpilih
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Pilih aksi untuk kandidat yang dipilih
-                    </p>
+                  <div className="flex items-center gap-2 flex-wrap justify-end">
+                    <button
+                      onClick={() => setSelectedApplications([])}
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
+                    >
+                      Batal
+                    </button>
+
+                    {/* Tolak - selalu muncul */}
+                    <button
+                      onClick={handleBulkReject}
+                      className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-xl hover:bg-red-200 transition font-medium"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      Tolak
+                    </button>
+
+                    {/* Tinjau - muncul jika ada PENDING */}
+                    {info.hasPending && (
+                      <button
+                        onClick={handleBulkReview}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-medium"
+                      >
+                        <Eye className="w-4 h-4" />
+                        Tinjau{" "}
+                        {info.pendingCount > 0 && info.statuses.length > 1
+                          ? `(${info.pendingCount})`
+                          : ""}
+                      </button>
+                    )}
+
+                    {/* Lolos Seleksi - muncul jika ada REVIEWING atau INTERVIEW status */}
+                    {(info.hasReviewing ||
+                      info.hasInterviewScheduled ||
+                      info.hasInterviewCompleted) && (
+                      <button
+                        onClick={handleBulkShortlist}
+                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition font-medium"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        Lolos Seleksi
+                      </button>
+                    )}
+
+                    {/* Undang Interview - muncul jika ada SHORTLISTED */}
+                    {info.hasShortlisted && (
+                      <button
+                        onClick={handleInviteMultipleInterview}
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition font-medium shadow-lg shadow-indigo-500/30"
+                      >
+                        <Video className="w-4 h-4" />
+                        Undang Interview{" "}
+                        {info.shortlistedCount > 0 && info.statuses.length > 1
+                          ? `(${info.shortlistedCount})`
+                          : ""}
+                      </button>
+                    )}
+
+                    {/* Terima - muncul jika ada INTERVIEW_COMPLETED */}
+                    {info.hasInterviewCompleted && (
+                      <button
+                        onClick={handleBulkAccept}
+                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition font-medium shadow-lg shadow-green-500/30"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        Terima{" "}
+                        {info.interviewCompletedCount > 0 &&
+                        info.statuses.length > 1
+                          ? `(${info.interviewCompletedCount})`
+                          : ""}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setSelectedApplications([])}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={handleBulkDelete}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-xl hover:bg-red-200 transition font-medium"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Hapus
-                </button>
-                <button
-                  onClick={handleBulkShortlist}
-                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition font-medium"
-                >
-                  <CheckCircle className="w-4 h-4" />
-                  Lolos Seleksi
-                </button>
-                <button
-                  onClick={handleInviteMultipleInterview}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition font-medium shadow-lg shadow-indigo-500/30"
-                >
-                  <Video className="w-5 h-5" />
-                  Undang Interview
-                </button>
-              </div>
             </div>
-          </div>
-        </div>
-      )}
+          );
+        })()}
 
       {/* Document Preview Modal */}
       {documentModal.isOpen && (
@@ -1936,7 +2377,10 @@ export default function JobDetailPage() {
                 <div className="flex flex-wrap gap-3">
                   {applicantModal.application.jobseekers?.cvUrl && (
                     <button
-                      onClick={() => {
+                      onClick={async () => {
+                        await updateStatusToReviewing(
+                          applicantModal.application
+                        );
                         setApplicantModal({ isOpen: false, application: null });
                         setDocumentModal({
                           isOpen: true,
@@ -1952,7 +2396,10 @@ export default function JobDetailPage() {
                   )}
                   {applicantModal.application.jobseekers?.ktpUrl && (
                     <button
-                      onClick={() => {
+                      onClick={async () => {
+                        await updateStatusToReviewing(
+                          applicantModal.application
+                        );
                         setApplicantModal({ isOpen: false, application: null });
                         setDocumentModal({
                           isOpen: true,
@@ -1968,7 +2415,10 @@ export default function JobDetailPage() {
                   )}
                   {applicantModal.application.jobseekers?.ak1Url && (
                     <button
-                      onClick={() => {
+                      onClick={async () => {
+                        await updateStatusToReviewing(
+                          applicantModal.application
+                        );
                         setApplicantModal({ isOpen: false, application: null });
                         setDocumentModal({
                           isOpen: true,
@@ -1984,7 +2434,10 @@ export default function JobDetailPage() {
                   )}
                   {applicantModal.application.jobseekers?.ijazahUrl && (
                     <button
-                      onClick={() => {
+                      onClick={async () => {
+                        await updateStatusToReviewing(
+                          applicantModal.application
+                        );
                         setApplicantModal({ isOpen: false, application: null });
                         setDocumentModal({
                           isOpen: true,
@@ -2000,7 +2453,10 @@ export default function JobDetailPage() {
                   )}
                   {applicantModal.application.jobseekers?.sertifikatUrl && (
                     <button
-                      onClick={() => {
+                      onClick={async () => {
+                        await updateStatusToReviewing(
+                          applicantModal.application
+                        );
                         setApplicantModal({ isOpen: false, application: null });
                         setDocumentModal({
                           isOpen: true,
@@ -2018,7 +2474,10 @@ export default function JobDetailPage() {
                   {applicantModal.application.jobseekers
                     ?.suratPengalamanUrl && (
                     <button
-                      onClick={() => {
+                      onClick={async () => {
+                        await updateStatusToReviewing(
+                          applicantModal.application
+                        );
                         setApplicantModal({ isOpen: false, application: null });
                         setDocumentModal({
                           isOpen: true,
