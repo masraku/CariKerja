@@ -265,8 +265,6 @@ async function handleSkillMatching(request) {
             const pythonApiUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL
             
             if (pythonApiUrl && cvUrl) {
-                console.log('[AI-MATCH] Calling Python API:', pythonApiUrl)
-                console.log('[AI-MATCH] Request payload:', { uri_cv: cvUrl, job_title: jobTitle, required_skill: jobSkills })
                 
                 const response = await fetch(`${pythonApiUrl}/api/match`, {
                     method: 'POST',
@@ -278,8 +276,6 @@ async function handleSkillMatching(request) {
                     }),
                     signal: AbortSignal.timeout(10000) // 10 second timeout
                 })
-                
-                console.log('[AI-MATCH] Python response status:', response.status)
 
                 if (response.ok) {
                     const data = await response.json()

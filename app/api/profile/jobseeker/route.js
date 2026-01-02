@@ -396,28 +396,110 @@ export async function GET(request) {
 
     const userId = decoded.userId
 
-    // Fetch profile with all relations - UPDATED INCLUDES
+    // Fetch profile with all relations - OPTIMIZED with select
     const profile = await prisma.jobseekers.findUnique({
       where: { userId: userId },
-      include: {
+      select: {
+        id: true,
+        userId: true,
+        photo: true,
+        firstName: true,
+        lastName: true,
+        dateOfBirth: true,
+        gender: true,
+        religion: true,
+        maritalStatus: true,
+        nationality: true,
+        idNumber: true,
+        phone: true,
+        email: true,
+        address: true,
+        city: true,
+        province: true,
+        postalCode: true,
+        kecamatan: true,
+        kelurahan: true,
+        currentTitle: true,
+        summary: true,
+        linkedinUrl: true,
+        githubUrl: true,
+        portfolioUrl: true,
+        websiteUrl: true,
+        cvUrl: true,
+        ktpUrl: true,
+        ak1Url: true,
+        ijazahUrl: true,
+        sertifikatUrl: true,
+        suratPengalamanUrl: true,
+        lastEducationLevel: true,
+        lastEducationInstitution: true,
+        lastEducationMajor: true,
+        graduationYear: true,
+        desiredJobTitle: true,
+        desiredSalaryMin: true,
+        desiredSalaryMax: true,
+        preferredLocation: true,
+        preferredJobType: true,
+        willingToRelocate: true,
+        availableFrom: true,
+        profileCompleted: true,
+        profileCompleteness: true,
+        isEmployed: true,
+        isLookingForJob: true,
+        hasDisability: true,
+        disabilityType: true,
+        createdAt: true,
+        updatedAt: true,
         educations: {
-          orderBy: {
-            startDate: 'desc'
+          orderBy: { startDate: 'desc' },
+          select: {
+            id: true,
+            institution: true,
+            degree: true,
+            fieldOfStudy: true,
+            level: true,
+            startDate: true,
+            endDate: true,
+            isCurrent: true,
+            gpa: true,
+            diplomaUrl: true
           }
         },
         work_experiences: {
-          orderBy: {
-            startDate: 'desc'
+          orderBy: { startDate: 'desc' },
+          select: {
+            id: true,
+            company: true,
+            position: true,
+            location: true,
+            startDate: true,
+            endDate: true,
+            isCurrent: true,
+            description: true,
+            achievements: true
           }
         },
         jobseeker_skills: {
-          include: {
-            skills: true
+          select: {
+            id: true,
+            proficiencyLevel: true,
+            yearsOfExperience: true,
+            skills: {
+              select: { id: true, name: true }
+            }
           }
         },
         certifications: {
-          orderBy: {
-            issueDate: 'desc'
+          orderBy: { issueDate: 'desc' },
+          select: {
+            id: true,
+            name: true,
+            issuingOrganization: true,
+            issueDate: true,
+            expiryDate: true,
+            credentialId: true,
+            credentialUrl: true,
+            certificateUrl: true
           }
         }
       }

@@ -33,12 +33,32 @@ export async function GET(request) {
       whereClause.status = status
     }
 
-    // Fetch applications with job and company details
+    // Fetch applications with job and company details - OPTIMIZED
     const applications = await prisma.applications.findMany({
       where: whereClause,
-      include: {
+      select: {
+        id: true,
+        status: true,
+        appliedAt: true,
+        coverLetter: true,
+        resumeUrl: true,
+        reviewedAt: true,
+        interviewDate: true,
+        respondedAt: true,
+        recruiterNotes: true,
+        rejectionReason: true,
+        matchStatus: true,
+        matchPercentage: true,
         jobs: {
-          include: {
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            jobType: true,
+            location: true,
+            salaryMin: true,
+            salaryMax: true,
+            isActive: true,
             companies: {
               select: {
                 id: true,
@@ -46,13 +66,6 @@ export async function GET(request) {
                 logo: true,
                 city: true,
                 industry: true
-              }
-            },
-            recruiters: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true
               }
             }
           }

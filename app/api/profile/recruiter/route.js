@@ -24,10 +24,55 @@ export async function GET(request) {
             )
         }
 
-        // Try to find recruiter profile
+        // Try to find recruiter profile - OPTIMIZED with select
         const recruiter = await prisma.recruiters.findUnique({
             where: { userId: user.id },
-            include: { companies: true }
+            select: {
+                id: true,
+                userId: true,
+                companyId: true,
+                firstName: true,
+                lastName: true,
+                position: true,
+                phone: true,
+                department: true,
+                photoUrl: true,
+                canPostJobs: true,
+                canReviewApplications: true,
+                canManageCompany: true,
+                isVerified: true,
+                createdAt: true,
+                companies: {
+                    select: {
+                        id: true,
+                        name: true,
+                        slug: true,
+                        logo: true,
+                        tagline: true,
+                        description: true,
+                        industry: true,
+                        companySize: true,
+                        foundedYear: true,
+                        email: true,
+                        phone: true,
+                        website: true,
+                        address: true,
+                        city: true,
+                        province: true,
+                        postalCode: true,
+                        linkedinUrl: true,
+                        facebookUrl: true,
+                        twitterUrl: true,
+                        instagramUrl: true,
+                        culture: true,
+                        benefits: true,
+                        bio: true,
+                        status: true,
+                        verified: true,
+                        rejectionReason: true
+                    }
+                }
+            }
         })
 
         // ✅ Return null profile if not found (not an error)

@@ -37,6 +37,7 @@ export async function GET() {
         }),
       ]);
 
+    // Add cache headers for better performance
     return NextResponse.json({
       success: true,
       data: {
@@ -45,6 +46,10 @@ export async function GET() {
         totalApplications,
         totalHires,
       },
+    }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300'
+      }
     });
   } catch (error) {
     return NextResponse.json(

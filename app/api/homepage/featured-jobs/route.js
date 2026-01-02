@@ -6,6 +6,7 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url)
         const limit = parseInt(searchParams.get('limit') || '6')
 
+        // OPTIMIZED: use select instead of include
         const jobs = await prisma.jobs.findMany({
             where: {
                 isActive: true
@@ -14,10 +15,18 @@ export async function GET(request) {
             orderBy: {
                 createdAt: 'desc'
             },
-            include: {
+            select: {
+                id: true,
+                title: true,
+                slug: true,
+                location: true,
+                jobType: true,
+                salaryMin: true,
+                salaryMax: true,
+                category: true,
+                createdAt: true,
                 companies: {
                     select: {
-                        id: true,
                         name: true,
                         logo: true,
                         city: true,
@@ -37,26 +46,31 @@ export async function GET(request) {
             id: job.id,
             title: job.title,
             slug: job.slug,
-            companies: {
+            companies: job.companies ? {
                 name: job.companies.name,
                 logo: job.companies.logo,
                 city: job.companies.city,
                 industry: job.companies.industry
-            },
-            location: job.location || job.companies.city,
+            } : null,
+            location: job.location || job.companies?.city || '',
             jobType: job.jobType,
             salaryMin: job.salaryMin,
             salaryMax: job.salaryMax,
-            salaryCurrency: job.salaryCurrency || 'IDR',
+            salaryCurrency: 'IDR',
             postedAt: job.createdAt,
             applicationCount: job._count.applications,
             category: job.category
         }))
 
+        // Add cache headers for better performance
         return NextResponse.json({
             success: true,
             data: {
                 jobs: featuredJobs
+            }
+        }, {
+            headers: {
+                'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120'
             }
         })
 
