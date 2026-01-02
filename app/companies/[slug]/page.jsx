@@ -154,7 +154,7 @@ export default function CompanyProfilePage() {
         <div className="absolute inset-0 bg-gradient-to-br from-[#03587f] to-[#024666] opacity-90" />
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')] bg-cover bg-center mix-blend-overlay opacity-20" />
 
-        <div className="absolute top-6 left-4 lg:left-8 z-10">
+        <div className="absolute top-24 left-4 lg:left-8 z-10">
           <Link
             href="/companies"
             className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white rounded-xl transition-all text-sm font-medium border border-white/20"

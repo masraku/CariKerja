@@ -132,7 +132,7 @@ export default function LandingPage() {
           </h1>
           <div className="flex flex-col items-center justify-center mb-10">
             <div className="h-px w-24 bg-blue-400/50 mb-1"></div>
-            <p className="text-5xl lg:text-2xl text-[#ffd700] font-semibold tracking-wider uppercase">
+            <p className="text-lg sm:text-xl lg:text-2xl text-[#ffd700] font-semibold tracking-wider uppercase">
               Sistem Informasi Matching Pelamar
             </p>
             <p className="text-base lg:text-lg text-blue-100 font-light mt-1">
@@ -304,7 +304,7 @@ export default function LandingPage() {
 
           {/* Companies Grid */}
           {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div
                   key={i}
@@ -313,7 +313,7 @@ export default function LandingPage() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
               {topCompanies.map((company) => (
                 <Link
                   key={company.id}
