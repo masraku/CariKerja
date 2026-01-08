@@ -489,9 +489,22 @@ export default function RecruiterInterviewsPage() {
                       Daftar Kandidat:
                     </h4>
                     {interview.participants
-                      ?.filter((p) => p.status !== "RESCHEDULE_REQUESTED")
+                      ?.filter((p) => {
+                        // Hide reschedule requested (shown separately)
+                        if (p.status === "RESCHEDULE_REQUESTED") return false;
+                        // Hide participants with terminal application statuses
+                        const appStatus = p.applications?.status;
+                        const terminalStatuses = [
+                          "ACCEPTED",
+                          "REJECTED",
+                          "RESIGNED",
+                          "WITHDRAWN",
+                        ];
+                        if (terminalStatuses.includes(appStatus)) return false;
+                        return true;
+                      })
                       .map((participant) => {
-                        const appStatus = participant.applications?.status; // Check application status if available, fallback to participant status logic
+                        const appStatus = participant.applications?.status;
                         let displayStatus = "Pending";
                         let statusColor = "bg-yellow-100 text-yellow-700";
 
@@ -504,15 +517,6 @@ export default function RecruiterInterviewsPage() {
                         } else if (participant.status === "COMPLETED") {
                           displayStatus = "Interview Selesai";
                           statusColor = "bg-green-100 text-green-700";
-                        }
-
-                        // Override if application status is final
-                        if (appStatus === "ACCEPTED") {
-                          displayStatus = "Diterima Bekerja";
-                          statusColor = "bg-green-600 text-white";
-                        } else if (appStatus === "REJECTED") {
-                          displayStatus = "Ditolak";
-                          statusColor = "bg-red-600 text-white";
                         }
 
                         return (
@@ -546,10 +550,9 @@ export default function RecruiterInterviewsPage() {
                               </div>
                             </div>
 
-                            {/* Actions for Candidates (Accept/Reject) - Only if Interview Completed and Application Status is not yet final */}
+                            {/* Actions for Candidates (Accept/Reject) - Only if Interview Completed and Application Status is INTERVIEW_COMPLETED */}
                             {isCompleted &&
-                              appStatus !== "ACCEPTED" &&
-                              appStatus !== "REJECTED" && (
+                              appStatus === "INTERVIEW_COMPLETED" && (
                                 <div className="flex gap-2">
                                   <button
                                     onClick={() =>

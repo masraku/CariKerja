@@ -80,8 +80,14 @@ export default function JobDetailPage() {
   // Recalculate stats when applications change
   useEffect(() => {
     if (applications.length > 0) {
+      // Exclude terminal/hidden statuses from stats
+      const hiddenStatuses = ["WITHDRAWN", "RESIGNED", "REJECTED"];
+      const activeApplications = applications.filter(
+        (a) => !hiddenStatuses.includes(a.status)
+      );
+
       setStats({
-        total: applications.length,
+        total: activeApplications.length,
         pending: applications.filter((a) => a.status === "PENDING").length,
         reviewing: applications.filter((a) => a.status === "REVIEWING").length,
         shortlisted: applications.filter((a) => a.status === "SHORTLISTED")
@@ -159,6 +165,14 @@ export default function JobDetailPage() {
       setLoading(true);
       const token = localStorage.getItem("token");
 
+      // Redirect to login if no token
+      if (!token) {
+        router.push(
+          `/login?redirect=${encodeURIComponent(window.location.pathname)}`
+        );
+        return;
+      }
+
       const response = await fetch(
         `/api/profile/recruiter/jobs/${params.slug}/applications`,
         {
@@ -167,6 +181,15 @@ export default function JobDetailPage() {
           },
         }
       );
+
+      // Redirect to login if unauthorized
+      if (response.status === 401) {
+        localStorage.removeItem("token");
+        router.push(
+          `/login?redirect=${encodeURIComponent(window.location.pathname)}`
+        );
+        return;
+      }
 
       if (response.ok) {
         const data = await response.json();
@@ -191,10 +214,16 @@ export default function JobDetailPage() {
   const filterApplications = () => {
     let filtered = applications;
 
-    // Handle AI_RECOMMENDED filter
+    // Statuses that should be hidden from normal view (terminal/inactive statuses)
+    const hiddenStatuses = ["WITHDRAWN", "RESIGNED", "REJECTED"];
+
+    // Handle AI_RECOMMENDED filter - now works as overlay for all statuses
     if (statusFilter === "AI_RECOMMENDED") {
+      // Show AI recommended applications across ALL statuses (excluding hidden ones)
       filtered = filtered.filter(
-        (app) => aiRecommendations[app.id]?.isRecommended
+        (app) =>
+          aiRecommendations[app.id]?.isRecommended &&
+          !hiddenStatuses.includes(app.status)
       );
     } else if (statusFilter === "SELEKSI_ALL") {
       // Show all applications in Seleksi pipeline
@@ -206,7 +235,11 @@ export default function JobDetailPage() {
       filtered = filtered.filter((app) =>
         ["INTERVIEW_SCHEDULED", "INTERVIEW_COMPLETED"].includes(app.status)
       );
-    } else if (statusFilter !== "all") {
+    } else if (statusFilter === "all") {
+      // Default "all" view - exclude hidden/terminal statuses
+      filtered = filtered.filter((app) => !hiddenStatuses.includes(app.status));
+    } else {
+      // Specific status filter (including WITHDRAWN, RESIGNED if explicitly selected)
       filtered = filtered.filter((app) => app.status === statusFilter);
     }
 
@@ -280,6 +313,16 @@ export default function JobDetailPage() {
       REJECTED: {
         label: "Ditolak",
         color: "bg-red-100 text-red-700",
+        icon: XCircle,
+      },
+      WITHDRAWN: {
+        label: "Mengundurkan Diri",
+        color: "bg-gray-100 text-gray-700",
+        icon: XCircle,
+      },
+      RESIGNED: {
+        label: "Resign",
+        color: "bg-orange-100 text-orange-700",
         icon: XCircle,
       },
     };
@@ -694,21 +737,31 @@ export default function JobDetailPage() {
     if (application.status === "PENDING") {
       try {
         const token = localStorage.getItem("token");
-        await fetch(`/api/profile/recruiter/applications/${application.id}`, {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ status: "REVIEWING" }),
-        });
-        // Update local state
-        setApplications((prev) =>
-          prev.map((app) =>
-            app.id === application.id ? { ...app, status: "REVIEWING" } : app
-          )
+        const response = await fetch(
+          `/api/profile/recruiter/applications/${application.id}`,
+          {
+            method: "PATCH",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ status: "REVIEWING" }),
+          }
         );
-        return true;
+
+        if (response.ok) {
+          // Update local state only if API succeeded
+          setApplications((prev) =>
+            prev.map((app) =>
+              app.id === application.id ? { ...app, status: "REVIEWING" } : app
+            )
+          );
+          return true;
+        } else {
+          const errorData = await response.json();
+          console.error("Failed to update status:", errorData);
+          return false;
+        }
       } catch (error) {
         console.error("Failed to update status", error);
         return false;

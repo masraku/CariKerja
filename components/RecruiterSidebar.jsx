@@ -10,6 +10,8 @@ import {
   LogOut,
   Building2,
   User,
+  UserRoundCheck,
+  Settings2,
   CalendarCheck,
 } from "lucide-react";
 
@@ -41,11 +43,11 @@ export default function RecruiterSidebar() {
       href: "/profile/recruiter/dashboard/interviews",
     },
     {
-      icon: LogOut,
-      label: "Pengajuan Resign",
-      href: "/profile/recruiter/dashboard/resignations",
+      icon: UserRoundCheck,
+      label: "Pelamar Diterima",
+      href: "/profile/recruiter/dashboard/hired",
     },
-    { icon: User, label: "Profil Perusahaan", href: "/profile/recruiter" },
+    { icon: Settings2, label: "Profil Perusahaan", href: "/profile/recruiter" },
   ];
 
   const handleLogout = () => {
@@ -82,29 +84,23 @@ export default function RecruiterSidebar() {
         </Link>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
           {menuItems.map((item) => {
             const Icon = item.icon;
 
-            // More specific active state logic
             let isActive = false;
             if (item.href === "/profile/recruiter/dashboard") {
-              // Dashboard only active on exact match
               isActive = pathname === "/profile/recruiter/dashboard";
             } else if (item.href === "/profile/recruiter") {
-              // Profile only on exact /profile/recruiter
               isActive = pathname === "/profile/recruiter";
             } else if (item.href === "/profile/recruiter/dashboard/jobs") {
-              // Jobs active for /dashboard/jobs but NOT /dashboard/applications
               isActive = pathname.startsWith(
                 "/profile/recruiter/dashboard/jobs"
               );
             } else if (
               item.href === "/profile/recruiter/dashboard/interviews"
             ) {
-              // Interviews active for /dashboard/interviews and /dashboard/interview
               isActive =
                 pathname.startsWith(
                   "/profile/recruiter/dashboard/interviews"
@@ -113,12 +109,10 @@ export default function RecruiterSidebar() {
             } else if (
               item.href === "/profile/recruiter/dashboard/resignations"
             ) {
-              // Resignations active for /dashboard/resignations
               isActive = pathname.startsWith(
                 "/profile/recruiter/dashboard/resignations"
               );
             } else {
-              // Other items: exact match
               isActive = pathname === item.href;
             }
 

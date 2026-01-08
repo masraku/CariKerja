@@ -10,6 +10,7 @@ import {
   Settings,
   LogOut,
   CheckCircle,
+  FileText,
 } from "lucide-react";
 
 export default function AdminSidebar() {
@@ -17,6 +18,7 @@ export default function AdminSidebar() {
   const [pendingCounts, setPendingCounts] = useState({
     companies: 0,
     jobs: 0,
+    contracts: 0,
   });
 
   // Fetch pending counts for notifications
@@ -35,6 +37,11 @@ export default function AdminSidebar() {
           headers: { Authorization: `Bearer ${token}` },
         });
 
+        // Fetch pending contracts count
+        const contractsRes = await fetch("/api/admin/contracts/pending-count", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
         if (companiesRes.ok) {
           const companiesData = await companiesRes.json();
           setPendingCounts((prev) => ({
@@ -46,6 +53,14 @@ export default function AdminSidebar() {
         if (jobsRes.ok) {
           const jobsData = await jobsRes.json();
           setPendingCounts((prev) => ({ ...prev, jobs: jobsData.count || 0 }));
+        }
+
+        if (contractsRes.ok) {
+          const contractsData = await contractsRes.json();
+          setPendingCounts((prev) => ({
+            ...prev,
+            contracts: contractsData.count || 0,
+          }));
         }
       } catch (error) {
         console.error("Failed to fetch pending counts:", error);
@@ -72,6 +87,12 @@ export default function AdminSidebar() {
       label: "Lowongan",
       href: "/admin/jobs",
       showBullet: pendingCounts.jobs > 0,
+    },
+    {
+      icon: FileText,
+      label: "Pendaftaran Kontrak",
+      href: "/admin/contracts",
+      showBullet: pendingCounts.contracts > 0,
     },
     { icon: Settings, label: "Pengaturan", href: "/admin/settings" },
   ];

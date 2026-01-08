@@ -1,30 +1,17 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { verifyToken } from '@/lib/auth'
+import { requireRecruiter } from '@/lib/authHelper'
 
 // GET /api/resignations
 // Recruiter gets list of resignations for their company
 export async function GET(request) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '')
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await requireRecruiter(request)
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status })
     }
 
-    const decoded = verifyToken(token)
-    if (!decoded || decoded.role !== 'RECRUITER') {
-      return NextResponse.json({ error: 'Only recruiters can view resignations' }, { status: 403 })
-    }
-
-    // Get recruiter profile
-    const recruiter = await prisma.recruiters.findUnique({
-      where: { userId: decoded.userId },
-      include: { companies: true }
-    })
-
-    if (!recruiter) {
-      return NextResponse.json({ error: 'Recruiter profile not found' }, { status: 404 })
-    }
+    const { recruiter } = auth
 
     // Get query params
     const { searchParams } = new URL(request.url)

@@ -282,7 +282,8 @@ export async function PATCH(request, context) {
           isEmployed: true,
           isLookingForJob: false,
           employedAt: new Date(),
-          employedCompany: updatedApplication.jobs.companies.name
+          employedCompany: updatedApplication.jobs.companies.name,
+          currentTitle: `${updatedApplication.jobs.companies.name} - ${updatedApplication.jobs.title}`
         }
       })
     }

@@ -94,8 +94,9 @@ function InterviewRoomContent() {
             method: "PATCH",
             headers: {
               Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
             },
-            body: JSON.stringify({ participantId }),
+            body: JSON.stringify({ participantId: participantId || null }),
           }
         );
 

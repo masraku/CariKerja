@@ -41,6 +41,7 @@ model applications {
   jobseekers             jobseekers               @relation(fields: [jobseekerId], references: [id], onDelete: Cascade)
   interview_participants interview_participants[]
   resignation            resignations?
+  contract_workers       contract_workers[]
 
   @@unique([jobId, jobseekerId])
   @@index([appliedAt])
@@ -86,47 +87,48 @@ model certifications {
 }
 
 model companies {
-  id              String        @id
-  name            String
-  slug            String        @unique
-  logo            String?
-  tagline         String?
-  description     String?
-  industry        String
-  companySize     String
-  foundedYear     Int?
-  email           String
-  phone           String?
-  website         String?
-  address         String
-  city            String
-  province        String
-  postalCode      String?
-  linkedinUrl     String?
-  facebookUrl     String?
-  twitterUrl      String?
-  instagramUrl    String?
-  npwp            String?
-  aktaPendirian   String?
-  siup            String?
-  domisili        String?
-  status          CompanyStatus @default(PENDING_VERIFICATION)
-  verified        Boolean       @default(false)
-  verifiedAt      DateTime?
-  rejectionReason String?
-  bio             String?
-  culture         String?
-  benefits        String[]
-  gallery         String[]
-  totalEmployees  Int?
-  totalHired      Int           @default(0)
-  rating          Float         @default(0)
-  totalReviews    Int           @default(0)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime
-  jobs            jobs[]
-  recruiters      recruiters[]
-  reviews         reviews[]
+  id                     String                   @id
+  name                   String
+  slug                   String                   @unique
+  logo                   String?
+  tagline                String?
+  description            String?
+  industry               String
+  companySize            String
+  foundedYear            Int?
+  email                  String
+  phone                  String?
+  website                String?
+  address                String
+  city                   String
+  province               String
+  postalCode             String?
+  linkedinUrl            String?
+  facebookUrl            String?
+  twitterUrl             String?
+  instagramUrl           String?
+  npwp                   String?
+  aktaPendirian          String?
+  siup                   String?
+  domisili               String?
+  status                 CompanyStatus            @default(PENDING_VERIFICATION)
+  verified               Boolean                  @default(false)
+  verifiedAt             DateTime?
+  rejectionReason        String?
+  bio                    String?
+  culture                String?
+  benefits               String[]
+  gallery                String[]
+  totalEmployees         Int?
+  totalHired             Int                      @default(0)
+  rating                 Float                    @default(0)
+  totalReviews           Int                      @default(0)
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime
+  jobs                   jobs[]
+  recruiters             recruiters[]
+  reviews                reviews[]
+  contract_registrations contract_registrations[]
 
   @@index([city])
   @@index([industry])
@@ -362,6 +364,7 @@ model jobseekers {
   saved_jobs               saved_jobs[]
   work_experiences         work_experiences[]
   resignations             resignations[]
+  contract_workers         contract_workers[]
 }
 
 model messages {
@@ -420,26 +423,27 @@ model profile_views {
 }
 
 model recruiters {
-  id                    String       @id
-  userId                String       @unique
-  companyId             String
-  firstName             String
-  lastName              String
-  position              String
-  phone                 String?
-  department            String?
-  photoUrl              String?
-  canPostJobs           Boolean      @default(true)
-  canReviewApplications Boolean      @default(true)
-  canManageCompany      Boolean      @default(false)
-  isVerified            Boolean      @default(false)
-  createdAt             DateTime     @default(now())
-  updatedAt             DateTime
-  interviews            interviews[]
-  jobs                  jobs[]
-  companies             companies    @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  users                 users        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  reviews               reviews[]
+  id                     String                   @id
+  userId                 String                   @unique
+  companyId              String
+  firstName              String
+  lastName               String
+  position               String
+  phone                  String?
+  department             String?
+  photoUrl               String?
+  canPostJobs            Boolean                  @default(true)
+  canReviewApplications  Boolean                  @default(true)
+  canManageCompany       Boolean                  @default(false)
+  isVerified             Boolean                  @default(false)
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime
+  interviews             interviews[]
+  jobs                   jobs[]
+  companies              companies                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  users                  users                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviews                reviews[]
+  contract_registrations contract_registrations[]
 
   @@index([companyId])
   @@index([userId])
@@ -598,6 +602,58 @@ model resignations {
   @@index([applicationId])
   @@index([jobseekerId])
   @@index([status])
+}
+
+model contract_registrations {
+  id                  String                     @id @default(cuid())
+  recruiterId         String
+  companyId           String
+  status              ContractRegistrationStatus @default(PENDING)
+  recruiterDocUrl     String? // Document uploaded by recruiter when submitting
+  adminNotes          String?
+  adminResponseDocUrl String? // Document uploaded by admin when approving
+  processedAt         DateTime?
+  processedBy         String?
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
+
+  recruiters recruiters         @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+  companies  companies          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  workers    contract_workers[]
+
+  @@index([recruiterId])
+  @@index([companyId])
+  @@index([status])
+}
+
+model contract_workers {
+  id                     String   @id @default(cuid())
+  contractRegistrationId String
+  applicationId          String
+  jobseekerId            String
+  jobTitle               String
+  startDate              DateTime
+  endDate                DateTime
+  salary                 BigInt
+  attachmentUrl          String?
+  notes                  String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  contract_registration contract_registrations @relation(fields: [contractRegistrationId], references: [id], onDelete: Cascade)
+  applications          applications           @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  jobseekers            jobseekers             @relation(fields: [jobseekerId], references: [id], onDelete: Cascade)
+
+  @@unique([contractRegistrationId, applicationId])
+  @@index([contractRegistrationId])
+  @@index([applicationId])
+  @@index([jobseekerId])
+}
+
+enum ContractRegistrationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum ResignationStatus {
