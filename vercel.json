@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/complete-interviews",
       "schedule": "0 18 * * *"
+    },
+    {
+      "path": "/api/cron/complete-contracts",
+      "schedule": "0 1 * * *"
     }
   ]
 }

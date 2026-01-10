@@ -167,36 +167,42 @@ export default function LandingPage() {
           </form>
 
           {/* Stats */}
-          {!loading && stats && (
-            <div className="grid grid-cols-3 gap-2 sm:gap-4 max-w-3xl mx-auto">
-              {[
-                {
-                  label: "Total Lowongan",
-                  value: stats.totalJobs,
-                },
-                {
-                  label: "Perusahaan",
-                  value: stats.totalCompanies,
-                },
-                {
-                  label: "Talenta Diterima",
-                  value: stats.totalHires,
-                },
-              ].map((stat, i) => (
-                <div
-                  key={i}
-                  className="bg-white/10 backdrop-blur-md border border-white/10 rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg text-center"
-                >
-                  <div className="text-xl sm:text-2xl lg:text-4xl font-bold text-white mb-1">
-                    {stat.value?.toLocaleString() || "0"}+
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 max-w-3xl mx-auto">
+            {[
+              {
+                label: "Total Lowongan",
+                value: stats?.totalJobs,
+              },
+              {
+                label: "Perusahaan",
+                value: stats?.totalCompanies,
+              },
+              {
+                label: "Talenta Diterima",
+                value: stats?.totalHires,
+              },
+            ].map((stat, i) => (
+              <div
+                key={i}
+                className="bg-white/10 backdrop-blur-md border border-white/10 rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg text-center min-h-[80px] sm:min-h-[100px] lg:min-h-[120px] flex flex-col justify-center"
+              >
+                {loading ? (
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-white/30 border-t-white animate-spin" />
                   </div>
-                  <div className="text-[10px] sm:text-xs lg:text-sm text-blue-200 font-medium uppercase tracking-wider leading-tight">
-                    {stat.label}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ) : (
+                  <>
+                    <div className="text-xl sm:text-2xl lg:text-4xl font-bold text-white mb-1">
+                      {stat.value?.toLocaleString() || "0"}+
+                    </div>
+                    <div className="text-[10px] sm:text-xs lg:text-sm text-blue-200 font-medium uppercase tracking-wider leading-tight">
+                      {stat.label}
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

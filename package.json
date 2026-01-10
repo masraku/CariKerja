@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbo",
     "build": "prisma generate && next build",
     "postinstall": "prisma generate",
     "start": "next start",
@@ -15,7 +15,7 @@
     "bcryptjs": "^3.0.3",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.553.0",
-    "next": "^16.0.7",
+    "next": "15",
     "react": "19.2.1",
     "react-dom": "19.2.1",
     "recharts": "^3.5.1",
@@ -30,7 +30,7 @@
     "@types/react": "^19.2.7",
     "baseline-browser-mapping": "^2.9.3",
     "eslint": "^9",
-    "eslint-config-next": "^16.0.7",
+    "eslint-config-next": "15",
     "prisma": "^6.19.0",
     "tailwindcss": "^4"
   }

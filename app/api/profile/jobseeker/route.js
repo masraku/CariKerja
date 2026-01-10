@@ -418,6 +418,12 @@ export async function GET(request) {
         province: true,
         postalCode: true,
         kecamatan: true,
+        // Include users to get registration email
+        users: {
+          select: {
+            email: true
+          }
+        },
         kelurahan: true,
         currentTitle: true,
         summary: true,
@@ -448,8 +454,32 @@ export async function GET(request) {
         isLookingForJob: true,
         hasDisability: true,
         disabilityType: true,
+        employedCompany: true,
         createdAt: true,
         updatedAt: true,
+        // Include applications with contract workers to check employment status
+        applications: {
+          select: {
+            id: true,
+            status: true,
+            contract_workers: {
+              select: {
+                id: true,
+                status: true,
+                jobTitle: true
+              }
+            },
+            jobs: {
+              select: {
+                companies: {
+                  select: {
+                    name: true
+                  }
+                }
+              }
+            }
+          }
+        },
         educations: {
           orderBy: { startDate: 'desc' },
           select: {
@@ -512,9 +542,25 @@ export async function GET(request) {
       )
     }
 
+    // Check for active contract workers to determine employment status
+    const activeContractApp = profile.applications?.find(app => 
+      app.contract_workers && 
+      app.contract_workers.length > 0 &&
+      app.contract_workers.some(cw => cw.status === 'ACTIVE')
+    )
+    
+    const hasActiveContract = !!activeContractApp
+    const employedCompanyName = activeContractApp?.jobs?.companies?.name || null
+
     // Transform jobseekerSkills to simple skills array for frontend
     const transformedProfile = {
       ...profile,
+      // Use registration email if jobseeker email is empty
+      email: profile.email || profile.users?.email || '',
+      // Override isEmployed and isLookingForJob based on active contract
+      isEmployed: hasActiveContract,
+      isLookingForJob: !hasActiveContract,
+      employedCompany: employedCompanyName || profile.employedCompany,
       skills: profile.jobseeker_skills.map(js => ({
         id: js.id,
         name: js.skills.name,
@@ -522,6 +568,10 @@ export async function GET(request) {
         yearsOfExperience: js.yearsOfExperience
       }))
     }
+    
+    // Remove applications and users from response (not needed in frontend)
+    delete transformedProfile.applications
+    delete transformedProfile.users
 
     return NextResponse.json({ 
       success: true,

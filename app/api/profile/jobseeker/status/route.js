@@ -2,75 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireJobseeker } from '@/lib/authHelper'
 
-// PUT: Update jobseeker employment status
-export async function PUT(request) {
-    try {
-        const auth = await requireJobseeker(request)
-        
-        if (auth.error) {
-            return NextResponse.json({ error: auth.error }, { status: auth.status })
-        }
-
-        const body = await request.json()
-        const { isEmployed, isLookingForJob, employedCompany } = body
-
-        // Get current jobseeker
-        const jobseeker = await prisma.jobseekers.findUnique({
-            where: { userId: auth.user.id }
-        })
-
-        if (!jobseeker) {
-            return NextResponse.json({ error: 'Jobseeker profile not found' }, { status: 404 })
-        }
-
-        // Prepare update data
-        const updateData = {}
-
-        if (typeof isEmployed === 'boolean') {
-            updateData.isEmployed = isEmployed
-            if (isEmployed) {
-                updateData.employedAt = new Date()
-                if (employedCompany) {
-                    updateData.employedCompany = employedCompany
-                }
-            } else {
-                updateData.employedAt = null
-                updateData.employedCompany = null
-            }
-        }
-
-        if (typeof isLookingForJob === 'boolean') {
-            updateData.isLookingForJob = isLookingForJob
-        }
-
-        // Update jobseeker
-        const updatedJobseeker = await prisma.jobseekers.update({
-            where: { id: jobseeker.id },
-            data: updateData,
-            select: {
-                id: true,
-                isEmployed: true,
-                isLookingForJob: true,
-                employedAt: true,
-                employedCompany: true
-            }
-        })
-
-        return NextResponse.json({
-            success: true,
-            message: 'Status berhasil diupdate',
-            data: updatedJobseeker
-        })
-
-    } catch (error) {
-        return NextResponse.json(
-            { error: 'Failed to update status' },
-            { status: 500 }
-        )
-    }
-}
-
-// GET: Get current jobseeker status
+// GET: Get current jobseeker status (computed from contract workers)
 export async function GET(request) {
     try {
         const auth = await requireJobseeker(request)
@@ -86,7 +18,27 @@ export async function GET(request) {
                 isEmployed: true,
                 isLookingForJob: true,
                 employedAt: true,
-                employedCompany: true
+                employedCompany: true,
+                applications: {
+                    select: {
+                        contract_workers: {
+                            select: {
+                                id: true,
+                                status: true,
+                                jobTitle: true
+                            }
+                        },
+                        jobs: {
+                            select: {
+                                companies: {
+                                    select: {
+                                        name: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         })
 
@@ -94,9 +46,26 @@ export async function GET(request) {
             return NextResponse.json({ error: 'Jobseeker profile not found' }, { status: 404 })
         }
 
+        // Check for active contract workers to determine employment status
+        const activeContractApp = jobseeker.applications?.find(app => 
+            app.contract_workers && 
+            app.contract_workers.length > 0 &&
+            app.contract_workers.some(cw => cw.status === 'ACTIVE')
+        )
+        
+        const hasActiveContract = !!activeContractApp
+        const employedCompanyName = activeContractApp?.jobs?.companies?.name || null
+
         return NextResponse.json({
             success: true,
-            data: jobseeker
+            data: {
+                id: jobseeker.id,
+                // Status is now computed from contract workers
+                isEmployed: hasActiveContract,
+                isLookingForJob: !hasActiveContract,
+                employedAt: hasActiveContract ? new Date() : null,
+                employedCompany: employedCompanyName || jobseeker.employedCompany
+            }
         })
 
     } catch (error) {

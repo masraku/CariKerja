@@ -19,6 +19,11 @@ import {
   Check,
   AlertCircle,
   Download,
+  Eye,
+  StopCircle,
+  Phone,
+  Mail,
+  Search,
 } from "lucide-react";
 
 export default function ContractRegistrationPage() {
@@ -40,6 +45,10 @@ export default function ContractRegistrationPage() {
   const [showFormModal, setShowFormModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [previewDocUrl, setPreviewDocUrl] = useState(null); // For document preview modal
+  const [selectedWorkerDetail, setSelectedWorkerDetail] = useState(null); // For worker detail modal
+  const [terminatingId, setTerminatingId] = useState(null); // For termination loading state
+  const [selectedBatchDetail, setSelectedBatchDetail] = useState(null); // For batch detail modal
+  const [searchQuery, setSearchQuery] = useState(""); // Search query for registered workers
 
   // Form state
   const [formData, setFormData] = useState({
@@ -111,6 +120,96 @@ export default function ContractRegistrationPage() {
         return [...prev, applicationId];
       }
     });
+  };
+
+  const handleTerminateContract = async (worker, contract) => {
+    const result = await Swal.fire({
+      title: "Akhiri Kontrak?",
+      html: `
+        <p class="text-gray-600 mb-3">Anda akan mengakhiri kontrak:</p>
+        <p class="font-semibold">${worker.jobseekers?.firstName} ${worker.jobseekers?.lastName}</p>
+        <p class="text-sm text-gray-500">${worker.jobTitle}</p>
+      `,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Ya, Akhiri Kontrak",
+      cancelButtonText: "Batal",
+      input: "textarea",
+      inputPlaceholder: "Alasan pengakhiran kontrak (opsional)...",
+      inputAttributes: {
+        "aria-label": "Alasan pengakhiran"
+      }
+    });
+
+    if (result.isConfirmed) {
+      try {
+        setTerminatingId(worker.id);
+        const token = localStorage.getItem("token");
+
+        const response = await fetch("/api/contracts/terminate", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            workerId: worker.id,
+            reason: result.value || "Diakhiri oleh recruiter"
+          }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          Swal.fire({
+            icon: "success",
+            title: "Kontrak Diakhiri",
+            text: data.message,
+          });
+          loadData();
+        } else {
+          throw new Error(data.error);
+        }
+      } catch (error) {
+        console.error("Error terminating contract:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Gagal",
+          text: error.message || "Gagal mengakhiri kontrak",
+        });
+      } finally {
+        setTerminatingId(null);
+      }
+    }
+  };
+
+  const formatRupiah = (num) => {
+    if (!num) return "Rp 0";
+    return `Rp ${Number(num).toLocaleString("id-ID")}`;
+  };
+
+  const formatDate = (date) => {
+    if (!date) return "-";
+    return new Date(date).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
+  };
+
+  const getWorkerStatusBadge = (worker) => {
+    const now = new Date();
+    const endDate = new Date(worker.endDate);
+    
+    if (worker.status === "TERMINATED") {
+      return { text: "Diakhiri", color: "bg-red-100 text-red-700" };
+    }
+    if (worker.status === "COMPLETED" || endDate < now) {
+      return { text: "Selesai", color: "bg-gray-100 text-gray-700" };
+    }
+    return { text: "Aktif", color: "bg-green-100 text-green-700" };
   };
 
   const handleSelectAll = () => {
@@ -545,6 +644,70 @@ export default function ContractRegistrationPage() {
                       </span>
                     </div>
 
+                    {/* Contract Details */}
+                    {contract.workers?.[0] && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 p-3 bg-yellow-50 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-yellow-600" />
+                          <div>
+                            <p className="text-xs text-gray-500">Periode Kontrak</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {contract.workers[0].startDate
+                                ? new Date(contract.workers[0].startDate).toLocaleDateString("id-ID", {
+                                    day: "numeric",
+                                    month: "short",
+                                    year: "numeric",
+                                  })
+                                : "-"}{" "}
+                              -{" "}
+                              {contract.workers[0].endDate
+                                ? new Date(contract.workers[0].endDate).toLocaleDateString("id-ID", {
+                                    day: "numeric",
+                                    month: "short",
+                                    year: "numeric",
+                                  })
+                                : "-"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <DollarSign className="w-4 h-4 text-yellow-600" />
+                          <div>
+                            <p className="text-xs text-gray-500">Gaji/Bulan</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {contract.workers[0].salary
+                                ? `Rp ${Number(contract.workers[0].salary).toLocaleString("id-ID")}`
+                                : "-"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-yellow-600" />
+                          <div>
+                            <p className="text-xs text-gray-500">Lampiran</p>
+                            {contract.recruiterDocUrl ? (
+                              <button
+                                onClick={() => setPreviewDocUrl(contract.recruiterDocUrl)}
+                                className="text-sm font-medium text-yellow-700 hover:text-yellow-800 underline"
+                              >
+                                Lihat Dokumen
+                              </button>
+                            ) : (
+                              <p className="text-sm font-medium text-gray-400">Tidak ada</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Notes */}
+                    {contract.notes && (
+                      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                        <p className="text-xs text-gray-500 mb-1">Catatan:</p>
+                        <p className="text-sm text-gray-700">{contract.notes}</p>
+                      </div>
+                    )}
+
                     {/* Worker list in this batch */}
                     <div className="border-t border-gray-100 pt-4">
                       <p className="text-xs text-gray-500 mb-2 font-medium">
@@ -599,83 +762,150 @@ export default function ContractRegistrationPage() {
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {registeredWorkers.map((contract, index) => (
-                  <div
-                    key={contract.id}
-                    className="bg-white rounded-xl border border-green-200 p-5 shadow-sm"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white font-bold">
-                          <CheckCircle className="w-6 h-6" />
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-gray-900">
-                            Batch Kontrak #{index + 1}
-                          </h3>
-                          <p className="text-sm text-gray-500">
-                            {contract.workers?.length || 0} pekerja • Disetujui{" "}
-                            {new Date(
-                              contract.updatedAt || contract.createdAt
-                            ).toLocaleDateString("id-ID")}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                          <CheckCircle className="w-3 h-3" />
-                          Disetujui Admin
-                        </span>
-                        {contract.adminResponseDocUrl && (
-                          <button
-                            onClick={() => setPreviewDocUrl(contract.adminResponseDocUrl)}
-                            className="text-xs text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1"
-                          >
-                            <FileText className="w-3 h-3" />
-                            Lihat Surat Balasan
-                          </button>
-                        )}
-                      </div>
-                    </div>
+              <>
+                {/* Search Bar */}
+                <div className="bg-white rounded-xl p-4 mb-4 shadow-sm">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Cari nama pekerja, jabatan, atau batch..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                    />
+                  </div>
+                </div>
 
-                    {/* Worker list in this batch */}
-                    <div className="border-t border-gray-100 pt-4">
-                      <p className="text-xs text-gray-500 mb-2 font-medium">
-                        DAFTAR PEKERJA:
-                      </p>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                        {contract.workers?.map((worker) => (
-                          <div
-                            key={worker.id}
-                            className="flex items-center gap-2 p-2 bg-green-50 rounded-lg"
-                          >
-                            <div className="w-8 h-8 rounded-full bg-green-200 flex items-center justify-center text-xs font-bold text-green-600 overflow-hidden">
-                              {worker.jobseekers?.photo ? (
-                                <img
-                                  src={worker.jobseekers.photo}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                worker.jobseekers?.firstName?.charAt(0) || "U"
-                              )}
+                {/* Batch Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {registeredWorkers
+                    .filter((contract) => {
+                      if (!searchQuery) return true;
+                      const query = searchQuery.toLowerCase();
+                      // Search in batch index
+                      const batchMatch = `batch ${registeredWorkers.indexOf(contract) + 1}`.includes(query);
+                      // Search in worker names and job titles
+                      const workerMatch = contract.workers?.some(
+                        (w) =>
+                          `${w.jobseekers?.firstName} ${w.jobseekers?.lastName}`.toLowerCase().includes(query) ||
+                          w.jobTitle?.toLowerCase().includes(query)
+                      );
+                      return batchMatch || workerMatch;
+                    })
+                    .map((contract, index) => {
+                      const activeWorkers = contract.workers?.filter(w => w.status === "ACTIVE" && new Date(w.endDate) >= new Date()).length || 0;
+                      const totalWorkers = contract.workers?.length || 0;
+                      const completedWorkers = contract.workers?.filter(w => w.status === "COMPLETED" || (w.status === "ACTIVE" && new Date(w.endDate) < new Date())).length || 0;
+                      const terminatedWorkers = contract.workers?.filter(w => w.status === "TERMINATED").length || 0;
+
+                      return (
+                        <div
+                          key={contract.id}
+                          className="bg-white rounded-xl border border-green-200 p-5 shadow-sm hover:shadow-md transition"
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white font-bold">
+                                <CheckCircle className="w-6 h-6" />
+                              </div>
+                              <div>
+                                <h3 className="font-bold text-gray-900">
+                                  Batch Kontrak #{registeredWorkers.indexOf(contract) + 1}
+                                </h3>
+                                <p className="text-sm text-gray-500">
+                                  Disetujui {new Date(contract.updatedAt || contract.createdAt).toLocaleDateString("id-ID")}
+                                </p>
+                              </div>
                             </div>
-                            <div className="overflow-hidden">
-                              <p className="text-sm font-medium text-gray-900 truncate">
-                                {worker.jobseekers?.firstName}{" "}
-                                {worker.jobseekers?.lastName}
-                              </p>
-                              <p className="text-xs text-gray-500 truncate">
-                                {worker.jobTitle}
-                              </p>
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                              <CheckCircle className="w-3 h-3" />
+                              Disetujui
+                            </span>
+                          </div>
+
+                          {/* Stats */}
+                          <div className="grid grid-cols-3 gap-2 mb-4">
+                            <div className="bg-green-50 rounded-lg p-2 text-center">
+                              <p className="text-lg font-bold text-green-600">{activeWorkers}</p>
+                              <p className="text-xs text-green-700">Aktif</p>
+                            </div>
+                            <div className="bg-gray-50 rounded-lg p-2 text-center">
+                              <p className="text-lg font-bold text-gray-600">{completedWorkers}</p>
+                              <p className="text-xs text-gray-600">Selesai</p>
+                            </div>
+                            <div className="bg-red-50 rounded-lg p-2 text-center">
+                              <p className="text-lg font-bold text-red-600">{terminatedWorkers}</p>
+                              <p className="text-xs text-red-600">Diakhiri</p>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </div>
+
+                          {/* Worker Names Preview */}
+                          <div className="mb-4">
+                            <p className="text-xs text-gray-500 mb-2">Pekerja:</p>
+                            <div className="flex flex-wrap gap-1">
+                              {contract.workers?.slice(0, 3).map((worker) => (
+                                <span
+                                  key={worker.id}
+                                  className={`px-2 py-1 rounded-full text-xs ${
+                                    worker.status === "TERMINATED"
+                                      ? "bg-red-100 text-red-700"
+                                      : worker.status === "COMPLETED" || new Date(worker.endDate) < new Date()
+                                      ? "bg-gray-100 text-gray-600"
+                                      : "bg-green-100 text-green-700"
+                                  }`}
+                                >
+                                  {worker.jobseekers?.firstName}
+                                </span>
+                              ))}
+                              {contract.workers?.length > 3 && (
+                                <span className="px-2 py-1 bg-gray-100 text-gray-500 rounded-full text-xs">
+                                  +{contract.workers.length - 3}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex gap-2 pt-3 border-t border-gray-100">
+                            <button
+                              onClick={() => setSelectedBatchDetail(contract)}
+                              className="flex-1 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg font-medium hover:bg-blue-100 transition flex items-center justify-center gap-2"
+                            >
+                              <Eye className="w-4 h-4" />
+                              Lihat Detail
+                            </button>
+                            {contract.adminResponseDocUrl && (
+                              <button
+                                onClick={() => setPreviewDocUrl(contract.adminResponseDocUrl)}
+                                className="px-4 py-2 bg-amber-50 text-amber-600 rounded-lg font-medium hover:bg-amber-100 transition flex items-center gap-2"
+                              >
+                                <FileText className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+
+                {/* No results */}
+                {searchQuery && registeredWorkers.filter((contract) => {
+                  const query = searchQuery.toLowerCase();
+                  const batchMatch = `batch ${registeredWorkers.indexOf(contract) + 1}`.includes(query);
+                  const workerMatch = contract.workers?.some(
+                    (w) =>
+                      `${w.jobseekers?.firstName} ${w.jobseekers?.lastName}`.toLowerCase().includes(query) ||
+                      w.jobTitle?.toLowerCase().includes(query)
+                  );
+                  return batchMatch || workerMatch;
+                }).length === 0 && (
+                  <div className="bg-white rounded-xl shadow-sm p-8 text-center mt-4">
+                    <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-600">Tidak ada hasil untuk "{searchQuery}"</p>
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </>
         )}
@@ -996,7 +1226,7 @@ export default function ContractRegistrationPage() {
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
               <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-blue-500" />
-                Surat Balasan Admin
+                Preview Dokumen
               </h3>
               <button
                 onClick={() => setPreviewDocUrl(null)}
@@ -1016,7 +1246,7 @@ export default function ContractRegistrationPage() {
                 <div className="flex items-center justify-center">
                   <img
                     src={previewDocUrl}
-                    alt="Surat Balasan"
+                    alt="Preview Dokumen"
                     className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"
                   />
                 </div>
@@ -1037,6 +1267,386 @@ export default function ContractRegistrationPage() {
                 <Download className="w-4 h-4" />
                 Download
               </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Worker Detail Modal */}
+      {selectedWorkerDetail && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <User className="w-5 h-5 text-green-500" />
+                Detail Kontrak Pekerja
+              </h3>
+              <button
+                onClick={() => setSelectedWorkerDetail(null)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-6">
+              {/* Worker Info */}
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-xl font-bold text-gray-600 overflow-hidden">
+                  {selectedWorkerDetail.worker.jobseekers?.photo ? (
+                    <img
+                      src={selectedWorkerDetail.worker.jobseekers.photo}
+                      className="w-full h-full object-cover"
+                      alt=""
+                    />
+                  ) : (
+                    selectedWorkerDetail.worker.jobseekers?.firstName?.charAt(0) || "U"
+                  )}
+                </div>
+                <div>
+                  <h4 className="text-xl font-bold text-gray-900">
+                    {selectedWorkerDetail.worker.jobseekers?.firstName}{" "}
+                    {selectedWorkerDetail.worker.jobseekers?.lastName}
+                  </h4>
+                  <p className="text-gray-600">{selectedWorkerDetail.worker.jobTitle}</p>
+                  <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium ${getWorkerStatusBadge(selectedWorkerDetail.worker).color}`}>
+                    {getWorkerStatusBadge(selectedWorkerDetail.worker).text}
+                  </span>
+                </div>
+              </div>
+
+              {/* Contact Info */}
+              <div className="bg-gray-50 rounded-xl p-4 mb-4">
+                <h5 className="font-semibold text-gray-900 mb-3 text-sm">Informasi Kontak</h5>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm text-gray-700">
+                      {selectedWorkerDetail.worker.jobseekers?.email || "-"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm text-gray-700">
+                      {selectedWorkerDetail.worker.jobseekers?.phone || "-"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contract Details */}
+              <div className="bg-green-50 rounded-xl p-4 mb-4 border border-green-200">
+                <h5 className="font-semibold text-gray-900 mb-3 text-sm">Detail Kontrak</h5>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500">Periode Kontrak</p>
+                    <p className="font-medium text-gray-900">
+                      {formatDate(selectedWorkerDetail.worker.startDate)} - {formatDate(selectedWorkerDetail.worker.endDate)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Gaji/Bulan</p>
+                    <p className="font-medium text-gray-900">
+                      {formatRupiah(selectedWorkerDetail.worker.salary)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Tanggal Disetujui</p>
+                    <p className="font-medium text-gray-900">
+                      {formatDate(selectedWorkerDetail.contract.updatedAt)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Status</p>
+                    <p className="font-medium text-gray-900">
+                      {getWorkerStatusBadge(selectedWorkerDetail.worker).text}
+                    </p>
+                  </div>
+                </div>
+                {selectedWorkerDetail.worker.terminatedAt && (
+                  <div className="mt-3 pt-3 border-t border-green-200">
+                    <p className="text-xs text-gray-500">Tanggal Diakhiri</p>
+                    <p className="font-medium text-red-600">
+                      {formatDate(selectedWorkerDetail.worker.terminatedAt)}
+                    </p>
+                    {selectedWorkerDetail.worker.terminationReason && (
+                      <>
+                        <p className="text-xs text-gray-500 mt-2">Alasan</p>
+                        <p className="text-sm text-red-600">
+                          {selectedWorkerDetail.worker.terminationReason}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Admin Notes */}
+              {selectedWorkerDetail.contract.adminNotes && (
+                <div className="bg-blue-50 rounded-xl p-4 mb-4 border border-blue-200">
+                  <h5 className="font-semibold text-gray-900 mb-2 text-sm">Catatan Admin</h5>
+                  <p className="text-sm text-gray-700">{selectedWorkerDetail.contract.adminNotes}</p>
+                </div>
+              )}
+
+              {/* Documents */}
+              <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+                <h5 className="font-semibold text-gray-900 mb-3 text-sm">Dokumen</h5>
+                <div className="flex flex-wrap gap-2">
+                  {selectedWorkerDetail.contract.recruiterDocUrl && (
+                    <button
+                      onClick={() => {
+                        setSelectedWorkerDetail(null);
+                        setPreviewDocUrl(selectedWorkerDetail.contract.recruiterDocUrl);
+                      }}
+                      className="px-3 py-2 bg-white border border-amber-300 text-amber-700 text-sm font-medium rounded-lg hover:bg-amber-100 transition flex items-center gap-2"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Dokumen Pengantar
+                    </button>
+                  )}
+                  {selectedWorkerDetail.contract.adminResponseDocUrl && (
+                    <button
+                      onClick={() => {
+                        setSelectedWorkerDetail(null);
+                        setPreviewDocUrl(selectedWorkerDetail.contract.adminResponseDocUrl);
+                      }}
+                      className="px-3 py-2 bg-white border border-green-300 text-green-700 text-sm font-medium rounded-lg hover:bg-green-100 transition flex items-center gap-2"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Surat Balasan Admin
+                    </button>
+                  )}
+                  {!selectedWorkerDetail.contract.recruiterDocUrl && !selectedWorkerDetail.contract.adminResponseDocUrl && (
+                    <p className="text-sm text-gray-500 italic">Tidak ada dokumen</p>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="p-4 border-t border-gray-200 flex justify-between">
+              {selectedWorkerDetail.worker.status === "ACTIVE" && new Date(selectedWorkerDetail.worker.endDate) >= new Date() && (
+                <button
+                  onClick={() => {
+                    setSelectedWorkerDetail(null);
+                    handleTerminateContract(selectedWorkerDetail.worker, selectedWorkerDetail.contract);
+                  }}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 flex items-center gap-2"
+                >
+                  <StopCircle className="w-4 h-4" />
+                  Akhiri Kontrak
+                </button>
+              )}
+              <button
+                onClick={() => setSelectedWorkerDetail(null)}
+                className="px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 ml-auto"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Batch Detail Modal */}
+      {selectedBatchDetail && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  Detail Batch Kontrak #{registeredWorkers.indexOf(selectedBatchDetail) + 1}
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Disetujui {new Date(selectedBatchDetail.updatedAt || selectedBatchDetail.createdAt).toLocaleDateString("id-ID", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric"
+                  })}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedBatchDetail(null)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-auto p-6">
+              {/* Stats Summary */}
+              <div className="grid grid-cols-4 gap-3 mb-6">
+                <div className="bg-gray-50 rounded-xl p-3 text-center">
+                  <p className="text-2xl font-bold text-gray-900">{selectedBatchDetail.workers?.length || 0}</p>
+                  <p className="text-xs text-gray-500">Total</p>
+                </div>
+                <div className="bg-green-50 rounded-xl p-3 text-center">
+                  <p className="text-2xl font-bold text-green-600">
+                    {selectedBatchDetail.workers?.filter(w => w.status === "ACTIVE" && new Date(w.endDate) >= new Date()).length || 0}
+                  </p>
+                  <p className="text-xs text-green-600">Aktif</p>
+                </div>
+                <div className="bg-gray-100 rounded-xl p-3 text-center">
+                  <p className="text-2xl font-bold text-gray-600">
+                    {selectedBatchDetail.workers?.filter(w => w.status === "COMPLETED" || (w.status === "ACTIVE" && new Date(w.endDate) < new Date())).length || 0}
+                  </p>
+                  <p className="text-xs text-gray-600">Selesai</p>
+                </div>
+                <div className="bg-red-50 rounded-xl p-3 text-center">
+                  <p className="text-2xl font-bold text-red-600">
+                    {selectedBatchDetail.workers?.filter(w => w.status === "TERMINATED").length || 0}
+                  </p>
+                  <p className="text-xs text-red-600">Diakhiri</p>
+                </div>
+              </div>
+
+              {/* Admin Notes */}
+              {selectedBatchDetail.adminNotes && (
+                <div className="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                  <p className="text-sm text-blue-600 font-medium mb-1">Catatan Admin:</p>
+                  <p className="text-gray-800">{selectedBatchDetail.adminNotes}</p>
+                </div>
+              )}
+
+              {/* Documents */}
+              <div className="mb-6 flex flex-wrap gap-3">
+                {selectedBatchDetail.recruiterDocUrl && (
+                  <button
+                    onClick={() => {
+                      setSelectedBatchDetail(null);
+                      setPreviewDocUrl(selectedBatchDetail.recruiterDocUrl);
+                    }}
+                    className="px-4 py-2 bg-amber-50 border border-amber-200 text-amber-700 rounded-lg font-medium hover:bg-amber-100 transition flex items-center gap-2"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Dokumen Pengantar
+                  </button>
+                )}
+                {selectedBatchDetail.adminResponseDocUrl && (
+                  <button
+                    onClick={() => {
+                      setSelectedBatchDetail(null);
+                      setPreviewDocUrl(selectedBatchDetail.adminResponseDocUrl);
+                    }}
+                    className="px-4 py-2 bg-green-50 border border-green-200 text-green-700 rounded-lg font-medium hover:bg-green-100 transition flex items-center gap-2"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Surat Balasan Admin
+                  </button>
+                )}
+              </div>
+
+              {/* Workers List */}
+              <div>
+                <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Daftar Pekerja ({selectedBatchDetail.workers?.length || 0})
+                </h4>
+                <div className="space-y-3">
+                  {selectedBatchDetail.workers?.map((worker) => {
+                    const statusBadge = getWorkerStatusBadge(worker);
+                    const isActive = worker.status === "ACTIVE" && new Date(worker.endDate) >= new Date();
+
+                    return (
+                      <div
+                        key={worker.id}
+                        className={`p-4 rounded-xl border ${
+                          worker.status === "TERMINATED"
+                            ? "bg-red-50 border-red-200"
+                            : worker.status === "COMPLETED" || new Date(worker.endDate) < new Date()
+                            ? "bg-gray-50 border-gray-200"
+                            : "bg-green-50 border-green-200"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-center gap-3 flex-1">
+                            <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-sm font-bold text-gray-600 overflow-hidden flex-shrink-0">
+                              {worker.jobseekers?.photo ? (
+                                <img
+                                  src={worker.jobseekers.photo}
+                                  className="w-full h-full object-cover"
+                                  alt=""
+                                />
+                              ) : (
+                                worker.jobseekers?.firstName?.charAt(0) || "U"
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="font-semibold text-gray-900">
+                                  {worker.jobseekers?.firstName} {worker.jobseekers?.lastName}
+                                </p>
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusBadge.color}`}>
+                                  {statusBadge.text}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-600">{worker.jobTitle}</p>
+                              <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-gray-500">
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="w-3 h-3" />
+                                  {formatDate(worker.startDate)} - {formatDate(worker.endDate)}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <DollarSign className="w-3 h-3" />
+                                  {formatRupiah(worker.salary)}/bulan
+                                </span>
+                                {worker.jobseekers?.phone && (
+                                  <span className="flex items-center gap-1">
+                                    <Phone className="w-3 h-3" />
+                                    {worker.jobseekers.phone}
+                                  </span>
+                                )}
+                              </div>
+                              {worker.terminationReason && (
+                                <p className="text-xs text-red-600 mt-1">
+                                  Alasan: {worker.terminationReason}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <button
+                              onClick={() => {
+                                setSelectedBatchDetail(null);
+                                setSelectedWorkerDetail({ worker, contract: selectedBatchDetail });
+                              }}
+                              className="px-3 py-1.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-lg hover:bg-blue-200 transition flex items-center gap-1"
+                            >
+                              <Eye className="w-3 h-3" />
+                              Detail
+                            </button>
+                            {isActive && (
+                              <button
+                                onClick={() => {
+                                  setSelectedBatchDetail(null);
+                                  handleTerminateContract(worker, selectedBatchDetail);
+                                }}
+                                disabled={terminatingId === worker.id}
+                                className="px-3 py-1.5 bg-red-100 text-red-700 text-xs font-medium rounded-lg hover:bg-red-200 transition flex items-center gap-1 disabled:opacity-50"
+                              >
+                                {terminatingId === worker.id ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <StopCircle className="w-3 h-3" />
+                                )}
+                                Akhiri
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-gray-200 flex justify-end">
+              <button
+                onClick={() => setSelectedBatchDetail(null)}
+                className="px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Tutup
+              </button>
             </div>
           </div>
         </div>

@@ -244,36 +244,24 @@ const ViewProfilePage = () => {
                 </h3>
                 <div
                   className={`px-3 py-1 rounded-full text-xs font-bold ${
-                    profile.isLookingForJob
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
+                    profile.isEmployed
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-amber-100 text-amber-700"
                   }`}
                 >
-                  {profile.isLookingForJob ? "AKTIF" : "NON-AKTIF"}
+                  {profile.isEmployed ? "BEKERJA" : "MENCARI KERJA"}
                 </div>
               </div>
 
-              <button
-                onClick={toggleJobSeekingStatus}
-                disabled={isUpdatingStatus}
-                className={`w-full py-3 rounded-xl font-medium transition flex items-center justify-center gap-2 ${
-                  profile.isLookingForJob
-                    ? "bg-red-50 text-red-600 hover:bg-red-100"
-                    : "bg-green-50 text-green-600 hover:bg-green-100"
-                }`}
-              >
-                {isUpdatingStatus ? (
-                  <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                ) : profile.isLookingForJob ? (
-                  <>
-                    <ToggleLeft size={20} /> Nonaktifkan
-                  </>
-                ) : (
-                  <>
-                    <ToggleRight size={20} /> Aktifkan
-                  </>
-                )}
-              </button>
+              <p className="text-sm text-gray-500 text-center">
+                {profile.isEmployed 
+                  ? `Anda tercatat sedang bekerja${profile.employedCompany ? ` di ${profile.employedCompany}` : ''}`
+                  : "Anda sedang aktif mencari pekerjaan"
+                }
+              </p>
+              <p className="text-xs text-gray-400 text-center mt-2">
+                Status ini diperbarui otomatis berdasarkan kontrak kerja
+              </p>
             </div>
 
             {/* Action Buttons */}

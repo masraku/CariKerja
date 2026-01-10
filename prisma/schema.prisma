@@ -610,6 +610,7 @@ model contract_registrations {
   companyId           String
   status              ContractRegistrationStatus @default(PENDING)
   recruiterDocUrl     String? // Document uploaded by recruiter when submitting
+  notes               String? // Notes from recruiter when submitting
   adminNotes          String?
   adminResponseDocUrl String? // Document uploaded by admin when approving
   processedAt         DateTime?
@@ -627,7 +628,7 @@ model contract_registrations {
 }
 
 model contract_workers {
-  id                     String   @id @default(cuid())
+  id                     String               @id @default(cuid())
   contractRegistrationId String
   applicationId          String
   jobseekerId            String
@@ -635,10 +636,13 @@ model contract_workers {
   startDate              DateTime
   endDate                DateTime
   salary                 BigInt
+  status                 ContractWorkerStatus @default(ACTIVE)
+  terminatedAt           DateTime?
+  terminationReason      String?
   attachmentUrl          String?
   notes                  String?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
 
   contract_registration contract_registrations @relation(fields: [contractRegistrationId], references: [id], onDelete: Cascade)
   applications          applications           @relation(fields: [applicationId], references: [id], onDelete: Cascade)
@@ -648,12 +652,19 @@ model contract_workers {
   @@index([contractRegistrationId])
   @@index([applicationId])
   @@index([jobseekerId])
+  @@index([status])
 }
 
 enum ContractRegistrationStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum ContractWorkerStatus {
+  ACTIVE
+  COMPLETED
+  TERMINATED
 }
 
 enum ResignationStatus {

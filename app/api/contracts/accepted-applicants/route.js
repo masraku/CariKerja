@@ -70,11 +70,15 @@ export async function GET(request) {
           id: true,
           status: true,
           createdAt: true,
+          recruiterDocUrl: true,
+          notes: true,
           workers: {
             select: {
               id: true,
               jobTitle: true,
               salary: true,
+              startDate: true,
+              endDate: true,
               jobseekers: {
                 select: {
                   id: true,
@@ -100,18 +104,28 @@ export async function GET(request) {
           status: true,
           createdAt: true,
           updatedAt: true,
+          adminNotes: true,
           adminResponseDocUrl: true,
+          recruiterDocUrl: true,
+          notes: true,
           workers: {
             select: {
               id: true,
               jobTitle: true,
               salary: true,
+              startDate: true,
+              endDate: true,
+              status: true,
+              terminatedAt: true,
+              terminationReason: true,
               jobseekers: {
                 select: {
                   id: true,
                   firstName: true,
                   lastName: true,
-                  photo: true
+                  photo: true,
+                  email: true,
+                  phone: true
                 }
               }
             }
@@ -121,9 +135,10 @@ export async function GET(request) {
       })
     ])
 
-    // Count total workers
+    // Count total workers (only active ones)
     const totalPendingWorkers = pendingContracts.reduce((sum, c) => sum + c.workers.length, 0)
-    const totalApprovedWorkers = approvedContracts.reduce((sum, c) => sum + c.workers.length, 0)
+    const totalApprovedWorkers = approvedContracts.reduce((sum, c) => 
+      sum + c.workers.filter(w => w.status === 'ACTIVE').length, 0)
 
     return NextResponse.json({
       success: true,

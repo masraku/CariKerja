@@ -434,6 +434,36 @@ export default function RecruiterInterviewsPage() {
                     </div>
                   </div>
 
+                  {/* Summary for Completed Interviews */}
+                  {isCompleted && (
+                    <div className="mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="bg-gray-50 rounded-lg p-3 text-center border border-gray-100">
+                        <p className="text-2xl font-bold text-gray-900">
+                          {interview.participants?.length || 0}
+                        </p>
+                        <p className="text-xs text-gray-500">Total Kandidat</p>
+                      </div>
+                      <div className="bg-emerald-50 rounded-lg p-3 text-center border border-emerald-200">
+                        <p className="text-2xl font-bold text-emerald-600">
+                          {interview.participants?.filter(p => p.applications?.status === "ACCEPTED").length || 0}
+                        </p>
+                        <p className="text-xs text-emerald-600">Diterima</p>
+                      </div>
+                      <div className="bg-red-50 rounded-lg p-3 text-center border border-red-200">
+                        <p className="text-2xl font-bold text-red-600">
+                          {interview.participants?.filter(p => p.applications?.status === "REJECTED").length || 0}
+                        </p>
+                        <p className="text-xs text-red-600">Ditolak</p>
+                      </div>
+                      <div className="bg-purple-50 rounded-lg p-3 text-center border border-purple-200">
+                        <p className="text-2xl font-bold text-purple-600">
+                          {interview.participants?.filter(p => p.applications?.status === "INTERVIEW_COMPLETED").length || 0}
+                        </p>
+                        <p className="text-xs text-purple-600">Pending</p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Reschedule Alerts */}
                   {rescheduleParticipants.length > 0 && (
                     <div className="mb-6 bg-orange-50 border border-orange-200 rounded-xl p-4">
@@ -492,7 +522,9 @@ export default function RecruiterInterviewsPage() {
                       ?.filter((p) => {
                         // Hide reschedule requested (shown separately)
                         if (p.status === "RESCHEDULE_REQUESTED") return false;
-                        // Hide participants with terminal application statuses
+                        // For completed interviews, show ALL participants including terminal statuses
+                        if (isCompleted) return true;
+                        // For non-completed interviews, hide participants with terminal application statuses
                         const appStatus = p.applications?.status;
                         const terminalStatuses = [
                           "ACCEPTED",
@@ -519,10 +551,30 @@ export default function RecruiterInterviewsPage() {
                           statusColor = "bg-green-100 text-green-700";
                         }
 
+                        // For completed interviews, show final application status
+                        if (isCompleted) {
+                          if (appStatus === "ACCEPTED") {
+                            displayStatus = "Diterima";
+                            statusColor = "bg-emerald-100 text-emerald-700";
+                          } else if (appStatus === "REJECTED") {
+                            displayStatus = "Ditolak";
+                            statusColor = "bg-red-100 text-red-700";
+                          } else if (appStatus === "INTERVIEW_COMPLETED") {
+                            displayStatus = "Menunggu Keputusan";
+                            statusColor = "bg-purple-100 text-purple-700";
+                          }
+                        }
+
                         return (
                           <div
                             key={participant.id}
-                            className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 gap-4"
+                            className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl border gap-4 ${
+                              isCompleted && appStatus === "ACCEPTED"
+                                ? "bg-emerald-50 border-emerald-200"
+                                : isCompleted && appStatus === "REJECTED"
+                                ? "bg-red-50 border-red-200"
+                                : "bg-gray-50 border-gray-100"
+                            }`}
                           >
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">

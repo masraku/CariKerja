@@ -387,7 +387,7 @@ const JobsPage = () => {
             </button>
           ) : (
             <Link
-              href={`/jobs/${job.slug}`}
+              href={`/jobs/${job.slug}/apply`}
               className="flex-1 flex items-center justify-center gap-2 px-8 py-4 bg-[#03587f] hover:bg-[#024666] text-white font-bold rounded-xl transition-all shadow-lg shadow-[#03587f]/20 hover:shadow-[#03587f]/30 hover:-translate-y-0.5"
             >
               Lamar Sekarang

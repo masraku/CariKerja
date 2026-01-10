@@ -22,6 +22,8 @@ import {
   Mail,
   ExternalLink,
   Upload,
+  X,
+  Download,
 } from "lucide-react";
 
 export default function AdminContractsPage() {
@@ -44,6 +46,7 @@ export default function AdminContractsPage() {
   const [approvalNotes, setApprovalNotes] = useState("");
   const [approvalFile, setApprovalFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [previewDocUrl, setPreviewDocUrl] = useState(null);
 
   useEffect(() => {
     loadContracts(true);
@@ -703,16 +706,14 @@ export default function AdminContractsPage() {
                   Dokumen Pengantar dari Recruiter
                 </h3>
                 {selectedContract.recruiterDocUrl ? (
-                  <a
-                    href={selectedContract.recruiterDocUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    onClick={() => setPreviewDocUrl(selectedContract.recruiterDocUrl)}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-white text-amber-700 rounded-lg font-medium hover:bg-amber-100 transition border border-amber-300"
                   >
                     <FileText className="w-4 h-4" />
                     Lihat Dokumen Pengantar
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
+                    <Eye className="w-3 h-3" />
+                  </button>
                 ) : (
                   <p className="text-sm text-amber-700 italic">
                     Tidak ada dokumen pengantar yang dilampirkan
@@ -926,6 +927,61 @@ export default function AdminContractsPage() {
                   </>
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Document Preview Modal */}
+      {previewDocUrl && (
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-amber-500" />
+                Dokumen Pengantar dari Recruiter
+              </h3>
+              <button
+                onClick={() => setPreviewDocUrl(null)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-4 bg-gray-50">
+              {previewDocUrl.toLowerCase().endsWith('.pdf') ? (
+                <iframe
+                  src={previewDocUrl}
+                  className="w-full h-[70vh] rounded-lg border border-gray-200"
+                  title="Document Preview"
+                />
+              ) : (
+                <div className="flex items-center justify-center">
+                  <img
+                    src={previewDocUrl}
+                    alt="Dokumen Pengantar"
+                    className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"
+                  />
+                </div>
+              )}
+            </div>
+            <div className="p-4 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={() => setPreviewDocUrl(null)}
+                className="px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Tutup
+              </button>
+              <a
+                href={previewDocUrl}
+                download
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Download
+              </a>
             </div>
           </div>
         </div>

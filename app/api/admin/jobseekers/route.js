@@ -17,7 +17,7 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url)
         const statusFilter = searchParams.get('status') || 'all' // all, employed, rejected, active
 
-        // Get all jobseekers with their applications
+        // Get all jobseekers with their applications - sorted by newest registration first
         const jobseekers = await prisma.jobseekers.findMany({
             include: {
                 users: {
@@ -38,17 +38,35 @@ export async function GET(request) {
                                     }
                                 }
                             }
+                        },
+                        contract_workers: {
+                            select: {
+                                id: true,
+                                status: true,
+                                terminatedAt: true
+                            }
                         }
                     },
                     orderBy: {
                         createdAt: 'desc'
                     }
                 }
+            },
+            orderBy: {
+                createdAt: 'desc'  // Newest registered first
             }
         })
 
         // Transform and calculate employment status
         const jobseekersWithStatus = jobseekers.map(jobseeker => {
+            // Check for active contract workers (not terminated/completed)
+            // contract_workers is an array, so we need to check if any worker is ACTIVE
+            const activeContractWorker = jobseeker.applications.find(app => 
+                app.contract_workers && 
+                app.contract_workers.length > 0 &&
+                app.contract_workers.some(cw => cw.status === 'ACTIVE')
+            )
+            
             const acceptedApplications = jobseeker.applications.filter(app => app.status === 'ACCEPTED')
             const rejectedApplications = jobseeker.applications.filter(app => app.status === 'REJECTED')
             const pendingApplications = jobseeker.applications.filter(app => 
@@ -58,15 +76,15 @@ export async function GET(request) {
             let employmentStatus = 'ACTIVE'
             let acceptedJob = null
 
-            if (acceptedApplications.length > 0) {
+            // Only mark as EMPLOYED if has active contract worker
+            if (activeContractWorker) {
                 employmentStatus = 'EMPLOYED'
-                const latestAccepted = acceptedApplications[0]
                 acceptedJob = {
-                    title: latestAccepted.jobs?.title,
-                    company: latestAccepted.jobs?.companies?.name,
-                    acceptedAt: latestAccepted.updatedAt
+                    title: activeContractWorker.jobs?.title,
+                    company: activeContractWorker.jobs?.companies?.name,
+                    acceptedAt: activeContractWorker.updatedAt
                 }
-            } else if (rejectedApplications.length > 0 && pendingApplications.length === 0) {
+            } else if (rejectedApplications.length > 0 && pendingApplications.length === 0 && acceptedApplications.length === 0) {
                 employmentStatus = 'REJECTED'
             }
 
@@ -106,9 +124,10 @@ export async function GET(request) {
                 suratPengalamanUrl: jobseeker.suratPengalamanUrl,
                 // Summary
                 summary: jobseeker.summary,
-                // Status
-                isEmployed: jobseeker.isEmployed || false,
-                isLookingForJob: jobseeker.isLookingForJob ?? true,
+                // Status - isEmployed based on active contract worker, not database field
+                // If no active contract, jobseeker is considered looking for job
+                isEmployed: !!activeContractWorker,
+                isLookingForJob: !activeContractWorker,
                 employedCompany: jobseeker.employedCompany,
                 employedAt: jobseeker.employedAt,
                 employmentStatus,
