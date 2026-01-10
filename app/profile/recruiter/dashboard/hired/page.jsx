@@ -32,6 +32,7 @@ export default function ContractRegistrationPage() {
   const [activeTab, setActiveTab] = useState("pendaftaran"); // total, pendaftaran, menunggu, terdaftar
   const [acceptedApplicants, setAcceptedApplicants] = useState([]);
   const [pendingContracts, setPendingContracts] = useState([]); // Contract batches waiting for admin
+  const [rejectedContracts, setRejectedContracts] = useState([]); // Rejected contract batches
   const [registeredWorkers, setRegisteredWorkers] = useState([]); // Approved contract batches
   const [stats, setStats] = useState({
     total: 0,
@@ -40,6 +41,7 @@ export default function ContractRegistrationPage() {
     pendingContractWorkers: 0,
     registered: 0,
     registeredWorkers: 0,
+    rejectedContracts: 0,
   });
   const [selectedWorkers, setSelectedWorkers] = useState([]);
   const [showFormModal, setShowFormModal] = useState(false);
@@ -48,6 +50,7 @@ export default function ContractRegistrationPage() {
   const [selectedWorkerDetail, setSelectedWorkerDetail] = useState(null); // For worker detail modal
   const [terminatingId, setTerminatingId] = useState(null); // For termination loading state
   const [selectedBatchDetail, setSelectedBatchDetail] = useState(null); // For batch detail modal
+  const [resubmittingId, setResubmittingId] = useState(null); // For resubmit loading state
   const [searchQuery, setSearchQuery] = useState(""); // Search query for registered workers
 
   // Form state
@@ -84,6 +87,7 @@ export default function ContractRegistrationPage() {
       if (applicantsData.success) {
         setAcceptedApplicants(applicantsData.acceptedApplicants || []);
         setPendingContracts(applicantsData.pendingContracts || []);
+        setRejectedContracts(applicantsData.rejectedContracts || []);
         setRegisteredWorkers(applicantsData.approvedContracts || []);
       }
 
@@ -99,6 +103,7 @@ export default function ContractRegistrationPage() {
         pendingContractWorkers: stats.totalPendingWorkers || 0,
         registered: stats.totalApprovedContracts || 0,
         registeredWorkers: stats.totalApprovedWorkers || 0,
+        rejectedContracts: stats.totalRejectedContracts || 0,
       });
     } catch (error) {
       console.error("Error loading data:", error);
@@ -181,6 +186,59 @@ export default function ContractRegistrationPage() {
         });
       } finally {
         setTerminatingId(null);
+      }
+    }
+  };
+
+  const handleResubmit = async (contract) => {
+    const result = await Swal.fire({
+      title: "Daftarkan Ulang?",
+      html: `
+        <p class="text-gray-600 mb-2">Pendaftaran kontrak batch ini telah ditolak oleh admin.</p>
+        <p class="text-gray-600">Pekerja dalam batch ini akan dikembalikan ke tab "Pendaftaran Kontrak" untuk didaftarkan ulang.</p>
+      `,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Ya, Daftarkan Ulang",
+      cancelButtonText: "Batal",
+      confirmButtonColor: "#03587f",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        setResubmittingId(contract.id);
+        const token = localStorage.getItem("token");
+        const response = await fetch("/api/contracts/resubmit", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ contractId: contract.id }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          Swal.fire({
+            icon: "success",
+            title: "Berhasil",
+            text: data.message,
+          });
+          setActiveTab("pendaftaran");
+          loadData();
+        } else {
+          throw new Error(data.error);
+        }
+      } catch (error) {
+        console.error("Error resubmitting contract:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Gagal",
+          text: error.message || "Gagal melakukan resubmit",
+        });
+      } finally {
+        setResubmittingId(null);
       }
     }
   };
@@ -439,12 +497,17 @@ export default function ContractRegistrationPage() {
 
           <button
             onClick={() => setActiveTab("menunggu")}
-            className={`text-left rounded-xl p-4 transition-all ${
+            className={`text-left rounded-xl p-4 transition-all relative ${
               activeTab === "menunggu"
                 ? "bg-yellow-500 text-white ring-2 ring-yellow-500 ring-offset-2"
                 : "bg-yellow-50 hover:bg-yellow-100 border border-yellow-200"
             }`}
           >
+            {stats.rejectedContracts > 0 && (
+              <span className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                {stats.rejectedContracts}
+              </span>
+            )}
             <p
               className={`text-xs mb-1 ${
                 activeTab === "menunggu" ? "text-yellow-100" : "text-yellow-700"
@@ -604,7 +667,7 @@ export default function ContractRegistrationPage() {
 
         {activeTab === "menunggu" && (
           <>
-            {pendingContracts.length === 0 ? (
+            {pendingContracts.length === 0 && rejectedContracts.length === 0 ? (
               <div className="bg-white rounded-xl shadow-sm p-12 text-center">
                 <Clock className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
@@ -613,6 +676,105 @@ export default function ContractRegistrationPage() {
                 <p className="text-gray-600">
                   Kontrak yang menunggu persetujuan admin akan muncul di sini
                 </p>
+              </div>
+            ) : pendingContracts.length === 0 && rejectedContracts.length > 0 ? (
+              // Only show rejected contracts
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold text-red-700 flex items-center gap-2">
+                  <XCircle className="w-5 h-5" />
+                  Pendaftaran Ditolak ({rejectedContracts.length})
+                </h3>
+                {rejectedContracts.map((contract, index) => (
+                  <div
+                    key={contract.id}
+                    className="bg-white rounded-xl border border-red-200 p-5 shadow-sm"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white font-bold">
+                          <XCircle className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-gray-900">
+                            Batch Pendaftaran #{index + 1}
+                          </h3>
+                          <p className="text-sm text-gray-500">
+                            {contract.workers?.length || 0} pekerja • Ditolak{" "}
+                            {new Date(contract.updatedAt).toLocaleDateString("id-ID")}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-100 text-red-700 text-xs font-medium rounded-full">
+                        <XCircle className="w-3 h-3" />
+                        Ditolak
+                      </span>
+                    </div>
+
+                    {/* Admin Rejection Notes */}
+                    {contract.adminNotes && (
+                      <div className="mb-4 p-4 bg-red-50 rounded-lg border border-red-200">
+                        <p className="text-xs text-red-600 font-medium mb-1">Alasan Penolakan:</p>
+                        <p className="text-sm text-red-800">{contract.adminNotes}</p>
+                      </div>
+                    )}
+
+                    {/* Worker list */}
+                    <div className="border-t border-gray-100 pt-4">
+                      <p className="text-xs text-gray-500 mb-2 font-medium">
+                        DAFTAR PEKERJA:
+                      </p>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
+                        {contract.workers?.map((worker) => (
+                          <div
+                            key={worker.id}
+                            className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg"
+                          >
+                            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500 overflow-hidden">
+                              {worker.jobseekers?.photo ? (
+                                <img
+                                  src={worker.jobseekers.photo}
+                                  className="w-full h-full object-cover"
+                                  alt=""
+                                />
+                              ) : (
+                                worker.jobseekers?.firstName?.charAt(0) || "U"
+                              )}
+                            </div>
+                            <div className="overflow-hidden">
+                              <p className="text-sm font-medium text-gray-900 truncate">
+                                {worker.jobseekers?.firstName} {worker.jobseekers?.lastName}
+                              </p>
+                              <p className="text-xs text-gray-500 truncate">
+                                {worker.jobTitle}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Resubmit Button */}
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => handleResubmit(contract)}
+                        disabled={resubmittingId === contract.id}
+                        className="px-6 py-2.5 bg-[#03587f] text-white rounded-lg font-medium hover:bg-[#024666] transition flex items-center gap-2 disabled:opacity-50"
+                      >
+                        {resubmittingId === contract.id ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Memproses...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4" />
+                            Daftarkan Ulang
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="space-y-4">
@@ -744,6 +906,159 @@ export default function ContractRegistrationPage() {
                     </div>
                   </div>
                 ))}
+
+                {/* Rejected Contracts Section */}
+                {rejectedContracts.length > 0 && (
+                  <div className="mt-8">
+                    <h3 className="text-lg font-bold text-red-700 mb-4 flex items-center gap-2">
+                      <XCircle className="w-5 h-5" />
+                      Pendaftaran Ditolak ({rejectedContracts.length})
+                    </h3>
+                    <div className="space-y-4">
+                      {rejectedContracts.map((contract, index) => (
+                        <div
+                          key={contract.id}
+                          className="bg-white rounded-xl border border-red-200 p-5 shadow-sm"
+                        >
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white font-bold">
+                                <XCircle className="w-6 h-6" />
+                              </div>
+                              <div>
+                                <h3 className="font-bold text-gray-900">
+                                  Batch Pendaftaran #{index + 1}
+                                </h3>
+                                <p className="text-sm text-gray-500">
+                                  {contract.workers?.length || 0} pekerja • Ditolak{" "}
+                                  {new Date(contract.updatedAt).toLocaleDateString("id-ID")}
+                                </p>
+                              </div>
+                            </div>
+                            <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-100 text-red-700 text-xs font-medium rounded-full">
+                              <XCircle className="w-3 h-3" />
+                              Ditolak
+                            </span>
+                          </div>
+
+                          {/* Admin Rejection Notes */}
+                          {contract.adminNotes && (
+                            <div className="mb-4 p-4 bg-red-50 rounded-lg border border-red-200">
+                              <p className="text-xs text-red-600 font-medium mb-1">Alasan Penolakan:</p>
+                              <p className="text-sm text-red-800">{contract.adminNotes}</p>
+                            </div>
+                          )}
+
+                          {/* Contract Details */}
+                          {contract.workers?.[0] && (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <Calendar className="w-4 h-4 text-gray-500" />
+                                <div>
+                                  <p className="text-xs text-gray-500">Periode Kontrak</p>
+                                  <p className="text-sm font-medium text-gray-900">
+                                    {contract.workers[0].startDate
+                                      ? new Date(contract.workers[0].startDate).toLocaleDateString("id-ID", {
+                                          day: "numeric",
+                                          month: "short",
+                                          year: "numeric",
+                                        })
+                                      : "-"}{" "}
+                                    -{" "}
+                                    {contract.workers[0].endDate
+                                      ? new Date(contract.workers[0].endDate).toLocaleDateString("id-ID", {
+                                          day: "numeric",
+                                          month: "short",
+                                          year: "numeric",
+                                        })
+                                      : "-"}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <DollarSign className="w-4 h-4 text-gray-500" />
+                                <div>
+                                  <p className="text-xs text-gray-500">Gaji/Bulan</p>
+                                  <p className="text-sm font-medium text-gray-900">
+                                    {contract.workers[0].salary
+                                      ? `Rp ${Number(contract.workers[0].salary).toLocaleString("id-ID")}`
+                                      : "-"}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Users className="w-4 h-4 text-gray-500" />
+                                <div>
+                                  <p className="text-xs text-gray-500">Jumlah Pekerja</p>
+                                  <p className="text-sm font-medium text-gray-900">
+                                    {contract.workers?.length || 0} orang
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Worker list */}
+                          <div className="border-t border-gray-100 pt-4">
+                            <p className="text-xs text-gray-500 mb-2 font-medium">
+                              DAFTAR PEKERJA:
+                            </p>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
+                              {contract.workers?.map((worker) => (
+                                <div
+                                  key={worker.id}
+                                  className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg"
+                                >
+                                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500 overflow-hidden">
+                                    {worker.jobseekers?.photo ? (
+                                      <img
+                                        src={worker.jobseekers.photo}
+                                        className="w-full h-full object-cover"
+                                        alt=""
+                                      />
+                                    ) : (
+                                      worker.jobseekers?.firstName?.charAt(0) || "U"
+                                    )}
+                                  </div>
+                                  <div className="overflow-hidden">
+                                    <p className="text-sm font-medium text-gray-900 truncate">
+                                      {worker.jobseekers?.firstName}{" "}
+                                      {worker.jobseekers?.lastName}
+                                    </p>
+                                    <p className="text-xs text-gray-500 truncate">
+                                      {worker.jobTitle}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Resubmit Button */}
+                          <div className="flex justify-end">
+                            <button
+                              onClick={() => handleResubmit(contract)}
+                              disabled={resubmittingId === contract.id}
+                              className="px-6 py-2.5 bg-[#03587f] text-white rounded-lg font-medium hover:bg-[#024666] transition flex items-center gap-2 disabled:opacity-50"
+                            >
+                              {resubmittingId === contract.id ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                  Memproses...
+                                </>
+                              ) : (
+                                <>
+                                  <Upload className="w-4 h-4" />
+                                  Daftarkan Ulang
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </>

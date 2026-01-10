@@ -14,7 +14,7 @@ export async function GET(request) {
     const { recruiter } = auth
 
     // Run all queries in parallel for better performance
-    const [acceptedApplicants, pendingContracts, approvedContracts] = await Promise.all([
+    const [acceptedApplicants, pendingContracts, approvedContracts, rejectedContracts] = await Promise.all([
       // Get accepted applicants that haven't been registered in a contract yet
       prisma.applications.findMany({
         where: {
@@ -132,6 +132,44 @@ export async function GET(request) {
           }
         },
         orderBy: { createdAt: 'desc' }
+      }),
+
+      // Get REJECTED contracts
+      prisma.contract_registrations.findMany({
+        where: {
+          companyId: recruiter.companyId,
+          status: 'REJECTED'
+        },
+        select: {
+          id: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+          adminNotes: true,
+          recruiterDocUrl: true,
+          notes: true,
+          workers: {
+            select: {
+              id: true,
+              jobTitle: true,
+              salary: true,
+              startDate: true,
+              endDate: true,
+              applicationId: true,
+              jobseekers: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  photo: true,
+                  email: true,
+                  phone: true
+                }
+              }
+            }
+          }
+        },
+        orderBy: { updatedAt: 'desc' }
       })
     ])
 
@@ -139,18 +177,22 @@ export async function GET(request) {
     const totalPendingWorkers = pendingContracts.reduce((sum, c) => sum + c.workers.length, 0)
     const totalApprovedWorkers = approvedContracts.reduce((sum, c) => 
       sum + c.workers.filter(w => w.status === 'ACTIVE').length, 0)
+    const totalRejectedWorkers = rejectedContracts.reduce((sum, c) => sum + c.workers.length, 0)
 
     return NextResponse.json({
       success: true,
       acceptedApplicants,
       pendingContracts: serializeBigInt(pendingContracts),
       approvedContracts: serializeBigInt(approvedContracts),
+      rejectedContracts: serializeBigInt(rejectedContracts),
       stats: {
         totalAccepted: acceptedApplicants.length,
         totalPendingContracts: pendingContracts.length,
         totalPendingWorkers,
         totalApprovedContracts: approvedContracts.length,
-        totalApprovedWorkers
+        totalApprovedWorkers,
+        totalRejectedContracts: rejectedContracts.length,
+        totalRejectedWorkers
       }
     })
 
