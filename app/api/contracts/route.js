@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireRecruiter } from '@/lib/authHelper'
+import { serializeBigInt } from '@/lib/utils'
 
 // GET /api/contracts - Get contract registrations for recruiter's company
 export async function GET(request) {
@@ -98,14 +99,9 @@ export async function GET(request) {
       totalWorkers: totalWorkersRegistered
     }
 
-    // Convert BigInt to string for JSON serialization
-    const contractsJSON = JSON.parse(JSON.stringify(contracts, (_, value) =>
-      typeof value === 'bigint' ? value.toString() : value
-    ))
-
     return NextResponse.json({
       success: true,
-      contracts: contractsJSON,
+      contracts: serializeBigInt(contracts),
       stats: statsFormatted
     })
 
@@ -129,9 +125,6 @@ export async function POST(request) {
     const { recruiter } = auth
     const body = await request.json()
     const { workers, recruiterDocUrl } = body
-
-    console.log("=== Contract Registration API ===")
-    console.log("recruiterDocUrl received:", recruiterDocUrl)
 
     if (!workers || !Array.isArray(workers) || workers.length === 0) {
       return NextResponse.json({ 
@@ -231,15 +224,10 @@ export async function POST(request) {
       }
     })
 
-    // Convert BigInt to string for JSON serialization
-    const contractJSON = JSON.parse(JSON.stringify(contract, (_, value) =>
-      typeof value === 'bigint' ? value.toString() : value
-    ))
-
     return NextResponse.json({
       success: true,
       message: 'Contract registration submitted successfully',
-      contract: contractJSON
+      contract: serializeBigInt(contract)
     })
 
   } catch (error) {

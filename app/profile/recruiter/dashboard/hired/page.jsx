@@ -73,7 +73,6 @@ export default function ContractRegistrationPage() {
       const contractsData = await contractsRes.json();
 
       if (applicantsData.success) {
-        console.log("API response:", applicantsData);
         setAcceptedApplicants(applicantsData.acceptedApplicants || []);
         setPendingContracts(applicantsData.pendingContracts || []);
         setRegisteredWorkers(applicantsData.approvedContracts || []);
@@ -175,15 +174,11 @@ export default function ContractRegistrationPage() {
         });
 
         const uploadData = await uploadRes.json();
-        console.log("Upload response:", uploadData); // Debug log
         if (!uploadData.success) {
           throw new Error(uploadData.error || "Gagal mengupload lampiran");
         }
         uploadedFileUrl = uploadData.url;
-        console.log("Uploaded file URL:", uploadedFileUrl); // Debug log
       }
-
-      console.log("recruiterDocUrl being sent:", uploadedFileUrl); // Debug log
 
       // Prepare workers data (without attachmentUrl, it's now at registration level)
       const workers = selectedWorkers.map((appId) => {

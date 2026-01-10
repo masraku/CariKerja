@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/authHelper'
+import { serializeBigInt } from '@/lib/utils'
 
 // GET /api/admin/contracts - Get all contract registrations for admin review
 export async function GET(request) {
@@ -22,10 +23,17 @@ export async function GET(request) {
       whereClause.status = status
     }
 
-    const [contracts, total] = await Promise.all([
+    const [contracts, total, stats] = await Promise.all([
       prisma.contract_registrations.findMany({
         where: whereClause,
-        include: {
+        select: {
+          id: true,
+          status: true,
+          recruiterDocUrl: true,
+          adminNotes: true,
+          adminResponseDocUrl: true,
+          createdAt: true,
+          updatedAt: true,
           recruiters: {
             select: {
               id: true,
@@ -55,7 +63,13 @@ export async function GET(request) {
             }
           },
           workers: {
-            include: {
+            select: {
+              id: true,
+              jobTitle: true,
+              startDate: true,
+              endDate: true,
+              salary: true,
+              notes: true,
               jobseekers: {
                 select: {
                   id: true,
@@ -63,20 +77,7 @@ export async function GET(request) {
                   lastName: true,
                   photo: true,
                   email: true,
-                  phone: true,
-                  address: true,
-                  city: true
-                }
-              },
-              applications: {
-                include: {
-                  jobs: {
-                    select: {
-                      id: true,
-                      title: true,
-                      slug: true
-                    }
-                  }
+                  phone: true
                 }
               }
             }
@@ -88,14 +89,12 @@ export async function GET(request) {
         skip,
         take: limit
       }),
-      prisma.contract_registrations.count({ where: whereClause })
+      prisma.contract_registrations.count({ where: whereClause }),
+      prisma.contract_registrations.groupBy({
+        by: ['status'],
+        _count: true
+      })
     ])
-
-    // Get stats
-    const stats = await prisma.contract_registrations.groupBy({
-      by: ['status'],
-      _count: true
-    })
 
     const statsFormatted = {
       total,
@@ -104,14 +103,9 @@ export async function GET(request) {
       rejected: stats.find(s => s.status === 'REJECTED')?._count || 0
     }
 
-    // Convert BigInt to string for JSON serialization
-    const contractsJSON = JSON.parse(JSON.stringify(contracts, (_, value) =>
-      typeof value === 'bigint' ? value.toString() : value
-    ))
-
     return NextResponse.json({
       success: true,
-      contracts: contractsJSON,
+      contracts: serializeBigInt(contracts),
       stats: statsFormatted,
       pagination: {
         page,

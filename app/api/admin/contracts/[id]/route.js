@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/authHelper'
+import { serializeBigInt } from '@/lib/utils'
 
 // GET /api/admin/contracts/[id] - Get contract registration detail
 export async function GET(request, { params }) {
@@ -73,14 +74,9 @@ export async function GET(request, { params }) {
       }, { status: 404 })
     }
 
-    // Convert BigInt to string for JSON serialization
-    const contractJSON = JSON.parse(JSON.stringify(contract, (_, value) =>
-      typeof value === 'bigint' ? value.toString() : value
-    ))
-
     return NextResponse.json({
       success: true,
-      contract: contractJSON
+      contract: serializeBigInt(contract)
     })
 
   } catch (error) {
@@ -156,15 +152,10 @@ export async function PATCH(request, { params }) {
       }
     })
 
-    // Convert BigInt to string for JSON serialization
-    const contractJSON = JSON.parse(JSON.stringify(updatedContract, (_, value) =>
-      typeof value === 'bigint' ? value.toString() : value
-    ))
-
     return NextResponse.json({
       success: true,
       message: `Contract registration ${action === 'approve' ? 'approved' : 'rejected'} successfully`,
-      contract: contractJSON
+      contract: serializeBigInt(updatedContract)
     })
 
   } catch (error) {
