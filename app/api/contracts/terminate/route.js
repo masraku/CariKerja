@@ -62,7 +62,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Kontrak sudah berakhir' }, { status: 400 })
     }
 
-    // Update contract worker status and application status
+    // Update contract worker status, application status, and jobseeker employment status
     const [updatedWorker] = await prisma.$transaction([
       // Update contract worker status
       prisma.contract_workers.update({
@@ -78,6 +78,14 @@ export async function POST(request) {
         where: { id: worker.applications.id },
         data: {
           status: 'RESIGNED' // Using RESIGNED status to indicate contract ended
+        }
+      }),
+      // Update jobseeker employment status to not employed
+      prisma.jobseekers.update({
+        where: { id: worker.jobseekers.id },
+        data: {
+          isEmployed: false,
+          isLookingForJob: true
         }
       })
     ])

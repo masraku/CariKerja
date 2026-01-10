@@ -728,13 +728,30 @@ export default function AdminContractsPage() {
                   Daftar Pekerja ({selectedContract.workers?.length || 0})
                 </h3>
                 <div className="space-y-3">
-                  {selectedContract.workers?.map((worker) => (
+                  {selectedContract.workers?.map((worker) => {
+                    const isTerminated = worker.status === "TERMINATED";
+                    const isCompleted = worker.status === "COMPLETED" || new Date(worker.endDate) < new Date();
+                    const isActive = worker.status === "ACTIVE" && new Date(worker.endDate) >= new Date();
+                    
+                    return (
                     <div
                       key={worker.id}
-                      className="bg-white border border-gray-200 rounded-xl p-4"
+                      className={`border rounded-xl p-4 ${
+                        isTerminated 
+                          ? "bg-red-50 border-red-200" 
+                          : isCompleted 
+                          ? "bg-gray-50 border-gray-200" 
+                          : "bg-white border-gray-200"
+                      }`}
                     >
                       <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white font-bold overflow-hidden flex-shrink-0">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold overflow-hidden flex-shrink-0 ${
+                          isTerminated 
+                            ? "bg-gradient-to-br from-red-500 to-rose-500" 
+                            : isCompleted 
+                            ? "bg-gradient-to-br from-gray-400 to-gray-500" 
+                            : "bg-gradient-to-br from-green-500 to-emerald-500"
+                        }`}>
                           {worker.jobseekers?.photo ? (
                             <img
                               src={worker.jobseekers.photo}
@@ -748,10 +765,21 @@ export default function AdminContractsPage() {
                           )}
                         </div>
                         <div className="flex-1">
-                          <h4 className="font-bold text-gray-900">
-                            {worker.jobseekers?.firstName}{" "}
-                            {worker.jobseekers?.lastName}
-                          </h4>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="font-bold text-gray-900">
+                              {worker.jobseekers?.firstName}{" "}
+                              {worker.jobseekers?.lastName}
+                            </h4>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                              isTerminated 
+                                ? "bg-red-100 text-red-700" 
+                                : isCompleted 
+                                ? "bg-gray-100 text-gray-700" 
+                                : "bg-green-100 text-green-700"
+                            }`}>
+                              {isTerminated ? "Diakhiri" : isCompleted ? "Selesai" : "Aktif"}
+                            </span>
+                          </div>
                           <p className="text-sm text-gray-500 flex items-center gap-1">
                             <Briefcase className="w-3 h-3" />
                             {worker.jobTitle}
@@ -783,6 +811,27 @@ export default function AdminContractsPage() {
                               </p>
                             </div>
                           </div>
+                          {/* Termination Info */}
+                          {isTerminated && worker.terminatedAt && (
+                            <div className="mt-3 p-3 bg-red-100 rounded-lg border border-red-200">
+                              <div className="flex flex-wrap gap-4">
+                                <div>
+                                  <p className="text-xs text-red-600 font-medium">Tanggal Diakhiri</p>
+                                  <p className="text-sm font-semibold text-red-700">
+                                    {formatDate(worker.terminatedAt)}
+                                  </p>
+                                </div>
+                                {worker.terminationReason && (
+                                  <div className="flex-1">
+                                    <p className="text-xs text-red-600 font-medium">Alasan</p>
+                                    <p className="text-sm text-red-700">
+                                      {worker.terminationReason}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
                           {worker.notes && (
                             <div className="mt-3 p-2 bg-gray-50 rounded-lg text-sm text-gray-600">
                               <strong>Keterangan:</strong> {worker.notes}
@@ -791,7 +840,7 @@ export default function AdminContractsPage() {
                         </div>
                       </div>
                     </div>
-                  ))}
+                  )})}
                 </div>
               </div>
 

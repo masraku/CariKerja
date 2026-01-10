@@ -70,6 +70,9 @@ export async function GET(request) {
               endDate: true,
               salary: true,
               notes: true,
+              status: true,
+              terminatedAt: true,
+              terminationReason: true,
               jobseekers: {
                 select: {
                   id: true,
