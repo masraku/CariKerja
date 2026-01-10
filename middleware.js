@@ -15,7 +15,8 @@ export function middleware(request) {
     '/about',
     '/warning',
     '/terms',
-    '/privacy'
+    '/privacy',
+    '/news'
   ]
 
   // Check if route is public

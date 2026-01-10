@@ -68,6 +68,7 @@ const Header = () => {
     { name: "Beranda", href: "/" },
     { name: "Lowongan", href: "/jobs" },
     { name: "Perusahaan", href: "/companies" },
+    { name: "Berita", href: "/news" },
     { name: "Tentang", href: "/about" },
     { name: "Syarat & Ketentuan", href: "/warning" },
   ];
@@ -247,7 +248,7 @@ const Header = () => {
                   href="/login"
                   className={`px-5 py-2.5 text-sm font-semibold transition-colors ${
                     !isScrolled &&
-                    (isHomePage || pathname.startsWith("/companies"))
+                    (isHomePage || pathname.startsWith("/companies") || pathname.startsWith("/news"))
                       ? "text-white hover:text-blue-100"
                       : "text-slate-600 hover:text-[#03587f]"
                   }`}

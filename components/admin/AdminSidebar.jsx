@@ -11,6 +11,7 @@ import {
   LogOut,
   CheckCircle,
   FileText,
+  Newspaper,
 } from "lucide-react";
 
 export default function AdminSidebar() {
@@ -94,6 +95,7 @@ export default function AdminSidebar() {
       href: "/admin/contracts",
       showBullet: pendingCounts.contracts > 0,
     },
+    { icon: Newspaper, label: "Berita", href: "/admin/news" },
     { icon: Settings, label: "Pengaturan", href: "/admin/settings" },
   ];
 
