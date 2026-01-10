@@ -382,8 +382,13 @@ export default function AdminJobseekersPage() {
                         {js.firstName} {js.lastName}
                       </h3>
                       <p className="text-sm text-slate-500 truncate">
-                        {js.currentTitle || "Belum ada posisi"}
+                        {js.currentJob?.position || js.currentTitle || "Belum ada posisi"}
                       </p>
+                      {js.currentJob && (
+                        <p className="text-xs text-emerald-600 font-medium mt-0.5">
+                          {js.currentJob.company} • Kontrak: {new Date(js.currentJob.startDate).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })} - {new Date(js.currentJob.endDate).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                        </p>
+                      )}
                       <div className="flex flex-wrap items-center gap-3 mt-2">
                         {(js.kecamatan || js.kelurahan || js.city) && (
                           <span className="inline-flex items-center gap-1 text-xs text-slate-500">

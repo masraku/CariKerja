@@ -43,7 +43,20 @@ export async function GET(request) {
                             select: {
                                 id: true,
                                 status: true,
-                                terminatedAt: true
+                                jobTitle: true,
+                                startDate: true,
+                                endDate: true,
+                                salary: true,
+                                terminatedAt: true,
+                                contract_registration: {
+                                    select: {
+                                        companies: {
+                                            select: {
+                                                name: true
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     },
@@ -61,11 +74,21 @@ export async function GET(request) {
         const jobseekersWithStatus = jobseekers.map(jobseeker => {
             // Check for active contract workers (not terminated/completed)
             // contract_workers is an array, so we need to check if any worker is ACTIVE
-            const activeContractWorker = jobseeker.applications.find(app => 
-                app.contract_workers && 
-                app.contract_workers.length > 0 &&
-                app.contract_workers.some(cw => cw.status === 'ACTIVE')
-            )
+            let activeWorkerData = null
+            const activeContractApp = jobseeker.applications.find(app => {
+                if (app.contract_workers && app.contract_workers.length > 0) {
+                    const activeWorker = app.contract_workers.find(cw => cw.status === 'ACTIVE')
+                    if (activeWorker) {
+                        activeWorkerData = {
+                            ...activeWorker,
+                            jobTitle: activeWorker.jobTitle || app.jobs?.title,
+                            companyName: activeWorker.contract_registration?.companies?.name
+                        }
+                        return true
+                    }
+                }
+                return false
+            })
             
             const acceptedApplications = jobseeker.applications.filter(app => app.status === 'ACCEPTED')
             const rejectedApplications = jobseeker.applications.filter(app => app.status === 'REJECTED')
@@ -75,14 +98,23 @@ export async function GET(request) {
 
             let employmentStatus = 'ACTIVE'
             let acceptedJob = null
+            let currentJob = null
 
             // Only mark as EMPLOYED if has active contract worker
-            if (activeContractWorker) {
+            if (activeContractApp && activeWorkerData) {
                 employmentStatus = 'EMPLOYED'
                 acceptedJob = {
-                    title: activeContractWorker.jobs?.title,
-                    company: activeContractWorker.jobs?.companies?.name,
-                    acceptedAt: activeContractWorker.updatedAt
+                    title: activeContractApp.jobs?.title,
+                    company: activeContractApp.jobs?.companies?.name,
+                    acceptedAt: activeContractApp.updatedAt
+                }
+                // Info pekerjaan dari contract_workers
+                currentJob = {
+                    position: activeWorkerData.jobTitle,
+                    company: activeWorkerData.companyName,
+                    startDate: activeWorkerData.startDate,
+                    endDate: activeWorkerData.endDate,
+                    salary: activeWorkerData.salary ? Number(activeWorkerData.salary) : null
                 }
             } else if (rejectedApplications.length > 0 && pendingApplications.length === 0 && acceptedApplications.length === 0) {
                 employmentStatus = 'REJECTED'
@@ -126,12 +158,13 @@ export async function GET(request) {
                 summary: jobseeker.summary,
                 // Status - isEmployed based on active contract worker, not database field
                 // If no active contract, jobseeker is considered looking for job
-                isEmployed: !!activeContractWorker,
-                isLookingForJob: !activeContractWorker,
-                employedCompany: jobseeker.employedCompany,
-                employedAt: jobseeker.employedAt,
+                isEmployed: !!activeContractApp,
+                isLookingForJob: !activeContractApp,
+                employedCompany: currentJob?.company || jobseeker.employedCompany,
+                employedAt: currentJob?.startDate || jobseeker.employedAt,
                 employmentStatus,
                 acceptedJob,
+                currentJob,
                 profileCompleted: jobseeker.profileCompleted,
                 profileCompleteness: jobseeker.profileCompleteness,
                 lastApplicationDate: jobseeker.applications[0]?.createdAt || null,

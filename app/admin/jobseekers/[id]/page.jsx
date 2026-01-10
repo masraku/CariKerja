@@ -467,20 +467,33 @@ export default function AdminJobseekerDetail() {
             </section>
 
             {/* Info Kerja */}
-            {profile.isEmployed && profile.employedCompany && (
+            {profile.isEmployed && (profile.employedCompany || profile.currentJob) && (
               <section className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
                 <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                   <Building2 className="w-5 h-5 text-emerald-600" />
                   Info Pekerjaan Saat Ini
                 </h2>
                 <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
-                  <p className="font-medium text-emerald-700">
-                    {profile.employedCompany}
+                  <p className="font-bold text-emerald-700 text-lg">
+                    {profile.currentJob?.company || profile.employedCompany}
                   </p>
-                  {profile.employedAt && (
-                    <p className="text-sm text-slate-500 mt-1">
-                      Sejak {formatDate(profile.employedAt)}
+                  {profile.currentJob?.position && (
+                    <p className="text-emerald-600 font-medium mt-1">
+                      {profile.currentJob.position}
                     </p>
+                  )}
+                  {(profile.currentJob?.startDate || profile.employedAt) && (
+                    <p className="text-sm text-slate-500 mt-2">
+                      Sejak {formatDate(profile.currentJob?.startDate || profile.employedAt)}
+                    </p>
+                  )}
+                  {profile.currentJob?.startDate && profile.currentJob?.endDate && (
+                    <div className="mt-3 pt-3 border-t border-emerald-200">
+                      <p className="text-xs text-emerald-600 font-medium mb-1">Periode Kontrak</p>
+                      <p className="text-sm text-slate-700">
+                        {formatDate(profile.currentJob.startDate)} - {formatDate(profile.currentJob.endDate)}
+                      </p>
+                    </div>
                   )}
                 </div>
               </section>
