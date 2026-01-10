@@ -174,7 +174,7 @@ export default function LandingPage() {
                 value: stats?.totalJobs,
               },
               {
-                label: "Perusahaan",
+                label: "Perusahaan Terverifikasi",
                 value: stats?.totalCompanies,
               },
               {
@@ -301,10 +301,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Bekerja di Perusahaan Top
+              Perusahaan Terverifikasi
             </h2>
             <p className="text-gray-500 text-lg">
-              Bergabung dengan tim terbaik di industri
+              Perusahaan terpercaya yang sudah diverifikasi oleh Disnaker
             </p>
           </div>
 
@@ -340,8 +340,9 @@ export default function LandingPage() {
                   <h3 className="font-bold text-gray-900 text-sm mb-1 line-clamp-1 group-hover:text-blue-600 transition-colors">
                     {company.name}
                   </h3>
-                  <span className="text-xs text-gray-400 group-hover:text-blue-500 transition-colors font-medium">
-                    {company.activeJobsCount} lowongan
+                  <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-medium">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    Terverifikasi
                   </span>
                 </Link>
               ))}

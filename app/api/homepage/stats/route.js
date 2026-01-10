@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 export async function GET() {
   try {
     // Run all queries in parallel for better performance
-    const [totalJobs, totalCompanies, totalApplications, totalHires] =
+    const [totalJobs, totalVerifiedCompanies, totalApplications, totalHires] =
       await Promise.all([
         // Count active jobs
         prisma.jobs.count({
@@ -15,14 +15,11 @@ export async function GET() {
           },
         }),
 
-        // Count companies with active jobs
+        // Count verified companies (diverifikasi oleh admin)
         prisma.companies.count({
           where: {
-            jobs: {
-              some: {
-                isActive: true,
-              },
-            },
+            verified: true,
+            status: "VERIFIED",
           },
         }),
 
@@ -42,7 +39,7 @@ export async function GET() {
       success: true,
       data: {
         totalJobs,
-        totalCompanies,
+        totalCompanies: totalVerifiedCompanies,
         totalApplications,
         totalHires,
       },

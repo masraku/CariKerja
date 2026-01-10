@@ -15,9 +15,6 @@ export async function GET(request) {
             take: limit,
             include: {
                 jobs: {
-                    where: {
-                        isActive: true
-                    },
                     take: 3,
                     orderBy: {
                         createdAt: 'desc'
@@ -32,11 +29,7 @@ export async function GET(request) {
                 },
                 _count: {
                     select: {
-                        jobs: {
-                            where: {
-                                isActive: true
-                            }
-                        }
+                        jobs: true
                     }
                 }
             },
@@ -51,12 +44,13 @@ export async function GET(request) {
         const topCompanies = companies.map(company => ({
             id: company.id,
             name: company.name,
+            slug: company.slug,
             logo: company.logo,
             description: company.description,
             city: company.city,
             province: company.province,
             industry: company.industry,
-            activeJobsCount: company._count.jobs,
+            totalJobsCount: company._count.jobs,
             latestJobs: company.jobs
         }))
 

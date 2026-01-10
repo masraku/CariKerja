@@ -1,9 +1,13 @@
-import { Inter } from 'next/font/google'
+import { Poppins } from 'next/font/google'
 import "@/styles/globals.css"
 import { AuthProvider } from '@/contexts/AuthContext'
 import MainLayout from '@/components/MainLayout'
 
-const inter = Inter({ subsets: ['latin'] })
+const poppins = Poppins({ 
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800'],
+  display: 'swap',
+})
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://kerjasimpel.vercel.app'
 
@@ -88,7 +92,7 @@ export default function RootLayout({ children }) {
         <meta name="geo.region" content="ID-JB" />
         <meta name="geo.placename" content="Cirebon" />
       </head>
-      <body className={`${inter.className} bg-slate-50 text-slate-900 antialiased selection:bg-blue-100 selection:text-blue-900`}>
+      <body className={`${poppins.className} bg-slate-50 text-slate-900 antialiased selection:bg-blue-100 selection:text-blue-900`}>
         <AuthProvider>
           <MainLayout>
             {children}
