@@ -30,6 +30,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQueryJobDetail } from "@/hooks/jobs/useJobs";
 
 export default function JobDetailPage() {
   const params = useParams();
@@ -37,18 +38,14 @@ export default function JobDetailPage() {
   const { user, isAuthenticated } = useAuth();
   const slug = params.slug;
 
-  const [job, setJob] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
-  const [hasApplied, setHasApplied] = useState(false);
-  const [existingApplication, setExistingApplication] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
 
-  useEffect(() => {
-    if (slug) {
-      fetchJobDetail();
-    }
-  }, [slug]);
+  // Use React Query hook
+  const { data: job, isPending: loading, isError } = useQueryJobDetail(slug);
+
+  const hasApplied = job?.hasApplied || false;
+  const existingApplication = job?.existingApplication || null;
 
   useEffect(() => {
     if (job) {
@@ -57,45 +54,18 @@ export default function JobDetailPage() {
     }
   }, [job]);
 
-  const fetchJobDetail = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/jobs/${slug}`, {
-        credentials: "include",
-      });
-      const data = await response.json();
-
-      if (data.success) {
-        setJob(data.data);
-
-        if (data.data.hasApplied) {
-          setHasApplied(true);
-          setExistingApplication(data.data.existingApplication);
-        } else {
-          setHasApplied(false);
-          setExistingApplication(null);
-        }
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Job Not Found",
-          text: "Lowongan tidak ditemukan",
-          confirmButtonColor: "#03587f",
-        }).then(() => {
-          router.push("/jobs");
-        });
-      }
-    } catch (error) {
+  useEffect(() => {
+    if (isError) {
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: "Gagal memuat detail lowongan",
+        title: "Job Not Found",
+        text: "Lowongan tidak ditemukan",
         confirmButtonColor: "#03587f",
+      }).then(() => {
+        router.push("/jobs");
       });
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [isError, router]);
 
   const toggleSave = () => {
     if (!isAuthenticated) {

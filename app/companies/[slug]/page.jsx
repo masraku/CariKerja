@@ -24,36 +24,21 @@ import {
   Share2,
   Flag,
 } from "lucide-react";
+import { useQueryCompanyDetail } from "@/hooks/companies/useCompanies";
 
 export default function CompanyProfilePage() {
   const params = useParams();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [company, setCompany] = useState(null);
   const [activeTab, setActiveTab] = useState("about");
 
+  // Use React Query hook
+  const { data: company, isPending: loading, isError } = useQueryCompanyDetail(params?.slug);
+
   useEffect(() => {
-    if (params?.slug) {
-      loadCompanyProfile();
+    if (isError) {
+      router.push("/companies");
     }
-  }, [params?.slug]);
-
-  const loadCompanyProfile = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/companies/${params.slug}`);
-
-      if (response.ok) {
-        const data = await response.json();
-        setCompany(data.company);
-      } else {
-        router.push("/companies");
-      }
-    } catch (error) {
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [isError, router]);
 
   const getJobTypeLabel = (type) => {
     const labels = {

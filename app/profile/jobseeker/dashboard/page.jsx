@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -22,170 +22,74 @@ import {
   AlertCircle,
 } from "lucide-react";
 import Swal from "sweetalert2";
+import {
+  useQueryGetProfile,
+  useQueryDashboardStats,
+  useQueryEmploymentStatus,
+  useMutationEmploymentStatus,
+} from "@/hooks/dashboard/getProfile";
 
 const JobseekerDashboard = () => {
   const router = useRouter();
   const { user } = useAuth();
-  const [profile, setProfile] = useState(null);
-  const [stats, setStats] = useState({
-    totalApplications: 0,
-    pending: 0,
-    interview: 0,
-    accepted: 0,
-  });
-  const [recentApplications, setRecentApplications] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  // Employment status states
-  const [employmentStatus, setEmploymentStatus] = useState({
-    isEmployed: false,
-    isLookingForJob: true,
-    employedCompany: "",
-    employedAt: null,
-  });
-  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  // Profile Query
+  const {
+    data: profileData,
+    isError: isErrorGetProfile,
+    isPending: isPendingGetProfile,
+  } = useQueryGetProfile();
 
+  const profile = profileData?.profile;
+  const isProfileComplete = profile?.profileCompleted;
+
+  // Dashboard Stats Query - only fetch when profile is complete
+  const {
+    data: statsData,
+    isPending: isPendingStats,
+  } = useQueryDashboardStats(isProfileComplete);
+
+  // Employment Status Query - only fetch when profile is complete
+  const {
+    data: employmentStatus,
+    isPending: isPendingEmployment,
+  } = useQueryEmploymentStatus(isProfileComplete);
+
+  // Employment Status Mutation
+  const { mutate: updateStatus, isPending: isUpdatingStatus } = useMutationEmploymentStatus();
+
+  // Redirect logic
   useEffect(() => {
-    checkProfile();
-  }, []);
-
-  const checkProfile = async () => {
-    try {
-      const response = await fetch("/api/profile/jobseeker", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-      const data = await response.json();
-
-      if (response.ok && data.profile) {
-        setProfile(data.profile);
-
-        // If profile not completed, MUST complete profile first
-        if (!data.profile.profileCompleted) {
-          router.push("/profile/jobseeker?mode=edit");
-          return;
-        }
-
-        // Load dashboard data
-        loadDashboardData();
-      } else {
-        // No profile yet, redirect to create profile
+    if (!isPendingGetProfile) {
+      if (isErrorGetProfile || !profile) {
+        router.push("/profile/jobseeker?mode=edit");
+      } else if (!isProfileComplete) {
         router.push("/profile/jobseeker?mode=edit");
       }
-    } catch (error) {
-      router.push("/profile/jobseeker?mode=edit");
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [isPendingGetProfile, isErrorGetProfile, profile, isProfileComplete, router]);
 
-  const loadDashboardData = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        router.push("/login?role=jobseeker");
-        return;
-      }
+  const handleUpdateEmploymentStatus = async (field, value) => {
+    const updateData = { [field]: value };
 
-      // Fetch stats from my-applications API
-      const statsResponse = await fetch(
-        "/api/profile/jobseeker/my-applications",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json();
-        if (statsData.success) {
-          setStats({
-            totalApplications: statsData.data.total,
-            pending:
-              (statsData.data.stats.PENDING || 0) +
-              (statsData.data.stats.REVIEWING || 0),
-            interview:
-              (statsData.data.stats.INTERVIEW_SCHEDULED || 0) +
-              (statsData.data.stats.INTERVIEW_COMPLETED || 0),
-            accepted: statsData.data.stats.ACCEPTED || 0,
-          });
-          setRecentApplications(statsData.data.applications.slice(0, 3));
-        }
-      }
-
-      // Load employment status
-      await loadEmploymentStatus();
-    } catch (error) {
-    }
-  };
-
-  const loadEmploymentStatus = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("/api/profile/jobseeker/status", {
-        headers: { Authorization: `Bearer ${token}` },
+    // If setting employed to true, ask for company name
+    if (field === "isEmployed" && value === true) {
+      const { value: companyName } = await Swal.fire({
+        title: "Selamat! 🎉",
+        text: "Dimana Anda bekerja sekarang?",
+        input: "text",
+        inputPlaceholder: "Nama Perusahaan",
+        showCancelButton: true,
+        confirmButtonColor: "#3b82f6",
+        confirmButtonText: "Simpan",
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setEmploymentStatus({
-            isEmployed: data.data.isEmployed || false,
-            isLookingForJob: data.data.isLookingForJob ?? true,
-            employedCompany: data.data.employedCompany || "",
-            employedAt: data.data.employedAt,
-          });
-        }
-      }
-    } catch (error) {
+      if (!companyName) return;
+      updateData.employedCompany = companyName;
     }
-  };
 
-  const updateEmploymentStatus = async (field, value) => {
-    try {
-      setIsUpdatingStatus(true);
-      const token = localStorage.getItem("token");
-      const updateData = { [field]: value };
-
-      // If setting employed to true, ask for company name
-      if (field === "isEmployed" && value === true) {
-        const { value: companyName } = await Swal.fire({
-          title: "Selamat! 🎉",
-          text: "Dimana Anda bekerja sekarang?",
-          input: "text",
-          inputPlaceholder: "Nama Perusahaan",
-          showCancelButton: true,
-          confirmButtonColor: "#3b82f6",
-          confirmButtonText: "Simpan",
-        });
-
-        if (!companyName) {
-          setIsUpdatingStatus(false);
-          return;
-        }
-        updateData.employedCompany = companyName;
-      }
-
-      const response = await fetch("/api/profile/jobseeker/status", {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updateData),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setEmploymentStatus({
-          isEmployed: data.data.isEmployed || false,
-          isLookingForJob: data.data.isLookingForJob ?? true,
-          employedCompany: data.data.employedCompany || "",
-          employedAt: data.data.employedAt,
-        });
+    updateStatus(updateData, {
+      onSuccess: () => {
         Swal.fire({
           icon: "success",
           title: "Status Diperbarui",
@@ -194,21 +98,31 @@ const JobseekerDashboard = () => {
           position: "top-end",
           toast: true,
         });
-      }
-    } catch (error) {
-      Swal.fire({ icon: "error", text: "Gagal memperbarui status" });
-    } finally {
-      setIsUpdatingStatus(false);
-    }
+      },
+      onError: () => {
+        Swal.fire({ icon: "error", text: "Gagal memperbarui status" });
+      },
+    });
   };
 
-  if (isLoading) {
+  // Loading state
+  if (isPendingGetProfile || (isProfileComplete && (isPendingStats || isPendingEmployment))) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600"></div>
       </div>
     );
   }
+
+  // Default values
+  const stats = statsData || { totalApplications: 0, pending: 0, interview: 0, accepted: 0 };
+  const recentApplications = statsData?.recentApplications || [];
+  const currentEmploymentStatus = employmentStatus || {
+    isEmployed: false,
+    isLookingForJob: true,
+    employedCompany: "",
+    employedAt: null,
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 pt-24 pb-12">
@@ -248,7 +162,7 @@ const JobseekerDashboard = () => {
                     Hai, {profile?.firstName}! 👋
                   </h1>
                   {/* Employment Status Badge */}
-                  {employmentStatus.isEmployed ? (
+                  {currentEmploymentStatus.isEmployed ? (
                     <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-green-500/90 text-white shadow-lg">
                       <CheckCircle className="w-3.5 h-3.5" />
                       Sudah Bekerja
@@ -261,8 +175,8 @@ const JobseekerDashboard = () => {
                   )}
                 </div>
                 <p className="text-blue-100 text-sm md:text-base mt-1">
-                  {employmentStatus.isEmployed
-                    ? `Bekerja di ${employmentStatus.employedCompany}`
+                  {currentEmploymentStatus.isEmployed
+                    ? `Bekerja di ${currentEmploymentStatus.employedCompany}`
                     : profile?.currentTitle || "Siap menjemput karir impian?"}
                 </p>
                 <div className="flex flex-wrap items-center gap-2 mt-3">
@@ -271,11 +185,10 @@ const JobseekerDashboard = () => {
                     {profile?.city || "Belum diatur"}
                   </span>
                   <span
-                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm ${
-                      profile?.profileCompleteness === 100
-                        ? "bg-green-500/20 text-green-200"
-                        : "bg-yellow-500/20 text-yellow-200"
-                    }`}
+                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm ${profile?.profileCompleteness === 100
+                      ? "bg-green-500/20 text-green-200"
+                      : "bg-yellow-500/20 text-yellow-200"
+                      }`}
                   >
                     <Award className="w-3 h-3" /> Profile:{" "}
                     {profile?.profileCompleteness}%
@@ -400,15 +313,14 @@ const JobseekerDashboard = () => {
                             </div>
                           </div>
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-bold border ${
-                              app.status === "ACCEPTED"
-                                ? "bg-green-50 text-green-600 border-green-100"
-                                : app.status === "REJECTED"
+                            className={`px-3 py-1 rounded-full text-xs font-bold border ${app.status === "ACCEPTED"
+                              ? "bg-green-50 text-green-600 border-green-100"
+                              : app.status === "REJECTED"
                                 ? "bg-red-50 text-red-600 border-red-100"
                                 : app.status === "INTERVIEW_SCHEDULED"
-                                ? "bg-purple-50 text-purple-600 border-purple-100"
-                                : "bg-yellow-50 text-yellow-700 border-yellow-100"
-                            }`}
+                                  ? "bg-purple-50 text-purple-600 border-purple-100"
+                                  : "bg-yellow-50 text-yellow-700 border-yellow-100"
+                              }`}
                           >
                             {app.status.replace("_", " ")}
                           </span>

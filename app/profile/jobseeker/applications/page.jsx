@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import {
   Briefcase,
   Building2,
@@ -20,56 +20,28 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 import Link from "next/link";
+import {
+  useQueryJobseekerApplications,
+  useMutationWithdrawApplication,
+} from "@/hooks/jobseeker/useJobseeker";
 
 export default function JobseekerApplicationsPage() {
-  const [applications, setApplications] = useState([]);
-  const [stats, setStats] = useState({});
-  const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState("ALL");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedApplication, setSelectedApplication] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState(null);
 
-  // Helper function untuk auth header
-  const getAuthHeader = () => {
-    const token = localStorage.getItem("token");
-    return {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    };
-  };
+  // Use React Query hooks
+  const {
+    data: applicationsData,
+    isPending: loading,
+    refetch,
+  } = useQueryJobseekerApplications({ status: selectedStatus });
 
-  // Fetch applications
-  const fetchApplications = async () => {
-    try {
-      setLoading(true);
-      const queryParams = new URLSearchParams();
-      if (selectedStatus !== "ALL") {
-        queryParams.append("status", selectedStatus);
-      }
+  const { mutate: withdrawApplication } = useMutationWithdrawApplication();
 
-      const response = await fetch(
-        `/api/profile/jobseeker/my-applications?${queryParams}`,
-        {
-          headers: getAuthHeader(),
-        }
-      );
-
-      const result = await response.json();
-
-      if (result.success) {
-        setApplications(result.data.applications);
-        setStats(result.data.stats);
-      } else {
-        if (response.status === 401) {
-          window.location.href = "/login";
-        }
-      }
-    } catch (error) {
-    } finally {
-      setLoading(false);
-    }
-  };
+  const applications = applicationsData?.applications || [];
+  const stats = applicationsData?.stats || {};
 
   // Withdraw application with SweetAlert
   const handleWithdraw = async (applicationId) => {
@@ -86,68 +58,47 @@ export default function JobseekerApplicationsPage() {
 
     if (!result.isConfirmed) return;
 
-    try {
-      Swal.fire({
-        title: "Memproses...",
-        text: "Sedang menarik lamaran",
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading(),
-      });
+    Swal.fire({
+      title: "Memproses...",
+      text: "Sedang menarik lamaran",
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading(),
+    });
 
-      const response = await fetch(
-        `/api/applications/${applicationId}/withdraw`,
-        {
-          method: "PATCH",
-          headers: getAuthHeader(),
-        }
-      );
-
-      const data = await response.json();
-
-      if (data.success) {
-        await Swal.fire({
+    withdrawApplication(applicationId, {
+      onSuccess: () => {
+        Swal.fire({
           title: "Berhasil!",
           text: "Lamaran berhasil ditarik",
           icon: "success",
           confirmButtonColor: "#3b82f6",
         });
-        fetchApplications();
-      } else {
-        await Swal.fire({
+      },
+      onError: (error) => {
+        Swal.fire({
           title: "Gagal!",
-          text: data.error || "Gagal menarik lamaran",
+          text: error.message || "Gagal menarik lamaran",
           icon: "error",
           confirmButtonColor: "#3b82f6",
         });
-      }
-    } catch (error) {
-      await Swal.fire({
-        title: "Error!",
-        text: "Terjadi kesalahan saat menarik lamaran",
-        icon: "error",
-        confirmButtonColor: "#3b82f6",
-      });
-    }
+      },
+    });
   };
 
   // View details
   const viewDetails = async (applicationId) => {
-    // Direct navigation is better for UX now
     window.location.href = `/profile/jobseeker/applications/${applicationId}`;
   };
 
-  // Fetch on mount and when status changes
-  useEffect(() => {
-    fetchApplications();
-  }, [selectedStatus]);
-
   // Filter applications
-  const filteredApplications = applications.filter((app) => {
-    const matchSearch =
-      app.jobs.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.jobs.companies.name.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchSearch;
-  });
+  const filteredApplications = useMemo(() => {
+    return applications.filter((app) => {
+      const matchSearch =
+        app.jobs.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.jobs.companies.name.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchSearch;
+    });
+  }, [applications, searchTerm]);
 
   // Status configuration
   const statusConfig = {

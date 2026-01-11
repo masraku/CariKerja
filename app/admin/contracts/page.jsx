@@ -1,7 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
+import axios from "axios";
 import {
   ArrowLeft,
   Building2,
@@ -25,18 +26,10 @@ import {
   X,
   Download,
 } from "lucide-react";
+import { useQueryAdminContracts, useMutationProcessContract } from "@/hooks/admin/useAdmin";
 
 export default function AdminContractsPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true); // Initial full page load
-  const [contentLoading, setContentLoading] = useState(false); // For filter changes
-  const [contracts, setContracts] = useState([]);
-  const [stats, setStats] = useState({
-    total: 0,
-    pending: 0,
-    approved: 0,
-    rejected: 0,
-  });
   const [statusFilter, setStatusFilter] = useState("PENDING");
   const [searchQuery, setSearchQuery] = useState("");
   const [processingId, setProcessingId] = useState(null);
@@ -48,56 +41,16 @@ export default function AdminContractsPage() {
   const [uploading, setUploading] = useState(false);
   const [previewDocUrl, setPreviewDocUrl] = useState(null);
 
-  useEffect(() => {
-    loadContracts(true);
-  }, []);
+  // Use React Query hooks
+  const { data, isPending: loading, refetch } = useQueryAdminContracts({
+    status: statusFilter,
+  });
 
-  // Effect for filter changes (partial loading)
-  useEffect(() => {
-    if (!loading) {
-      loadContracts(false);
-    }
-  }, [statusFilter]);
+  const processContractMutation = useMutationProcessContract();
 
-  const loadContracts = async (isInitial = false) => {
-    try {
-      if (isInitial) {
-        setLoading(true);
-      } else {
-        setContentLoading(true);
-      }
-      const token = localStorage.getItem("token");
-
-      const params = new URLSearchParams();
-      if (statusFilter !== "all") {
-        params.append("status", statusFilter);
-      }
-
-      const response = await fetch(`/api/admin/contracts?${params}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setContracts(data.contracts || []);
-        setStats(
-          data.stats || { total: 0, pending: 0, approved: 0, rejected: 0 }
-        );
-      }
-    } catch (error) {
-      console.error("Error loading contracts:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Gagal memuat data kontrak",
-      });
-    } finally {
-      setLoading(false);
-      setContentLoading(false);
-    }
-  };
+  const contracts = data?.contracts || [];
+  const stats = data?.stats || { total: 0, pending: 0, approved: 0, rejected: 0 };
+  const contentLoading = loading;
 
   const handleProcess = async (id, action) => {
     const actionText = action === "approve" ? "menyetujui" : "menolak";

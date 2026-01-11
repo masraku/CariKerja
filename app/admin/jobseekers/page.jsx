@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Users,
@@ -20,66 +20,33 @@ import {
   getAllKecamatan,
   getKelurahanByKecamatan,
 } from "@/lib/cirebonData";
+import { useQueryAdminJobseekers } from "@/hooks/admin/useAdmin";
 
 export default function AdminJobseekersPage() {
   const router = useRouter();
-  const [jobseekers, setJobseekers] = useState([]);
-  const [filteredJobseekers, setFilteredJobseekers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [kecamatanFilter, setKecamatanFilter] = useState("");
   const [kelurahanFilter, setKelurahanFilter] = useState("");
-  const [stats, setStats] = useState({
-    total: 0,
-    employed: 0,
-    lookingForJob: 0,
-    profileCompleted: 0,
-  });
+
+  // Use React Query hook
+  const { data: jobseekers = [], isPending: loading } = useQueryAdminJobseekers();
 
   // Get kelurahan options based on selected kecamatan
   const kelurahanOptions = kecamatanFilter
     ? getKelurahanByKecamatan(kecamatanFilter)
     : [];
 
-  useEffect(() => {
-    loadJobseekers();
-  }, []);
+  // Calculate stats from jobseekers data
+  const stats = useMemo(() => ({
+    total: jobseekers.length,
+    employed: jobseekers.filter((js) => js.isEmployed).length,
+    lookingForJob: jobseekers.filter((js) => js.isLookingForJob).length,
+    profileCompleted: jobseekers.filter((js) => js.profileCompleted).length,
+  }), [jobseekers]);
 
-  useEffect(() => {
-    filterJobseekers();
-  }, [jobseekers, searchQuery, statusFilter, kecamatanFilter, kelurahanFilter]);
-
-  const loadJobseekers = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("/api/admin/jobseekers", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setJobseekers(data.data.jobseekers);
-        calculateStats(data.data.jobseekers);
-      }
-    } catch (error) {
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const calculateStats = (data) => {
-    setStats({
-      total: data.length,
-      employed: data.filter((js) => js.isEmployed).length,
-      lookingForJob: data.filter((js) => js.isLookingForJob).length,
-      profileCompleted: data.filter((js) => js.profileCompleted).length,
-    });
-  };
-
-  const filterJobseekers = () => {
+  // Filter jobseekers based on search and filters
+  const filteredJobseekers = useMemo(() => {
     let filtered = [...jobseekers];
 
     if (searchQuery) {
@@ -114,8 +81,8 @@ export default function AdminJobseekersPage() {
       filtered = filtered.filter((js) => js.kelurahan === kelurahanFilter);
     }
 
-    setFilteredJobseekers(filtered);
-  };
+    return filtered;
+  }, [jobseekers, searchQuery, statusFilter, kecamatanFilter, kelurahanFilter]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "-";

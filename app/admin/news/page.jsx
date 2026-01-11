@@ -1,6 +1,7 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
+import axios from "axios";
 import {
   Newspaper,
   Search,
@@ -25,12 +26,9 @@ import {
   MoreVertical,
 } from "lucide-react";
 import Swal from "sweetalert2";
+import { useQueryAdminNews, useMutationCreateNews, useMutationUpdateNews, useMutationDeleteNews } from "@/hooks/admin/useAdmin";
 
 export default function AdminNewsPage() {
-  const [news, setNews] = useState([]);
-  const [stats, setStats] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -50,6 +48,22 @@ export default function AdminNewsPage() {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
 
+  // Use React Query hooks
+  const { data, isPending: loading, refetch } = useQueryAdminNews({
+    search,
+    status: statusFilter,
+    category: categoryFilter,
+    sort: sortOrder,
+  });
+
+  const createNewsMutation = useMutationCreateNews();
+  const updateNewsMutation = useMutationUpdateNews();
+  const deleteNewsMutation = useMutationDeleteNews();
+
+  const news = data?.news || [];
+  const stats = data?.stats || null;
+  const categories = data?.categories || [];
+
   const predefinedCategories = [
     "Teknologi",
     "Karir",
@@ -61,42 +75,6 @@ export default function AdminNewsPage() {
     "Industri",
     "Umum",
   ];
-
-  useEffect(() => {
-    fetchNews();
-  }, [search, statusFilter, categoryFilter, sortOrder]);
-
-  const fetchNews = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      const params = new URLSearchParams();
-      if (search) params.append("search", search);
-      if (statusFilter !== "all") params.append("status", statusFilter);
-      if (categoryFilter !== "all") params.append("category", categoryFilter);
-      params.append("sort", sortOrder);
-
-      const response = await fetch(`/api/admin/news?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await response.json();
-
-      if (data.success) {
-        setNews(data.news || []);
-        setStats(data.stats || null);
-        setCategories(data.categories || []);
-      } else {
-        setNews([]);
-        setStats(null);
-      }
-    } catch (error) {
-      console.error("Error fetching news:", error);
-      setNews([]);
-      setStats(null);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const formatDate = (date) => {
     if (!date) return "-";
@@ -251,40 +229,23 @@ export default function AdminNewsPage() {
     }
 
     try {
-      const token = localStorage.getItem("token");
-      const url = editingNews
-        ? `/api/admin/news/${editingNews.id}`
-        : "/api/admin/news";
-      const method = editingNews ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        Swal.fire({
-          icon: "success",
-          title: "Berhasil",
-          text: editingNews ? "Berita berhasil diperbarui" : "Berita berhasil dibuat",
-          timer: 1500,
-          showConfirmButton: false,
+      if (editingNews) {
+        await updateNewsMutation.mutateAsync({
+          newsId: editingNews.id,
+          newsData: formData,
         });
-        handleCloseDrawer();
-        fetchNews();
       } else {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: data.error || "Terjadi kesalahan",
-        });
+        await createNewsMutation.mutateAsync(formData);
       }
+
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil",
+        text: editingNews ? "Berita berhasil diperbarui" : "Berita berhasil dibuat",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      handleCloseDrawer();
     } catch (error) {
       console.error("Error saving news:", error);
       Swal.fire({
@@ -309,34 +270,18 @@ export default function AdminNewsPage() {
 
     if (result.isConfirmed) {
       try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`/api/admin/news/${id}`, {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
+        await deleteNewsMutation.mutateAsync(id);
+        Swal.fire({
+          icon: "success",
+          title: "Berhasil",
+          text: "Berita berhasil dihapus",
         });
-
-        const data = await response.json();
-
-        if (data.success) {
-          Swal.fire({
-            icon: "success",
-            title: "Berhasil",
-            text: "Berita berhasil dihapus",
-          });
-          fetchNews();
-        } else {
-          Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: data.error || "Gagal menghapus berita",
-          });
-        }
       } catch (error) {
         console.error("Error deleting news:", error);
         Swal.fire({
           icon: "error",
           title: "Error",
-          text: "Terjadi kesalahan saat menghapus berita",
+          text: error.message || "Terjadi kesalahan saat menghapus berita",
         });
       }
     }

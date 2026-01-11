@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   Briefcase,
@@ -20,11 +20,9 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 import { getAllKecamatan } from "@/lib/cirebonData";
+import { useQueryAdminJobs, useMutationUpdateJobStatus } from "@/hooks/admin/useAdmin";
 
 export default function AdminJobsPage() {
-  const [jobs, setJobs] = useState([]);
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [jobTypeFilter, setJobTypeFilter] = useState("all");
@@ -32,49 +30,20 @@ export default function AdminJobsPage() {
   const [sortOrder, setSortOrder] = useState("newest");
   const [scopeFilter, setScopeFilter] = useState("all");
 
-  useEffect(() => {
-    fetchJobs();
-  }, [
+  // Use React Query hooks
+  const { data, isPending: loading, refetch } = useQueryAdminJobs({
     search,
-    statusFilter,
-    jobTypeFilter,
-    kecamatanFilter,
-    sortOrder,
-    scopeFilter,
-  ]);
+    status: statusFilter,
+    jobType: jobTypeFilter,
+    kecamatan: kecamatanFilter,
+    scope: scopeFilter,
+    sort: sortOrder,
+  });
 
-  const fetchJobs = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      const params = new URLSearchParams();
-      if (search) params.append("search", search);
-      if (statusFilter !== "all") params.append("status", statusFilter);
-      if (jobTypeFilter !== "all") params.append("jobType", jobTypeFilter);
-      if (kecamatanFilter !== "all")
-        params.append("kecamatan", kecamatanFilter);
-      if (scopeFilter !== "all") params.append("scope", scopeFilter);
-      params.append("sort", sortOrder);
+  const updateStatusMutation = useMutationUpdateJobStatus();
 
-      const response = await fetch(`/api/admin/jobs?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await response.json();
-
-      if (data.success) {
-        setJobs(data.jobs || []);
-        setStats(data.stats || null);
-      } else {
-        setJobs([]);
-        setStats(null);
-      }
-    } catch (error) {
-      setJobs([]);
-      setStats(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const jobs = data?.jobs || [];
+  const stats = data?.stats || null;
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("id-ID", {
@@ -152,36 +121,23 @@ export default function AdminJobsPage() {
         rejectionReason = result.value;
       }
 
-      // API Call
-      const token = localStorage.getItem("token");
-      const response = await fetch("/api/admin/jobs", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          jobId,
-          status: newStatus,
-          rejectionReason,
-        }),
+      // Use mutation
+      await updateStatusMutation.mutateAsync({
+        jobId,
+        status: newStatus,
+        rejectionReason,
       });
 
-      if (response.ok) {
-        await Swal.fire({
-          icon: "success",
-          title: "Berhasil",
-          text:
-            newStatus === "ACTIVE"
-              ? "Lowongan berhasil disetujui"
-              : "Lowongan berhasil ditolak",
-          timer: 1500,
-          showConfirmButton: false,
-        });
-        fetchJobs();
-      } else {
-        throw new Error("Failed to update");
-      }
+      await Swal.fire({
+        icon: "success",
+        title: "Berhasil",
+        text:
+          newStatus === "ACTIVE"
+            ? "Lowongan berhasil disetujui"
+            : "Lowongan berhasil ditolak",
+        timer: 1500,
+        showConfirmButton: false,
+      });
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -190,7 +146,6 @@ export default function AdminJobsPage() {
       });
     }
   };
-
   const getStatusBadge = (status) => {
     const styles = {
       PENDING: "bg-orange-100 text-orange-700",

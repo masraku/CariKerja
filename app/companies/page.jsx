@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import {
   Search,
@@ -16,15 +16,15 @@ import {
   Globe,
   Calendar,
 } from "lucide-react";
+import { useQueryCompanies } from "@/hooks/companies/useCompanies";
 
 const CompaniesPage = () => {
-  const [companies, setCompanies] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [followedCompanies, setFollowedCompanies] = useState([]);
   const [selectedIndustry, setSelectedIndustry] = useState("all");
   const [selectedSize, setSelectedSize] = useState("all");
-  const [industries, setIndustries] = useState(["all"]);
+
   const companySizes = [
     "all",
     "1-10",
@@ -35,15 +35,23 @@ const CompaniesPage = () => {
     "1000+",
   ];
 
-  useEffect(() => {
-    loadCompanies();
-  }, [selectedIndustry, selectedSize]);
+  // Debounce search query
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (searchQuery || searchQuery === "") loadCompanies();
+      setDebouncedSearch(searchQuery);
     }, 500);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Use React Query hook
+  const { data: companiesData, isPending: loading } = useQueryCompanies({
+    search: debouncedSearch,
+    industry: selectedIndustry,
+    size: selectedSize,
+  });
+
+  const companies = companiesData?.companies || [];
+  const industries = companiesData?.industries || ["all"];
 
   useEffect(() => {
     const saved = localStorage.getItem("followedCompanies");
@@ -57,35 +65,6 @@ const CompaniesPage = () => {
     );
   }, [followedCompanies]);
 
-  const loadCompanies = async () => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      if (searchQuery) params.append("search", searchQuery);
-      if (selectedIndustry !== "all")
-        params.append("industry", selectedIndustry);
-      if (selectedSize !== "all") params.append("size", selectedSize);
-
-      const response = await fetch(`/api/companies?${params.toString()}`);
-      const data = await response.json();
-      if (response.ok) {
-        setCompanies(data.companies);
-        const uniqueIndustries = [
-          "all",
-          ...new Set(
-            data.companies
-              .map((c) => c.industry)
-              .filter((i) => i && i !== "Belum dilengkapi")
-          ),
-        ];
-        setIndustries(uniqueIndustries);
-      }
-    } catch (error) {
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const toggleFollow = (companyId) => {
     setFollowedCompanies((prev) =>
       prev.includes(companyId)
@@ -94,7 +73,10 @@ const CompaniesPage = () => {
     );
   };
 
-  const totalActiveJobs = companies.reduce((sum, c) => sum + c.activeJobs, 0);
+  const totalActiveJobs = useMemo(
+    () => companies.reduce((sum, c) => sum + (c.activeJobs || 0), 0),
+    [companies]
+  );
   const hasFilters = selectedIndustry !== "all" || selectedSize !== "all";
 
   return (
