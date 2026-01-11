@@ -122,11 +122,22 @@ export async function POST(request) {
 
     // Prepare benefits array
     const allBenefits = [...(benefits || [])]
-    if (workingDays) {
-      allBenefits.push(`Hari Kerja: ${workingDays}`)
+    
+    // Handle workingDays - convert array to string if needed
+    const workingDaysStr = Array.isArray(workingDays) 
+      ? workingDays.join(', ') 
+      : workingDays
+    
+    // Handle holidays - convert array to string if needed
+    const holidaysStr = Array.isArray(holidays) 
+      ? holidays.join(', ') 
+      : holidays
+    
+    if (workingDaysStr) {
+      allBenefits.push(`Hari Kerja: ${workingDaysStr}`)
     }
-    if (holidays) {
-      allBenefits.push(`Hari Libur: ${holidays}`)
+    if (holidaysStr) {
+      allBenefits.push(`Hari Libur: ${holidaysStr}`)
     }
 
     // Create job - set isActive to false for admin validation

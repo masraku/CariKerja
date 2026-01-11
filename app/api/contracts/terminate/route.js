@@ -12,11 +12,14 @@ export async function POST(request) {
 
     const { recruiter } = auth
     const body = await request.json()
-    const { workerId, reason } = body
+    const { workerId, reason, endDate } = body
 
     if (!workerId) {
       return NextResponse.json({ error: 'ID pekerja diperlukan' }, { status: 400 })
     }
+
+    // Parse end date or use current date
+    const terminationDate = endDate ? new Date(endDate) : new Date()
 
     // Get the contract worker and verify ownership
     const worker = await prisma.contract_workers.findUnique({
@@ -62,6 +65,11 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Kontrak sudah berakhir' }, { status: 400 })
     }
 
+    // Check if application exists
+    if (!worker.applications?.id) {
+      return NextResponse.json({ error: 'Data aplikasi tidak ditemukan' }, { status: 400 })
+    }
+
     // Update contract worker status, application status, and jobseeker employment status
     const [updatedWorker] = await prisma.$transaction([
       // Update contract worker status
@@ -69,8 +77,9 @@ export async function POST(request) {
         where: { id: workerId },
         data: {
           status: 'TERMINATED',
-          terminatedAt: new Date(),
-          terminationReason: reason || 'Diakhiri oleh recruiter'
+          terminatedAt: terminationDate,
+          terminationReason: reason || 'Diakhiri oleh recruiter',
+          endDate: terminationDate
         }
       }),
       // Update application status back to allow job seeking

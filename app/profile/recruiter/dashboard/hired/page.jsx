@@ -128,12 +128,20 @@ export default function ContractRegistrationPage() {
   };
 
   const handleTerminateContract = async (worker, contract) => {
+    const today = new Date().toISOString().split('T')[0];
+    
     const result = await Swal.fire({
       title: "Akhiri Kontrak?",
       html: `
         <p class="text-gray-600 mb-3">Anda akan mengakhiri kontrak:</p>
         <p class="font-semibold">${worker.jobseekers?.firstName} ${worker.jobseekers?.lastName}</p>
-        <p class="text-sm text-gray-500">${worker.jobTitle}</p>
+        <p class="text-sm text-gray-500 mb-4">${worker.jobTitle}</p>
+        <div class="text-left">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Akhir Kontrak <span class="text-red-500">*</span></label>
+          <input type="date" id="swal-endDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-3" value="${today}" required />
+          <label class="block text-sm font-medium text-gray-700 mb-1">Alasan Pengakhiran (opsional)</label>
+          <textarea id="swal-reason" class="w-full px-3 py-2 border border-gray-300 rounded-lg" rows="3" placeholder="Alasan pengakhiran kontrak..."></textarea>
+        </div>
       `,
       icon: "warning",
       showCancelButton: true,
@@ -141,14 +149,19 @@ export default function ContractRegistrationPage() {
       cancelButtonColor: "#6b7280",
       confirmButtonText: "Ya, Akhiri Kontrak",
       cancelButtonText: "Batal",
-      input: "textarea",
-      inputPlaceholder: "Alasan pengakhiran kontrak (opsional)...",
-      inputAttributes: {
-        "aria-label": "Alasan pengakhiran"
+      focusConfirm: false,
+      preConfirm: () => {
+        const endDate = document.getElementById('swal-endDate').value;
+        const reason = document.getElementById('swal-reason').value;
+        if (!endDate) {
+          Swal.showValidationMessage('Tanggal akhir kontrak harus diisi');
+          return false;
+        }
+        return { endDate, reason };
       }
     });
 
-    if (result.isConfirmed) {
+    if (result.isConfirmed && result.value) {
       try {
         setTerminatingId(worker.id);
         const token = localStorage.getItem("token");
@@ -161,7 +174,8 @@ export default function ContractRegistrationPage() {
           },
           body: JSON.stringify({
             workerId: worker.id,
-            reason: result.value || "Diakhiri oleh recruiter"
+            reason: result.value.reason || "Diakhiri oleh recruiter",
+            endDate: result.value.endDate
           }),
         });
 

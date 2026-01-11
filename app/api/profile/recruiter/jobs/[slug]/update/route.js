@@ -9,8 +9,18 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const decoded = verifyToken(token)
+    let decoded;
+    try {
+      decoded = verifyToken(token)
+    } catch (tokenError) {
+      return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 })
+    }
+
     const { slug } = await params
+    if (!slug) {
+      return NextResponse.json({ error: 'Job slug is required' }, { status: 400 })
+    }
+    
     const body = await request.json()
 
     // Verify job ownership
@@ -112,8 +122,8 @@ export async function PUT(request, { params }) {
         publishedAt: null, // Clear published date
         
         photo: photo || null,
-        workingDays: workingDays || null,
-        holidays: holidays || null,
+        workingDays: Array.isArray(workingDays) ? workingDays.join(', ') : (workingDays || null),
+        holidays: Array.isArray(holidays) ? holidays.join(', ') : (holidays || null),
         isShift: isShift || false,
         shiftCount: shiftCount ? parseInt(shiftCount) : null,
         isDisabilityFriendly: isDisabilityFriendly || false,

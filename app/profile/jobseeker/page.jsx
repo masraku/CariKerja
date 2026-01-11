@@ -1030,9 +1030,11 @@ function JobseekerProfileContent() {
 
               {/* Form Content */}
               <div className="p-6 md:p-10 flex-1 bg-white">
+                <fieldset disabled={isSaving} className={isSaving ? "opacity-60" : ""}>
                 <div className="max-w-4xl mx-auto animate-fadeIn">
                   {renderCurrentStep()}
                 </div>
+                </fieldset>
               </div>
 
               {/* Footer Navigation */}
