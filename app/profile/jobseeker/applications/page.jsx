@@ -28,6 +28,8 @@ import {
 export default function JobseekerApplicationsPage() {
   const [selectedStatus, setSelectedStatus] = useState("ALL");
   const [searchTerm, setSearchTerm] = useState("");
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState(null);
 
   // Use React Query hooks
   const {
