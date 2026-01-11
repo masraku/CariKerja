@@ -130,8 +130,8 @@ export default function PostJobPage() {
     benefits: [],
 
     // Work Schedule (Step 2)
-    workingDays: "",
-    holidays: "",
+    workingDays: [],
+    holidays: [],
     isShift: false,
     shiftCount: "",
     isDisabilityFriendly: false,
@@ -1206,32 +1206,82 @@ export default function PostJobPage() {
                   Jadwal Kerja
                 </h3>
 
-                <div className="grid md:grid-cols-2 gap-4 mb-4">
+                <div className="space-y-4 mb-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
                       Hari Kerja
                     </label>
-                    <input
-                      type="text"
-                      name="workingDays"
-                      value={formData.workingDays}
-                      onChange={handleChange}
-                      className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Contoh: Senin - Jumat"
-                    />
+                    <div className="flex flex-wrap gap-2">
+                      {["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"].map((day) => (
+                        <label
+                          key={day}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-all ${
+                            formData.workingDays.includes(day)
+                              ? "bg-blue-50 border-blue-500 text-blue-700"
+                              : "bg-white border-gray-300 text-gray-700 hover:border-gray-400"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={formData.workingDays.includes(day)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  workingDays: [...prev.workingDays, day],
+                                  holidays: prev.holidays.filter((d) => d !== day),
+                                }));
+                              } else {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  workingDays: prev.workingDays.filter((d) => d !== day),
+                                }));
+                              }
+                            }}
+                            className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                          />
+                          <span className="text-sm font-medium">{day}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
                       Hari Libur
                     </label>
-                    <input
-                      type="text"
-                      name="holidays"
-                      value={formData.holidays}
-                      onChange={handleChange}
-                      className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Contoh: Sabtu - Minggu"
-                    />
+                    <div className="flex flex-wrap gap-2">
+                      {["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"].map((day) => (
+                        <label
+                          key={day}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-all ${
+                            formData.holidays.includes(day)
+                              ? "bg-red-50 border-red-500 text-red-700"
+                              : "bg-white border-gray-300 text-gray-700 hover:border-gray-400"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={formData.holidays.includes(day)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  holidays: [...prev.holidays, day],
+                                  workingDays: prev.workingDays.filter((d) => d !== day),
+                                }));
+                              } else {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  holidays: prev.holidays.filter((d) => d !== day),
+                                }));
+                              }
+                            }}
+                            className="w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500"
+                          />
+                          <span className="text-sm font-medium">{day}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
