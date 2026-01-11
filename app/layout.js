@@ -3,7 +3,9 @@ import "@/styles/globals.css"
 import { AuthProvider } from '@/contexts/AuthContext'
 import MainLayout from '@/components/MainLayout'
 
-const poppins = Poppins({ 
+import TanStackProvider from '@/providers/TanStackProvider'
+
+const poppins = Poppins({
   subsets: ['latin'],
   weight: ['300', '400', '500', '600', '700', '800'],
   display: 'swap',
@@ -93,11 +95,13 @@ export default function RootLayout({ children }) {
         <meta name="geo.placename" content="Cirebon" />
       </head>
       <body className={`${poppins.className} bg-slate-50 text-slate-900 antialiased selection:bg-blue-100 selection:text-blue-900`}>
-        <AuthProvider>
-          <MainLayout>
-            {children}
-          </MainLayout>
-        </AuthProvider>
+        <TanStackProvider>
+          <AuthProvider>
+            <MainLayout>
+              {children}
+            </MainLayout>
+          </AuthProvider>
+        </TanStackProvider>
       </body>
     </html>
   )
