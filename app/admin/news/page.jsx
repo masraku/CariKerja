@@ -246,13 +246,6 @@ export default function AdminNewsPage() {
         showConfirmButton: false,
       });
       handleCloseDrawer();
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: data.error || "Terjadi kesalahan",
-        });
-      }
     } catch (error) {
       console.error("Error saving news:", error);
       Swal.fire({
