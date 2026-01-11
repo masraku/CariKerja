@@ -17,7 +17,6 @@ async function check() {
       }
     }
   });
-  console.log('Aderama applications:', JSON.stringify(aderama?.applications, (k, v) => typeof v === 'bigint' ? v.toString() : v, 2));
   
   await prisma.$disconnect();
 }
