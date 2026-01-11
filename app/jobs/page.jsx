@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useMemo } from "react";
 import Link from "next/link";
 import {
   Search,
@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import { useQueryJobs } from "@/hooks/jobs/useJobs";
 
 const JobsPage = () => {
   const searchParams = useSearchParams();
@@ -41,17 +42,9 @@ const JobsPage = () => {
   const [savedJobs, setSavedJobs] = useState([]);
   const [sortBy, setSortBy] = useState("latest");
   const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [jobs, setJobs] = useState([]);
   const [selectedJob, setSelectedJob] = useState(null);
   const [showDetail, setShowDetail] = useState(false); // Mobile detail view toggle
   const [selectedImage, setSelectedImage] = useState(null);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 10,
-    totalCount: 0,
-    totalPages: 0,
-  });
 
   const [filters, setFilters] = useState({
     jobType: [],
@@ -63,45 +56,41 @@ const JobsPage = () => {
   const jobTypes = ["FULL_TIME", "PART_TIME"];
   const experienceLevels = ["0-1 tahun", "1-3 tahun", "3-5 tahun", "5+ tahun"];
 
-  const fetchJobs = async () => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      if (searchQuery) params.append("search", searchQuery);
-      if (location) params.append("location", location);
-      if (filters.jobType.length > 0)
-        params.append("jobType", filters.jobType.join(","));
-      if (filters.experience.length > 0)
-        params.append("experience", filters.experience.join(","));
-      if (sortBy) params.append("sortBy", sortBy);
-      params.append("page", currentPage.toString());
-      params.append("limit", "20");
+  // Use React Query hook
+  const {
+    data: jobsData,
+    isPending: loading,
+    isError,
+  } = useQueryJobs({
+    search: searchQuery,
+    location,
+    jobType: filters.jobType,
+    experience: filters.experience,
+    sortBy,
+    page: currentPage,
+    limit: 20,
+  });
 
-      const response = await fetch(`/api/jobs?${params.toString()}`, {
-        credentials: "include",
-      });
-      const data = await response.json();
-      if (data.success) {
-        setJobs(data.data);
-        setPagination(data.pagination);
-        // Auto-select first job on desktop
-        if (data.data.length > 0 && !selectedJob && window.innerWidth >= 1024) {
-          setSelectedJob(data.data[0]);
-        }
-      }
-    } catch (error) {
-    } finally {
-      setLoading(false);
-    }
+  const jobs = jobsData?.jobs || [];
+  const pagination = jobsData?.pagination || {
+    page: 1,
+    limit: 10,
+    totalCount: 0,
+    totalPages: 0,
   };
 
+  // Auto-select first job on desktop when jobs load
   useEffect(() => {
-    fetchJobs();
-  }, [searchQuery, location, filters, sortBy, currentPage]);
+    if (jobs.length > 0 && !selectedJob && window.innerWidth >= 1024) {
+      setSelectedJob(jobs[0]);
+    }
+  }, [jobs, selectedJob]);
+
   useEffect(() => {
     const saved = localStorage.getItem("savedJobs");
     if (saved) setSavedJobs(JSON.parse(saved));
   }, []);
+
   useEffect(() => {
     localStorage.setItem("savedJobs", JSON.stringify(savedJobs));
   }, [savedJobs]);

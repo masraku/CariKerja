@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import Swal from "sweetalert2";
+import axios from "axios";
 import {
   Mail,
   Lock,
@@ -165,17 +166,7 @@ function LoginContent() {
               password: regForm.password,
             };
 
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || data.details || "Registrasi gagal");
-      }
+      const { data } = await axios.post(endpoint, payload);
 
       Swal.fire({
         icon: "success",
@@ -193,7 +184,7 @@ function LoginContent() {
       Swal.fire({
         icon: "error",
         title: "Registrasi Gagal",
-        text: error.message || "Terjadi kesalahan saat registrasi.",
+        text: error.response?.data?.error || error.response?.data?.details || "Terjadi kesalahan saat registrasi.",
         confirmButtonColor: "#03587f",
       });
     } finally {
@@ -206,23 +197,7 @@ function LoginContent() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        Swal.fire({
-          icon: "error",
-          title: "Login Gagal",
-          text: data.error || "Terjadi kesalahan saat login.",
-          confirmButtonColor: "#03587f",
-        });
-        return;
-      }
+      const { data } = await axios.post("/api/auth/login", { email, password });
 
       await login(data.token, data.user);
       await refreshUser();
@@ -252,8 +227,8 @@ function LoginContent() {
     } catch (error) {
       Swal.fire({
         icon: "error",
-        title: "Login Error",
-        text: "Terjadi kesalahan, silakan coba lagi.",
+        title: "Login Gagal",
+        text: error.response?.data?.error || "Terjadi kesalahan saat login.",
         confirmButtonColor: "#03587f",
       });
     } finally {

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -17,41 +17,22 @@ import {
   Clock,
   Star,
 } from "lucide-react";
+import { useHomepageData } from "@/hooks/homepage/useHomepage";
 
 export default function LandingPage() {
   const router = useRouter();
-  const [stats, setStats] = useState(null);
-  const [featuredJobs, setFeaturedJobs] = useState([]);
-  const [topCompanies, setTopCompanies] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState("");
 
-  useEffect(() => {
-    loadHomepageData();
-  }, []);
-
-  const loadHomepageData = async () => {
-    try {
-      const [statsRes, jobsRes, companiesRes] = await Promise.all([
-        fetch("/api/homepage/stats"),
-        fetch("/api/homepage/featured-jobs?limit=6"),
-        fetch("/api/homepage/top-companies?limit=6"),
-      ]);
-
-      const [statsData, jobsData, companiesData] = await Promise.all([
-        statsRes.json(),
-        jobsRes.json(),
-        companiesRes.json(),
-      ]);
-
-      if (statsData.success) setStats(statsData.data);
-      if (jobsData.success) setFeaturedJobs(jobsData.data.jobs);
-      if (companiesData.success) setTopCompanies(companiesData.data.companies);
-    } catch (error) {
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Use React Query hook
+  const {
+    stats,
+    featuredJobs,
+    topCompanies,
+    isLoading: loading,
+    isLoadingStats,
+    isLoadingJobs,
+    isLoadingCompanies,
+  } = useHomepageData();
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -186,7 +167,7 @@ export default function LandingPage() {
                 key={i}
                 className="bg-white/10 backdrop-blur-md border border-white/10 rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg text-center min-h-[80px] sm:min-h-[100px] lg:min-h-[120px] flex flex-col justify-center"
               >
-                {loading ? (
+                {isLoadingStats ? (
                   <div className="flex flex-col items-center justify-center gap-2">
                     <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-white/30 border-t-white animate-spin" />
                   </div>
@@ -228,7 +209,7 @@ export default function LandingPage() {
           </div>
 
           {/* Jobs Grid */}
-          {loading ? (
+          {isLoadingJobs ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div
@@ -309,7 +290,7 @@ export default function LandingPage() {
           </div>
 
           {/* Companies Grid */}
-          {loading ? (
+          {isLoadingCompanies ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div

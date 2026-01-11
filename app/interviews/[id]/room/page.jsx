@@ -15,13 +15,11 @@ import {
     ArrowLeft,
     ExternalLink
 } from 'lucide-react'
+import { useQueryInterviewRoom } from '@/hooks/jobseeker/useJobseeker'
 
 export default function InterviewRoomPage() {
     const params = useParams()
     const router = useRouter()
-    const [loading, setLoading] = useState(true)
-    const [interview, setInterview] = useState(null)
-    const [timing, setTiming] = useState(null)
     const [timeLeft, setTimeLeft] = useState({
         days: 0,
         hours: 0,
@@ -29,9 +27,23 @@ export default function InterviewRoomPage() {
         seconds: 0
     })
 
+    // Use React Query hook
+    const { data, isPending: loading, isError, error } = useQueryInterviewRoom(params.id)
+
+    const interview = data?.interview || null
+    const timing = data?.timing || null
+
     useEffect(() => {
-        loadInterviewRoom()
-    }, [])
+        if (isError) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: error?.message || 'Gagal memuat interview room'
+            }).then(() => {
+                router.push('/profile/jobseeker/interviews')
+            })
+        }
+    }, [isError, error, router])
 
     // Countdown timer
     useEffect(() => {
@@ -55,38 +67,6 @@ export default function InterviewRoomPage() {
 
         return () => clearInterval(timer)
     }, [timing])
-
-    const loadInterviewRoom = async () => {
-        try {
-            setLoading(true)
-            const token = localStorage.getItem('token')
-
-            const response = await fetch(`/api/interviews/${params.id}/room`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-
-            const data = await response.json()
-
-            if (data.success) {
-                setInterview(data.data.interview)
-                setTiming(data.data.timing)
-            } else {
-                throw new Error(data.error)
-            }
-        } catch (error) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Gagal',
-                text: error.message || 'Gagal memuat interview room'
-            }).then(() => {
-                router.push('/profile/jobseeker/interviews')
-            })
-        } finally {
-            setLoading(false)
-        }
-    }
 
     const handleJoinMeeting = () => {
         if (!timing?.canAccess) {

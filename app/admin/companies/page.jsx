@@ -1,48 +1,32 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { 
     Building2, CheckCircle, XCircle, Clock, Search, 
     MapPin, Users, Briefcase, Mail, Eye, Calendar
 } from 'lucide-react'
+import { useQueryAdminCompanies } from '@/hooks/admin/useAdmin'
 
 export default function AdminCompaniesPage() {
     const router = useRouter()
-    const [companies, setCompanies] = useState([])
-    const [loading, setLoading] = useState(true)
     const [filter, setFilter] = useState('pending')
     const [searchQuery, setSearchQuery] = useState('')
 
-    useEffect(() => {
-        loadCompanies()
-    }, [filter])
+    // Use React Query hook
+    const { data, isPending: loading } = useQueryAdminCompanies({
+        status: filter,
+    });
 
-    const loadCompanies = async () => {
-        setLoading(true)
-        setCompanies([]) // Clear old data immediately
-        try {
-            const token = localStorage.getItem('token')
-            const response = await fetch(`/api/admin/companies?status=${filter}`, {
-                headers: { 'Authorization': `Bearer ${token}` },
-                cache: 'no-store' // Prevent caching
-            })
+    const companies = data?.companies || [];
 
-            const data = await response.json()
-            if (data.success) {
-                setCompanies(data.data.companies)
-            }
-        } catch (error) {
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const filteredCompanies = companies.filter(company =>
-        company.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        company.industry?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        company.city?.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    const filteredCompanies = useMemo(() => 
+        companies.filter(company =>
+            company.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            company.industry?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            company.city?.toLowerCase().includes(searchQuery.toLowerCase())
+        ), [companies, searchQuery]
+    );
 
     const formatDate = (date) => {
         return new Date(date).toLocaleDateString('id-ID', {

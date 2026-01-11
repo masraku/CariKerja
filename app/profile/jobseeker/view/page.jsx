@@ -20,12 +20,11 @@ import {
   Eye,
   X,
 } from "lucide-react";
+import { useQueryJobseekerProfileView, useMutationUpdateJobSeekingStatus } from "@/hooks/jobseeker/useJobseeker";
 
 const ViewProfilePage = () => {
   const router = useRouter();
   const { user } = useAuth();
-  const [profile, setProfile] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [previewModal, setPreviewModal] = useState({
     isOpen: false,
@@ -34,31 +33,18 @@ const ViewProfilePage = () => {
     fileType: "",
   });
 
+  // Use React Query hooks
+  const { data: profile, isPending: isLoading, isError } = useQueryJobseekerProfileView();
+  const updateStatusMutation = useMutationUpdateJobSeekingStatus();
+
   useEffect(() => {
-    loadProfile();
-  }, []);
-
-  const loadProfile = async () => {
-    try {
-      const response = await fetch("/api/profile/jobseeker", {
-        credentials: "include",
-      });
-      const data = await response.json();
-
-      if (response.ok && data.profile) {
-        setProfile(data.profile);
-      } else {
-        router.push("/profile/jobseeker?mode=edit");
-      }
-    } catch (error) {
+    if (!isLoading && (isError || !profile)) {
       router.push("/profile/jobseeker?mode=edit");
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [isLoading, isError, profile, router]);
 
   const toggleJobSeekingStatus = async () => {
-    const currentStatus = profile.isLookingForJob;
+    const currentStatus = profile?.isLookingForJob;
     const newStatus = !currentStatus;
 
     const result = await Swal.fire({
@@ -79,25 +65,17 @@ const ViewProfilePage = () => {
 
     try {
       setIsUpdatingStatus(true);
-      const response = await fetch("/api/profile/jobseeker/status", {
-        method: "PUT",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isLookingForJob: newStatus }),
+      await updateStatusMutation.mutateAsync(newStatus);
+      
+      await Swal.fire({
+        icon: "success",
+        title: "Berhasil!",
+        text: newStatus
+          ? "Status pencari kerja telah diaktifkan"
+          : "Status pencari kerja telah dinonaktifkan",
+        timer: 1500,
+        showConfirmButton: false,
       });
-
-      if (response.ok) {
-        setProfile((prev) => ({ ...prev, isLookingForJob: newStatus }));
-        await Swal.fire({
-          icon: "success",
-          title: "Berhasil!",
-          text: newStatus
-            ? "Status pencari kerja telah diaktifkan"
-            : "Status pencari kerja telah dinonaktifkan",
-          timer: 1500,
-          showConfirmButton: false,
-        });
-      }
     } catch (error) {
       Swal.fire({ icon: "error", text: "Gagal mengupdate status" });
     } finally {

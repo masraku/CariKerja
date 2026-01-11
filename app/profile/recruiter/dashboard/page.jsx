@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -23,45 +23,19 @@ import {
   AlertCircle,
   LogOut,
 } from "lucide-react";
+import { useQueryRecruiterDashboard } from "@/hooks/recruiter/useRecruiter";
 
 export default function RecruiterDashboard() {
   const router = useRouter();
   const { user, refreshUser } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [dashboardData, setDashboardData] = useState(null);
   const [activeFilter, setActiveFilter] = useState("ALL");
 
-  useEffect(() => {
-    loadDashboard();
-  }, []);
-
-  const loadDashboard = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch("/api/profile/recruiter/dashboard", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setDashboardData(data.data);
-      } else if (response.status === 404) {
-        // Recruiter profile not found - redirect to create profile
-        router.push("/profile/recruiter");
-        return;
-      } else if (response.status === 401) {
-        // Not authenticated
-        router.push("/login?role=recruiter");
-        return;
-      } else {
-      }
-    } catch (error) {
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Use React Query hook
+  const {
+    data: dashboardData,
+    isPending: loading,
+    isError,
+  } = useQueryRecruiterDashboard();
 
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString("id-ID", {
@@ -105,7 +79,7 @@ export default function RecruiterDashboard() {
     );
   }
 
-  if (!dashboardData) {
+  if (isError || !dashboardData) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -122,23 +96,15 @@ export default function RecruiterDashboard() {
     activeFilter === "ALL"
       ? recentApplications
       : recentApplications.filter((app) => {
-          // This filters the *recent* list. Ideally should filter all or fetch filtered. For now, filter client side on recent list is OK or clarification needed.
-          // But mapped to stats:
           if (activeFilter === "PENDING")
             return ["PENDING", "REVIEWING"].includes(app.status);
           if (activeFilter === "SHORTLISTED")
             return app.status === "SHORTLISTED";
-          // 'Total Lowongan' or 'Total Pelamar' click -> 'ALL'
           return true;
         });
 
-  // Actually, clicking "Total Lowongan" should probably show Jobs tab?
-  // Clicking "Pending Review" -> Filter applications by status.
-  // The user requested: "terus buat card nya itu bisa dipencet sehingga dapat menjadi filter otomatis"
-
   const handleStatClick = (filterType) => {
     setActiveFilter(filterType);
-    // Optional: Scroll to applications section if needed
   };
 
   return (

@@ -1,53 +1,26 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { Calendar, User, ArrowRight, Search, Newspaper, Eye, ChevronLeft, ChevronRight, TrendingUp, BookOpen } from 'lucide-react'
+import { useQueryNews } from '@/hooks/news/useNews'
 
 export default function NewsPage() {
     const [searchQuery, setSearchQuery] = useState('')
-    const [news, setNews] = useState([])
-    const [categories, setCategories] = useState([])
     const [selectedCategory, setSelectedCategory] = useState('all')
-    const [loading, setLoading] = useState(true)
-    const [pagination, setPagination] = useState({
-        page: 1,
+    const [currentPage, setCurrentPage] = useState(1)
+
+    // Use React Query hook
+    const { data: newsData, isPending: loading } = useQueryNews({
+        search: searchQuery,
+        category: selectedCategory,
+        page: currentPage,
         limit: 6,
-        total: 0,
-        totalPages: 0
     })
 
-    useEffect(() => {
-        fetchNews()
-    }, [searchQuery, selectedCategory, pagination.page])
-
-    const fetchNews = async () => {
-        setLoading(true)
-        try {
-            const params = new URLSearchParams()
-            if (searchQuery) params.append('search', searchQuery)
-            if (selectedCategory !== 'all') params.append('category', selectedCategory)
-            params.append('page', pagination.page)
-            params.append('limit', 6) // Always show 6 items
-
-            const response = await fetch(`/api/news?${params.toString()}`)
-            const data = await response.json()
-
-            if (data.success) {
-                setNews(data.news || [])
-                setCategories(data.categories || [])
-                setPagination(prev => ({
-                    ...prev,
-                    total: data.pagination?.total || 0,
-                    totalPages: data.pagination?.totalPages || 0
-                }))
-            }
-        } catch (error) {
-            console.error('Error fetching news:', error)
-        } finally {
-            setLoading(false)
-        }
-    }
+    const news = newsData?.news || []
+    const categories = newsData?.categories || []
+    const pagination = newsData?.pagination || { page: 1, limit: 6, total: 0, totalPages: 0 }
 
     const formatDate = (dateString) => {
         if (!dateString) return ''
@@ -97,7 +70,7 @@ export default function NewsPage() {
                                 value={searchQuery}
                                 onChange={(e) => {
                                     setSearchQuery(e.target.value)
-                                    setPagination(prev => ({ ...prev, page: 1 }))
+                                    setCurrentPage(1)
                                 }}
                             />
                         </div>
@@ -134,7 +107,7 @@ export default function NewsPage() {
                         <button
                             onClick={() => {
                                 setSelectedCategory('all')
-                                setPagination(prev => ({ ...prev, page: 1 }))
+                                setCurrentPage(1)
                             }}
                             className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
                                 selectedCategory === 'all'
@@ -149,7 +122,7 @@ export default function NewsPage() {
                                 key={cat}
                                 onClick={() => {
                                     setSelectedCategory(cat)
-                                    setPagination(prev => ({ ...prev, page: 1 }))
+                                    setCurrentPage(1)
                                 }}
                                 className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
                                     selectedCategory === cat
@@ -267,8 +240,8 @@ export default function NewsPage() {
                         {pagination.totalPages > 1 && (
                             <div className="mt-12 flex justify-center items-center gap-3">
                                 <button
-                                    onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
-                                    disabled={pagination.page === 1}
+                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                    disabled={currentPage === 1}
                                     className="p-3 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
                                 >
                                     <ChevronLeft className="w-5 h-5" />
@@ -277,9 +250,9 @@ export default function NewsPage() {
                                 {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(page => (
                                     <button 
                                         key={page}
-                                        onClick={() => setPagination(prev => ({ ...prev, page }))}
+                                        onClick={() => setCurrentPage(page)}
                                         className={`w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all ${
-                                            page === pagination.page 
+                                            page === currentPage 
                                             ? 'bg-[#03587f] text-white shadow-lg shadow-[#03587f]/30' 
                                             : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 shadow-sm'
                                         }`}
@@ -289,8 +262,8 @@ export default function NewsPage() {
                                 ))}
 
                                 <button
-                                    onClick={() => setPagination(prev => ({ ...prev, page: Math.min(pagination.totalPages, prev.page + 1) }))}
-                                    disabled={pagination.page === pagination.totalPages}
+                                    onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
+                                    disabled={currentPage === pagination.totalPages}
                                     className="p-3 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
                                 >
                                     <ChevronRight className="w-5 h-5" />

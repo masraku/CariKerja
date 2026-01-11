@@ -1,4 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+
+// Helper to get auth header
+const getAuthHeader = () => ({
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+});
 
 // ============ PROFILE ============
 const queryKeyGetProfile = ["getProfile"];
@@ -7,12 +13,9 @@ export function useQueryGetProfile() {
     return useQuery({
         queryKey: queryKeyGetProfile,
         queryFn: async () => {
-            const response = await fetch("/api/profile/jobseeker", {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`,
-                },
+            const { data } = await axios.get("/api/profile/jobseeker", {
+                headers: getAuthHeader(),
             });
-            const data = await response.json();
             return data;
         },
     });
@@ -28,13 +31,9 @@ export function useQueryDashboardStats(enabled = true) {
             const token = localStorage.getItem("token");
             if (!token) throw new Error("No token");
 
-            const response = await fetch("/api/profile/jobseeker/my-applications", {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
+            const { data } = await axios.get("/api/profile/jobseeker/my-applications", {
+                headers: getAuthHeader(),
             });
-            const data = await response.json();
             
             if (!data.success) throw new Error("Failed to fetch stats");
             
@@ -60,10 +59,9 @@ export function useQueryEmploymentStatus(enabled = true) {
             const token = localStorage.getItem("token");
             if (!token) throw new Error("No token");
 
-            const response = await fetch("/api/profile/jobseeker/status", {
-                headers: { Authorization: `Bearer ${token}` },
+            const { data } = await axios.get("/api/profile/jobseeker/status", {
+                headers: getAuthHeader(),
             });
-            const data = await response.json();
             
             if (!data.success) throw new Error("Failed to fetch status");
             
@@ -83,18 +81,9 @@ export function useMutationEmploymentStatus() {
     
     return useMutation({
         mutationFn: async (updateData) => {
-            const token = localStorage.getItem("token");
-            const response = await fetch("/api/profile/jobseeker/status", {
-                method: "PUT",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(updateData),
+            const { data } = await axios.put("/api/profile/jobseeker/status", updateData, {
+                headers: getAuthHeader(),
             });
-            const data = await response.json();
-            
-            if (!response.ok) throw new Error("Failed to update status");
             
             return {
                 isEmployed: data.data.isEmployed || false,

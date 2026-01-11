@@ -4,35 +4,16 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Calendar, User, ArrowLeft, ArrowRight, Tag, Clock, Eye, Share2, Newspaper } from 'lucide-react'
+import { useQueryNewsDetail } from '@/hooks/news/useNews'
 
 export default function NewsDetailPage() {
     const params = useParams()
-    const [news, setNews] = useState(null)
-    const [relatedNews, setRelatedNews] = useState([])
-    const [loading, setLoading] = useState(true)
 
-    useEffect(() => {
-        if (params.slug) {
-            fetchNews()
-        }
-    }, [params.slug])
+    // Use React Query hook
+    const { data, isPending: loading } = useQueryNewsDetail(params.slug)
 
-    const fetchNews = async () => {
-        setLoading(true)
-        try {
-            const response = await fetch(`/api/news/${params.slug}`)
-            const data = await response.json()
-
-            if (data.success) {
-                setNews(data.news)
-                setRelatedNews(data.relatedNews || [])
-            }
-        } catch (error) {
-            console.error('Error fetching news:', error)
-        } finally {
-            setLoading(false)
-        }
-    }
+    const news = data?.news || null
+    const relatedNews = data?.relatedNews || []
 
     const formatDate = (dateString) => {
         if (!dateString) return ''

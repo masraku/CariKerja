@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import {
   Users,
@@ -24,56 +24,14 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import { useQueryAdminStats, useQueryAdminChartStats } from "@/hooks/admin/useAdmin";
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState(null);
-  const [chartData, setChartData] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      const [statsRes, chartRes] = await Promise.all([
-        // Existing stats
-        Promise.all([
-          fetch("/api/admin/jobseekers/stats", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch("/api/admin/companies?status=pending", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]),
-        // Chart data
-        fetch("/api/admin/chart-stats", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
-
-      const [jobseekersRes, companiesRes] = statsRes;
-      const jobseekersData = await jobseekersRes.json();
-      const companiesData = await companiesRes.json();
-      const chartDataRes = await chartRes.json();
-
-      if (jobseekersData.success && companiesData.success) {
-        setStats({
-          jobseekers: jobseekersData.data,
-          pendingCompanies: companiesData.data.count,
-        });
-      }
-
-      if (chartDataRes.success) {
-        setChartData(chartDataRes.data);
-      }
-    } catch (error) {
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Use React Query hooks
+  const { data: stats, isPending: loadingStats } = useQueryAdminStats();
+  const { data: chartData, isPending: loadingChart } = useQueryAdminChartStats();
+  
+  const loading = loadingStats || loadingChart;
 
   const COLORS = ["#10b981", "#94a3b8"];
   const COLORS_LOOKING = ["#f59e0b", "#cbd5e1"];
