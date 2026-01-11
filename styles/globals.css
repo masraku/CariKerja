@@ -20,6 +20,32 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Cursor pointer untuk semua elemen yang bisa diklik */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+a[href],
+input[type="button"]:not(:disabled),
+input[type="submit"]:not(:disabled),
+input[type="reset"]:not(:disabled),
+input[type="checkbox"]:not(:disabled),
+input[type="radio"]:not(:disabled),
+select:not(:disabled),
+label[for],
+.cursor-pointer,
+[onclick] {
+  cursor: pointer;
+}
+
+/* Cursor not-allowed untuk elemen disabled */
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled,
+[aria-disabled="true"],
+.cursor-not-allowed {
+  cursor: not-allowed;
+}
+
 @layer utilities {
   .glass {
     @apply bg-white/70 backdrop-blur-lg border border-white/20 shadow-sm;

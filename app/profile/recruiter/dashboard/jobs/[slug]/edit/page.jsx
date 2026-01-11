@@ -52,8 +52,8 @@ export default function EditJobPage() {
     isActive: true,
     jobPhoto: "",
     gallery: [],
-    workingDays: "",
-    holidays: "",
+    workingDays: [],
+    holidays: [],
     isShift: false,
     shiftCount: "",
     isDisabilityFriendly: false,
@@ -96,7 +96,9 @@ export default function EditJobPage() {
           setCompanyProfile(data.profile.companies);
         }
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error("Error loading company profile:", error);
+    }
   };
 
   // Handle address toggle
@@ -166,8 +168,8 @@ export default function EditJobPage() {
           isActive: job.isActive !== undefined ? job.isActive : true,
           jobPhoto: job.photo || "",
           gallery: Array.isArray(job.gallery) ? job.gallery : [],
-          workingDays: job.workingDays || "",
-          holidays: job.holidays || "",
+          workingDays: Array.isArray(job.workingDays) ? job.workingDays : (job.workingDays ? job.workingDays.split(', ').map(d => d.trim()) : []),
+          holidays: Array.isArray(job.holidays) ? job.holidays : (job.holidays ? job.holidays.split(', ').map(d => d.trim()) : []),
           isShift: job.isShift || false,
           shiftCount: job.shiftCount?.toString() || "",
           isDisabilityFriendly: job.isDisabilityFriendly || false,
@@ -471,6 +473,7 @@ export default function EditJobPage() {
           </div>
         )}
         <form onSubmit={handleSubmit} className="space-y-8">
+          <fieldset disabled={submitting} className={submitting ? "opacity-60" : ""}>
           {/* Main Info Card */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
             <div className="flex items-center gap-3 mb-8">
@@ -905,32 +908,82 @@ export default function EditJobPage() {
               )}
 
               <div className="pt-4 border-t border-gray-100 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">
+                    <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
                       Hari Kerja
                     </label>
-                    <input
-                      type="text"
-                      name="workingDays"
-                      value={formData.workingDays}
-                      onChange={handleInputChange}
-                      className="w-full bg-gray-50 text-gray-900 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-blue-500 outline-none"
-                      placeholder="Senin - Jumat"
-                    />
+                    <div className="flex flex-wrap gap-2">
+                      {["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"].map((day) => (
+                        <label
+                          key={day}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all text-sm ${
+                            formData.workingDays.includes(day)
+                              ? "bg-blue-50 border-blue-500 text-blue-700"
+                              : "bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={formData.workingDays.includes(day)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  workingDays: [...prev.workingDays, day],
+                                  holidays: prev.holidays.filter((d) => d !== day),
+                                }));
+                              } else {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  workingDays: prev.workingDays.filter((d) => d !== day),
+                                }));
+                              }
+                            }}
+                            className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                          />
+                          <span className="font-medium">{day}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">
+                    <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
                       Hari Libur
                     </label>
-                    <input
-                      type="text"
-                      name="holidays"
-                      value={formData.holidays}
-                      onChange={handleInputChange}
-                      className="w-full bg-gray-50 text-gray-900 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-blue-500 outline-none"
-                      placeholder="Sabtu - Minggu"
-                    />
+                    <div className="flex flex-wrap gap-2">
+                      {["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"].map((day) => (
+                        <label
+                          key={day}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all text-sm ${
+                            formData.holidays.includes(day)
+                              ? "bg-red-50 border-red-500 text-red-700"
+                              : "bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={formData.holidays.includes(day)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  holidays: [...prev.holidays, day],
+                                  workingDays: prev.workingDays.filter((d) => d !== day),
+                                }));
+                              } else {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  holidays: prev.holidays.filter((d) => d !== day),
+                                }));
+                              }
+                            }}
+                            className="w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500"
+                          />
+                          <span className="font-medium">{day}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
@@ -1173,6 +1226,7 @@ export default function EditJobPage() {
               </div>
             </div>
           </div>
+          </fieldset>
         </form>
       </main>
     </div>

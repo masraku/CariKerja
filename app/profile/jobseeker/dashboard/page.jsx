@@ -33,6 +33,22 @@ const JobseekerDashboard = () => {
   const router = useRouter();
   const { user } = useAuth();
 
+  // Status label helper - konsisten dengan recruiter dalam bahasa Indonesia
+  const getStatusLabel = (status) => {
+    const statusConfig = {
+      PENDING: { label: "Menunggu", color: "bg-yellow-50 text-yellow-700 border-yellow-100" },
+      REVIEWING: { label: "Sedang Ditinjau", color: "bg-blue-50 text-blue-700 border-blue-100" },
+      SHORTLISTED: { label: "Lolos Seleksi", color: "bg-purple-50 text-purple-700 border-purple-100" },
+      INTERVIEW_SCHEDULED: { label: "Tahap Interview", color: "bg-indigo-50 text-indigo-700 border-indigo-100" },
+      INTERVIEW_COMPLETED: { label: "Selesai Interview", color: "bg-cyan-50 text-cyan-700 border-cyan-100" },
+      ACCEPTED: { label: "Diterima", color: "bg-green-50 text-green-600 border-green-100" },
+      REJECTED: { label: "Ditolak", color: "bg-red-50 text-red-600 border-red-100" },
+      WITHDRAWN: { label: "Ditarik", color: "bg-gray-50 text-gray-600 border-gray-100" },
+      RESIGNED: { label: "Mengundurkan Diri", color: "bg-orange-50 text-orange-700 border-orange-100" },
+    };
+    return statusConfig[status] || { label: status, color: "bg-gray-50 text-gray-600 border-gray-100" };
+  };
+
   // Profile Query
   const {
     data: profileData,
@@ -313,16 +329,9 @@ const JobseekerDashboard = () => {
                             </div>
                           </div>
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-bold border ${app.status === "ACCEPTED"
-                              ? "bg-green-50 text-green-600 border-green-100"
-                              : app.status === "REJECTED"
-                                ? "bg-red-50 text-red-600 border-red-100"
-                                : app.status === "INTERVIEW_SCHEDULED"
-                                  ? "bg-purple-50 text-purple-600 border-purple-100"
-                                  : "bg-yellow-50 text-yellow-700 border-yellow-100"
-                              }`}
+                            className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusLabel(app.status).color}`}
                           >
-                            {app.status.replace("_", " ")}
+                            {getStatusLabel(app.status).label}
                           </span>
                         </div>
                         <div className="mt-4 flex items-center justify-between text-xs text-gray-400">

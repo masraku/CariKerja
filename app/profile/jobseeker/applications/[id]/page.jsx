@@ -392,7 +392,7 @@ export default function ApplicationDetailPage() {
         ],
       },
       REJECTED: {
-        label: "Tidak Lolos",
+        label: "Ditolak",
         color: "bg-rose-100 text-rose-800",
         indicator: "bg-rose-500",
         icon: XCircle,
@@ -408,7 +408,7 @@ export default function ApplicationDetailPage() {
         tips: [],
       },
       RESIGNED: {
-        label: "Resign",
+        label: "Mengundurkan Diri",
         color: "bg-orange-100 text-orange-800",
         indicator: "bg-orange-500",
         icon: LogOut,

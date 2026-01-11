@@ -109,7 +109,7 @@ export default function JobseekerApplicationsPage() {
       description: "Menunggu review",
     },
     REVIEWING: {
-      label: "Ditinjau",
+      label: "Sedang Ditinjau",
       color: "bg-blue-100 text-blue-800",
       icon: Eye,
       description: "Sedang ditinjau recruiter",
@@ -151,10 +151,10 @@ export default function JobseekerApplicationsPage() {
       description: "Lamaran ditarik",
     },
     RESIGNED: {
-      label: "Resign",
+      label: "Mengundurkan Diri",
       color: "bg-orange-100 text-orange-800",
       icon: AlertCircle,
-      description: "Mengundurkan diri",
+      description: "Telah mengundurkan diri",
     },
   };
 
@@ -166,7 +166,7 @@ export default function JobseekerApplicationsPage() {
       count: Object.values(stats).reduce((a, b) => a + b, 0),
     },
     { key: "PENDING", label: "Menunggu", count: stats.PENDING || 0 },
-    { key: "REVIEWING", label: "Ditinjau", count: stats.REVIEWING || 0 },
+    { key: "REVIEWING", label: "Sedang Ditinjau", count: stats.REVIEWING || 0 },
     {
       key: "SHORTLISTED",
       label: "Lolos Seleksi",

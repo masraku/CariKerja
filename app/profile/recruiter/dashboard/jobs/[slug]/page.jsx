@@ -316,12 +316,12 @@ export default function JobDetailPage() {
         icon: XCircle,
       },
       WITHDRAWN: {
-        label: "Mengundurkan Diri",
+        label: "Ditarik",
         color: "bg-gray-100 text-gray-700",
         icon: XCircle,
       },
       RESIGNED: {
-        label: "Resign",
+        label: "Mengundurkan Diri",
         color: "bg-orange-100 text-orange-700",
         icon: XCircle,
       },

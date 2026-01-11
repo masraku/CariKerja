@@ -353,6 +353,7 @@ export default function RecruiterProfilePage() {
 
         {/* Form Content */}
         <form className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+          <fieldset disabled={isSaving} className={isSaving ? "opacity-60" : ""}>
           {/* Step 1: Profil & Perusahaan */}
           {currentStep === 1 && (
             <div className="space-y-6">
@@ -1038,6 +1039,7 @@ export default function RecruiterProfilePage() {
               </p>
             </div>
           )}
+          </fieldset>
         </form>
       </div>
     </div>
