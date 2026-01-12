@@ -35,6 +35,10 @@ import {
 import RupiahInput from "@/components/RupiahInput";
 import DataDiriStep from "./components/DataDiriStep";
 import DokumenStep from "./components/DokumenStep";
+import {
+  useQueryJobseekerProfileFull,
+  useMutationSaveJobseekerProfile,
+} from "@/hooks/jobseeker/useJobseeker";
 
 function JobseekerProfileContent() {
   const router = useRouter();
@@ -43,9 +47,11 @@ function JobseekerProfileContent() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({});
-  const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
+
+  // React Query hooks
+  const { data: profileData, isLoading } = useQueryJobseekerProfileFull();
+  const saveProfileMutation = useMutationSaveJobseekerProfile();
 
   // Format helpers
   const formatRupiah = (value) => {
@@ -204,191 +210,184 @@ function JobseekerProfileContent() {
 
   const totalSteps = steps.length;
 
+  // Date formatting helpers
+  const formatMonthDate = (d) =>
+    d ? new Date(d).toISOString().slice(0, 7) : "";
+  const formatDate = (d) => (d ? new Date(d).toISOString().split("T")[0] : "");
+
+  // Check for edit mode
   useEffect(() => {
     const mode = searchParams.get("mode");
     if (mode === "edit") setIsEditMode(true);
-    loadProfile();
   }, [searchParams]);
 
-  const loadProfile = async () => {
-    try {
-      const { data } = await axios.get("/api/profile/jobseeker", {
-        withCredentials: true,
+  // Populate form data when profile loads
+  useEffect(() => {
+    if (profileData) {
+      const profile = profileData;
+      setFormData({
+        // Personal Info
+        photo: profile.photo,
+        photoPreview: profile.photo,
+        firstName: profile.firstName || "",
+        lastName: profile.lastName || "",
+        dateOfBirth: formatDate(profile.dateOfBirth) || "",
+        gender: profile.gender || "",
+        religion: profile.religion || "",
+        maritalStatus: profile.maritalStatus || "",
+        nationality: profile.nationality || "Indonesia",
+        idNumber: profile.idNumber || "",
+
+        // Contact Info
+        phone: profile.phone || "",
+        email: profile.email || "",
+        address: profile.address || "",
+        city: profile.city || "",
+        province: profile.province || "",
+        postalCode: profile.postalCode || "",
+
+        // Alamat Cirebon
+        kecamatan: profile.kecamatan || "",
+        kelurahan: profile.kelurahan || "",
+
+        // Professional Info
+        currentTitle: profile.currentTitle || "",
+        summary: profile.summary || "",
+        linkedinUrl: profile.linkedinUrl || "",
+        githubUrl: profile.githubUrl || "",
+        portfolioUrl: profile.portfolioUrl || "",
+        websiteUrl: profile.websiteUrl || "",
+
+        // CV & Documents
+        cvUrl: profile.cvUrl || "",
+        cvFileName: profile.cvUrl ? "CV.pdf" : "",
+        ktpUrl: profile.ktpUrl || "",
+        ktpFileName: profile.ktpUrl ? "KTP.pdf" : "",
+        ak1Url: profile.ak1Url || "",
+        ak1FileName: profile.ak1Url ? "Kartu AK-1.pdf" : "",
+        ijazahUrl: profile.ijazahUrl || "",
+        ijazahFileName: profile.ijazahUrl ? "Ijazah.pdf" : "",
+        sertifikatUrl: profile.sertifikatUrl || "",
+        sertifikatFileName: profile.sertifikatUrl ? "Sertifikat.pdf" : "",
+        suratPengalamanUrl: profile.suratPengalamanUrl || "",
+        suratPengalamanFileName: profile.suratPengalamanUrl
+          ? "Surat Pengalaman.pdf"
+          : "",
+
+        // Simplified Education (Step 1)
+        lastEducationLevel: profile.lastEducationLevel || "",
+        lastEducationInstitution: profile.lastEducationInstitution || "",
+        lastEducationMajor: profile.lastEducationMajor || "",
+        graduationYear: profile.graduationYear?.toString() || "",
+
+        // Education
+        educations:
+          profile.educations && profile.educations.length > 0
+            ? profile.educations.map((edu) => ({
+                institution: edu.institution || "",
+                degree: edu.degree || "",
+                fieldOfStudy: edu.fieldOfStudy || "",
+                level: edu.level || "",
+                startDate: formatMonthDate(edu.startDate) || "",
+                endDate: formatMonthDate(edu.endDate) || "",
+                gpa: edu.gpa?.toString() || "",
+                isCurrent: edu.isCurrent || false,
+                diplomaUrl: edu.diplomaUrl || "",
+                diplomaFileName: edu.diplomaUrl ? "Ijazah.pdf" : "",
+              }))
+            : [
+                {
+                  institution: "",
+                  degree: "",
+                  fieldOfStudy: "",
+                  level: "",
+                  startDate: "",
+                  endDate: "",
+                  gpa: "",
+                  isCurrent: false,
+                  diplomaFileName: "",
+                  diplomaUrl: "",
+                },
+              ],
+
+        // Work Experience
+        experiences:
+          profile.work_experiences && profile.work_experiences.length > 0
+            ? profile.work_experiences.map((exp) => ({
+                company: exp.company || "",
+                position: exp.position || "",
+                location: exp.location || "",
+                startDate: formatMonthDate(exp.startDate) || "",
+                endDate: formatMonthDate(exp.endDate) || "",
+                isCurrent: exp.isCurrent || false,
+                description: exp.description || "",
+                achievements:
+                  exp.achievements && exp.achievements.length > 0
+                    ? exp.achievements
+                    : [""],
+              }))
+            : [
+                {
+                  company: "",
+                  position: "",
+                  location: "",
+                  startDate: "",
+                  endDate: "",
+                  isCurrent: false,
+                  description: "",
+                  achievements: [""],
+                },
+              ],
+
+        // Skills
+        skills:
+          profile.skills && profile.skills.length > 0
+            ? profile.skills.map((s) => s.name)
+            : [""],
+
+        // Certifications
+        certifications:
+          profile.certifications && profile.certifications.length > 0
+            ? profile.certifications.map((cert) => ({
+                name: cert.name || "",
+                issuingOrganization: cert.issuingOrganization || "",
+                issueDate: formatMonthDate(cert.issueDate) || "",
+                expiryDate: formatMonthDate(cert.expiryDate) || "",
+                credentialId: cert.credentialId || "",
+                credentialUrl: cert.credentialUrl || "",
+                certificateUrl: cert.certificateUrl || "",
+                certificateFileName: cert.certificateUrl
+                  ? "Sertifikat.pdf"
+                  : "",
+              }))
+            : [
+                {
+                  name: "",
+                  issuingOrganization: "",
+                  issueDate: "",
+                  expiryDate: "",
+                  credentialId: "",
+                  credentialUrl: "",
+                  certificateFileName: "",
+                  certificateUrl: "",
+                },
+              ],
+
+        // Job Preferences
+        desiredJobTitle: profile.desiredJobTitle || "",
+        desiredSalaryMin: profile.desiredSalaryMin?.toString() || "",
+        desiredSalaryMax: profile.desiredSalaryMax?.toString() || "",
+        preferredLocation: profile.preferredLocation || "",
+        preferredJobType: profile.preferredJobType || "",
+        willingToRelocate: profile.willingToRelocate || false,
+        availableFrom: formatDate(profile.availableFrom) || "",
+
+        // Disability
+        hasDisability: profile.hasDisability || false,
+        disabilityType: profile.disabilityType || "",
       });
-      if (data.profile) {
-        const profile = data.profile;
-        const formatMonthDate = (d) =>
-          d ? new Date(d).toISOString().slice(0, 7) : "";
-        const formatDate = (d) =>
-          d ? new Date(d).toISOString().split("T")[0] : "";
-
-        setFormData({
-          // Personal Info
-          photo: profile.photo,
-          photoPreview: profile.photo,
-          firstName: profile.firstName || "",
-          lastName: profile.lastName || "",
-          dateOfBirth: formatDate(profile.dateOfBirth) || "",
-          gender: profile.gender || "",
-          religion: profile.religion || "",
-          maritalStatus: profile.maritalStatus || "",
-          nationality: profile.nationality || "Indonesia",
-          idNumber: profile.idNumber || "",
-
-          // Contact Info
-          phone: profile.phone || "",
-          email: profile.email || "",
-          address: profile.address || "",
-          city: profile.city || "",
-          province: profile.province || "",
-          postalCode: profile.postalCode || "",
-
-          // Alamat Cirebon
-          kecamatan: profile.kecamatan || "",
-          kelurahan: profile.kelurahan || "",
-
-          // Professional Info
-          currentTitle: profile.currentTitle || "",
-          summary: profile.summary || "",
-          linkedinUrl: profile.linkedinUrl || "",
-          githubUrl: profile.githubUrl || "",
-          portfolioUrl: profile.portfolioUrl || "",
-          websiteUrl: profile.websiteUrl || "",
-
-          // CV & Documents
-          cvUrl: profile.cvUrl || "",
-          cvFileName: profile.cvUrl ? "CV.pdf" : "",
-          ktpUrl: profile.ktpUrl || "",
-          ktpFileName: profile.ktpUrl ? "KTP.pdf" : "",
-          ak1Url: profile.ak1Url || "",
-          ak1FileName: profile.ak1Url ? "Kartu AK-1.pdf" : "",
-          ijazahUrl: profile.ijazahUrl || "",
-          ijazahFileName: profile.ijazahUrl ? "Ijazah.pdf" : "",
-          sertifikatUrl: profile.sertifikatUrl || "",
-          sertifikatFileName: profile.sertifikatUrl ? "Sertifikat.pdf" : "",
-          suratPengalamanUrl: profile.suratPengalamanUrl || "",
-          suratPengalamanFileName: profile.suratPengalamanUrl
-            ? "Surat Pengalaman.pdf"
-            : "",
-
-          // Simplified Education (Step 1)
-          lastEducationLevel: profile.lastEducationLevel || "",
-          lastEducationInstitution: profile.lastEducationInstitution || "",
-          lastEducationMajor: profile.lastEducationMajor || "",
-          graduationYear: profile.graduationYear?.toString() || "",
-
-          // Education
-          educations:
-            profile.educations && profile.educations.length > 0
-              ? profile.educations.map((edu) => ({
-                  institution: edu.institution || "",
-                  degree: edu.degree || "",
-                  fieldOfStudy: edu.fieldOfStudy || "",
-                  level: edu.level || "",
-                  startDate: formatMonthDate(edu.startDate) || "",
-                  endDate: formatMonthDate(edu.endDate) || "",
-                  gpa: edu.gpa?.toString() || "",
-                  isCurrent: edu.isCurrent || false,
-                  diplomaUrl: edu.diplomaUrl || "",
-                  diplomaFileName: edu.diplomaUrl ? "Ijazah.pdf" : "",
-                }))
-              : [
-                  {
-                    institution: "",
-                    degree: "",
-                    fieldOfStudy: "",
-                    level: "",
-                    startDate: "",
-                    endDate: "",
-                    gpa: "",
-                    isCurrent: false,
-                    diplomaFileName: "",
-                    diplomaUrl: "",
-                  },
-                ],
-
-          // Work Experience
-          experiences:
-            profile.work_experiences && profile.work_experiences.length > 0
-              ? profile.work_experiences.map((exp) => ({
-                  company: exp.company || "",
-                  position: exp.position || "",
-                  location: exp.location || "",
-                  startDate: formatMonthDate(exp.startDate) || "",
-                  endDate: formatMonthDate(exp.endDate) || "",
-                  isCurrent: exp.isCurrent || false,
-                  description: exp.description || "",
-                  achievements:
-                    exp.achievements && exp.achievements.length > 0
-                      ? exp.achievements
-                      : [""],
-                }))
-              : [
-                  {
-                    company: "",
-                    position: "",
-                    location: "",
-                    startDate: "",
-                    endDate: "",
-                    isCurrent: false,
-                    description: "",
-                    achievements: [""],
-                  },
-                ],
-
-          // Skills
-          skills:
-            profile.skills && profile.skills.length > 0
-              ? profile.skills.map((s) => s.name)
-              : [""],
-
-          // Certifications
-          certifications:
-            profile.certifications && profile.certifications.length > 0
-              ? profile.certifications.map((cert) => ({
-                  name: cert.name || "",
-                  issuingOrganization: cert.issuingOrganization || "",
-                  issueDate: formatMonthDate(cert.issueDate) || "",
-                  expiryDate: formatMonthDate(cert.expiryDate) || "",
-                  credentialId: cert.credentialId || "",
-                  credentialUrl: cert.credentialUrl || "",
-                  certificateUrl: cert.certificateUrl || "",
-                  certificateFileName: cert.certificateUrl
-                    ? "Sertifikat.pdf"
-                    : "",
-                }))
-              : [
-                  {
-                    name: "",
-                    issuingOrganization: "",
-                    issueDate: "",
-                    expiryDate: "",
-                    credentialId: "",
-                    credentialUrl: "",
-                    certificateFileName: "",
-                    certificateUrl: "",
-                  },
-                ],
-
-          // Job Preferences
-          desiredJobTitle: profile.desiredJobTitle || "",
-          desiredSalaryMin: profile.desiredSalaryMin?.toString() || "",
-          desiredSalaryMax: profile.desiredSalaryMax?.toString() || "",
-          preferredLocation: profile.preferredLocation || "",
-          preferredJobType: profile.preferredJobType || "",
-          willingToRelocate: profile.willingToRelocate || false,
-          availableFrom: formatDate(profile.availableFrom) || "",
-
-          // Disability
-          hasDisability: profile.hasDisability || false,
-          disabilityType: profile.disabilityType || "",
-        });
-      }
-    } catch (error) {
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [profileData]);
 
   // Upload Logic
   const uploadFile = async (file, bucket) => {
@@ -732,31 +731,30 @@ function JobseekerProfileContent() {
     });
 
     if (!result.isConfirmed) return;
-    setIsSaving(true);
 
-    try {
-      const payload = {
-        ...formData,
-        skills: formData.skills.filter((s) => s), // Clean skills
-      };
+    const payload = {
+      ...formData,
+      skills: formData.skills.filter((s) => s), // Clean skills
+    };
 
-      const { data } = await axios.post("/api/profile/jobseeker", payload, {
-        withCredentials: true,
-      });
-
-      await Swal.fire({
-        icon: "success",
-        title: "Berhasil!",
-        html: `<p>Profile berhasil disimpan!</p><p class="mt-2 font-bold text-blue-600">Kelengkapan: ${data.completeness}%</p>`,
-        confirmButtonColor: "#3b82f6",
-      });
-      router.push("/profile/jobseeker/view");
-    } catch (error) {
-      Swal.fire({ icon: "error", title: "Gagal", text: error.message });
-    } finally {
-      setIsSaving(false);
-    }
+    saveProfileMutation.mutate(payload, {
+      onSuccess: async (data) => {
+        await Swal.fire({
+          icon: "success",
+          title: "Berhasil!",
+          html: `<p>Profile berhasil disimpan!</p><p class="mt-2 font-bold text-blue-600">Kelengkapan: ${data.completeness}%</p>`,
+          confirmButtonColor: "#3b82f6",
+        });
+        router.push("/profile/jobseeker/view");
+      },
+      onError: (error) => {
+        Swal.fire({ icon: "error", title: "Gagal", text: error.message });
+      },
+    });
   };
+
+  // Derived state for isSaving from mutation
+  const isSaving = saveProfileMutation.isPending;
 
   // Helper to calculate age
   const calculateAge = (birthDate) => {

@@ -342,3 +342,30 @@ export function useMutationDeleteNews() {
         },
     });
 }
+
+// ============ ADMIN SIDEBAR PENDING COUNTS ============
+const queryKeyAdminSidebarCounts = ["adminSidebarCounts"];
+
+export function useQueryAdminSidebarCounts(enabled = true) {
+    return useQuery({
+        queryKey: queryKeyAdminSidebarCounts,
+        queryFn: async () => {
+            const [companiesRes, jobsRes, contractsRes] = await Promise.allSettled([
+                axios.get("/api/admin/companies/pending-count", { headers: getAuthHeader() }),
+                axios.get("/api/admin/jobs/pending-count", { headers: getAuthHeader() }),
+                axios.get("/api/admin/contracts/pending-count", { headers: getAuthHeader() }),
+            ]);
+
+            return {
+                companies: companiesRes.status === "fulfilled"
+                    ? companiesRes.value.data.count || 0 : 0,
+                jobs: jobsRes.status === "fulfilled"
+                    ? jobsRes.value.data.count || 0 : 0,
+                contracts: contractsRes.status === "fulfilled"
+                    ? contractsRes.value.data.count || 0 : 0,
+            };
+        },
+        enabled,
+        refetchInterval: 30000, // Refresh every 30 seconds
+    });
+}

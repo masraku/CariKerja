@@ -1,8 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useQueryAdminSidebarCounts } from "@/hooks/admin/useAdmin";
 import {
   LayoutDashboard,
   Building2,
@@ -17,48 +16,8 @@ import {
 
 export default function AdminSidebar() {
   const pathname = usePathname();
-  const [pendingCounts, setPendingCounts] = useState({
-    companies: 0,
-    jobs: 0,
-    contracts: 0,
-  });
-
-  // Fetch pending counts for notifications
-  useEffect(() => {
-    const fetchPendingCounts = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const headers = { Authorization: `Bearer ${token}` };
-
-        // Fetch all pending counts in parallel
-        const [companiesRes, jobsRes, contractsRes] = await Promise.allSettled([
-          axios.get("/api/admin/companies/pending-count", { headers }),
-          axios.get("/api/admin/jobs/pending-count", { headers }),
-          axios.get("/api/admin/contracts/pending-count", { headers }),
-        ]);
-
-        setPendingCounts({
-          companies:
-            companiesRes.status === "fulfilled"
-              ? companiesRes.value.data.count || 0
-              : 0,
-          jobs:
-            jobsRes.status === "fulfilled" ? jobsRes.value.data.count || 0 : 0,
-          contracts:
-            contractsRes.status === "fulfilled"
-              ? contractsRes.value.data.count || 0
-              : 0,
-        });
-      } catch (error) {
-        console.error("Failed to fetch pending counts:", error);
-      }
-    };
-
-    fetchPendingCounts();
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchPendingCounts, 30000);
-    return () => clearInterval(interval);
-  }, []);
+  const { data: pendingCounts = { companies: 0, jobs: 0, contracts: 0 } } =
+    useQueryAdminSidebarCounts();
 
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },

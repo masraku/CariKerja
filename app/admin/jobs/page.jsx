@@ -20,7 +20,10 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 import { getAllKecamatan } from "@/lib/cirebonData";
-import { useQueryAdminJobs, useMutationUpdateJobStatus } from "@/hooks/admin/useAdmin";
+import {
+  useQueryAdminJobs,
+  useMutationUpdateJobStatus,
+} from "@/hooks/admin/useAdmin";
 
 export default function AdminJobsPage() {
   const [search, setSearch] = useState("");
@@ -31,7 +34,11 @@ export default function AdminJobsPage() {
   const [scopeFilter, setScopeFilter] = useState("all");
 
   // Use React Query hooks
-  const { data, isPending: loading, refetch } = useQueryAdminJobs({
+  const {
+    data,
+    isPending: loading,
+    refetch,
+  } = useQueryAdminJobs({
     search,
     status: statusFilter,
     jobType: jobTypeFilter,
@@ -226,114 +233,83 @@ export default function AdminJobsPage() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6">
         {/* Filters */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-6">
-          {/* Row 1: Search + Status Filter */}
-          <div className="flex flex-col lg:flex-row gap-4 mb-4">
-            {/* Search */}
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+        {/* Filters & Search */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6 sticky top-4 z-30">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            {/* Search Input */}
+            <div className="lg:col-span-4 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
-                placeholder="Cari lowongan, perusahaan, atau lokasi..."
+                placeholder="Cari posisi, perusahaan..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 placeholder-slate-400"
+                className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400"
               />
             </div>
 
-            {/* Status Filter Pills */}
-            <div className="flex gap-1.5 bg-slate-100 p-1.5 rounded-xl overflow-x-auto">
-              {[
-                { key: "all", label: "Semua", color: "" },
-                { key: "pending", label: "Pending", color: "text-orange-600" },
-                { key: "active", label: "Aktif", color: "text-emerald-600" },
-                { key: "rejected", label: "Ditolak", color: "text-red-600" },
-                { key: "closed", label: "Ditutup", color: "text-slate-600" },
-              ].map((filter) => (
-                <button
-                  key={filter.key}
-                  onClick={() => setStatusFilter(filter.key)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap ${
-                    statusFilter === filter.key
-                      ? "bg-white text-slate-800 shadow-sm"
-                      : `${filter.color || "text-slate-500"} hover:bg-white/50`
-                  }`}
+            {/* Main Filters */}
+            <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-3">
+              {/* Status Filter */}
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">Semua Status</option>
+                <option value="pending">⏳ Menunggu</option>
+                <option value="active">✅ Aktif</option>
+                <option value="rejected">❌ Ditolak</option>
+                <option value="closed">🔒 Ditutup</option>
+              </select>
+
+              {/* Kecamatan Filter */}
+              <select
+                value={kecamatanFilter}
+                onChange={(e) => setKecamatanFilter(e.target.value)}
+                className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">Semua Lokasi</option>
+                {getAllKecamatan().map((kec) => (
+                  <option key={kec} value={kec}>
+                    Kec. {kec}
+                  </option>
+                ))}
+              </select>
+
+              {/* Job Type Filter */}
+              <select
+                value={jobTypeFilter}
+                onChange={(e) => setJobTypeFilter(e.target.value)}
+                className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">Semua Tipe</option>
+                <option value="FULL_TIME">Full Time</option>
+                <option value="PART_TIME">Part Time</option>
+              </select>
+
+              {/* Sort Order */}
+              <div className="md:col-span-1">
+                <select
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  {filter.label}
-                </button>
-              ))}
+                  <option value="newest">Terbaru</option>
+                  <option value="oldest">Terlama</option>
+                  <option value="deadline_asc">Deadline Dekat</option>
+                  <option value="deadline_desc">Deadline Jauh</option>
+                </select>
+              </div>
             </div>
-          </div>
-
-          {/* Row 2: Advanced Filters */}
-          <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-100">
-            <div className="flex items-center gap-2 text-sm text-slate-500">
-              <Filter className="w-4 h-4" />
-              <span>Filter:</span>
-            </div>
-
-            {/* Kecamatan Filter */}
-            <select
-              value={kecamatanFilter}
-              onChange={(e) => setKecamatanFilter(e.target.value)}
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="all">Semua Kecamatan</option>
-              {getAllKecamatan().map((kec) => (
-                <option key={kec} value={kec}>
-                  Kec. {kec}
-                </option>
-              ))}
-            </select>
-
-            {/* Job Type Filter */}
-            <select
-              value={jobTypeFilter}
-              onChange={(e) => setJobTypeFilter(e.target.value)}
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="all">Semua Tipe</option>
-              <option value="FULL_TIME">Full Time</option>
-              <option value="PART_TIME">Part Time</option>
-            </select>
-
-            {/* Scope Filter */}
-            <select
-              value={scopeFilter}
-              onChange={(e) => setScopeFilter(e.target.value)}
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="all">Semua Skup</option>
-              <option value="domestic">Dalam Negeri</option>
-              <option value="international">Luar Negeri</option>
-            </select>
-
-            {/* Divider */}
-            <div className="w-px h-6 bg-slate-200 hidden sm:block"></div>
-
-            {/* Sort Order */}
-            <div className="flex items-center gap-2 text-sm text-slate-500">
-              <ArrowUpDown className="w-4 h-4" />
-              <span>Urutkan:</span>
-            </div>
-            <select
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value)}
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="newest">Terbaru</option>
-              <option value="oldest">Terlama</option>
-              <option value="deadline_asc">Deadline Terdekat</option>
-              <option value="deadline_desc">Deadline Terjauh</option>
-            </select>
           </div>
         </div>
 
         {/* Results Count */}
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-sm text-slate-500">
+        <div className="flex items-center justify-between mb-4 px-1">
+          <p className="text-sm font-medium text-slate-500">
             Menampilkan{" "}
-            <span className="font-semibold text-slate-700">
+            <span className="text-slate-900 font-bold">
               {loading ? "..." : jobs.length}
             </span>{" "}
             lowongan
@@ -375,138 +351,162 @@ export default function AdminJobsPage() {
             </p>
           </div>
         ) : (
-          <div className="grid gap-4">
+          <div className="space-y-4">
             {jobs.map((job) => (
               <div
                 key={job.id}
-                className={`bg-white rounded-2xl shadow-sm border p-5 transition group ${
+                className={`bg-white rounded-xl shadow-sm border transition-all duration-200 group relative overflow-hidden ${
                   job.status === "PENDING"
-                    ? "border-orange-200 ring-4 ring-orange-50"
-                    : "border-slate-100 hover:shadow-md"
+                    ? "border-orange-200 ring-1 ring-orange-100"
+                    : "border-slate-200 hover:border-blue-300 hover:shadow-md"
                 }`}
               >
-                <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-                  {/* Company Logo & Job Info */}
-                  <div className="flex items-start gap-4 flex-1">
-                    <div className="w-14 h-14 rounded-xl bg-slate-100 flex items-center justify-center overflow-hidden flex-shrink-0">
-                      {job.company?.logo ? (
-                        <img
-                          src={job.company.logo}
-                          alt={job.company.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <Building2 className="w-7 h-7 text-slate-400" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-slate-800 group-hover:text-blue-600 transition truncate">
-                        {job.title}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-sm text-slate-600">
-                          {job.company?.name}
-                        </span>
-                        {job.company?.verified && (
-                          <CheckCircle className="w-4 h-4 text-blue-500" />
+                {/* Status Strip for Pending */}
+                {job.status === "PENDING" && (
+                  <div className="absolute top-0 left-0 w-1 h-full bg-orange-400"></div>
+                )}
+
+                <div className="p-5">
+                  <div className="flex flex-col lg:flex-row gap-5">
+                    {/* Left: Logo & Main Info */}
+                    <div className="flex gap-4 flex-1">
+                      {/* Logo */}
+                      <div className="w-16 h-16 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {job.company?.logo ? (
+                          <img
+                            src={job.company.logo}
+                            alt={job.company.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Building2 className="w-8 h-8 text-slate-300" />
                         )}
                       </div>
-                      <div className="flex flex-wrap items-center gap-3 mt-2">
-                        <span className="inline-flex items-center gap-1 text-xs text-slate-500">
-                          <MapPin className="w-3.5 h-3.5" />
-                          {job.city}
-                          {job.isRemote && (
-                            <span className="ml-1 px-1.5 py-0.5 bg-blue-100 text-blue-600 rounded text-xs">
-                              Remote
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition truncate leading-tight">
+                              {job.title}
+                            </h3>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-sm font-medium text-slate-700">
+                                {job.company?.name}
+                              </span>
+                              {job.company?.verified && (
+                                <CheckCircle className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                              )}
+                            </div>
+                          </div>
+                          {/* Job Type Badge (Mobile/Desktop) */}
+                          <div className="flex-shrink-0">
+                            {getJobTypeBadge(job.jobType)}
+                          </div>
+                        </div>
+
+                        {/* Metadata Rows */}
+                        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
+                          <div className="flex items-center gap-2 text-slate-500">
+                            <MapPin className="w-4 h-4 flex-shrink-0" />
+                            <span className="truncate">
+                              {job.city}
+                              {job.isRemote && " (Remote)"}
                             </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-slate-500">
+                            <Users className="w-4 h-4 flex-shrink-0" />
+                            <span>
+                              {job.numberOfPositions} Posisi{" "}
+                              {job.isDisabilityFriendly && "• Disabilitas"}
+                            </span>
+                          </div>
+                          {job.showSalary && job.salaryMin && job.salaryMax && (
+                            <div className="flex items-center gap-2 font-medium text-emerald-600">
+                              <div className="w-4 h-4 flex items-center justify-center font-bold text-xs border border-emerald-200 rounded-full bg-emerald-50">
+                                Rp
+                              </div>
+                              <span>
+                                {formatCurrency(job.salaryMin)} -{" "}
+                                {formatCurrency(job.salaryMax)}
+                              </span>
+                            </div>
                           )}
-                        </span>
-                        <span className="text-xs text-slate-400">•</span>
-                        <span className="text-xs text-slate-500">
-                          {job.numberOfPositions} posisi
-                        </span>
-                        {job.isDisabilityFriendly && (
-                          <>
-                            <span className="text-xs text-slate-400">•</span>
-                            <span className="text-xs text-blue-600">
-                              ♿ Disabilitas
-                            </span>
-                          </>
-                        )}
+                          <div className="flex items-center gap-2 text-slate-500">
+                            <Calendar className="w-4 h-4 flex-shrink-0" />
+                            <span>Diposting {formatDate(job.createdAt)}</span>
+                          </div>
+                        </div>
                       </div>
-                      {job.showSalary && job.salaryMin && job.salaryMax && (
-                        <p className="text-sm text-emerald-600 font-medium mt-2">
-                          {formatCurrency(job.salaryMin)} -{" "}
-                          {formatCurrency(job.salaryMax)}
-                        </p>
-                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer / Actions Bar */}
+                <div className="px-5 py-3 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  {/* Left: Metrics & Status */}
+                  <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
+                    <div className="flex items-center gap-4 text-sm">
+                      <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 rounded-lg shadow-sm">
+                        <TrendingUp className="w-3.5 h-3.5 text-blue-500" />
+                        <span className="font-semibold text-slate-700">
+                          {job.applicationCount}
+                        </span>
+                        <span className="text-slate-500 text-xs">Pelamar</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-slate-500">
+                        <Eye className="w-4 h-4 text-slate-400" />
+                        <span>{job.viewCount} views</span>
+                      </div>
+                    </div>
+                    <div className="sm:hidden">
+                      {getStatusBadge(job.status || "PENDING")}
                     </div>
                   </div>
 
-                  {/* Actions for Pending Jobs */}
-                  {job.status === "PENDING" && (
-                    <div className="flex items-center gap-2 lg:border-l lg:border-r lg:border-slate-100 lg:px-6">
-                      <button
-                        onClick={() => handleUpdateStatus(job.id, "ACTIVE")}
-                        className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white text-sm font-medium rounded-lg hover:bg-emerald-600 transition shadow-sm hover:shadow"
+                  {/* Right: Actions & Desktop Status */}
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <div className="hidden sm:block">
+                      {getStatusBadge(job.status || "PENDING")}
+                    </div>
+
+                    <div className="h-6 w-px bg-slate-200 hidden sm:block mx-1"></div>
+
+                    {job.status === "PENDING" ? (
+                      <>
+                        <button
+                          onClick={() => handleUpdateStatus(job.id, "REJECTED")}
+                          className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition"
+                        >
+                          Tolak
+                        </button>
+                        <button
+                          onClick={() => handleUpdateStatus(job.id, "ACTIVE")}
+                          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 shadow-sm shadow-emerald-200 transition"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                          Setujui
+                        </button>
+                      </>
+                    ) : (
+                      <Link
+                        href={`/admin/jobs/${job.id}`}
+                        className="flex-1 sm:flex-none text-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-slate-900 transition"
                       >
-                        <CheckCircle className="w-4 h-4" />
-                        Setujui
-                      </button>
-                      <button
-                        onClick={() => handleUpdateStatus(job.id, "REJECTED")}
-                        className="flex items-center gap-2 px-4 py-2 bg-white border border-red-200 text-red-600 text-sm font-medium rounded-lg hover:bg-red-50 transition"
+                        Lihat Detail
+                      </Link>
+                    )}
+
+                    {/* View Link for Pending (icon only) */}
+                    {job.status === "PENDING" && (
+                      <Link
+                        href={`/admin/jobs/${job.id}`}
+                        title="Lihat Detail"
+                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
                       >
-                        <XCircle className="w-4 h-4" />
-                        Tolak
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Stats & Actions */}
-                  <div className="flex items-center gap-6 lg:gap-8">
-                    {/* Job Type Badge */}
-                    <div className="hidden md:block">
-                      {getJobTypeBadge(job.jobType)}
-                    </div>
-
-                    {/* Metrics */}
-                    <div className="flex items-center gap-6">
-                      <div className="text-center">
-                        <div className="flex items-center gap-1 text-slate-800 font-semibold">
-                          <Users className="w-4 h-4 text-purple-500" />
-                          {job.applicationCount}
-                        </div>
-                        <div className="text-xs text-slate-400">Lamaran</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="flex items-center gap-1 text-slate-800 font-semibold">
-                          <Eye className="w-4 h-4 text-blue-500" />
-                          {job.viewCount}
-                        </div>
-                        <div className="text-xs text-slate-400">Views</div>
-                      </div>
-                    </div>
-
-                    {/* Status */}
-                    <div>{getStatusBadge(job.status || "PENDING")}</div>
-
-                    {/* Date */}
-                    <div className="hidden lg:block text-right">
-                      <div className="text-sm text-slate-600">
-                        {formatDate(job.createdAt)}
-                      </div>
-                      <div className="text-xs text-slate-400">Dibuat</div>
-                    </div>
-
-                    {/* Action */}
-                    <Link
-                      href={`/admin/jobs/${job.id}`}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 text-white text-sm font-medium rounded-xl hover:bg-slate-700 transition"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                      Lihat
-                    </Link>
+                        <ExternalLink className="w-5 h-5" />
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>

@@ -24,16 +24,27 @@ import {
 import Swal from "sweetalert2";
 import RecruiterPhotoUpload from "@/components/recruiter/RecruiterPhotoUpload";
 import CompanyGallery from "@/components/recruiter/CompanyGallery";
+import {
+  useQueryRecruiterProfile,
+  useMutationSaveRecruiterProfile,
+  useMutationSubmitForVerification,
+} from "@/hooks/recruiter/useRecruiter";
 
 export default function RecruiterProfilePage() {
   const router = useRouter();
   const { user, refreshUser } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
-  const [isLoading, setIsLoading] = useState(true); // Start with true to show loading until redirect check completes
-  const [isSaving, setIsSaving] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [companyStatus, setCompanyStatus] = useState(null); // PENDING_VERIFICATION, REJECTED, PENDING_RESUBMISSION, VERIFIED
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [companyStatus, setCompanyStatus] = useState(null);
+
+  // React Query hooks
+  const { data: profileData, isLoading } = useQueryRecruiterProfile();
+  const saveProfileMutation = useMutationSaveRecruiterProfile();
+  const submitVerificationMutation = useMutationSubmitForVerification();
+
+  // Derived state from mutations
+  const isSaving =
+    saveProfileMutation.isPending || submitVerificationMutation.isPending;
 
   // Form data
   const [formData, setFormData] = useState({
@@ -81,124 +92,96 @@ export default function RecruiterProfilePage() {
 
   const [newBenefit, setNewBenefit] = useState("");
 
-  // Load existing profile and check redirect
+  // Populate form data when profile loads from React Query
   useEffect(() => {
-    // Load profile data
-    loadProfile();
-  }, [user]);
+    if (profileData) {
+      // Set company status - no redirect, allow viewing profile
+      const status =
+        profileData.companies?.verified === true
+          ? "VERIFIED"
+          : profileData.companies?.status || null;
+      setCompanyStatus(status);
+
+      setIsEditMode(true);
+      setFormData({
+        firstName: profileData.firstName || "",
+        lastName: profileData.lastName || "",
+        position: profileData.position || "",
+        phone: profileData.phone || "",
+        department: profileData.department || "",
+        bio: profileData.bio || "",
+
+        companyId: profileData.companyId || "",
+        companyName: profileData.companies?.name || "",
+        companySlug: profileData.companies?.slug || "",
+        companyLogo: profileData.companies?.logo || "",
+        tagline: profileData.companies?.tagline || "",
+        description: profileData.companies?.description || "",
+        industry: profileData.companies?.industry || "",
+        companySize: profileData.companies?.companySize || "",
+        foundedYear: profileData.companies?.foundedYear || "",
+
+        companyEmail: profileData.companies?.email || "",
+        companyPhone: profileData.companies?.phone || "",
+        website: profileData.companies?.website || "",
+
+        address: profileData.companies?.address || "",
+        city: profileData.companies?.city || "",
+        province: profileData.companies?.province || "",
+        postalCode: profileData.companies?.postalCode || "",
+
+        linkedinUrl: profileData.companies?.linkedinUrl || "",
+        facebookUrl: profileData.companies?.facebookUrl || "",
+        twitterUrl: profileData.companies?.twitterUrl || "",
+        instagramUrl: profileData.companies?.instagramUrl || "",
+
+        culture: profileData.companies?.culture || "",
+        benefits: profileData.companies?.benefits || [],
+        gallery: profileData.companies?.gallery || [],
+      });
+    }
+  }, [profileData]);
 
   const handleSave = async () => {
-    try {
-      setIsSaving(true);
+    saveProfileMutation.mutate(formData, {
+      onSuccess: async () => {
+        // Submit for verification after saving
+        submitVerificationMutation.mutate(undefined, {
+          onSuccess: async () => {
+            await Swal.fire({
+              icon: "success",
+              title: "Berhasil!",
+              text: "Profile berhasil disimpan dan diajukan untuk validasi.",
+              confirmButtonColor: "#2563EB",
+            });
 
-      // 1. Save Profile Data
-      const { data } = await axios.post("/api/profile/recruiter", formData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+            // Refresh user data
+            await refreshUser();
 
-      // 2. Automatically Submit for Validation
-      // We use the token to submit validation immediately after saving
-      const validationResponse = await axios.post(
-        "/api/profile/recruiter/submit-validation",
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            // Redirect to dashboard
+            router.push("/profile/recruiter/dashboard");
+            router.refresh();
           },
-        }
-      );
-
-      // Even if validation submission fails (e.g. already submitted), we count the save as success but warn?
-      // User requirement: "setiap update profile otomatis kirim permintaan validasi"
-      // So we assume we should try to submit.
-
-      await Swal.fire({
-        icon: "success",
-        title: "Berhasil!",
-        text: "Profile berhasil disimpan dan diajukan untuk validasi.",
-        confirmButtonColor: "#2563EB",
-      });
-
-      // Refresh user data
-      await refreshUser();
-
-      // Redirect to dashboard
-      router.push("/profile/recruiter/dashboard");
-      router.refresh();
-    } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Error!",
-        text: error.message || "Terjadi kesalahan saat menyimpan",
-        confirmButtonColor: "#2563EB",
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const loadProfile = async () => {
-    try {
-      setIsLoading(true);
-
-      const { data } = await axios.get("/api/profile/recruiter", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-
-      if (data.profile) {
-        // Set company status - no redirect, allow viewing profile
-        const status =
-          data.profile.companies?.verified === true
-            ? "VERIFIED"
-            : data.profile.companies?.status || null;
-        setCompanyStatus(status);
-
-        setIsEditMode(true);
-        setFormData({
-          firstName: data.profile.firstName || "",
-          lastName: data.profile.lastName || "",
-          position: data.profile.position || "",
-          phone: data.profile.phone || "",
-          department: data.profile.department || "",
-          bio: data.profile.bio || "",
-
-          companyId: data.profile.companyId || "",
-          companyName: data.profile.companies?.name || "",
-          companySlug: data.profile.companies?.slug || "",
-          companyLogo: data.profile.companies?.logo || "",
-          tagline: data.profile.companies?.tagline || "",
-          description: data.profile.companies?.description || "",
-          industry: data.profile.companies?.industry || "",
-          companySize: data.profile.companies?.companySize || "",
-          foundedYear: data.profile.companies?.foundedYear || "",
-
-          companyEmail: data.profile.companies?.email || "",
-          companyPhone: data.profile.companies?.phone || "",
-          website: data.profile.companies?.website || "",
-
-          address: data.profile.companies?.address || "",
-          city: data.profile.companies?.city || "",
-          province: data.profile.companies?.province || "",
-          postalCode: data.profile.companies?.postalCode || "",
-
-          linkedinUrl: data.profile.companies?.linkedinUrl || "",
-          facebookUrl: data.profile.companies?.facebookUrl || "",
-          twitterUrl: data.profile.companies?.twitterUrl || "",
-          instagramUrl: data.profile.companies?.instagramUrl || "",
-
-          culture: data.profile.companies?.culture || "",
-          benefits: data.profile.companies?.benefits || [],
-          gallery: data.profile.companies?.gallery || [],
+          onError: (error) => {
+            Swal.fire({
+              icon: "error",
+              title: "Error!",
+              text:
+                error.message || "Terjadi kesalahan saat mengajukan validasi",
+              confirmButtonColor: "#2563EB",
+            });
+          },
         });
-      }
-    } catch (error) {
-    } finally {
-      setIsLoading(false);
-    }
+      },
+      onError: (error) => {
+        Swal.fire({
+          icon: "error",
+          title: "Error!",
+          text: error.message || "Terjadi kesalahan saat menyimpan",
+          confirmButtonColor: "#2563EB",
+        });
+      },
+    });
   };
 
   // Handle input change

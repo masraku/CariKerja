@@ -182,3 +182,36 @@ export function useMutationUpdateJobSeekingStatus() {
         },
     });
 }
+
+// ============ JOBSEEKER PROFILE FULL (for Edit Page) ============
+const queryKeyJobseekerProfileFull = ["jobseekerProfileFull"];
+
+export function useQueryJobseekerProfileFull(enabled = true) {
+    return useQuery({
+        queryKey: queryKeyJobseekerProfileFull,
+        queryFn: async () => {
+            const { data } = await axios.get("/api/profile/jobseeker", {
+                withCredentials: true,
+            });
+            return data.profile;
+        },
+        enabled,
+    });
+}
+
+export function useMutationSaveJobseekerProfile() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (profileData) => {
+            const { data } = await axios.post("/api/profile/jobseeker", profileData, {
+                withCredentials: true,
+            });
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeyJobseekerProfileFull });
+            queryClient.invalidateQueries({ queryKey: queryKeyJobseekerProfile });
+        },
+    });
+}
