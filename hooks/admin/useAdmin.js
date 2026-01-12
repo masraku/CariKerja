@@ -24,7 +24,7 @@ export function useQueryAdminStats(enabled = true) {
             ]);
 
             if (!jobseekersRes.data.success || !companiesRes.data.success) {
-                throw new Error("Failed to fetch stats");
+                throw new Error("Gagal memuat statistik");
             }
 
             return {
@@ -44,7 +44,7 @@ export function useQueryAdminChartStats(enabled = true) {
                 headers: getAuthHeader(),
             });
 
-            if (!data.success) throw new Error("Failed to fetch chart stats");
+            if (!data.success) throw new Error("Gagal memuat statistik chart");
 
             return data.data;
         },
@@ -75,10 +75,10 @@ export function useQueryAdminCompanies({
                 },
             });
 
-            if (!data.success) throw new Error("Failed to fetch companies");
+            if (!data.success) throw new Error("Gagal memuat daftar perusahaan");
 
             return {
-                companies: data.data || [],
+                companies: data.data?.companies || [],
                 pagination: data.pagination,
             };
         },
@@ -98,7 +98,7 @@ export function useMutationVerifyCompany() {
                 { headers: getAuthHeader() }
             );
 
-            if (!data.success) throw new Error(data.error || "Failed to verify");
+            if (!data.success) throw new Error(data.error || "Gagal memverifikasi");
 
             return data;
         },
@@ -138,7 +138,7 @@ export function useQueryAdminJobs({
                 headers: getAuthHeader(),
             });
 
-            if (!data.success) throw new Error("Failed to fetch jobs");
+            if (!data.success) throw new Error("Gagal memuat daftar lowongan");
 
             return {
                 jobs: data.jobs || [],
@@ -160,7 +160,7 @@ export function useMutationUpdateJobStatus() {
                 { headers: getAuthHeader() }
             );
 
-            if (!data.success) throw new Error(data.error || "Failed to update status");
+            if (!data.success) throw new Error(data.error || "Gagal memperbarui status");
 
             return data;
         },
@@ -185,7 +185,7 @@ export function useQueryAdminJobseekers({
                 headers: getAuthHeader(),
             });
 
-            if (!data.success) throw new Error("Failed to fetch jobseekers");
+            if (!data.success) throw new Error("Gagal memuat daftar pencari kerja");
 
             return data.data?.jobseekers || [];
         },
@@ -212,7 +212,7 @@ export function useQueryAdminContracts({
                 headers: getAuthHeader(),
             });
 
-            if (!data.success) throw new Error("Failed to fetch contracts");
+            if (!data.success) throw new Error("Gagal memuat daftar kontrak");
 
             return {
                 contracts: data.contracts || [],
@@ -234,7 +234,7 @@ export function useMutationProcessContract() {
                 { headers: getAuthHeader() }
             );
 
-            if (!data.success) throw new Error(data.error || "Failed to process contract");
+            if (!data.success) throw new Error(data.error || "Gagal memproses kontrak");
 
             return data;
         },
@@ -268,7 +268,7 @@ export function useQueryAdminNews({
                 headers: getAuthHeader(),
             });
 
-            if (!data.success) throw new Error("Failed to fetch news");
+            if (!data.success) throw new Error("Gagal memuat daftar berita");
 
             return {
                 news: data.news || [],
@@ -292,7 +292,7 @@ export function useMutationCreateNews() {
                 { headers: getAuthHeader() }
             );
 
-            if (!data.success) throw new Error(data.error || "Failed to create news");
+            if (!data.success) throw new Error(data.error || "Gagal membuat berita");
 
             return data;
         },
@@ -313,7 +313,7 @@ export function useMutationUpdateNews() {
                 { headers: getAuthHeader() }
             );
 
-            if (!data.success) throw new Error(data.error || "Failed to update news");
+            if (!data.success) throw new Error(data.error || "Gagal memperbarui berita");
 
             return data;
         },
@@ -333,7 +333,7 @@ export function useMutationDeleteNews() {
                 { headers: getAuthHeader() }
             );
 
-            if (!data.success) throw new Error(data.error || "Failed to delete news");
+            if (!data.success) throw new Error(data.error || "Gagal menghapus berita");
 
             return data;
         },
