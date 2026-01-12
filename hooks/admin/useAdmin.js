@@ -102,9 +102,12 @@ export function useMutationVerifyCompany() {
 
             return data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeyAdminCompanies });
-            queryClient.invalidateQueries({ queryKey: queryKeyAdminStats });
+        onSuccess: async () => {
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: queryKeyAdminCompanies }),
+                queryClient.invalidateQueries({ queryKey: queryKeyAdminStats }),
+                queryClient.invalidateQueries({ queryKey: queryKeyAdminSidebarCounts }),
+            ]);
         },
     });
 }
@@ -164,10 +167,13 @@ export function useMutationUpdateJobStatus() {
 
             return data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeyAdminJobs });
-            queryClient.invalidateQueries({ queryKey: queryKeyAdminStats });
-            queryClient.invalidateQueries({ queryKey: queryKeyAdminChartStats });
+        onSuccess: async () => {
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: queryKeyAdminJobs }),
+                queryClient.invalidateQueries({ queryKey: queryKeyAdminStats }),
+                queryClient.invalidateQueries({ queryKey: queryKeyAdminChartStats }),
+                queryClient.invalidateQueries({ queryKey: queryKeyAdminSidebarCounts }),
+            ]);
         },
     });
 }
@@ -238,9 +244,12 @@ export function useMutationProcessContract() {
 
             return data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeyAdminContracts });
-            queryClient.invalidateQueries({ queryKey: queryKeyAdminStats });
+        onSuccess: async () => {
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: queryKeyAdminContracts }),
+                queryClient.invalidateQueries({ queryKey: queryKeyAdminStats }),
+                queryClient.invalidateQueries({ queryKey: queryKeyAdminSidebarCounts }),
+            ]);
         },
     });
 }

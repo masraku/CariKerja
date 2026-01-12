@@ -90,32 +90,21 @@ export default function AdminContractsPage() {
       // Proceed with reject
       try {
         setProcessingId(id);
-        const token = localStorage.getItem("token");
-        const { data } = await axios.patch(
-          `/api/admin/contracts/${id}`,
-          {
-            action,
-            adminNotes: notes,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        if (data.success) {
-          Swal.fire({
-            icon: "success",
-            title: "Berhasil",
-            text: `Pendaftaran kontrak berhasil ditolak`,
-            timer: 1500,
-            showConfirmButton: false,
-          });
-          setShowDetail(false);
-          refetch();
-        } else {
-          throw new Error(data.error);
-        }
+
+        await processContractMutation.mutateAsync({
+          id,
+          action,
+          adminNotes: notes,
+        });
+
+        Swal.fire({
+          icon: "success",
+          title: "Berhasil",
+          text: `Pendaftaran kontrak berhasil ditolak`,
+          timer: 1500,
+          showConfirmButton: false,
+        });
+        setShowDetail(false);
       } catch (error) {
         Swal.fire({
           icon: "error",
@@ -163,48 +152,40 @@ export default function AdminContractsPage() {
         adminResponseDocUrl = uploadRes.data.url;
       }
 
-      // Approve contract
-      const { data } = await axios.patch(
-        `/api/admin/contracts/${selectedContract.id}`,
-        {
-          action: "approve",
-          adminNotes: approvalNotes,
-          adminResponseDocUrl,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (data.success) {
-        Swal.fire({
-          icon: "success",
-          title: "Berhasil",
-          text: `Pendaftaran kontrak berhasil disetujui`,
-          timer: 1500,
-          showConfirmButton: false,
-        });
-        setShowApprovalModal(false);
-        setShowDetail(false);
-        setApprovalFile(null);
-        setApprovalNotes("");
-        refetch();
-      } else {
-        throw new Error(data.error);
-      }
+      // Approve contract using mutation
+      await processContractMutation.mutateAsync({
+        id: selectedContract.id,
+        action: "approve",
+        adminNotes: approvalNotes,
+        adminResponseDocUrl,
+      });
+
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil",
+        text: `Pendaftaran kontrak berhasil disetujui`,
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      setShowApprovalModal(false);
+      setShowDetail(false);
+      setApprovalFile(null);
+      setApprovalNotes("");
     } catch (error) {
-      const errorMessage = error.response?.data?.error || error.message || "Gagal menyetujui pendaftaran";
+      const errorMessage =
+        error.response?.data?.error ||
+        error.message ||
+        "Gagal menyetujui pendaftaran";
       Swal.fire({
         icon: "error",
         title: "Gagal",
         text: errorMessage,
       });
-      // Close modal and refresh data if contract was already processed
+      // Close modal and refresh data if contract was already processed or other error
       if (error.response?.status === 400) {
         setShowApprovalModal(false);
         setShowDetail(false);
-        refetch();
+        // refetch is handled by hook
       }
     } finally {
       setUploading(false);
