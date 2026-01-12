@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import axios from "axios";
 import {
   ArrowLeft,
   Building2,
@@ -33,13 +34,12 @@ export default function JobPreviewPage() {
   const fetchJobDetail = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(
+      const { data } = await axios.get(
         `/api/profile/recruiter/jobs/${params.slug}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      const data = await response.json();
 
       if (data.success) {
         setJob(data.job);

@@ -34,9 +34,9 @@ export function useQueryRecruiterProfile(enabled = true) {
                 headers: getAuthHeader(),
             });
 
-            if (!data.success) throw new Error("Failed to fetch profile");
+            if (!data.success) throw new Error("Gagal memuat profil");
 
-            return data.data;
+            return data.profile;
         },
         enabled,
     });
@@ -63,7 +63,7 @@ export function useQueryRecruiterJobs({
                 },
             });
 
-            if (!data.success) throw new Error("Failed to fetch jobs");
+            if (!data.success) throw new Error("Gagal memuat daftar lowongan");
 
             return {
                 jobs: data.data.jobs || [],
@@ -97,7 +97,7 @@ export function useQueryRecruiterApplications({
                 },
             });
 
-            if (!data.success) throw new Error("Failed to fetch applications");
+            if (!data.success) throw new Error("Gagal memuat daftar lamaran");
 
             return {
                 applications: data.data.applications || [],
@@ -121,7 +121,7 @@ export function useMutationUpdateApplicationStatus() {
                 { headers: getAuthHeader() }
             );
 
-            if (!data.success) throw new Error(data.error || "Failed to update");
+            if (!data.success) throw new Error(data.error || "Gagal memperbarui status");
 
             return data;
         },
@@ -153,7 +153,7 @@ export function useQueryRecruiterInterviews({
                 },
             });
 
-            if (!data.success) throw new Error("Failed to fetch interviews");
+            if (!data.success) throw new Error("Gagal memuat daftar interview");
 
             return {
                 interviews: data.data.interviews || data.data || [],
@@ -176,7 +176,7 @@ export function useMutationScheduleInterview() {
                 { headers: getAuthHeader() }
             );
 
-            if (!data.success) throw new Error(data.error || "Failed to schedule");
+            if (!data.success) throw new Error(data.error || "Gagal menjadwalkan interview");
 
             return data;
         },
@@ -198,7 +198,7 @@ export function useQueryHiredEmployees(enabled = true) {
                 headers: getAuthHeader(),
             });
 
-            if (!data.success) throw new Error("Failed to fetch hired employees");
+            if (!data.success) throw new Error("Gagal memuat data karyawan");
 
             return data.data;
         },
@@ -218,7 +218,7 @@ export function useMutationSaveRecruiterProfile() {
                 { headers: { ...getAuthHeader(), "Content-Type": "application/json" } }
             );
 
-            if (!data.success) throw new Error(data.error || "Failed to save profile");
+            if (!data.success) throw new Error(data.error || "Gagal menyimpan profil");
 
             return data;
         },
@@ -241,7 +241,7 @@ export function useMutationSubmitForVerification() {
                 { headers: getAuthHeader() }
             );
 
-            if (!data.success) throw new Error(data.error || "Failed to submit");
+            if (!data.success) throw new Error(data.error || "Gagal mengajukan verifikasi");
 
             return data;
         },
@@ -263,7 +263,7 @@ export function useMutationPostJob() {
                 { headers: getAuthHeader() }
             );
 
-            if (!data.success) throw new Error(data.error || "Failed to post job");
+            if (!data.success) throw new Error(data.error || "Gagal memposting lowongan");
 
             return data;
         },
@@ -286,7 +286,7 @@ export function useMutationUpdateJob() {
                 { headers: getAuthHeader() }
             );
 
-            if (!data.success) throw new Error(data.error || "Failed to update job");
+            if (!data.success) throw new Error(data.error || "Gagal memperbarui lowongan");
 
             return data;
         },

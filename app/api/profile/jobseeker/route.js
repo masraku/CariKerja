@@ -560,7 +560,9 @@ export async function GET(request) {
       // Override isEmployed and isLookingForJob based on active contract
       isEmployed: hasActiveContract,
       isLookingForJob: !hasActiveContract,
-      employedCompany: employedCompanyName || profile.employedCompany,
+      // Only show company and position info if actively employed
+      employedCompany: hasActiveContract ? (employedCompanyName || profile.employedCompany) : null,
+      currentTitle: hasActiveContract ? profile.currentTitle : null,
       skills: profile.jobseeker_skills.map(js => ({
         id: js.id,
         name: js.skills.name,

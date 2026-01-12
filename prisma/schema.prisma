@@ -639,6 +639,7 @@ model contract_workers {
   status                 ContractWorkerStatus @default(ACTIVE)
   terminatedAt           DateTime?
   terminationReason      String?
+  terminatedBy           String?              // "RECRUITER" or "ADMIN" or recruiter name
   attachmentUrl          String?
   notes                  String?
   createdAt              DateTime             @default(now())

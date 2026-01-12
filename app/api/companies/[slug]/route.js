@@ -79,7 +79,7 @@ export async function GET(request, { params }) {
 
     if (!company) {
       return NextResponse.json(
-        { error: 'Company not found' },
+        { error: 'Perusahaan tidak ditemukan' },
         { status: 404 }
       )
     }
@@ -125,7 +125,7 @@ export async function GET(request, { params }) {
   } catch (error) {
     return NextResponse.json(
       { 
-        error: 'Failed to fetch company details',
+        error: 'Gagal memuat detail perusahaan',
         details: process.env.NODE_ENV === 'development' ? error.message : undefined
       },
       { status: 500 }

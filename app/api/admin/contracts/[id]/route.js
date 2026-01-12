@@ -118,7 +118,8 @@ export async function PATCH(request, { params }) {
 
     if (contract.status !== 'PENDING') {
       return NextResponse.json({ 
-        error: 'Contract registration has already been processed' 
+        error: `Pendaftaran kontrak sudah diproses sebelumnya (status: ${contract.status})`,
+        currentStatus: contract.status
       }, { status: 400 })
     }
 

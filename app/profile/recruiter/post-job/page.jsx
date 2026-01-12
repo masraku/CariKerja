@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import axios from "axios";
 import {
   Briefcase,
   MapPin,
@@ -49,17 +50,9 @@ export default function PostJobPage() {
         return;
       }
 
-      const response = await fetch("/api/profile/recruiter", {
+      const { data } = await axios.get("/api/profile/recruiter", {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setBlockReason("error");
-        setIsCheckingVerification(false);
-        return;
-      }
 
       const profile = data.profile;
 
@@ -327,44 +320,23 @@ export default function PostJobPage() {
             parseInt(formData.femalePositions || 0) || 1,
       };
 
-      const response = await fetch("/api/profile/recruiter/jobs/create", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(submitData),
-      });
-      const data = await response.json();
-
-      if (response.ok) {
-        await Swal.fire({
-          icon: "success",
-          title: "Berhasil Diajukan!",
-          text: "Lowongan berhasil diajukan dan menunggu validasi admin sebelum dipublikasikan.",
-          confirmButtonColor: "#2563EB",
-        });
-        router.push("/profile/recruiter/dashboard");
-      } else {
-        if (response.status === 401) {
-          Swal.fire({
-            icon: "error",
-            title: "Session Expired",
-            text: "Sesi Anda telah berakhir. Silakan login kembali.",
-            confirmButtonColor: "#2563EB",
-          }).then(() => {
-            localStorage.removeItem("token");
-            router.push("/login?role=recruiter");
-          });
-        } else {
-          Swal.fire({
-            icon: "error",
-            title: "Gagal!",
-            text: data.error || "Gagal mempublikasikan lowongan",
-            confirmButtonColor: "#2563EB",
-          });
+      const { data } = await axios.post(
+        "/api/profile/recruiter/jobs/create",
+        submitData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      }
+      );
+
+      await Swal.fire({
+        icon: "success",
+        title: "Berhasil Diajukan!",
+        text: "Lowongan berhasil diajukan dan menunggu validasi admin sebelum dipublikasikan.",
+        confirmButtonColor: "#2563EB",
+      });
+      router.push("/profile/recruiter/dashboard");
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -990,7 +962,7 @@ export default function PostJobPage() {
 
                           // Show loading
                           Swal.fire({
-                            title: "Uploading...",
+                            title: "Mengunggah...",
                             text: "Sedang mengupload foto",
                             allowOutsideClick: false,
                             didOpen: () => Swal.showLoading(),
@@ -1001,19 +973,19 @@ export default function PostJobPage() {
                             formDataUpload.append("file", file);
                             formDataUpload.append("folder", "jobs");
 
-                            const response = await fetch("/api/upload", {
-                              method: "POST",
-                              headers: {
-                                Authorization: `Bearer ${localStorage.getItem(
-                                  "token"
-                                )}`,
-                              },
-                              body: formDataUpload,
-                            });
+                            const { data } = await axios.post(
+                              "/api/upload",
+                              formDataUpload,
+                              {
+                                headers: {
+                                  Authorization: `Bearer ${localStorage.getItem(
+                                    "token"
+                                  )}`,
+                                },
+                              }
+                            );
 
-                            const data = await response.json();
-
-                            if (response.ok && data.url) {
+                            if (data.url) {
                               setFormData((prev) => {
                                 const newGallery = [
                                   ...(prev.gallery || []),
@@ -1212,7 +1184,15 @@ export default function PostJobPage() {
                       Hari Kerja
                     </label>
                     <div className="flex flex-wrap gap-2">
-                      {["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"].map((day) => (
+                      {[
+                        "Senin",
+                        "Selasa",
+                        "Rabu",
+                        "Kamis",
+                        "Jumat",
+                        "Sabtu",
+                        "Minggu",
+                      ].map((day) => (
                         <label
                           key={day}
                           className={`flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-all ${
@@ -1229,12 +1209,16 @@ export default function PostJobPage() {
                                 setFormData((prev) => ({
                                   ...prev,
                                   workingDays: [...prev.workingDays, day],
-                                  holidays: prev.holidays.filter((d) => d !== day),
+                                  holidays: prev.holidays.filter(
+                                    (d) => d !== day
+                                  ),
                                 }));
                               } else {
                                 setFormData((prev) => ({
                                   ...prev,
-                                  workingDays: prev.workingDays.filter((d) => d !== day),
+                                  workingDays: prev.workingDays.filter(
+                                    (d) => d !== day
+                                  ),
                                 }));
                               }
                             }}
@@ -1250,7 +1234,15 @@ export default function PostJobPage() {
                       Hari Libur
                     </label>
                     <div className="flex flex-wrap gap-2">
-                      {["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"].map((day) => (
+                      {[
+                        "Senin",
+                        "Selasa",
+                        "Rabu",
+                        "Kamis",
+                        "Jumat",
+                        "Sabtu",
+                        "Minggu",
+                      ].map((day) => (
                         <label
                           key={day}
                           className={`flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-all ${
@@ -1267,12 +1259,16 @@ export default function PostJobPage() {
                                 setFormData((prev) => ({
                                   ...prev,
                                   holidays: [...prev.holidays, day],
-                                  workingDays: prev.workingDays.filter((d) => d !== day),
+                                  workingDays: prev.workingDays.filter(
+                                    (d) => d !== day
+                                  ),
                                 }));
                               } else {
                                 setFormData((prev) => ({
                                   ...prev,
-                                  holidays: prev.holidays.filter((d) => d !== day),
+                                  holidays: prev.holidays.filter(
+                                    (d) => d !== day
+                                  ),
                                 }));
                               }
                             }}

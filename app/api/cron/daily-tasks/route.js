@@ -10,7 +10,7 @@ export async function GET(request) {
     if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
       // Allow in development or if no secret is set
       if (process.env.NODE_ENV === 'production' && process.env.CRON_SECRET) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        return NextResponse.json({ error: 'Tidak memiliki akses' }, { status: 401 })
       }
     }
 
@@ -95,7 +95,7 @@ export async function GET(request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Daily tasks completed successfully',
+      message: 'Tugas harian berhasil diselesaikan',
       results,
       executedAt: now.toISOString()
     })
@@ -104,7 +104,7 @@ export async function GET(request) {
     console.error('Daily tasks cron error:', error)
     return NextResponse.json({
       success: false,
-      error: 'Failed to run daily tasks',
+      error: 'Gagal menjalankan tugas harian',
       details: error.message
     }, { status: 500 })
   }

@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
+import axios from "axios";
 import {
   ArrowLeft,
   Users,
@@ -73,16 +74,16 @@ export default function ContractRegistrationPage() {
 
       // Load accepted applicants and registered workers
       const [applicantsRes, contractsRes] = await Promise.all([
-        fetch("/api/contracts/accepted-applicants", {
+        axios.get("/api/contracts/accepted-applicants", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch("/api/contracts", {
+        axios.get("/api/contracts", {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
 
-      const applicantsData = await applicantsRes.json();
-      const contractsData = await contractsRes.json();
+      const applicantsData = applicantsRes.data;
+      const contractsData = contractsRes.data;
 
       if (applicantsData.success) {
         setAcceptedApplicants(applicantsData.acceptedApplicants || []);
@@ -144,8 +145,8 @@ export default function ContractRegistrationPage() {
       input: "textarea",
       inputPlaceholder: "Alasan pengakhiran kontrak (opsional)...",
       inputAttributes: {
-        "aria-label": "Alasan pengakhiran"
-      }
+        "aria-label": "Alasan pengakhiran",
+      },
     });
 
     if (result.isConfirmed) {
@@ -153,19 +154,18 @@ export default function ContractRegistrationPage() {
         setTerminatingId(worker.id);
         const token = localStorage.getItem("token");
 
-        const response = await fetch("/api/contracts/terminate", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
+        const { data } = await axios.post(
+          "/api/contracts/terminate",
+          {
             workerId: worker.id,
-            reason: result.value || "Diakhiri oleh recruiter"
-          }),
-        });
-
-        const data = await response.json();
+            reason: result.value || "Diakhiri oleh recruiter",
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (data.success) {
           Swal.fire({
@@ -208,16 +208,15 @@ export default function ContractRegistrationPage() {
       try {
         setResubmittingId(contract.id);
         const token = localStorage.getItem("token");
-        const response = await fetch("/api/contracts/resubmit", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ contractId: contract.id }),
-        });
-
-        const data = await response.json();
+        const { data } = await axios.post(
+          "/api/contracts/resubmit",
+          { contractId: contract.id },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (data.success) {
           Swal.fire({
@@ -253,14 +252,14 @@ export default function ContractRegistrationPage() {
     return new Date(date).toLocaleDateString("id-ID", {
       day: "numeric",
       month: "long",
-      year: "numeric"
+      year: "numeric",
     });
   };
 
   const getWorkerStatusBadge = (worker) => {
     const now = new Date();
     const endDate = new Date(worker.endDate);
-    
+
     if (worker.status === "TERMINATED") {
       return { text: "Diakhiri", color: "bg-red-100 text-red-700" };
     }
@@ -322,19 +321,16 @@ export default function ContractRegistrationPage() {
         uploadFormData.append("bucket", "Lowongan");
         uploadFormData.append("folder", "contracts");
 
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
+        const uploadRes = await axios.post("/api/upload", uploadFormData, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          body: uploadFormData,
         });
 
-        const uploadData = await uploadRes.json();
-        if (!uploadData.success) {
-          throw new Error(uploadData.error || "Gagal mengupload lampiran");
+        if (!uploadRes.data.success) {
+          throw new Error(uploadRes.data.error || "Gagal mengupload lampiran");
         }
-        uploadedFileUrl = uploadData.url;
+        uploadedFileUrl = uploadRes.data.url;
       }
 
       // Prepare workers data (without attachmentUrl, it's now at registration level)
@@ -351,19 +347,18 @@ export default function ContractRegistrationPage() {
         };
       });
 
-      const response = await fetch("/api/contracts", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ 
+      const { data } = await axios.post(
+        "/api/contracts",
+        {
           workers,
-          recruiterDocUrl: uploadedFileUrl // Document at registration level
-        }),
-      });
-
-      const data = await response.json();
+          recruiterDocUrl: uploadedFileUrl, // Document at registration level
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (data.success) {
         Swal.fire({
@@ -691,7 +686,9 @@ export default function ContractRegistrationPage() {
                           </h3>
                           <p className="text-sm text-gray-500">
                             {contract.workers?.length || 0} pekerja • Ditolak{" "}
-                            {new Date(contract.updatedAt).toLocaleDateString("id-ID")}
+                            {new Date(contract.updatedAt).toLocaleDateString(
+                              "id-ID"
+                            )}
                           </p>
                         </div>
                       </div>
@@ -704,8 +701,12 @@ export default function ContractRegistrationPage() {
                     {/* Admin Rejection Notes */}
                     {contract.adminNotes && (
                       <div className="mb-4 p-4 bg-red-50 rounded-lg border border-red-200">
-                        <p className="text-xs text-red-600 font-medium mb-1">Alasan Penolakan:</p>
-                        <p className="text-sm text-red-800">{contract.adminNotes}</p>
+                        <p className="text-xs text-red-600 font-medium mb-1">
+                          Alasan Penolakan:
+                        </p>
+                        <p className="text-sm text-red-800">
+                          {contract.adminNotes}
+                        </p>
                       </div>
                     )}
 
@@ -715,10 +716,14 @@ export default function ContractRegistrationPage() {
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4 text-gray-500" />
                           <div>
-                            <p className="text-xs text-gray-500">Periode Kontrak</p>
+                            <p className="text-xs text-gray-500">
+                              Periode Kontrak
+                            </p>
                             <p className="text-sm font-medium text-gray-900">
                               {contract.workers[0].startDate
-                                ? new Date(contract.workers[0].startDate).toLocaleDateString("id-ID", {
+                                ? new Date(
+                                    contract.workers[0].startDate
+                                  ).toLocaleDateString("id-ID", {
                                     day: "numeric",
                                     month: "short",
                                     year: "numeric",
@@ -726,7 +731,9 @@ export default function ContractRegistrationPage() {
                                 : "-"}{" "}
                               -{" "}
                               {contract.workers[0].endDate
-                                ? new Date(contract.workers[0].endDate).toLocaleDateString("id-ID", {
+                                ? new Date(
+                                    contract.workers[0].endDate
+                                  ).toLocaleDateString("id-ID", {
                                     day: "numeric",
                                     month: "short",
                                     year: "numeric",
@@ -741,7 +748,9 @@ export default function ContractRegistrationPage() {
                             <p className="text-xs text-gray-500">Gaji/Bulan</p>
                             <p className="text-sm font-medium text-gray-900">
                               {contract.workers[0].salary
-                                ? `Rp ${Number(contract.workers[0].salary).toLocaleString("id-ID")}`
+                                ? `Rp ${Number(
+                                    contract.workers[0].salary
+                                  ).toLocaleString("id-ID")}`
                                 : "-"}
                             </p>
                           </div>
@@ -749,7 +758,9 @@ export default function ContractRegistrationPage() {
                         <div className="flex items-center gap-2">
                           <Users className="w-4 h-4 text-gray-500" />
                           <div>
-                            <p className="text-xs text-gray-500">Jumlah Pekerja</p>
+                            <p className="text-xs text-gray-500">
+                              Jumlah Pekerja
+                            </p>
                             <p className="text-sm font-medium text-gray-900">
                               {contract.workers?.length || 0} orang
                             </p>
@@ -760,22 +771,34 @@ export default function ContractRegistrationPage() {
 
                     {/* Worker list */}
                     <div className="border-t border-gray-100 pt-4">
-                      <p className="text-xs text-gray-500 mb-2 font-medium">DAFTAR PEKERJA:</p>
+                      <p className="text-xs text-gray-500 mb-2 font-medium">
+                        DAFTAR PEKERJA:
+                      </p>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
                         {contract.workers?.map((worker) => (
-                          <div key={worker.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                          <div
+                            key={worker.id}
+                            className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg"
+                          >
                             <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500 overflow-hidden">
                               {worker.jobseekers?.photo ? (
-                                <img src={worker.jobseekers.photo} className="w-full h-full object-cover" alt="" />
+                                <img
+                                  src={worker.jobseekers.photo}
+                                  className="w-full h-full object-cover"
+                                  alt=""
+                                />
                               ) : (
                                 worker.jobseekers?.firstName?.charAt(0) || "U"
                               )}
                             </div>
                             <div className="overflow-hidden">
                               <p className="text-sm font-medium text-gray-900 truncate">
-                                {worker.jobseekers?.firstName} {worker.jobseekers?.lastName}
+                                {worker.jobseekers?.firstName}{" "}
+                                {worker.jobseekers?.lastName}
                               </p>
-                              <p className="text-xs text-gray-500 truncate">{worker.jobTitle}</p>
+                              <p className="text-xs text-gray-500 truncate">
+                                {worker.jobTitle}
+                              </p>
                             </div>
                           </div>
                         ))}
@@ -840,10 +863,14 @@ export default function ContractRegistrationPage() {
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4 text-yellow-600" />
                           <div>
-                            <p className="text-xs text-gray-500">Periode Kontrak</p>
+                            <p className="text-xs text-gray-500">
+                              Periode Kontrak
+                            </p>
                             <p className="text-sm font-medium text-gray-900">
                               {contract.workers[0].startDate
-                                ? new Date(contract.workers[0].startDate).toLocaleDateString("id-ID", {
+                                ? new Date(
+                                    contract.workers[0].startDate
+                                  ).toLocaleDateString("id-ID", {
                                     day: "numeric",
                                     month: "short",
                                     year: "numeric",
@@ -851,7 +878,9 @@ export default function ContractRegistrationPage() {
                                 : "-"}{" "}
                               -{" "}
                               {contract.workers[0].endDate
-                                ? new Date(contract.workers[0].endDate).toLocaleDateString("id-ID", {
+                                ? new Date(
+                                    contract.workers[0].endDate
+                                  ).toLocaleDateString("id-ID", {
                                     day: "numeric",
                                     month: "short",
                                     year: "numeric",
@@ -866,7 +895,9 @@ export default function ContractRegistrationPage() {
                             <p className="text-xs text-gray-500">Gaji/Bulan</p>
                             <p className="text-sm font-medium text-gray-900">
                               {contract.workers[0].salary
-                                ? `Rp ${Number(contract.workers[0].salary).toLocaleString("id-ID")}`
+                                ? `Rp ${Number(
+                                    contract.workers[0].salary
+                                  ).toLocaleString("id-ID")}`
                                 : "-"}
                             </p>
                           </div>
@@ -877,13 +908,17 @@ export default function ContractRegistrationPage() {
                             <p className="text-xs text-gray-500">Lampiran</p>
                             {contract.recruiterDocUrl ? (
                               <button
-                                onClick={() => setPreviewDocUrl(contract.recruiterDocUrl)}
+                                onClick={() =>
+                                  setPreviewDocUrl(contract.recruiterDocUrl)
+                                }
                                 className="text-sm font-medium text-yellow-700 hover:text-yellow-800 underline"
                               >
                                 Lihat Dokumen
                               </button>
                             ) : (
-                              <p className="text-sm font-medium text-gray-400">Tidak ada</p>
+                              <p className="text-sm font-medium text-gray-400">
+                                Tidak ada
+                              </p>
                             )}
                           </div>
                         </div>
@@ -894,7 +929,9 @@ export default function ContractRegistrationPage() {
                     {contract.notes && (
                       <div className="mb-4 p-3 bg-gray-50 rounded-lg">
                         <p className="text-xs text-gray-500 mb-1">Catatan:</p>
-                        <p className="text-sm text-gray-700">{contract.notes}</p>
+                        <p className="text-sm text-gray-700">
+                          {contract.notes}
+                        </p>
                       </div>
                     )}
 
@@ -974,20 +1011,38 @@ export default function ContractRegistrationPage() {
                       if (!searchQuery) return true;
                       const query = searchQuery.toLowerCase();
                       // Search in batch index
-                      const batchMatch = `batch ${registeredWorkers.indexOf(contract) + 1}`.includes(query);
+                      const batchMatch = `batch ${
+                        registeredWorkers.indexOf(contract) + 1
+                      }`.includes(query);
                       // Search in worker names and job titles
                       const workerMatch = contract.workers?.some(
                         (w) =>
-                          `${w.jobseekers?.firstName} ${w.jobseekers?.lastName}`.toLowerCase().includes(query) ||
+                          `${w.jobseekers?.firstName} ${w.jobseekers?.lastName}`
+                            .toLowerCase()
+                            .includes(query) ||
                           w.jobTitle?.toLowerCase().includes(query)
                       );
                       return batchMatch || workerMatch;
                     })
                     .map((contract, index) => {
-                      const activeWorkers = contract.workers?.filter(w => w.status === "ACTIVE" && new Date(w.endDate) >= new Date()).length || 0;
+                      const activeWorkers =
+                        contract.workers?.filter(
+                          (w) =>
+                            w.status === "ACTIVE" &&
+                            new Date(w.endDate) >= new Date()
+                        ).length || 0;
                       const totalWorkers = contract.workers?.length || 0;
-                      const completedWorkers = contract.workers?.filter(w => w.status === "COMPLETED" || (w.status === "ACTIVE" && new Date(w.endDate) < new Date())).length || 0;
-                      const terminatedWorkers = contract.workers?.filter(w => w.status === "TERMINATED").length || 0;
+                      const completedWorkers =
+                        contract.workers?.filter(
+                          (w) =>
+                            w.status === "COMPLETED" ||
+                            (w.status === "ACTIVE" &&
+                              new Date(w.endDate) < new Date())
+                        ).length || 0;
+                      const terminatedWorkers =
+                        contract.workers?.filter(
+                          (w) => w.status === "TERMINATED"
+                        ).length || 0;
 
                       return (
                         <div
@@ -1001,10 +1056,14 @@ export default function ContractRegistrationPage() {
                               </div>
                               <div>
                                 <h3 className="font-bold text-gray-900">
-                                  Batch Kontrak #{registeredWorkers.indexOf(contract) + 1}
+                                  Batch Kontrak #
+                                  {registeredWorkers.indexOf(contract) + 1}
                                 </h3>
                                 <p className="text-sm text-gray-500">
-                                  Disetujui {new Date(contract.updatedAt || contract.createdAt).toLocaleDateString("id-ID")}
+                                  Disetujui{" "}
+                                  {new Date(
+                                    contract.updatedAt || contract.createdAt
+                                  ).toLocaleDateString("id-ID")}
                                 </p>
                               </div>
                             </div>
@@ -1017,22 +1076,30 @@ export default function ContractRegistrationPage() {
                           {/* Stats */}
                           <div className="grid grid-cols-3 gap-2 mb-4">
                             <div className="bg-green-50 rounded-lg p-2 text-center">
-                              <p className="text-lg font-bold text-green-600">{activeWorkers}</p>
+                              <p className="text-lg font-bold text-green-600">
+                                {activeWorkers}
+                              </p>
                               <p className="text-xs text-green-700">Aktif</p>
                             </div>
                             <div className="bg-gray-50 rounded-lg p-2 text-center">
-                              <p className="text-lg font-bold text-gray-600">{completedWorkers}</p>
+                              <p className="text-lg font-bold text-gray-600">
+                                {completedWorkers}
+                              </p>
                               <p className="text-xs text-gray-600">Selesai</p>
                             </div>
                             <div className="bg-red-50 rounded-lg p-2 text-center">
-                              <p className="text-lg font-bold text-red-600">{terminatedWorkers}</p>
+                              <p className="text-lg font-bold text-red-600">
+                                {terminatedWorkers}
+                              </p>
                               <p className="text-xs text-red-600">Diakhiri</p>
                             </div>
                           </div>
 
                           {/* Worker Names Preview */}
                           <div className="mb-4">
-                            <p className="text-xs text-gray-500 mb-2">Pekerja:</p>
+                            <p className="text-xs text-gray-500 mb-2">
+                              Pekerja:
+                            </p>
                             <div className="flex flex-wrap gap-1">
                               {contract.workers?.slice(0, 3).map((worker) => (
                                 <span
@@ -1040,7 +1107,8 @@ export default function ContractRegistrationPage() {
                                   className={`px-2 py-1 rounded-full text-xs ${
                                     worker.status === "TERMINATED"
                                       ? "bg-red-100 text-red-700"
-                                      : worker.status === "COMPLETED" || new Date(worker.endDate) < new Date()
+                                      : worker.status === "COMPLETED" ||
+                                        new Date(worker.endDate) < new Date()
                                       ? "bg-gray-100 text-gray-600"
                                       : "bg-green-100 text-green-700"
                                   }`}
@@ -1067,7 +1135,9 @@ export default function ContractRegistrationPage() {
                             </button>
                             {contract.adminResponseDocUrl && (
                               <button
-                                onClick={() => setPreviewDocUrl(contract.adminResponseDocUrl)}
+                                onClick={() =>
+                                  setPreviewDocUrl(contract.adminResponseDocUrl)
+                                }
                                 className="px-4 py-2 bg-amber-50 text-amber-600 rounded-lg font-medium hover:bg-amber-100 transition flex items-center gap-2"
                               >
                                 <FileText className="w-4 h-4" />
@@ -1080,21 +1150,28 @@ export default function ContractRegistrationPage() {
                 </div>
 
                 {/* No results */}
-                {searchQuery && registeredWorkers.filter((contract) => {
-                  const query = searchQuery.toLowerCase();
-                  const batchMatch = `batch ${registeredWorkers.indexOf(contract) + 1}`.includes(query);
-                  const workerMatch = contract.workers?.some(
-                    (w) =>
-                      `${w.jobseekers?.firstName} ${w.jobseekers?.lastName}`.toLowerCase().includes(query) ||
-                      w.jobTitle?.toLowerCase().includes(query)
-                  );
-                  return batchMatch || workerMatch;
-                }).length === 0 && (
-                  <div className="bg-white rounded-xl shadow-sm p-8 text-center mt-4">
-                    <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-600">Tidak ada hasil untuk "{searchQuery}"</p>
-                  </div>
-                )}
+                {searchQuery &&
+                  registeredWorkers.filter((contract) => {
+                    const query = searchQuery.toLowerCase();
+                    const batchMatch = `batch ${
+                      registeredWorkers.indexOf(contract) + 1
+                    }`.includes(query);
+                    const workerMatch = contract.workers?.some(
+                      (w) =>
+                        `${w.jobseekers?.firstName} ${w.jobseekers?.lastName}`
+                          .toLowerCase()
+                          .includes(query) ||
+                        w.jobTitle?.toLowerCase().includes(query)
+                    );
+                    return batchMatch || workerMatch;
+                  }).length === 0 && (
+                    <div className="bg-white rounded-xl shadow-sm p-8 text-center mt-4">
+                      <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-600">
+                        Tidak ada hasil untuk "{searchQuery}"
+                      </p>
+                    </div>
+                  )}
               </>
             )}
           </>
@@ -1344,7 +1421,8 @@ export default function ContractRegistrationPage() {
                   Dokumen Pengantar / Lampiran
                 </label>
                 <p className="text-xs text-gray-500 mb-2">
-                  Upload surat pengantar atau dokumen pendukung pendaftaran kontrak
+                  Upload surat pengantar atau dokumen pendukung pendaftaran
+                  kontrak
                 </p>
                 <div className="relative">
                   <input
@@ -1426,7 +1504,7 @@ export default function ContractRegistrationPage() {
               </button>
             </div>
             <div className="flex-1 overflow-auto p-4 bg-gray-50">
-              {previewDocUrl.toLowerCase().endsWith('.pdf') ? (
+              {previewDocUrl.toLowerCase().endsWith(".pdf") ? (
                 <iframe
                   src={previewDocUrl}
                   className="w-full h-[70vh] rounded-lg border border-gray-200"
@@ -1489,7 +1567,9 @@ export default function ContractRegistrationPage() {
                       alt=""
                     />
                   ) : (
-                    selectedWorkerDetail.worker.jobseekers?.firstName?.charAt(0) || "U"
+                    selectedWorkerDetail.worker.jobseekers?.firstName?.charAt(
+                      0
+                    ) || "U"
                   )}
                 </div>
                 <div>
@@ -1497,8 +1577,14 @@ export default function ContractRegistrationPage() {
                     {selectedWorkerDetail.worker.jobseekers?.firstName}{" "}
                     {selectedWorkerDetail.worker.jobseekers?.lastName}
                   </h4>
-                  <p className="text-gray-600">{selectedWorkerDetail.worker.jobTitle}</p>
-                  <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium ${getWorkerStatusBadge(selectedWorkerDetail.worker).color}`}>
+                  <p className="text-gray-600">
+                    {selectedWorkerDetail.worker.jobTitle}
+                  </p>
+                  <span
+                    className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium ${
+                      getWorkerStatusBadge(selectedWorkerDetail.worker).color
+                    }`}
+                  >
                     {getWorkerStatusBadge(selectedWorkerDetail.worker).text}
                   </span>
                 </div>
@@ -1506,7 +1592,9 @@ export default function ContractRegistrationPage() {
 
               {/* Contact Info */}
               <div className="bg-gray-50 rounded-xl p-4 mb-4">
-                <h5 className="font-semibold text-gray-900 mb-3 text-sm">Informasi Kontak</h5>
+                <h5 className="font-semibold text-gray-900 mb-3 text-sm">
+                  Informasi Kontak
+                </h5>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center gap-2">
                     <Mail className="w-4 h-4 text-gray-400" />
@@ -1525,12 +1613,15 @@ export default function ContractRegistrationPage() {
 
               {/* Contract Details */}
               <div className="bg-green-50 rounded-xl p-4 mb-4 border border-green-200">
-                <h5 className="font-semibold text-gray-900 mb-3 text-sm">Detail Kontrak</h5>
+                <h5 className="font-semibold text-gray-900 mb-3 text-sm">
+                  Detail Kontrak
+                </h5>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-xs text-gray-500">Periode Kontrak</p>
                     <p className="font-medium text-gray-900">
-                      {formatDate(selectedWorkerDetail.worker.startDate)} - {formatDate(selectedWorkerDetail.worker.endDate)}
+                      {formatDate(selectedWorkerDetail.worker.startDate)} -{" "}
+                      {formatDate(selectedWorkerDetail.worker.endDate)}
                     </p>
                   </div>
                   <div>
@@ -1553,18 +1644,32 @@ export default function ContractRegistrationPage() {
                   </div>
                 </div>
                 {selectedWorkerDetail.worker.terminatedAt && (
-                  <div className="mt-3 pt-3 border-t border-green-200">
-                    <p className="text-xs text-gray-500">Tanggal Diakhiri</p>
-                    <p className="font-medium text-red-600">
-                      {formatDate(selectedWorkerDetail.worker.terminatedAt)}
-                    </p>
+                  <div className="mt-3 pt-3 border-t border-red-200 bg-red-50 rounded-lg p-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-xs text-gray-500">
+                          Tanggal Diakhiri
+                        </p>
+                        <p className="font-medium text-red-600">
+                          {formatDate(selectedWorkerDetail.worker.terminatedAt)}
+                        </p>
+                      </div>
+                      {selectedWorkerDetail.worker.terminatedBy && (
+                        <div>
+                          <p className="text-xs text-gray-500">Diakhiri Oleh</p>
+                          <p className="font-medium text-red-600">
+                            {selectedWorkerDetail.worker.terminatedBy}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                     {selectedWorkerDetail.worker.terminationReason && (
-                      <>
-                        <p className="text-xs text-gray-500 mt-2">Alasan</p>
+                      <div className="mt-2">
+                        <p className="text-xs text-gray-500">Alasan</p>
                         <p className="text-sm text-red-600">
                           {selectedWorkerDetail.worker.terminationReason}
                         </p>
-                      </>
+                      </div>
                     )}
                   </div>
                 )}
@@ -1573,20 +1678,28 @@ export default function ContractRegistrationPage() {
               {/* Admin Notes */}
               {selectedWorkerDetail.contract.adminNotes && (
                 <div className="bg-blue-50 rounded-xl p-4 mb-4 border border-blue-200">
-                  <h5 className="font-semibold text-gray-900 mb-2 text-sm">Catatan Admin</h5>
-                  <p className="text-sm text-gray-700">{selectedWorkerDetail.contract.adminNotes}</p>
+                  <h5 className="font-semibold text-gray-900 mb-2 text-sm">
+                    Catatan Admin
+                  </h5>
+                  <p className="text-sm text-gray-700">
+                    {selectedWorkerDetail.contract.adminNotes}
+                  </p>
                 </div>
               )}
 
               {/* Documents */}
               <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
-                <h5 className="font-semibold text-gray-900 mb-3 text-sm">Dokumen</h5>
+                <h5 className="font-semibold text-gray-900 mb-3 text-sm">
+                  Dokumen
+                </h5>
                 <div className="flex flex-wrap gap-2">
                   {selectedWorkerDetail.contract.recruiterDocUrl && (
                     <button
                       onClick={() => {
                         setSelectedWorkerDetail(null);
-                        setPreviewDocUrl(selectedWorkerDetail.contract.recruiterDocUrl);
+                        setPreviewDocUrl(
+                          selectedWorkerDetail.contract.recruiterDocUrl
+                        );
                       }}
                       className="px-3 py-2 bg-white border border-amber-300 text-amber-700 text-sm font-medium rounded-lg hover:bg-amber-100 transition flex items-center gap-2"
                     >
@@ -1598,7 +1711,9 @@ export default function ContractRegistrationPage() {
                     <button
                       onClick={() => {
                         setSelectedWorkerDetail(null);
-                        setPreviewDocUrl(selectedWorkerDetail.contract.adminResponseDocUrl);
+                        setPreviewDocUrl(
+                          selectedWorkerDetail.contract.adminResponseDocUrl
+                        );
                       }}
                       className="px-3 py-2 bg-white border border-green-300 text-green-700 text-sm font-medium rounded-lg hover:bg-green-100 transition flex items-center gap-2"
                     >
@@ -1606,25 +1721,32 @@ export default function ContractRegistrationPage() {
                       Surat Balasan Admin
                     </button>
                   )}
-                  {!selectedWorkerDetail.contract.recruiterDocUrl && !selectedWorkerDetail.contract.adminResponseDocUrl && (
-                    <p className="text-sm text-gray-500 italic">Tidak ada dokumen</p>
-                  )}
+                  {!selectedWorkerDetail.contract.recruiterDocUrl &&
+                    !selectedWorkerDetail.contract.adminResponseDocUrl && (
+                      <p className="text-sm text-gray-500 italic">
+                        Tidak ada dokumen
+                      </p>
+                    )}
                 </div>
               </div>
             </div>
             <div className="p-4 border-t border-gray-200 flex justify-between">
-              {selectedWorkerDetail.worker.status === "ACTIVE" && new Date(selectedWorkerDetail.worker.endDate) >= new Date() && (
-                <button
-                  onClick={() => {
-                    setSelectedWorkerDetail(null);
-                    handleTerminateContract(selectedWorkerDetail.worker, selectedWorkerDetail.contract);
-                  }}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 flex items-center gap-2"
-                >
-                  <StopCircle className="w-4 h-4" />
-                  Akhiri Kontrak
-                </button>
-              )}
+              {selectedWorkerDetail.worker.status === "ACTIVE" &&
+                new Date(selectedWorkerDetail.worker.endDate) >= new Date() && (
+                  <button
+                    onClick={() => {
+                      setSelectedWorkerDetail(null);
+                      handleTerminateContract(
+                        selectedWorkerDetail.worker,
+                        selectedWorkerDetail.contract
+                      );
+                    }}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 flex items-center gap-2"
+                  >
+                    <StopCircle className="w-4 h-4" />
+                    Akhiri Kontrak
+                  </button>
+                )}
               <button
                 onClick={() => setSelectedWorkerDetail(null)}
                 className="px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 ml-auto"
@@ -1644,13 +1766,18 @@ export default function ContractRegistrationPage() {
               <div>
                 <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                   <CheckCircle className="w-5 h-5 text-green-500" />
-                  Detail Batch Kontrak #{registeredWorkers.indexOf(selectedBatchDetail) + 1}
+                  Detail Batch Kontrak #
+                  {registeredWorkers.indexOf(selectedBatchDetail) + 1}
                 </h3>
                 <p className="text-sm text-gray-500">
-                  Disetujui {new Date(selectedBatchDetail.updatedAt || selectedBatchDetail.createdAt).toLocaleDateString("id-ID", {
+                  Disetujui{" "}
+                  {new Date(
+                    selectedBatchDetail.updatedAt ||
+                      selectedBatchDetail.createdAt
+                  ).toLocaleDateString("id-ID", {
                     day: "numeric",
                     month: "long",
-                    year: "numeric"
+                    year: "numeric",
                   })}
                 </p>
               </div>
@@ -1661,29 +1788,42 @@ export default function ContractRegistrationPage() {
                 <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
-            
+
             <div className="flex-1 overflow-auto p-6">
               {/* Stats Summary */}
               <div className="grid grid-cols-4 gap-3 mb-6">
                 <div className="bg-gray-50 rounded-xl p-3 text-center">
-                  <p className="text-2xl font-bold text-gray-900">{selectedBatchDetail.workers?.length || 0}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {selectedBatchDetail.workers?.length || 0}
+                  </p>
                   <p className="text-xs text-gray-500">Total</p>
                 </div>
                 <div className="bg-green-50 rounded-xl p-3 text-center">
                   <p className="text-2xl font-bold text-green-600">
-                    {selectedBatchDetail.workers?.filter(w => w.status === "ACTIVE" && new Date(w.endDate) >= new Date()).length || 0}
+                    {selectedBatchDetail.workers?.filter(
+                      (w) =>
+                        w.status === "ACTIVE" &&
+                        new Date(w.endDate) >= new Date()
+                    ).length || 0}
                   </p>
                   <p className="text-xs text-green-600">Aktif</p>
                 </div>
                 <div className="bg-gray-100 rounded-xl p-3 text-center">
                   <p className="text-2xl font-bold text-gray-600">
-                    {selectedBatchDetail.workers?.filter(w => w.status === "COMPLETED" || (w.status === "ACTIVE" && new Date(w.endDate) < new Date())).length || 0}
+                    {selectedBatchDetail.workers?.filter(
+                      (w) =>
+                        w.status === "COMPLETED" ||
+                        (w.status === "ACTIVE" &&
+                          new Date(w.endDate) < new Date())
+                    ).length || 0}
                   </p>
                   <p className="text-xs text-gray-600">Selesai</p>
                 </div>
                 <div className="bg-red-50 rounded-xl p-3 text-center">
                   <p className="text-2xl font-bold text-red-600">
-                    {selectedBatchDetail.workers?.filter(w => w.status === "TERMINATED").length || 0}
+                    {selectedBatchDetail.workers?.filter(
+                      (w) => w.status === "TERMINATED"
+                    ).length || 0}
                   </p>
                   <p className="text-xs text-red-600">Diakhiri</p>
                 </div>
@@ -1692,8 +1832,12 @@ export default function ContractRegistrationPage() {
               {/* Admin Notes */}
               {selectedBatchDetail.adminNotes && (
                 <div className="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
-                  <p className="text-sm text-blue-600 font-medium mb-1">Catatan Admin:</p>
-                  <p className="text-gray-800">{selectedBatchDetail.adminNotes}</p>
+                  <p className="text-sm text-blue-600 font-medium mb-1">
+                    Catatan Admin:
+                  </p>
+                  <p className="text-gray-800">
+                    {selectedBatchDetail.adminNotes}
+                  </p>
                 </div>
               )}
 
@@ -1734,7 +1878,9 @@ export default function ContractRegistrationPage() {
                 <div className="space-y-3">
                   {selectedBatchDetail.workers?.map((worker) => {
                     const statusBadge = getWorkerStatusBadge(worker);
-                    const isActive = worker.status === "ACTIVE" && new Date(worker.endDate) >= new Date();
+                    const isActive =
+                      worker.status === "ACTIVE" &&
+                      new Date(worker.endDate) >= new Date();
 
                     return (
                       <div
@@ -1742,7 +1888,8 @@ export default function ContractRegistrationPage() {
                         className={`p-4 rounded-xl border ${
                           worker.status === "TERMINATED"
                             ? "bg-red-50 border-red-200"
-                            : worker.status === "COMPLETED" || new Date(worker.endDate) < new Date()
+                            : worker.status === "COMPLETED" ||
+                              new Date(worker.endDate) < new Date()
                             ? "bg-gray-50 border-gray-200"
                             : "bg-green-50 border-green-200"
                         }`}
@@ -1763,17 +1910,23 @@ export default function ContractRegistrationPage() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <p className="font-semibold text-gray-900">
-                                  {worker.jobseekers?.firstName} {worker.jobseekers?.lastName}
+                                  {worker.jobseekers?.firstName}{" "}
+                                  {worker.jobseekers?.lastName}
                                 </p>
-                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusBadge.color}`}>
+                                <span
+                                  className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusBadge.color}`}
+                                >
                                   {statusBadge.text}
                                 </span>
                               </div>
-                              <p className="text-sm text-gray-600">{worker.jobTitle}</p>
+                              <p className="text-sm text-gray-600">
+                                {worker.jobTitle}
+                              </p>
                               <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-gray-500">
                                 <span className="flex items-center gap-1">
                                   <Calendar className="w-3 h-3" />
-                                  {formatDate(worker.startDate)} - {formatDate(worker.endDate)}
+                                  {formatDate(worker.startDate)} -{" "}
+                                  {formatDate(worker.endDate)}
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <DollarSign className="w-3 h-3" />
@@ -1786,9 +1939,11 @@ export default function ContractRegistrationPage() {
                                   </span>
                                 )}
                               </div>
-                              {worker.terminationReason && (
+                              {worker.terminatedAt && (
                                 <p className="text-xs text-red-600 mt-1">
-                                  Alasan: {worker.terminationReason}
+                                  Diakhiri: {formatDate(worker.terminatedAt)}
+                                  {worker.terminationReason &&
+                                    ` - ${worker.terminationReason}`}
                                 </p>
                               )}
                             </div>
@@ -1797,7 +1952,10 @@ export default function ContractRegistrationPage() {
                             <button
                               onClick={() => {
                                 setSelectedBatchDetail(null);
-                                setSelectedWorkerDetail({ worker, contract: selectedBatchDetail });
+                                setSelectedWorkerDetail({
+                                  worker,
+                                  contract: selectedBatchDetail,
+                                });
                               }}
                               className="px-3 py-1.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-lg hover:bg-blue-200 transition flex items-center gap-1"
                             >
@@ -1808,7 +1966,10 @@ export default function ContractRegistrationPage() {
                               <button
                                 onClick={() => {
                                   setSelectedBatchDetail(null);
-                                  handleTerminateContract(worker, selectedBatchDetail);
+                                  handleTerminateContract(
+                                    worker,
+                                    selectedBatchDetail
+                                  );
                                 }}
                                 disabled={terminatingId === worker.id}
                                 className="px-3 py-1.5 bg-red-100 text-red-700 text-xs font-medium rounded-lg hover:bg-red-200 transition flex items-center gap-1 disabled:opacity-50"

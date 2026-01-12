@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 import {
   ArrowLeft,
   Users,
@@ -40,7 +41,7 @@ export default function AllApplicationsPage() {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      const response = await fetch(
+      const { data } = await axios.get(
         "/api/profile/recruiter/dashboard/applications",
         {
           headers: {
@@ -49,19 +50,13 @@ export default function AllApplicationsPage() {
         }
       );
 
-      const data = await response.json();
-
-      if (response.ok) {
-        // Sort by appliedAt date (newest first)
-        const sortedApps = (data.applications || []).sort(
-          (a, b) => new Date(b.appliedAt) - new Date(a.appliedAt)
-        );
-        setApplications(sortedApps);
-        setStats(data.stats || null);
-        setJobs(data.jobs || []);
-      } else {
-        throw new Error(data.error || "Failed to load applications");
-      }
+      // Sort by appliedAt date (newest first)
+      const sortedApps = (data.applications || []).sort(
+        (a, b) => new Date(b.appliedAt) - new Date(a.appliedAt)
+      );
+      setApplications(sortedApps);
+      setStats(data.stats || null);
+      setJobs(data.jobs || []);
     } catch (error) {
       Swal.fire({
         icon: "error",

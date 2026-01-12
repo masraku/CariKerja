@@ -24,7 +24,7 @@ export function useQueryJobseekerApplications({
                 params,
             });
 
-            if (!data.success) throw new Error("Failed to fetch applications");
+            if (!data.success) throw new Error("Gagal memuat daftar lamaran");
 
             return {
                 applications: data.data.applications || [],
@@ -43,13 +43,13 @@ export function useQueryApplicationDetail(id, enabled = true) {
     return useQuery({
         queryKey: [...queryKeyApplicationDetail, id],
         queryFn: async () => {
-            if (!id) throw new Error("No application ID");
+            if (!id) throw new Error("Tidak ada ID lamaran");
 
             const { data } = await axios.get(`/api/applications/${id}`, {
                 headers: getAuthHeader(),
             });
 
-            if (!data.success) throw new Error("Failed to fetch application detail");
+            if (!data.success) throw new Error("Gagal memuat detail lamaran");
 
             return data.data;
         },
@@ -69,7 +69,7 @@ export function useMutationWithdrawApplication() {
                 { headers: getAuthHeader() }
             );
 
-            if (!data.success) throw new Error(data.error || "Failed to withdraw");
+            if (!data.success) throw new Error(data.error || "Gagal menarik lamaran");
 
             return data;
         },
@@ -90,7 +90,7 @@ export function useQueryJobseekerInterviews(enabled = true) {
                 headers: getAuthHeader(),
             });
 
-            if (!data.success) throw new Error("Failed to fetch interviews");
+            if (!data.success) throw new Error("Gagal memuat daftar interview");
 
             return {
                 upcoming: data.data.upcoming || [],
@@ -108,13 +108,13 @@ export function useQueryInterviewDetail(id, enabled = true) {
     return useQuery({
         queryKey: [...queryKeyInterviewDetail, id],
         queryFn: async () => {
-            if (!id) throw new Error("No interview ID");
+            if (!id) throw new Error("Tidak ada ID interview");
 
             const { data } = await axios.get(`/api/interviews/${id}`, {
                 headers: getAuthHeader(),
             });
 
-            if (!data.success) throw new Error("Failed to fetch interview");
+            if (!data.success) throw new Error("Gagal memuat detail interview");
 
             return data.data;
         },
@@ -129,13 +129,13 @@ export function useQueryInterviewRoom(id, enabled = true) {
     return useQuery({
         queryKey: [...queryKeyInterviewRoom, id],
         queryFn: async () => {
-            if (!id) throw new Error("No interview ID");
+            if (!id) throw new Error("Tidak ada ID interview");
 
             const { data } = await axios.get(`/api/interviews/${id}/room`, {
                 headers: getAuthHeader(),
             });
 
-            if (!data.success) throw new Error(data.error || "Failed to fetch interview room");
+            if (!data.success) throw new Error(data.error || "Gagal memuat ruang interview");
 
             return data.data;
         },

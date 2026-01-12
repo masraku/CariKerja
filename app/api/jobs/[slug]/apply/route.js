@@ -16,7 +16,7 @@ export async function POST(request, context) {
 
     if (!token) {
       return NextResponse.json(
-        { error: 'Unauthorized - Please login first' },
+        { error: 'Tidak memiliki akses - Silakan login terlebih dahulu' },
         { status: 401 }
       )
     }
@@ -26,7 +26,7 @@ export async function POST(request, context) {
       decoded = jwt.verify(token.value, JWT_SECRET)
     } catch (jwtError) {
       return NextResponse.json(
-        { error: 'Invalid token' },
+        { error: 'Token tidak valid' },
         { status: 401 }
       )
     }
@@ -41,14 +41,14 @@ export async function POST(request, context) {
 
     if (!user || user.role !== 'JOBSEEKER') {
       return NextResponse.json(
-        { error: 'Only jobseekers can apply for jobs' },
+        { error: 'Hanya pencari kerja yang dapat melamar pekerjaan' },
         { status: 403 }
       )
     }
 
     if (!user.jobseekers) {
       return NextResponse.json(
-        { error: 'Please complete your profile first' },
+        { error: 'Silakan lengkapi profil Anda terlebih dahulu' },
         { status: 400 }
       )
     }
@@ -144,14 +144,14 @@ export async function POST(request, context) {
 
     return NextResponse.json({
       success: true,
-      message: 'Application submitted successfully',
+      message: 'Lamaran berhasil dikirim',
       application
     })
 
   } catch (error) {
     return NextResponse.json(
       { 
-        error: 'Failed to submit application',
+        error: 'Gagal mengirim lamaran',
         details: error.message 
       },
       { status: 500 }

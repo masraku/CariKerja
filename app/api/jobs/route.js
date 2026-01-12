@@ -266,7 +266,7 @@ export async function GET(request) {
     return NextResponse.json(
       { 
         success: false,
-        error: 'Failed to fetch jobs',
+        error: 'Gagal memuat daftar lowongan',
         details: error.message 
       },
       { status: 500 }

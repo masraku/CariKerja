@@ -50,7 +50,7 @@ export async function GET(request, context) {
 
         if (!interview) {
             return NextResponse.json(
-                { error: 'Interview not found' },
+                { error: 'Interview tidak ditemukan' },
                 { status: 404 }
             )
         }
@@ -58,7 +58,7 @@ export async function GET(request, context) {
         // Check if jobseeker is participant
         if (interview.interview_participants.length === 0) {
             return NextResponse.json(
-                { error: 'You are not a participant in this interview' },
+                { error: 'Anda bukan peserta dalam interview ini' },
                 { status: 403 }
             )
         }
@@ -68,7 +68,7 @@ export async function GET(request, context) {
         // Check if participant accepted
         if (participant.status !== 'ACCEPTED') {
             return NextResponse.json(
-                { error: 'You have not accepted this interview invitation' },
+                { error: 'Anda belum menerima undangan interview ini' },
                 { status: 403 }
             )
         }
@@ -117,7 +117,7 @@ export async function GET(request, context) {
 
     } catch (error) {
         return NextResponse.json(
-            { error: 'Failed to get interview room', details: error.message },
+            { error: 'Gagal memuat ruang interview', details: error.message },
             { status: 500 }
         )
     }
@@ -139,7 +139,7 @@ export async function PATCH(request, context) {
 
         if (action !== 'mark_completed') {
             return NextResponse.json(
-                { error: 'Invalid action' },
+                { error: 'Aksi tidak valid' },
                 { status: 400 }
             )
         }
@@ -156,7 +156,7 @@ export async function PATCH(request, context) {
 
         if (!participant) {
             return NextResponse.json(
-                { error: 'Not authorized' },
+                { error: 'Tidak memiliki akses' },
                 { status: 403 }
             )
         }
@@ -171,12 +171,12 @@ export async function PATCH(request, context) {
 
         return NextResponse.json({
             success: true,
-            message: 'Interview marked as completed'
+            message: 'Interview ditandai selesai'
         })
 
     } catch (error) {
         return NextResponse.json(
-            { error: 'Failed to mark interview as completed' },
+            { error: 'Gagal menandai interview selesai' },
             { status: 500 }
         )
     }

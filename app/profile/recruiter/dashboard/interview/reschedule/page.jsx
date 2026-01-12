@@ -2,6 +2,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import axios from "axios";
 import {
   Calendar,
   Clock,
@@ -60,7 +61,7 @@ function RescheduleContent() {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      const response = await fetch(
+      const { data } = await axios.get(
         `/api/profile/recruiter/interviews/${interviewId}`,
         {
           headers: {
@@ -69,42 +70,37 @@ function RescheduleContent() {
         }
       );
 
-      if (response.ok) {
-        const data = await response.json();
-        const interviewData = data.data.interview;
-        const participantsData = data.data.participants;
+      const interviewData = data.data.interview;
+      const participantsData = data.data.participants;
 
-        setInterview(interviewData);
+      setInterview(interviewData);
 
-        // Find the participant who requested reschedule (if any)
-        if (participantId) {
-          const found = participantsData.find((p) => p.id === participantId);
-          setParticipant(found);
-        } else {
-          // Or try to find one with RESCHEDULE_REQUESTED status
-          const found = participantsData.find(
-            (p) => p.status === "RESCHEDULE_REQUESTED"
-          );
-          setParticipant(found);
-        }
-
-        // Parse scheduledAt to date and time
-        const scheduledDate = new Date(interviewData.scheduledAt);
-        const dateStr = scheduledDate.toISOString().split("T")[0];
-        const timeStr = scheduledDate.toTimeString().slice(0, 5);
-
-        setFormData({
-          date: dateStr,
-          time: timeStr,
-          duration: interviewData.duration,
-          meetingType: interviewData.meetingType,
-          meetingUrl: interviewData.meetingUrl || "",
-          location: interviewData.location || "",
-          description: interviewData.description || "",
-        });
+      // Find the participant who requested reschedule (if any)
+      if (participantId) {
+        const found = participantsData.find((p) => p.id === participantId);
+        setParticipant(found);
       } else {
-        throw new Error("Failed to load interview");
+        // Or try to find one with RESCHEDULE_REQUESTED status
+        const found = participantsData.find(
+          (p) => p.status === "RESCHEDULE_REQUESTED"
+        );
+        setParticipant(found);
       }
+
+      // Parse scheduledAt to date and time
+      const scheduledDate = new Date(interviewData.scheduledAt);
+      const dateStr = scheduledDate.toISOString().split("T")[0];
+      const timeStr = scheduledDate.toTimeString().slice(0, 5);
+
+      setFormData({
+        date: dateStr,
+        time: timeStr,
+        duration: interviewData.duration,
+        meetingType: interviewData.meetingType,
+        meetingUrl: interviewData.meetingUrl || "",
+        location: interviewData.location || "",
+        description: interviewData.description || "",
+      });
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -158,37 +154,29 @@ function RescheduleContent() {
       // Combine date and time
       const scheduledAt = new Date(`${formData.date}T${formData.time}`);
 
-      const response = await fetch(
+      const { data } = await axios.patch(
         `/api/profile/recruiter/interviews/${interview.id}/reschedule`,
         {
-          method: "PATCH",
+          scheduledAt: scheduledAt.toISOString(),
+          duration: parseInt(formData.duration),
+          meetingUrl: formData.meetingUrl,
+          description: formData.description,
+          participantId: participant ? participant.id : null,
+        },
+        {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            scheduledAt: scheduledAt.toISOString(),
-            duration: parseInt(formData.duration),
-            meetingUrl: formData.meetingUrl,
-            description: formData.description,
-            participantId: participant ? participant.id : null,
-          }),
         }
       );
 
-      const data = await response.json();
-
-      if (response.ok) {
-        await Swal.fire({
-          icon: "success",
-          title: "Jadwal Diperbarui!",
-          text: "Notifikasi perubahan jadwal telah dikirim ke kandidat.",
-          confirmButtonColor: "#2563EB",
-        });
-        router.push("/profile/recruiter/dashboard/interviews");
-      } else {
-        throw new Error(data.error || "Gagal memperbarui jadwal");
-      }
+      await Swal.fire({
+        icon: "success",
+        title: "Jadwal Diperbarui!",
+        text: "Notifikasi perubahan jadwal telah dikirim ke kandidat.",
+        confirmButtonColor: "#2563EB",
+      });
+      router.push("/profile/recruiter/dashboard/interviews");
     } catch (error) {
       Swal.fire({
         icon: "error",

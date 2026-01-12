@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 import {
   Briefcase,
   Users,
@@ -58,7 +59,7 @@ export default function RecruiterJobsPage() {
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (searchQuery) params.append("search", searchQuery);
 
-      const response = await fetch(
+      const { data } = await axios.get(
         `/api/profile/recruiter/jobs?${params.toString()}`,
         {
           headers: {
@@ -67,13 +68,8 @@ export default function RecruiterJobsPage() {
         }
       );
 
-      if (response.ok) {
-        const data = await response.json();
-        setJobs(data.jobs);
-        setStats(data.stats);
-      } else {
-        throw new Error("Failed to load jobs");
-      }
+      setJobs(data.jobs);
+      setStats(data.stats);
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -103,28 +99,24 @@ export default function RecruiterJobsPage() {
 
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(
+        await axios.post(
           `/api/profile/recruiter/jobs/${slug}/toggle-status`,
+          {},
           {
-            method: "POST",
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
 
-        if (response.ok) {
-          Swal.fire({
-            icon: "success",
-            title: "Berhasil!",
-            text: "Lowongan berhasil dinonaktifkan",
-            timer: 2000,
-            showConfirmButton: false,
-          });
-          loadJobs();
-        } else {
-          throw new Error("Failed to toggle status");
-        }
+        Swal.fire({
+          icon: "success",
+          title: "Berhasil!",
+          text: "Lowongan berhasil dinonaktifkan",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+        loadJobs();
       } catch (error) {
         Swal.fire({
           icon: "error",
@@ -180,25 +172,20 @@ export default function RecruiterJobsPage() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`/api/profile/recruiter/jobs/${slug}`, {
-        method: "DELETE",
+      await axios.delete(`/api/profile/recruiter/jobs/${slug}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      if (response.ok) {
-        Swal.fire({
-          icon: "success",
-          title: "Terhapus!",
-          text: "Lowongan berhasil dihapus",
-          timer: 2000,
-          showConfirmButton: false,
-        });
-        loadJobs();
-      } else {
-        throw new Error("Failed to delete job");
-      }
+      Swal.fire({
+        icon: "success",
+        title: "Terhapus!",
+        text: "Lowongan berhasil dihapus",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+      loadJobs();
     } catch (error) {
       Swal.fire({
         icon: "error",

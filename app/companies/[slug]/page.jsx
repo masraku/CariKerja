@@ -133,9 +133,9 @@ export default function CompanyProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
+    <div className="min-h-screen bg-gray-50 pb-12 overflow-hidden w-full max-w-[100vw]">
       {/* Hero Banner */}
-      <div className="relative h-64 lg:h-80 bg-blue-600 overflow-hidden">
+      <div className="relative h-64 lg:h-80 bg-blue-600 w-full">
         <div className="absolute inset-0 bg-gradient-to-br from-[#03587f] to-[#024666] opacity-90" />
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')] bg-cover bg-center mix-blend-overlay opacity-20" />
 
@@ -150,12 +150,12 @@ export default function CompanyProfilePage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 lg:px-8 relative z-10 -mt-32 pb-12">
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 relative z-10 -mt-32">
         {/* Company Header Card */}
-        <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-6 lg:p-8 mb-8">
-          <div className="flex flex-col lg:flex-row gap-8 items-start">
+        <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-4 lg:p-8 mb-8 w-full">
+          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start w-full">
             {/* Logo */}
-            <div className="w-32 h-32 lg:w-40 lg:h-40 bg-white rounded-2xl shadow-lg border-4 border-white overflow-hidden flex-shrink-0 relative z-10">
+            <div className="w-20 h-20 lg:w-40 lg:h-40 bg-white rounded-2xl shadow-lg border-4 border-white overflow-hidden flex-shrink-0 relative z-10 mx-auto lg:mx-0">
               {company.logo ? (
                 <img
                   src={company.logo}
@@ -164,63 +164,63 @@ export default function CompanyProfilePage() {
                 />
               ) : (
                 <div className="w-full h-full bg-gray-50 flex items-center justify-center">
-                  <Building2 className="w-16 h-16 text-gray-300" />
+                  <Building2 className="w-10 h-10 lg:w-16 lg:h-16 text-gray-300" />
                 </div>
               )}
             </div>
 
             {/* Info */}
-            <div className="flex-1 min-w-0 pt-2">
-              <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
-                <div>
-                  <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+            <div className="flex-1 min-w-0 pt-0 lg:pt-2 w-full">
+              <div className="flex flex-col gap-4 mb-4 text-center lg:text-left">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-2xl lg:text-4xl font-bold text-gray-900 mb-2 leading-tight">
                     {company.name}
                     {company.verified && (
-                      <CheckCircle className="w-6 h-6 text-blue-500 fill-blue-50" />
+                      <CheckCircle className="inline-block w-6 h-6 text-blue-500 fill-blue-50 ml-2 align-text-bottom" />
                     )}
                   </h1>
                   {company.tagline && (
-                    <p className="text-lg text-gray-500">{company.tagline}</p>
+                    <p className="text-base lg:text-lg text-gray-500 break-words">{company.tagline}</p>
                   )}
                 </div>
-                <div className="flex gap-3">
-                  <button className="p-2.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all border border-gray-200 hover:border-blue-200">
-                    <Share2 className="w-5 h-5" />
+                <div className="flex gap-2 justify-center lg:justify-start flex-wrap">
+                  <button className="p-2 sm:p-2.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all border border-gray-200 hover:border-blue-200 flex-1 sm:flex-none justify-center">
+                    <Share2 className="w-4 h-4 sm:w-5 sm:h-5 mx-auto" />
                   </button>
-                  <button className="p-2.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all border border-gray-200 hover:border-red-200">
-                    <Flag className="w-5 h-5" />
+                  <button className="p-2 sm:p-2.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all border border-gray-200 hover:border-red-200 flex-1 sm:flex-none justify-center">
+                    <Flag className="w-4 h-4 sm:w-5 sm:h-5 mx-auto" />
                   </button>
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-y-3 gap-x-6 text-sm text-gray-600 mb-6">
-                <div className="flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-gray-400" />
-                  <span>{company.industry}</span>
+              <div className="flex flex-wrap gap-y-3 gap-x-6 text-sm text-gray-600 mb-6 w-full justify-center lg:justify-start">
+                <div className="flex items-center gap-2 max-w-full">
+                  <Building2 className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <span className="truncate">{company.industry}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-gray-400" />
+                  <Users className="w-4 h-4 text-gray-400 flex-shrink-0" />
                   <span>{company.companySize} karyawan</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-gray-400" />
-                  <span>
+                <div className="flex items-start gap-2 max-w-full">
+                  <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                  <span className="break-words text-left">
                     {company.city}, {company.province}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Briefcase className="w-4 h-4 text-blue-500" />
-                  <span className="font-medium text-blue-600">
+                  <Briefcase className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                  <span className="font-medium text-blue-600 truncate">
                     {company._count.jobs} lowongan aktif
                   </span>
                 </div>
                 {company.averageRatings && (
-                  <div className="flex items-center gap-2 px-2 py-0.5 bg-amber-50 rounded-lg border border-amber-100">
-                    <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                  <div className="flex items-center gap-2 px-2 py-0.5 bg-amber-50 rounded-lg border border-amber-100 max-w-full">
+                    <Star className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />
                     <span className="font-bold text-amber-700">
                       {company.averageRatings.overall}
                     </span>
-                    <span className="text-amber-600">
+                    <span className="text-amber-600 truncate">
                       ({company._count.reviews} reviews)
                     </span>
                   </div>
@@ -228,7 +228,7 @@ export default function CompanyProfilePage() {
               </div>
 
               {/* Social Links */}
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
                 {company.website && (
                   <a
                     href={company.website}
@@ -286,13 +286,12 @@ export default function CompanyProfilePage() {
           </div>
         </div>
 
-        {/* Content Grid */}
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-8 max-w-full">
           {/* Main Column */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-8 min-w-0 max-w-full">
             {/* Tabs */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 sticky top-4 z-30">
-              <div className="flex overflow-x-auto no-scrollbar gap-2">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 sticky top-4 z-30 max-w-full">
+              <div className="flex overflow-x-auto no-scrollbar gap-2 w-full pb-1 touch-pan-x">
                 {[
                   { id: "about", label: "Tentang", icon: Building2 },
                   {
@@ -310,7 +309,7 @@ export default function CompanyProfilePage() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap flex-1 justify-center ${
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 justify-center ${
                       activeTab === tab.id
                         ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
                         : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
@@ -560,35 +559,35 @@ export default function CompanyProfilePage() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-6 min-w-0 max-w-full">
             {/* Company Details Widget */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 w-full overflow-hidden">
               <h3 className="font-bold text-gray-900 mb-6 flex items-center gap-2 pb-4 border-b border-gray-100">
-                <Building2 className="w-5 h-5 text-blue-600" />
+                <Building2 className="w-5 h-5 text-blue-600 flex-shrink-0" />
                 Detail Perusahaan
               </h3>
 
-              <div className="space-y-5 text-sm">
-                <div>
+              <div className="space-y-5 text-sm w-full">
+                <div className="w-full">
                   <p className="text-gray-500 mb-1 text-xs uppercase tracking-wider font-medium">
                     Industri
                   </p>
-                  <p className="font-semibold text-gray-900 text-base">
+                  <p className="font-semibold text-gray-900 text-base break-words">
                     {company.industry}
                   </p>
                 </div>
 
-                <div>
+                <div className="w-full">
                   <p className="text-gray-500 mb-1 text-xs uppercase tracking-wider font-medium">
                     Ukuran Perusahaan
                   </p>
-                  <p className="font-semibold text-gray-900 text-base">
+                  <p className="font-semibold text-gray-900 text-base break-words">
                     {company.companySize} karyawan
                   </p>
                 </div>
 
                 {company.foundedYear && (
-                  <div>
+                  <div className="w-full">
                     <p className="text-gray-500 mb-1 text-xs uppercase tracking-wider font-medium">
                       Tahun Didirikan
                     </p>
@@ -598,11 +597,11 @@ export default function CompanyProfilePage() {
                   </div>
                 )}
 
-                <div>
+                <div className="w-full">
                   <p className="text-gray-500 mb-1 text-xs uppercase tracking-wider font-medium">
                     Lokasi Kantor Pusat
                   </p>
-                  <p className="font-semibold text-gray-900 text-base leading-relaxed">
+                  <p className="font-semibold text-gray-900 text-base leading-relaxed whitespace-pre-wrap break-words w-full">
                     {company.address}
                     <br />
                     {company.city}, {company.province}
@@ -610,31 +609,31 @@ export default function CompanyProfilePage() {
                 </div>
 
                 {company.email && (
-                  <div>
+                  <div className="w-full">
                     <p className="text-gray-500 mb-1 text-xs uppercase tracking-wider font-medium">
                       Email Kontak
                     </p>
                     <a
                       href={`mailto:${company.email}`}
-                      className="font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-2 transition-colors"
+                      className="font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-2 transition-colors break-all w-full"
                     >
-                      <Mail className="w-4 h-4" />
-                      {company.email}
+                      <Mail className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate">{company.email}</span>
                     </a>
                   </div>
                 )}
 
                 {company.phone && (
-                  <div>
+                  <div className="w-full">
                     <p className="text-gray-500 mb-1 text-xs uppercase tracking-wider font-medium">
                       Nomor Telepon
                     </p>
                     <a
                       href={`tel:${company.phone}`}
-                      className="font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-2 transition-colors"
+                      className="font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-2 transition-colors w-full"
                     >
-                      <Phone className="w-4 h-4" />
-                      {company.phone}
+                      <Phone className="w-4 h-4 flex-shrink-0" />
+                      <span className="break-all">{company.phone}</span>
                     </a>
                   </div>
                 )}

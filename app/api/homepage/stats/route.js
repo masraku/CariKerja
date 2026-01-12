@@ -50,7 +50,7 @@ export async function GET() {
     });
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to fetch homepage statistics" },
+      { error: "Gagal memuat statistik" },
       { status: 500 }
     );
   }

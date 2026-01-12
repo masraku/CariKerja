@@ -151,7 +151,7 @@ export default function JobseekerApplicationsPage() {
       description: "Lamaran ditarik",
     },
     RESIGNED: {
-      label: "Resign",
+      label: "Mengundurkan Diri",
       color: "bg-orange-100 text-orange-800",
       icon: AlertCircle,
       description: "Mengundurkan diri",

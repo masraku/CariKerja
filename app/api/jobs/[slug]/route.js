@@ -98,7 +98,7 @@ export async function GET(request, context) {
       return NextResponse.json(
         { 
           success: false,
-          error: 'Job not found' 
+          error: 'Lowongan tidak ditemukan' 
         },
         { status: 404 }
       )
@@ -199,7 +199,7 @@ export async function GET(request, context) {
     return NextResponse.json(
       { 
         success: false,
-        error: 'Failed to fetch job details',
+        error: 'Gagal memuat detail lowongan',
         details: error.message 
       },
       { status: 500 }

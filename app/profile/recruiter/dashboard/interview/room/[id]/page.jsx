@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useParams } from "next/navigation";
+import axios from "axios";
 import {
   Calendar,
   Clock,
@@ -36,7 +37,7 @@ function InterviewRoomContent() {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      const response = await fetch(
+      const { data } = await axios.get(
         `/api/profile/recruiter/interviews/${interviewId}`,
         {
           headers: {
@@ -45,13 +46,8 @@ function InterviewRoomContent() {
         }
       );
 
-      if (response.ok) {
-        const data = await response.json();
-        setInterview(data.data.interview);
-        setParticipants(data.data.participants);
-      } else {
-        throw new Error("Failed to load interview");
-      }
+      setInterview(data.data.interview);
+      setParticipants(data.data.participants);
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -88,48 +84,30 @@ function InterviewRoomContent() {
         setCompleting(true);
         const token = localStorage.getItem("token");
 
-        const response = await fetch(
+        const { data } = await axios.patch(
           `/api/profile/recruiter/interviews/${id}/complete`,
+          { participantId: participantId || null },
           {
-            method: "PATCH",
             headers: {
               Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
             },
-            body: JSON.stringify({ participantId: participantId || null }),
           }
         );
 
-        const data = await response.json();
+        await Swal.fire({
+          icon: "success",
+          title: "Berhasil!",
+          text: isIndividual
+            ? "Status kandidat telah diperbarui."
+            : "Interview telah diselesaikan.",
+          confirmButtonColor: "#2563EB",
+        });
 
-        if (response.ok) {
-          await Swal.fire({
-            icon: "success",
-            title: "Berhasil!",
-            text: isIndividual
-              ? "Status kandidat telah diperbarui."
-              : "Interview telah diselesaikan.",
-            confirmButtonColor: "#2563EB",
-          });
-
-          if (isIndividual) {
-            // Reload data to reflect changes
-            loadData(id);
-          } else {
-            router.push("/profile/recruiter/dashboard/applications");
-          }
+        if (isIndividual) {
+          // Reload data to reflect changes
+          loadData(id);
         } else {
-          // Handle specific error: too early
-          if (data.error && data.error.includes("before scheduled time")) {
-            Swal.fire({
-              icon: "warning",
-              title: "Belum Waktunya",
-              text: "Anda tidak dapat menyelesaikan interview sebelum waktu jadwal dimulai.",
-              confirmButtonColor: "#2563EB",
-            });
-          } else {
-            throw new Error(data.error || "Gagal menyelesaikan interview");
-          }
+          router.push("/profile/recruiter/dashboard/applications");
         }
       } catch (error) {
         Swal.fire({
@@ -361,7 +339,7 @@ function InterviewRoomContent() {
 
                   {/* Complete Button */}
                   <button
-                    onClick={handleCompleteInterview}
+                    onClick={() => handleCompleteInterview()}
                     disabled={completing}
                     className="w-full py-4 px-4 bg-[#00A753] text-white rounded-xl font-bold shadow-lg hover:bg-[#00964b] hover:shadow-xl transition transform active:scale-95 flex items-center justify-center gap-2"
                   >

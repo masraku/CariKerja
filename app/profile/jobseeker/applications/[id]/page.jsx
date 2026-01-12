@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import axios from "axios";
 import Swal from "sweetalert2";
 import {
   ArrowLeft,
@@ -58,7 +59,7 @@ export default function ApplicationDetailPage() {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      const response = await fetch(
+      const { data } = await axios.get(
         `/api/profile/jobseeker/applications/${params.id}`,
         {
           headers: {
@@ -67,23 +68,18 @@ export default function ApplicationDetailPage() {
         }
       );
 
-      if (response.ok) {
-        const data = await response.json();
-        // API returns data in data field
-        const appData = data.data || data.application;
-        setApplication(appData);
+      // API returns data in data field
+      const appData = data.data || data.application;
+      setApplication(appData);
 
-        // If has interview from the response
-        if (appData.interview) {
-          loadInterviewDetail(appData.id);
-        } else if (
-          appData.status === "INTERVIEW_SCHEDULED" ||
-          appData.status === "INTERVIEW_COMPLETED"
-        ) {
-          loadInterviewDetail(appData.id);
-        }
-      } else {
-        throw new Error("Failed to load application");
+      // If has interview from the response
+      if (appData.interview) {
+        loadInterviewDetail(appData.id);
+      } else if (
+        appData.status === "INTERVIEW_SCHEDULED" ||
+        appData.status === "INTERVIEW_COMPLETED"
+      ) {
+        loadInterviewDetail(appData.id);
       }
     } catch (error) {
       Swal.fire({
@@ -99,7 +95,7 @@ export default function ApplicationDetailPage() {
   const loadInterviewDetail = async (applicationId) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(
+      const { data } = await axios.get(
         `/api/profile/jobseeker/applications/${applicationId}/interview`,
         {
           headers: {
@@ -108,10 +104,7 @@ export default function ApplicationDetailPage() {
         }
       );
 
-      if (response.ok) {
-        const data = await response.json();
-        setInterview(data.interview);
-      }
+      setInterview(data.interview);
     } catch (error) {}
   };
 
@@ -152,31 +145,23 @@ export default function ApplicationDetailPage() {
       });
 
       const token = localStorage.getItem("token");
-      const response = await fetch(
+      const { data } = await axios.post(
         `/api/profile/jobseeker/applications/${params.id}/reschedule`,
+        { reason },
         {
-          method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
           },
-          body: JSON.stringify({ reason }),
         }
       );
 
-      const data = await response.json();
-
-      if (response.ok) {
-        await Swal.fire({
-          icon: "success",
-          title: "Request Terkirim!",
-          text: "Permintaan reschedule Anda telah dikirim ke recruiter. Mohon tunggu konfirmasi.",
-          confirmButtonColor: "#3b82f6",
-        });
-        loadApplicationDetail();
-      } else {
-        throw new Error(data.error || "Gagal mengirim request");
-      }
+      await Swal.fire({
+        icon: "success",
+        title: "Request Terkirim!",
+        text: "Permintaan reschedule Anda telah dikirim ke recruiter. Mohon tunggu konfirmasi.",
+        confirmButtonColor: "#3b82f6",
+      });
+      loadApplicationDetail();
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -207,15 +192,12 @@ export default function ApplicationDetailPage() {
       formData.append("bucket", "resignation"); // Specify bucket to allow PDF upload
 
       const token = localStorage.getItem("token");
-      const response = await fetch("/api/upload", {
-        method: "POST",
+      const { data } = await axios.post("/api/upload", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        body: formData,
       });
 
-      const data = await response.json();
       if (data.url) {
         setResignLetterUrl(data.url);
         Swal.fire({
@@ -262,20 +244,20 @@ export default function ApplicationDetailPage() {
     try {
       setSubmittingResign(true);
       const token = localStorage.getItem("token");
-      const response = await fetch("/api/resignations/submit", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const { data } = await axios.post(
+        "/api/resignations/submit",
+        {
           applicationId: application.id,
           reason: resignReason,
           letterUrl: resignLetterUrl,
-        }),
-      });
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      const data = await response.json();
       if (data.success) {
         setShowResignModal(false);
         setResignReason("");
@@ -408,7 +390,7 @@ export default function ApplicationDetailPage() {
         tips: [],
       },
       RESIGNED: {
-        label: "Resign",
+        label: "Mengundurkan Diri",
         color: "bg-orange-100 text-orange-800",
         indicator: "bg-orange-500",
         icon: LogOut,
@@ -514,75 +496,78 @@ export default function ApplicationDetailPage() {
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden mb-6">
           {/* Status Header */}
           <div
-            className={`bg-gradient-to-r ${statusConfig.bgGradient} p-8 border-b`}
+            className={`bg-gradient-to-r ${statusConfig.bgGradient} p-4 sm:p-8 border-b`}
           >
-            <div className="flex items-center gap-6">
-              {/* Company Logo */}
-              <div className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center overflow-hidden">
-                {application.jobs?.companies?.logo ? (
-                  <img
-                    src={application.jobs.companies.logo}
-                    alt={application.jobs.companies.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <Building2 className="w-10 h-10 text-gray-400" />
-                )}
-              </div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+              {/* Company Logo & Info */}
+              <div className="flex items-start gap-4 flex-1">
+                {/* Company Logo */}
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+                  {application.jobs?.companies?.logo ? (
+                    <img
+                      src={application.jobs.companies.logo}
+                      alt={application.jobs.companies.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Building2 className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
+                  )}
+                </div>
 
-              <div className="flex-1">
-                <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                  {application.jobs?.title}
-                </h1>
-                <p className="text-lg text-gray-700 mb-2">
-                  {application.jobs?.companies?.name}
-                </p>
-                <div className="flex items-center gap-4 text-gray-600">
-                  <span className="flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
-                    {application.jobs?.location || application.jobs?.city}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
-                    Dilamar {formatDate(application.appliedAt)}
-                  </span>
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-lg sm:text-2xl font-bold text-gray-900 mb-1 truncate">
+                    {application.jobs?.title}
+                  </h1>
+                  <p className="text-base sm:text-lg text-gray-700 mb-2 truncate">
+                    {application.jobs?.companies?.name}
+                  </p>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-gray-600 text-sm sm:text-base">
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate">{application.jobs?.location || application.jobs?.city}</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate">Dilamar {formatDate(application.appliedAt)}</span>
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* Status Badge */}
               <div
-                className={`px-6 py-3 rounded-2xl border-2 ${statusConfig.color} flex items-center gap-2`}
+                className={`px-4 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 ${statusConfig.color} flex items-center gap-2 self-start sm:self-center flex-shrink-0`}
               >
-                <StatusIcon className={`w-6 h-6 ${statusConfig.iconColor}`} />
-                <span className="font-bold text-lg">{statusConfig.label}</span>
+                <StatusIcon className={`w-5 h-5 sm:w-6 sm:h-6 ${statusConfig.iconColor}`} />
+                <span className="font-bold text-sm sm:text-lg whitespace-nowrap">{statusConfig.label}</span>
               </div>
             </div>
           </div>
 
           {/* Status Description */}
-          <div className="p-6 bg-white">
-            <div className="flex items-start gap-4">
+          <div className="p-4 sm:p-6 bg-white">
+            <div className="flex items-start gap-3 sm:gap-4">
               <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center ${statusConfig.color}`}
+                className={`hidden sm:flex w-12 h-12 rounded-xl items-center justify-center flex-shrink-0 ${statusConfig.color}`}
               >
                 <StatusIcon className={`w-6 h-6 ${statusConfig.iconColor}`} />
               </div>
-              <div className="flex-1">
-                <p className="text-gray-700 text-lg">
+              <div className="flex-1 min-w-0">
+                <p className="text-gray-700 text-base sm:text-lg">
                   {statusConfig.description}
                 </p>
 
                 {/* Tips */}
                 {statusConfig.tips.length > 0 && (
-                  <div className="mt-4 p-4 bg-gray-50 rounded-xl">
+                  <div className="mt-4 p-3 sm:p-4 bg-gray-50 rounded-xl">
                     <p className="font-semibold text-gray-800 mb-2">💡 Tips:</p>
                     <ul className="space-y-1">
                       {statusConfig.tips.map((tip, index) => (
                         <li
                           key={index}
-                          className="text-gray-600 flex items-center gap-2"
+                          className="text-gray-600 text-sm sm:text-base flex items-center gap-2"
                         >
-                          <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                          <span className="w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0"></span>
                           {tip}
                         </li>
                       ))}

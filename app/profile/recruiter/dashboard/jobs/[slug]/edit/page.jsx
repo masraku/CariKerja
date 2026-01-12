@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
+import axios from "axios";
 import {
   Briefcase,
   MapPin,
@@ -86,15 +87,12 @@ export default function EditJobPage() {
   const loadCompanyProfile = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("/api/profile/recruiter", {
+      const { data } = await axios.get("/api/profile/recruiter", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.profile?.companies) {
-          setCompanyProfile(data.profile.companies);
-        }
+      if (data.profile?.companies) {
+        setCompanyProfile(data.profile.companies);
       }
     } catch (error) {}
   };
@@ -131,7 +129,7 @@ export default function EditJobPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const response = await fetch(
+      const { data } = await axios.get(
         `/api/profile/recruiter/jobs/${params.slug}/edit`,
         {
           headers: {
@@ -140,42 +138,37 @@ export default function EditJobPage() {
         }
       );
 
-      if (response.ok) {
-        const data = await response.json();
-        const job = data.job;
+      const job = data.job;
 
-        const formatDate = (date) => {
-          if (!date) return "";
-          const d = new Date(date);
-          return d.toISOString().split("T")[0];
-        };
+      const formatDate = (date) => {
+        if (!date) return "";
+        const d = new Date(date);
+        return d.toISOString().split("T")[0];
+      };
 
-        setFormData({
-          title: job.title || "",
-          description: job.description || "",
-          benefits: Array.isArray(job.benefits) ? job.benefits : [],
-          location: job.location || "",
-          city: job.city || "",
-          province: job.province || "",
-          isRemote: job.isRemote || false,
-          jobType: job.jobType || "",
-          educationLevel: job.educationLevel || "",
-          numberOfPositions: job.numberOfPositions?.toString() || "1",
-          applicationDeadline: formatDate(job.applicationDeadline) || "",
-          skills: job.skills || [],
-          isActive: job.isActive !== undefined ? job.isActive : true,
-          jobPhoto: job.photo || "",
-          gallery: Array.isArray(job.gallery) ? job.gallery : [],
-          workingDays: job.workingDays || "",
-          holidays: job.holidays || "",
-          isShift: job.isShift || false,
-          shiftCount: job.shiftCount?.toString() || "",
-          isDisabilityFriendly: job.isDisabilityFriendly || false,
-          disabilityDescription: job.disabilityDescription || "",
-        });
-      } else {
-        throw new Error("Failed to load job");
-      }
+      setFormData({
+        title: job.title || "",
+        description: job.description || "",
+        benefits: Array.isArray(job.benefits) ? job.benefits : [],
+        location: job.location || "",
+        city: job.city || "",
+        province: job.province || "",
+        isRemote: job.isRemote || false,
+        jobType: job.jobType || "",
+        educationLevel: job.educationLevel || "",
+        numberOfPositions: job.numberOfPositions?.toString() || "1",
+        applicationDeadline: formatDate(job.applicationDeadline) || "",
+        skills: job.skills || [],
+        isActive: job.isActive !== undefined ? job.isActive : true,
+        jobPhoto: job.photo || "",
+        gallery: Array.isArray(job.gallery) ? job.gallery : [],
+        workingDays: job.workingDays || "",
+        holidays: job.holidays || "",
+        isShift: job.isShift || false,
+        shiftCount: job.shiftCount?.toString() || "",
+        isDisabilityFriendly: job.isDisabilityFriendly || false,
+        disabilityDescription: job.disabilityDescription || "",
+      });
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -285,7 +278,7 @@ export default function EditJobPage() {
 
   const uploadFile = async (file, type) => {
     Swal.fire({
-      title: "Uploading...",
+      title: "Mengunggah...",
       text: "Sedang mengupload foto",
       allowOutsideClick: false,
       didOpen: () => Swal.showLoading(),
@@ -296,17 +289,13 @@ export default function EditJobPage() {
       formDataUpload.append("file", file);
       formDataUpload.append("folder", "jobs");
 
-      const response = await fetch("/api/upload", {
-        method: "POST",
+      const { data } = await axios.post("/api/upload", formDataUpload, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: formDataUpload,
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.url) {
+      if (data.url) {
         if (type === "gallery") {
           setFormData((prev) => ({
             ...prev,
@@ -385,33 +374,25 @@ export default function EditJobPage() {
         isActive: isActivateMode ? true : formData.isActive,
       };
 
-      const response = await fetch(
+      const { data } = await axios.put(
         `/api/profile/recruiter/jobs/${params.slug}/update`,
+        submitData,
         {
-          method: "PUT",
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
           },
-          body: JSON.stringify(submitData),
         }
       );
 
-      const data = await response.json();
-
-      if (response.ok) {
-        await Swal.fire({
-          icon: "success",
-          title: isActivateMode ? "Lowongan Diaktifkan!" : "Berhasil Diupdate!",
-          text: isActivateMode
-            ? "Lowongan berhasil diaktifkan dan dikirim untuk validasi admin."
-            : "Lowongan berhasil diupdate dan dikirim untuk validasi ulang oleh admin.",
-          confirmButtonColor: "#3b82f6",
-        });
-        router.push("/profile/recruiter/dashboard/jobs");
-      } else {
-        throw new Error(data.details || data.error || "Failed to update job");
-      }
+      await Swal.fire({
+        icon: "success",
+        title: isActivateMode ? "Lowongan Diaktifkan!" : "Berhasil Diupdate!",
+        text: isActivateMode
+          ? "Lowongan berhasil diaktifkan dan dikirim untuk validasi admin."
+          : "Lowongan berhasil diupdate dan dikirim untuk validasi ulang oleh admin.",
+        confirmButtonColor: "#3b82f6",
+      });
+      router.push("/profile/recruiter/dashboard/jobs");
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -814,7 +795,7 @@ export default function EditJobPage() {
                         Sama dengan Alamat Kantor
                       </div>
                       <div className="text-xs text-gray-500 mt-1 truncate">
-                        {companyProfile?.address || "Loading..."}
+                        {companyProfile?.address || "Memuat..."}
                       </div>
                     </label>
                     <label

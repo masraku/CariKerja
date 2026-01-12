@@ -16,7 +16,7 @@ export async function PATCH(request, context) {
 
         if (!token) {
             return NextResponse.json(
-                { error: 'Unauthorized' },
+                { error: 'Tidak memiliki akses' },
                 { status: 401 }
             )
         }
@@ -26,7 +26,7 @@ export async function PATCH(request, context) {
             decoded = jwt.verify(token.value, JWT_SECRET)
         } catch (jwtError) {
             return NextResponse.json(
-                { error: 'Invalid token' },
+                { error: 'Token tidak valid' },
                 { status: 401 }
             )
         }
@@ -41,7 +41,7 @@ export async function PATCH(request, context) {
 
         if (!user || user.role !== 'JOBSEEKER' || !user.jobseekers) {
             return NextResponse.json(
-                { error: 'Unauthorized - Jobseeker only' },
+                { error: 'Tidak memiliki akses - Hanya untuk Pencari Kerja' },
                 { status: 403 }
             )
         }

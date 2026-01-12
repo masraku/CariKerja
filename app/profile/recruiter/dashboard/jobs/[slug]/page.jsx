@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import axios from "axios";
 import {
   ArrowLeft,
   Users,
@@ -122,12 +123,9 @@ export default function JobDetailPage() {
       setLoadingAI((prev) => ({ ...prev, [application.id]: true }));
 
       // Use internal API route to avoid CORS issues
-      const response = await fetch("/api/profile/recruiter/jobs/ai-match", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const response = await axios.post(
+        "/api/profile/recruiter/jobs/ai-match",
+        {
           cv_url: application.jobseekers?.cvUrl,
           cv_skills: application.jobseekers?.skills || [],
           cv_title: application.jobseekers?.currentTitle || "",
@@ -140,20 +138,18 @@ export default function JobDetailPage() {
               job?.skills ||
               [],
           },
-        }),
-      });
+        }
+      );
 
-      if (response.ok) {
-        const data = await response.json();
-        setAiRecommendations((prev) => ({
-          ...prev,
-          [application.id]: {
-            isRecommended: data.match_score >= 1,
-            score: data.match_score,
-            highlights: data.highlights || [],
-          },
-        }));
-      }
+      const data = response.data;
+      setAiRecommendations((prev) => ({
+        ...prev,
+        [application.id]: {
+          isRecommended: data.match_score >= 1,
+          score: data.match_score,
+          highlights: data.highlights || [],
+        },
+      }));
     } catch (error) {
     } finally {
       setLoadingAI((prev) => ({ ...prev, [application.id]: false }));
@@ -173,7 +169,7 @@ export default function JobDetailPage() {
         return;
       }
 
-      const response = await fetch(
+      const { data } = await axios.get(
         `/api/profile/recruiter/jobs/${params.slug}/applications`,
         {
           headers: {
@@ -182,24 +178,9 @@ export default function JobDetailPage() {
         }
       );
 
-      // Redirect to login if unauthorized
-      if (response.status === 401) {
-        localStorage.removeItem("token");
-        router.push(
-          `/login?redirect=${encodeURIComponent(window.location.pathname)}`
-        );
-        return;
-      }
-
-      if (response.ok) {
-        const data = await response.json();
-        setApplications(data.applications || []);
-        setJob(data.job);
-        setStats(data.stats);
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to load applications");
-      }
+      setApplications(data.applications || []);
+      setJob(data.job);
+      setStats(data.stats);
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -316,12 +297,12 @@ export default function JobDetailPage() {
         icon: XCircle,
       },
       WITHDRAWN: {
-        label: "Mengundurkan Diri",
+        label: "Ditarik",
         color: "bg-gray-100 text-gray-700",
         icon: XCircle,
       },
       RESIGNED: {
-        label: "Resign",
+        label: "Mengundurkan Diri",
         color: "bg-orange-100 text-orange-700",
         icon: XCircle,
       },
@@ -434,14 +415,15 @@ export default function JobDetailPage() {
 
       await Promise.all(
         validApps.map((app) =>
-          fetch(`/api/profile/recruiter/applications/${app.id}`, {
-            method: "PATCH",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ status: "REVIEWING" }),
-          })
+          axios.patch(
+            `/api/profile/recruiter/applications/${app.id}`,
+            { status: "REVIEWING" },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          )
         )
       );
 
@@ -513,17 +495,18 @@ export default function JobDetailPage() {
 
       await Promise.all(
         validApps.map((app) =>
-          fetch(`/api/profile/recruiter/applications/${app.id}`, {
-            method: "PATCH",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
+          axios.patch(
+            `/api/profile/recruiter/applications/${app.id}`,
+            {
               status: "ACCEPTED",
               recruiterNotes: result.value || "",
-            }),
-          })
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          )
         )
       );
 
@@ -590,17 +573,17 @@ export default function JobDetailPage() {
     try {
       const token = localStorage.getItem("token");
 
-      // Update all selected candidates
       await Promise.all(
         validApps.map((app) =>
-          fetch(`/api/profile/recruiter/applications/${app.id}`, {
-            method: "PATCH",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ status: "SHORTLISTED" }),
-          })
+          axios.patch(
+            `/api/profile/recruiter/applications/${app.id}`,
+            { status: "SHORTLISTED" },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          )
         )
       );
 
@@ -657,17 +640,18 @@ export default function JobDetailPage() {
 
       await Promise.all(
         selectedApplications.map((appId) =>
-          fetch(`/api/profile/recruiter/applications/${appId}`, {
-            method: "PATCH",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
+          axios.patch(
+            `/api/profile/recruiter/applications/${appId}`,
+            {
               status: "REJECTED",
               recruiterNotes: result.value || "",
-            }),
-          })
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          )
         )
       );
 
@@ -737,33 +721,25 @@ export default function JobDetailPage() {
     if (application.status === "PENDING") {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(
+        await axios.patch(
           `/api/profile/recruiter/applications/${application.id}`,
+          { status: "REVIEWING" },
           {
-            method: "PATCH",
             headers: {
               Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
             },
-            body: JSON.stringify({ status: "REVIEWING" }),
           }
         );
 
-        if (response.ok) {
-          // Update local state only if API succeeded
-          setApplications((prev) =>
-            prev.map((app) =>
-              app.id === application.id ? { ...app, status: "REVIEWING" } : app
-            )
-          );
-          return true;
-        } else {
-          const errorData = await response.json();
-          console.error("Failed to update status:", errorData);
-          return false;
-        }
+        // Update local state only if API succeeded
+        setApplications((prev) =>
+          prev.map((app) =>
+            app.id === application.id ? { ...app, status: "REVIEWING" } : app
+          )
+        );
+        return true;
       } catch (error) {
-        console.error("Failed to update status", error);
+        console.error("Failed to update status:", error);
         return false;
       }
     }
@@ -810,35 +786,29 @@ export default function JobDetailPage() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(
+      await axios.patch(
         `/api/profile/recruiter/applications/${application.id}`,
+        { status: "SHORTLISTED" },
         {
-          method: "PATCH",
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
           },
-          body: JSON.stringify({ status: "SHORTLISTED" }),
         }
       );
 
-      if (response.ok) {
-        Swal.fire({
-          icon: "success",
-          title: "Berhasil!",
-          text: "Kandidat berhasil dipindahkan ke Lolos Seleksi",
-          timer: 1500,
-          showConfirmButton: false,
-        });
-        // Update local state
-        setApplications((prev) =>
-          prev.map((app) =>
-            app.id === application.id ? { ...app, status: "SHORTLISTED" } : app
-          )
-        );
-      } else {
-        throw new Error("Failed to update status");
-      }
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil!",
+        text: "Kandidat berhasil dipindahkan ke Lolos Seleksi",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      // Update local state
+      setApplications((prev) =>
+        prev.map((app) =>
+          app.id === application.id ? { ...app, status: "SHORTLISTED" } : app
+        )
+      );
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -901,31 +871,27 @@ export default function JobDetailPage() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(
+      await axios.patch(
         `/api/profile/recruiter/applications/${application.id}`,
         {
-          method: "PATCH",
+          status: "ACCEPTED",
+          recruiterNotes: result.value || "",
+        },
+        {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            status: "ACCEPTED",
-            recruiterNotes: result.value || "",
-          }),
         }
       );
 
-      if (response.ok) {
-        Swal.fire({
-          icon: "success",
-          title: "Kandidat Diterima!",
-          text: "Email notifikasi telah dikirim ke kandidat.",
-          timer: 2000,
-          showConfirmButton: false,
-        });
-        loadApplications();
-      }
+      Swal.fire({
+        icon: "success",
+        title: "Kandidat Diterima!",
+        text: "Email notifikasi telah dikirim ke kandidat.",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+      loadApplications();
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -1026,36 +992,32 @@ export default function JobDetailPage() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(
+      await axios.patch(
         `/api/profile/recruiter/applications/${applicationId}`,
         {
-          method: "PATCH",
+          status: "REJECTED",
+          recruiterNotes: result.value || "",
+        },
+        {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            status: "REJECTED",
-            recruiterNotes: result.value || "",
-          }),
         }
       );
 
-      if (response.ok) {
-        Swal.fire({
-          icon: "success",
-          title: "Lamaran Ditolak",
-          text: "Email notifikasi telah dikirim ke pelamar.",
-          timer: 2000,
-          showConfirmButton: false,
-        });
-        // Update local state
-        setApplications((prev) =>
-          prev.map((app) =>
-            app.id === applicationId ? { ...app, status: "REJECTED" } : app
-          )
-        );
-      }
+      Swal.fire({
+        icon: "success",
+        title: "Lamaran Ditolak",
+        text: "Email notifikasi telah dikirim ke pelamar.",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+      // Update local state
+      setApplications((prev) =>
+        prev.map((app) =>
+          app.id === applicationId ? { ...app, status: "REJECTED" } : app
+        )
+      );
     } catch (error) {
       Swal.fire({
         icon: "error",

@@ -2,6 +2,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import axios from "axios";
 import {
   Calendar,
   Clock,
@@ -62,7 +63,7 @@ function ScheduleInterviewContent() {
       const token = localStorage.getItem("token");
 
       // Load applicants first - this includes job data
-      const applicantResponse = await fetch(
+      const { data: applicantData } = await axios.get(
         `/api/applications/batch?ids=${applicantIds}`,
         {
           headers: {
@@ -71,35 +72,20 @@ function ScheduleInterviewContent() {
         }
       );
 
-      if (applicantResponse.ok) {
-        const applicantData = await applicantResponse.json();
-        setApplicants(applicantData.applications || []);
+      setApplicants(applicantData.applications || []);
 
-        // Get job info from first application (all should be same job)
-        // API returns 'job' (singular) not 'jobs'
-        if (
-          applicantData.applications &&
-          applicantData.applications.length > 0
-        ) {
-          const jobInfo = applicantData.applications[0].job;
-          if (jobInfo) {
-            setJob(jobInfo);
-            // Set default interview title
-            setFormData((prev) => ({
-              ...prev,
-              title: `Interview untuk posisi ${jobInfo.title || "Unknown"}`,
-            }));
-          } else {
-          }
+      // Get job info from first application (all should be same job)
+      // API returns 'job' (singular) not 'jobs'
+      if (applicantData.applications && applicantData.applications.length > 0) {
+        const jobInfo = applicantData.applications[0].job;
+        if (jobInfo) {
+          setJob(jobInfo);
+          // Set default interview title
+          setFormData((prev) => ({
+            ...prev,
+            title: `Interview untuk posisi ${jobInfo.title || "Unknown"}`,
+          }));
         }
-      } else {
-        const errorText = await applicantResponse.text();
-        Swal.fire({
-          icon: "error",
-          title: "Gagal Memuat Data",
-          text: "Silakan coba lagi atau kembali ke halaman sebelumnya",
-          confirmButtonColor: "#2563EB",
-        });
       }
     } catch (error) {
       Swal.fire({
@@ -179,66 +165,64 @@ function ScheduleInterviewContent() {
       setSaving(true);
 
       const token = localStorage.getItem("token");
-      const response = await fetch("/api/interviews/schedule", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const { data } = await axios.post(
+        "/api/interviews/schedule",
+        {
           ...formData,
           jobId: job.id,
           applicationIds: applicants.map((app) => app.id),
-        }),
-      });
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      const data = await response.json();
+      // Format date for WhatsApp message
+      const formattedDate = new Date(formData.date).toLocaleDateString(
+        "id-ID",
+        {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }
+      );
 
-      if (response.ok) {
-        // Format date for WhatsApp message
-        const formattedDate = new Date(formData.date).toLocaleDateString(
-          "id-ID",
-          {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          }
-        );
+      // Send WhatsApp to each candidate with phone number
+      const candidatesWithPhone = applicants.filter(
+        (app) => app.jobseeker?.phone
+      );
 
-        // Send WhatsApp to each candidate with phone number
-        const candidatesWithPhone = applicants.filter(
-          (app) => app.jobseeker?.phone
-        );
-
-        if (candidatesWithPhone.length > 0) {
-          await Swal.fire({
-            icon: "info",
-            title: "Kirim Undangan WhatsApp",
-            html: `<p>Klik OK untuk membuka WhatsApp dan mengirim undangan ke ${candidatesWithPhone.length} kandidat.</p>
+      if (candidatesWithPhone.length > 0) {
+        await Swal.fire({
+          icon: "info",
+          title: "Kirim Undangan WhatsApp",
+          html: `<p>Klik OK untuk membuka WhatsApp dan mengirim undangan ke ${candidatesWithPhone.length} kandidat.</p>
                   <p class="text-sm text-gray-500 mt-2">Tab baru akan terbuka untuk setiap kandidat.</p>`,
-            confirmButtonColor: "#25D366",
-            confirmButtonText: "Buka WhatsApp",
-          });
+          confirmButtonColor: "#25D366",
+          confirmButtonText: "Buka WhatsApp",
+        });
 
-          // Open WhatsApp for each candidate
-          candidatesWithPhone.forEach((app, index) => {
-            const phone = app.jobseeker.phone.replace(/[^0-9]/g, ""); // Remove non-numeric chars
-            const formattedPhone = phone.startsWith("0")
-              ? "62" + phone.slice(1)
-              : phone; // Convert 08xx to 628xx
+        // Open WhatsApp for each candidate
+        candidatesWithPhone.forEach((app, index) => {
+          const phone = app.jobseeker.phone.replace(/[^0-9]/g, ""); // Remove non-numeric chars
+          const formattedPhone = phone.startsWith("0")
+            ? "62" + phone.slice(1)
+            : phone; // Convert 08xx to 628xx
 
-            const meetingInfo =
-              formData.meetingType === "IN_PERSON"
-                ? `📍 *Lokasi:* ${formData.location}`
-                : `🔗 *Link Meeting:* ${formData.meetingUrl}`;
+          const meetingInfo =
+            formData.meetingType === "IN_PERSON"
+              ? `📍 *Lokasi:* ${formData.location}`
+              : `🔗 *Link Meeting:* ${formData.meetingUrl}`;
 
-            const message = encodeURIComponent(
-              `Halo ${app.jobseeker.firstName} ${app.jobseeker.lastName},
+          const message = encodeURIComponent(
+            `Halo ${app.jobseeker.firstName} ${app.jobseeker.lastName},
 
 Selamat! Anda diundang untuk mengikuti interview untuk posisi *${
-                job?.title
-              }* di *${job?.company?.name || "Perusahaan"}*.
+              job?.title
+            }* di *${job?.company?.name || "Perusahaan"}*.
 
 📅 *Tanggal:* ${formattedDate}
 ⏰ *Waktu:* ${formData.time} WIB
@@ -249,22 +233,22 @@ ${formData.description ? `📝 *Info:* ${formData.description}\n` : ""}
 Mohon konfirmasi kehadiran Anda dengan membalas pesan ini.
 
 Terima kasih dan sampai jumpa!`
+          );
+
+          // Delay opening each tab to prevent blocking
+          setTimeout(() => {
+            window.open(
+              `https://wa.me/${formattedPhone}?text=${message}`,
+              "_blank"
             );
+          }, index * 800);
+        });
+      }
 
-            // Delay opening each tab to prevent blocking
-            setTimeout(() => {
-              window.open(
-                `https://wa.me/${formattedPhone}?text=${message}`,
-                "_blank"
-              );
-            }, index * 800);
-          });
-        }
-
-        await Swal.fire({
-          icon: "success",
-          title: "Interview Dijadwalkan!",
-          html: `
+      await Swal.fire({
+        icon: "success",
+        title: "Interview Dijadwalkan!",
+        html: `
             <p>Interview telah dijadwalkan untuk ${
               applicants.length
             } kandidat</p>
@@ -275,18 +259,16 @@ Terima kasih dan sampai jumpa!`
                 : ""
             }
           `,
-          confirmButtonColor: "#2563EB",
-        });
-        router.push(`/profile/recruiter/dashboard/jobs/${job.slug}`);
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Gagal",
-          text: data.error || "Gagal menjadwalkan interview",
-          confirmButtonColor: "#2563EB",
-        });
-      }
+        confirmButtonColor: "#2563EB",
+      });
+      router.push(`/profile/recruiter/dashboard/jobs/${job.slug}`);
     } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: error.response?.data?.error || "Gagal menjadwalkan interview",
+        confirmButtonColor: "#2563EB",
+      });
       Swal.fire({
         icon: "error",
         title: "Error",

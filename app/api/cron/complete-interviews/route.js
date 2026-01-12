@@ -13,7 +13,7 @@ export async function GET(request) {
     
     // If CRON_SECRET is set, verify it
     if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Tidak memiliki akses' }, { status: 401 })
     }
 
     const now = new Date()
@@ -77,7 +77,7 @@ export async function GET(request) {
 
     return NextResponse.json({
       success: true,
-      message: `Auto-completed ${updatedCount} interview participants`,
+      message: `Menyelesaikan ${updatedCount} peserta interview secara otomatis`,
       updatedCount,
       processedInterviews: interviewIds.length,
       timestamp: now.toISOString()
@@ -86,7 +86,7 @@ export async function GET(request) {
   } catch (error) {
     return NextResponse.json(
       { 
-        error: 'Failed to auto-complete interviews',
+        error: 'Gagal menyelesaikan interview otomatis',
         details: error.message 
       },
       { status: 500 }

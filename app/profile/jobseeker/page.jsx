@@ -2,6 +2,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import axios from "axios";
 import Swal from "sweetalert2";
 import {
   User,
@@ -211,11 +212,10 @@ function JobseekerProfileContent() {
 
   const loadProfile = async () => {
     try {
-      const response = await fetch("/api/profile/jobseeker", {
-        credentials: "include",
+      const { data } = await axios.get("/api/profile/jobseeker", {
+        withCredentials: true,
       });
-      const data = await response.json();
-      if (response.ok && data.profile) {
+      if (data.profile) {
         const profile = data.profile;
         const formatMonthDate = (d) =>
           d ? new Date(d).toISOString().slice(0, 7) : "";
@@ -401,20 +401,10 @@ function JobseekerProfileContent() {
     formDataUpload.append("bucket", bucket);
     formDataUpload.append("userId", user?.id || "");
 
-    const response = await fetch("/api/upload", {
-      method: "POST",
-      credentials: "include",
-      body: formDataUpload,
+    const { data } = await axios.post("/api/upload", formDataUpload, {
+      withCredentials: true,
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      if (error.error?.includes("exceeded the maximum allowed size")) {
-        throw new Error("Ukuran file melebihi batas maksimal (2MB).");
-      }
-      throw new Error(error.error || "Upload failed");
-    }
-    return await response.json();
+    return data;
   };
 
   // Upload Handlers
@@ -750,15 +740,9 @@ function JobseekerProfileContent() {
         skills: formData.skills.filter((s) => s), // Clean skills
       };
 
-      const response = await fetch("/api/profile/jobseeker", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
+      const { data } = await axios.post("/api/profile/jobseeker", payload, {
+        withCredentials: true,
       });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to save");
 
       await Swal.fire({
         icon: "success",

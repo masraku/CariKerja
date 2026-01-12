@@ -26,7 +26,10 @@ import {
   X,
   Download,
 } from "lucide-react";
-import { useQueryAdminContracts, useMutationProcessContract } from "@/hooks/admin/useAdmin";
+import {
+  useQueryAdminContracts,
+  useMutationProcessContract,
+} from "@/hooks/admin/useAdmin";
 
 export default function AdminContractsPage() {
   const router = useRouter();
@@ -42,14 +45,23 @@ export default function AdminContractsPage() {
   const [previewDocUrl, setPreviewDocUrl] = useState(null);
 
   // Use React Query hooks
-  const { data, isPending: loading, refetch } = useQueryAdminContracts({
+  const {
+    data,
+    isPending: loading,
+    refetch,
+  } = useQueryAdminContracts({
     status: statusFilter,
   });
 
   const processContractMutation = useMutationProcessContract();
 
   const contracts = data?.contracts || [];
-  const stats = data?.stats || { total: 0, pending: 0, approved: 0, rejected: 0 };
+  const stats = data?.stats || {
+    total: 0,
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+  };
   const contentLoading = loading;
 
   const handleProcess = async (id, action) => {
@@ -79,19 +91,18 @@ export default function AdminContractsPage() {
       try {
         setProcessingId(id);
         const token = localStorage.getItem("token");
-        const response = await fetch(`/api/admin/contracts/${id}`, {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
+        const { data } = await axios.patch(
+          `/api/admin/contracts/${id}`,
+          {
             action,
             adminNotes: notes,
-          }),
-        });
-
-        const data = await response.json();
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         if (data.success) {
           Swal.fire({
             icon: "success",
@@ -101,7 +112,7 @@ export default function AdminContractsPage() {
             showConfirmButton: false,
           });
           setShowDetail(false);
-          loadContracts(false);
+          refetch();
         } else {
           throw new Error(data.error);
         }
@@ -140,39 +151,32 @@ export default function AdminContractsPage() {
         formData.append("bucket", "Lowongan"); // Use Lowongan as decided
         formData.append("folder", "admin-approvals");
 
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
+        const uploadRes = await axios.post("/api/upload", formData, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          body: formData,
         });
 
-        const uploadData = await uploadRes.json();
-        if (!uploadData.success) {
-          throw new Error(uploadData.error || "Gagal mengupload dokumen");
+        if (!uploadRes.data.success) {
+          throw new Error(uploadRes.data.error || "Gagal mengupload dokumen");
         }
-        adminResponseDocUrl = uploadData.url;
+        adminResponseDocUrl = uploadRes.data.url;
       }
 
       // Approve contract
-      const response = await fetch(
+      const { data } = await axios.patch(
         `/api/admin/contracts/${selectedContract.id}`,
         {
-          method: "PATCH",
+          action: "approve",
+          adminNotes: approvalNotes,
+          adminResponseDocUrl,
+        },
+        {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            action: "approve",
-            adminNotes: approvalNotes,
-            adminResponseDocUrl,
-          }),
         }
       );
-
-      const data = await response.json();
       if (data.success) {
         Swal.fire({
           icon: "success",
@@ -185,16 +189,23 @@ export default function AdminContractsPage() {
         setShowDetail(false);
         setApprovalFile(null);
         setApprovalNotes("");
-        loadContracts(false);
+        refetch();
       } else {
         throw new Error(data.error);
       }
     } catch (error) {
+      const errorMessage = error.response?.data?.error || error.message || "Gagal menyetujui pendaftaran";
       Swal.fire({
         icon: "error",
         title: "Gagal",
-        text: error.message || "Gagal menyetujui pendaftaran",
+        text: errorMessage,
       });
+      // Close modal and refresh data if contract was already processed
+      if (error.response?.status === 400) {
+        setShowApprovalModal(false);
+        setShowDetail(false);
+        refetch();
+      }
     } finally {
       setUploading(false);
     }
@@ -614,7 +625,8 @@ export default function AdminContractsPage() {
                       />
                     ) : (
                       <span>
-                        {selectedContract.recruiters?.firstName?.charAt(0) || "R"}
+                        {selectedContract.recruiters?.firstName?.charAt(0) ||
+                          "R"}
                       </span>
                     )}
                   </div>
@@ -660,7 +672,9 @@ export default function AdminContractsPage() {
                 </h3>
                 {selectedContract.recruiterDocUrl ? (
                   <button
-                    onClick={() => setPreviewDocUrl(selectedContract.recruiterDocUrl)}
+                    onClick={() =>
+                      setPreviewDocUrl(selectedContract.recruiterDocUrl)
+                    }
                     className="inline-flex items-center gap-2 px-4 py-2 bg-white text-amber-700 rounded-lg font-medium hover:bg-amber-100 transition border border-amber-300"
                   >
                     <FileText className="w-4 h-4" />
@@ -683,117 +697,134 @@ export default function AdminContractsPage() {
                 <div className="space-y-3">
                   {selectedContract.workers?.map((worker) => {
                     const isTerminated = worker.status === "TERMINATED";
-                    const isCompleted = worker.status === "COMPLETED" || new Date(worker.endDate) < new Date();
-                    const isActive = worker.status === "ACTIVE" && new Date(worker.endDate) >= new Date();
-                    
+                    const isCompleted =
+                      worker.status === "COMPLETED" ||
+                      new Date(worker.endDate) < new Date();
+                    const isActive =
+                      worker.status === "ACTIVE" &&
+                      new Date(worker.endDate) >= new Date();
+
                     return (
-                    <div
-                      key={worker.id}
-                      className={`border rounded-xl p-4 ${
-                        isTerminated 
-                          ? "bg-red-50 border-red-200" 
-                          : isCompleted 
-                          ? "bg-gray-50 border-gray-200" 
-                          : "bg-white border-gray-200"
-                      }`}
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold overflow-hidden flex-shrink-0 ${
-                          isTerminated 
-                            ? "bg-gradient-to-br from-red-500 to-rose-500" 
-                            : isCompleted 
-                            ? "bg-gradient-to-br from-gray-400 to-gray-500" 
-                            : "bg-gradient-to-br from-green-500 to-emerald-500"
-                        }`}>
-                          {worker.jobseekers?.photo ? (
-                            <img
-                              src={worker.jobseekers.photo}
-                              alt={worker.jobseekers?.firstName}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span>
-                              {worker.jobseekers?.firstName?.charAt(0) || "U"}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="font-bold text-gray-900">
-                              {worker.jobseekers?.firstName}{" "}
-                              {worker.jobseekers?.lastName}
-                            </h4>
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                              isTerminated 
-                                ? "bg-red-100 text-red-700" 
-                                : isCompleted 
-                                ? "bg-gray-100 text-gray-700" 
-                                : "bg-green-100 text-green-700"
-                            }`}>
-                              {isTerminated ? "Diakhiri" : isCompleted ? "Selesai" : "Aktif"}
-                            </span>
+                      <div
+                        key={worker.id}
+                        className={`border rounded-xl p-4 ${
+                          isTerminated
+                            ? "bg-red-50 border-red-200"
+                            : isCompleted
+                            ? "bg-gray-50 border-gray-200"
+                            : "bg-white border-gray-200"
+                        }`}
+                      >
+                        <div className="flex items-start gap-4">
+                          <div
+                            className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold overflow-hidden flex-shrink-0 ${
+                              isTerminated
+                                ? "bg-gradient-to-br from-red-500 to-rose-500"
+                                : isCompleted
+                                ? "bg-gradient-to-br from-gray-400 to-gray-500"
+                                : "bg-gradient-to-br from-green-500 to-emerald-500"
+                            }`}
+                          >
+                            {worker.jobseekers?.photo ? (
+                              <img
+                                src={worker.jobseekers.photo}
+                                alt={worker.jobseekers?.firstName}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span>
+                                {worker.jobseekers?.firstName?.charAt(0) || "U"}
+                              </span>
+                            )}
                           </div>
-                          <p className="text-sm text-gray-500 flex items-center gap-1">
-                            <Briefcase className="w-3 h-3" />
-                            {worker.jobTitle}
-                          </p>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3 pt-3 border-t border-gray-100">
-                            <div>
-                              <p className="text-xs text-gray-500">Periode</p>
-                              <p className="text-sm font-medium text-gray-900">
-                                {formatDate(worker.startDate)} -{" "}
-                                {formatDate(worker.endDate)}
-                              </p>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-bold text-gray-900">
+                                {worker.jobseekers?.firstName}{" "}
+                                {worker.jobseekers?.lastName}
+                              </h4>
+                              <span
+                                className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  isTerminated
+                                    ? "bg-red-100 text-red-700"
+                                    : isCompleted
+                                    ? "bg-gray-100 text-gray-700"
+                                    : "bg-green-100 text-green-700"
+                                }`}
+                              >
+                                {isTerminated
+                                  ? "Diakhiri"
+                                  : isCompleted
+                                  ? "Selesai"
+                                  : "Aktif"}
+                              </span>
                             </div>
-                            <div>
-                              <p className="text-xs text-gray-500">Upah</p>
-                              <p className="text-sm font-medium text-gray-900">
-                                Rp {formatCurrency(worker.salary)}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-gray-500">Email</p>
-                              <p className="text-sm text-gray-900">
-                                {worker.jobseekers?.email || "-"}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-gray-500">Telepon</p>
-                              <p className="text-sm text-gray-900">
-                                {worker.jobseekers?.phone || "-"}
-                              </p>
-                            </div>
-                          </div>
-                          {/* Termination Info */}
-                          {isTerminated && worker.terminatedAt && (
-                            <div className="mt-3 p-3 bg-red-100 rounded-lg border border-red-200">
-                              <div className="flex flex-wrap gap-4">
-                                <div>
-                                  <p className="text-xs text-red-600 font-medium">Tanggal Diakhiri</p>
-                                  <p className="text-sm font-semibold text-red-700">
-                                    {formatDate(worker.terminatedAt)}
-                                  </p>
-                                </div>
-                                {worker.terminationReason && (
-                                  <div className="flex-1">
-                                    <p className="text-xs text-red-600 font-medium">Alasan</p>
-                                    <p className="text-sm text-red-700">
-                                      {worker.terminationReason}
-                                    </p>
-                                  </div>
-                                )}
+                            <p className="text-sm text-gray-500 flex items-center gap-1">
+                              <Briefcase className="w-3 h-3" />
+                              {worker.jobTitle}
+                            </p>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3 pt-3 border-t border-gray-100">
+                              <div>
+                                <p className="text-xs text-gray-500">Periode</p>
+                                <p className="text-sm font-medium text-gray-900">
+                                  {formatDate(worker.startDate)} -{" "}
+                                  {formatDate(worker.endDate)}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-gray-500">Upah</p>
+                                <p className="text-sm font-medium text-gray-900">
+                                  Rp {formatCurrency(worker.salary)}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-gray-500">Email</p>
+                                <p className="text-sm text-gray-900">
+                                  {worker.jobseekers?.email || "-"}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-gray-500">Telepon</p>
+                                <p className="text-sm text-gray-900">
+                                  {worker.jobseekers?.phone || "-"}
+                                </p>
                               </div>
                             </div>
-                          )}
-                          {worker.notes && (
-                            <div className="mt-3 p-2 bg-gray-50 rounded-lg text-sm text-gray-600">
-                              <strong>Keterangan:</strong> {worker.notes}
-                            </div>
-                          )}
+                            {/* Termination Info */}
+                            {isTerminated && worker.terminatedAt && (
+                              <div className="mt-3 p-3 bg-red-100 rounded-lg border border-red-200">
+                                <div className="flex flex-wrap gap-4">
+                                  <div>
+                                    <p className="text-xs text-red-600 font-medium">
+                                      Tanggal Diakhiri
+                                    </p>
+                                    <p className="text-sm font-semibold text-red-700">
+                                      {formatDate(worker.terminatedAt)}
+                                    </p>
+                                  </div>
+                                  {worker.terminationReason && (
+                                    <div className="flex-1">
+                                      <p className="text-xs text-red-600 font-medium">
+                                        Alasan
+                                      </p>
+                                      <p className="text-sm text-red-700">
+                                        {worker.terminationReason}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                            {worker.notes && (
+                              <div className="mt-3 p-2 bg-gray-50 rounded-lg text-sm text-gray-600">
+                                <strong>Keterangan:</strong> {worker.notes}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )})}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -951,7 +982,7 @@ export default function AdminContractsPage() {
               </button>
             </div>
             <div className="flex-1 overflow-auto p-4 bg-gray-50">
-              {previewDocUrl.toLowerCase().endsWith('.pdf') ? (
+              {previewDocUrl.toLowerCase().endsWith(".pdf") ? (
                 <iframe
                   src={previewDocUrl}
                   className="w-full h-[70vh] rounded-lg border border-gray-200"

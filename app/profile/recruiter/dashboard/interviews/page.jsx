@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Swal from "sweetalert2";
+import axios from "axios";
 import {
   Calendar,
   Clock,
@@ -48,13 +49,14 @@ export default function RecruiterInterviewsPage() {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      const response = await fetch("/api/profile/recruiter/interviews/list", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await response.json();
+      const { data } = await axios.get(
+        "/api/profile/recruiter/interviews/list",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (data.success) {
         setInterviews(data.data.interviews);
@@ -117,30 +119,24 @@ export default function RecruiterInterviewsPage() {
         body.recruiterNotes = result.value;
       }
 
-      const response = await fetch(
+      const { data } = await axios.patch(
         `/api/profile/recruiter/applications/${applicationId}`,
+        body,
         {
-          method: "PATCH",
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
           },
-          body: JSON.stringify(body),
         }
       );
 
-      if (response.ok) {
-        Swal.fire({
-          icon: "success",
-          title: "Berhasil",
-          text: `Kandidat berhasil di-${actionText.toLowerCase()}`,
-          timer: 1500,
-          showConfirmButton: false,
-        });
-        loadInterviews(); // Reload to reflect changes
-      } else {
-        throw new Error("Gagal mengupdate status");
-      }
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil",
+        text: `Kandidat berhasil di-${actionText.toLowerCase()}`,
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      loadInterviews(); // Reload to reflect changes
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -182,32 +178,26 @@ export default function RecruiterInterviewsPage() {
       setProcessingId(participant.id);
       const token = localStorage.getItem("token");
 
-      const response = await fetch(
+      const { data } = await axios.patch(
         `/api/profile/recruiter/interviews/${interview.id}/participants/${participant.id}`,
         {
-          method: "PATCH",
+          status: "DECLINED",
+          rejectReschedule: true,
+        },
+        {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            status: "DECLINED",
-            rejectReschedule: true,
-          }),
         }
       );
 
-      if (response.ok) {
-        Swal.fire({
-          icon: "success",
-          title: "Reschedule Ditolak",
-          timer: 1500,
-          showConfirmButton: false,
-        });
-        loadInterviews();
-      } else {
-        throw new Error("Gagal menolak reschedule");
-      }
+      Swal.fire({
+        icon: "success",
+        title: "Reschedule Ditolak",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      loadInterviews();
     } catch (error) {
       Swal.fire({ icon: "error", title: "Gagal", text: error.message });
     } finally {
@@ -231,8 +221,7 @@ export default function RecruiterInterviewsPage() {
 
     try {
       const token = localStorage.getItem("token");
-      await fetch(`/api/profile/recruiter/interviews/${interview.id}`, {
-        method: "DELETE",
+      await axios.delete(`/api/profile/recruiter/interviews/${interview.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       loadInterviews();
@@ -445,19 +434,26 @@ export default function RecruiterInterviewsPage() {
                       </div>
                       <div className="bg-emerald-50 rounded-lg p-3 text-center border border-emerald-200">
                         <p className="text-2xl font-bold text-emerald-600">
-                          {interview.participants?.filter(p => p.applications?.status === "ACCEPTED").length || 0}
+                          {interview.participants?.filter(
+                            (p) => p.applications?.status === "ACCEPTED"
+                          ).length || 0}
                         </p>
                         <p className="text-xs text-emerald-600">Diterima</p>
                       </div>
                       <div className="bg-red-50 rounded-lg p-3 text-center border border-red-200">
                         <p className="text-2xl font-bold text-red-600">
-                          {interview.participants?.filter(p => p.applications?.status === "REJECTED").length || 0}
+                          {interview.participants?.filter(
+                            (p) => p.applications?.status === "REJECTED"
+                          ).length || 0}
                         </p>
                         <p className="text-xs text-red-600">Ditolak</p>
                       </div>
                       <div className="bg-purple-50 rounded-lg p-3 text-center border border-purple-200">
                         <p className="text-2xl font-bold text-purple-600">
-                          {interview.participants?.filter(p => p.applications?.status === "INTERVIEW_COMPLETED").length || 0}
+                          {interview.participants?.filter(
+                            (p) =>
+                              p.applications?.status === "INTERVIEW_COMPLETED"
+                          ).length || 0}
                         </p>
                         <p className="text-xs text-purple-600">Pending</p>
                       </div>

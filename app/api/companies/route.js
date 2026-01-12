@@ -118,7 +118,7 @@ export async function GET(request) {
 
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to fetch companies' },
+      { error: 'Gagal memuat daftar perusahaan' },
       { status: 500 }
     )
   }

@@ -2,6 +2,57 @@ import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/authHelper'
 import { supabaseAdmin } from '@/lib/supabase'
 import { prisma } from '@/lib/prisma'
+import sharp from 'sharp'
+
+/**
+ * Convert image to WebP format
+ * Returns original buffer if file is PDF or conversion fails
+ */
+async function convertToWebP(file) {
+    // Skip PDF files - keep original
+    if (file.type === 'application/pdf') {
+        const buffer = Buffer.from(await file.arrayBuffer())
+        return {
+            buffer,
+            extension: 'pdf',
+            contentType: 'application/pdf'
+        }
+    }
+
+    // Only process image files
+    if (!file.type.startsWith('image/')) {
+        const buffer = Buffer.from(await file.arrayBuffer())
+        const ext = file.name.split('.').pop()
+        return {
+            buffer,
+            extension: ext,
+            contentType: file.type
+        }
+    }
+
+    try {
+        const buffer = Buffer.from(await file.arrayBuffer())
+        const webpBuffer = await sharp(buffer)
+            .webp({ quality: 80 })
+            .toBuffer()
+        
+        return {
+            buffer: webpBuffer,
+            extension: 'webp',
+            contentType: 'image/webp'
+        }
+    } catch (error) {
+        console.error('WebP conversion failed:', error)
+        // Fallback to original if conversion fails
+        const buffer = Buffer.from(await file.arrayBuffer())
+        const ext = file.name.split('.').pop()
+        return {
+            buffer,
+            extension: ext,
+            contentType: file.type
+        }
+    }
+}
 
 function getBucketName(type, bucket) {
     // Photo types -> Profile bucket
@@ -58,7 +109,7 @@ export async function POST(request) {
 
         if (!file) {
             return NextResponse.json(
-                { error: 'No file provided' },
+                { error: 'Tidak ada file yang dipilih' },
                 { status: 400 }
             )
         }
@@ -115,33 +166,35 @@ export async function POST(request) {
 
             if (!recruiter) {
                 return NextResponse.json(
-                    { error: 'Recruiter profile not found' },
+                    { error: 'Profil rekruter tidak ditemukan' },
                     { status: 404 }
                 )
             }
 
-            const fileExt = file.name.split('.').pop()
-            const fileName = `profile.${fileExt}`
+            // Convert image to WebP
+            const { buffer, extension, contentType } = await convertToWebP(file)
+            const fileName = `profile.${extension}`
             const filePath = `recruiter/${recruiter.id}/${fileName}`
 
-            // Delete old photo first
+            // Delete old photo first (try both webp and old extensions)
             await supabaseAdmin.storage
                 .from(targetBucket)
-                .remove([filePath])
+                .remove([filePath, `recruiter/${recruiter.id}/profile.jpg`, `recruiter/${recruiter.id}/profile.png`, `recruiter/${recruiter.id}/profile.jpeg`])
                 .catch(() => {})
 
             // Upload new photo
             const { data, error } = await supabaseAdmin.storage
                 .from(targetBucket)
-                .upload(filePath, file, {
+                .upload(filePath, buffer, {
                     cacheControl: '3600',
-                    upsert: true
+                    upsert: true,
+                    contentType
                 })
 
             if (error) {
                 console.error('Upload error:', error)
                 return NextResponse.json(
-                    { error: `Failed to upload: ${error.message}` },
+                    { error: `Gagal mengunggah: ${error.message}` },
                     { status: 500 }
                 )
             }
@@ -161,7 +214,7 @@ export async function POST(request) {
         } else if (type === 'company-gallery') {
             if (!companyId) {
                 return NextResponse.json(
-                    { error: 'Company ID required' },
+                    { error: 'ID Perusahaan diperlukan' },
                     { status: 400 }
                 )
             }
@@ -173,7 +226,7 @@ export async function POST(request) {
 
             if (!recruiter || recruiter.companyId !== companyId) {
                 return NextResponse.json(
-                    { error: 'Unauthorized' },
+                    { error: 'Tidak memiliki akses' },
                     { status: 403 }
                 )
             }
@@ -185,25 +238,27 @@ export async function POST(request) {
 
             if (company.gallery && company.gallery.length >= 10) {
                 return NextResponse.json(
-                    { error: 'Maximum 10 photos allowed' },
+                    { error: 'Maksimal 10 foto yang diizinkan' },
                     { status: 400 }
                 )
             }
 
-            const fileExt = file.name.split('.').pop()
-            const fileName = `${Date.now()}.${fileExt}`
+            // Convert image to WebP
+            const { buffer, extension, contentType } = await convertToWebP(file)
+            const fileName = `${Date.now()}.${extension}`
             const filePath = `company/${companyId}/gallery/${fileName}`
 
             const { data, error } = await supabaseAdmin.storage
                 .from(targetBucket)
-                .upload(filePath, file, {
-                    cacheControl: '3600'
+                .upload(filePath, buffer, {
+                    cacheControl: '3600',
+                    contentType
                 })
 
             if (error) {
                 console.error('Upload error:', error)
                 return NextResponse.json(
-                    { error: `Failed to upload: ${error.message}` },
+                    { error: `Gagal mengunggah: ${error.message}` },
                     { status: 500 }
                 )
             }
@@ -232,26 +287,28 @@ export async function POST(request) {
 
             if (!recruiter) {
                 return NextResponse.json(
-                    { error: 'Recruiter profile not found' },
+                    { error: 'Profil rekruter tidak ditemukan' },
                     { status: 404 }
                 )
             }
 
-            const fileExt = file.name.split('.').pop()
-            const fileName = `${Date.now()}.${fileExt}`
+            // Convert image to WebP
+            const { buffer, extension, contentType } = await convertToWebP(file)
+            const fileName = `${Date.now()}.${extension}`
             const filePath = `${recruiter.companyId}/${fileName}`
 
             const { data, error } = await supabaseAdmin.storage
                 .from('Lowongan')
-                .upload(filePath, file, {
+                .upload(filePath, buffer, {
                     cacheControl: '3600',
-                    upsert: true
+                    upsert: true,
+                    contentType
                 })
 
             if (error) {
                 console.error('Upload error:', error)
                 return NextResponse.json(
-                    { error: `Failed to upload: ${error.message}` },
+                    { error: `Gagal mengunggah: ${error.message}` },
                     { status: 500 }
                 )
             }
@@ -282,7 +339,7 @@ export async function POST(request) {
 
             if (!jobseeker) {
                 return NextResponse.json(
-                    { error: 'Jobseeker profile not found' },
+                    { error: 'Profil pencari kerja tidak ditemukan' },
                     { status: 404 }
                 )
             }
@@ -314,21 +371,23 @@ export async function POST(request) {
                 uploadBucket = 'Resume'
             }
 
-            const fileExt = file.name.split('.').pop()
-            const fileName = `${folderName}-${Date.now()}.${fileExt}`
+            // Convert image to WebP (PDFs will remain unchanged)
+            const { buffer, extension, contentType } = await convertToWebP(file)
+            const fileName = `${folderName}-${Date.now()}.${extension}`
             const filePath = `jobseeker/${jobseeker.id}/${folderName}/${fileName}`
 
             const { data, error } = await supabaseAdmin.storage
                 .from(uploadBucket)
-                .upload(filePath, file, {
+                .upload(filePath, buffer, {
                     cacheControl: '3600',
-                    upsert: true
+                    upsert: true,
+                    contentType
                 })
 
             if (error) {
                 console.error('Upload error:', error)
                 return NextResponse.json(
-                    { error: `Failed to upload: ${error.message}` },
+                    { error: `Gagal mengunggah: ${error.message}` },
                     { status: 500 }
                 )
             }
@@ -346,21 +405,23 @@ export async function POST(request) {
                 let uploadFolder = folder || 'admin-uploads'
                 let uploadBucket = targetBucket || 'Lowongan' // Default to Lowongan bucket for admin docs
                 
-                const fileExt = file.name.split('.').pop()
-                const fileName = `${Date.now()}.${fileExt}`
+                // Convert image to WebP (PDFs will remain unchanged)
+                const { buffer, extension, contentType } = await convertToWebP(file)
+                const fileName = `${Date.now()}.${extension}`
                 const filePath = `${uploadFolder}/${fileName}`
 
                 const { data, error } = await supabaseAdmin.storage
                     .from(uploadBucket)
-                    .upload(filePath, file, {
+                    .upload(filePath, buffer, {
                         cacheControl: '3600',
-                        upsert: true
+                        upsert: true,
+                        contentType
                     })
 
                 if (error) {
                     console.error('Upload error:', error)
                     return NextResponse.json(
-                        { error: `Failed to upload: ${error.message}` },
+                        { error: `Gagal mengunggah: ${error.message}` },
                         { status: 500 }
                     )
                 }
@@ -379,13 +440,15 @@ export async function POST(request) {
 
                 let jobseeker = null
                 let uploadFolder = folder || 'misc'
-                let filePath = ''
                 let uploadBucket = targetBucket
+
+                // Convert image to WebP (PDFs will remain unchanged)
+                const { buffer, extension, contentType } = await convertToWebP(file)
+                let filePath = ''
 
                 if (recruiter) {
                     // Recruiter path
-                    const fileExt = file.name.split('.').pop()
-                    const fileName = `${Date.now()}.${fileExt}`
+                    const fileName = `${Date.now()}.${extension}`
                     filePath = `${uploadFolder}/${recruiter.companyId || recruiter.id}/${fileName}`
                 } else {
                     // Try jobseeker
@@ -396,28 +459,28 @@ export async function POST(request) {
 
                     if (!jobseeker) {
                         return NextResponse.json(
-                            { error: 'Profile not found. Please complete your profile first.' },
+                            { error: 'Profil tidak ditemukan. Silakan lengkapi profil Anda terlebih dahulu.' },
                             { status: 404 }
                         )
                     }
 
                     // Jobseeker path
-                    const fileExt = file.name.split('.').pop()
-                    const fileName = `${Date.now()}.${fileExt}`
+                    const fileName = `${Date.now()}.${extension}`
                     filePath = `jobseeker/${jobseeker.id}/${uploadFolder}/${fileName}`
                 }
 
                 const { data, error } = await supabaseAdmin.storage
                     .from(uploadBucket)
-                    .upload(filePath, file, {
+                    .upload(filePath, buffer, {
                         cacheControl: '3600',
-                        upsert: true
+                        upsert: true,
+                        contentType
                     })
 
                 if (error) {
                     console.error('Upload error:', error)
                     return NextResponse.json(
-                        { error: `Failed to upload: ${error.message}` },
+                        { error: `Gagal mengunggah: ${error.message}` },
                         { status: 500 }
                     )
                 }
@@ -434,13 +497,13 @@ export async function POST(request) {
             success: true,
             url: photoUrl,
             bucket: targetBucket,
-            message: 'File uploaded successfully'
+            message: 'File berhasil diunggah'
         })
 
     } catch (error) {
         console.error('Upload error:', error)
         return NextResponse.json(
-            { error: 'Failed to upload file', details: error.message },
+            { error: 'Gagal mengunggah file', details: error.message },
             { status: 500 }
         )
     }
@@ -463,7 +526,7 @@ export async function DELETE(request) {
 
         if (!photoUrl || !companyId) {
             return NextResponse.json(
-                { error: 'Photo URL and Company ID required' },
+                { error: 'URL Foto dan ID Perusahaan diperlukan' },
                 { status: 400 }
             )
         }
@@ -476,7 +539,7 @@ export async function DELETE(request) {
 
         if (!recruiter || recruiter.companyId !== companyId) {
             return NextResponse.json(
-                { error: 'Unauthorized' },
+                { error: 'Tidak memiliki akses' },
                 { status: 403 }
             )
         }
@@ -509,13 +572,13 @@ export async function DELETE(request) {
 
         return NextResponse.json({
             success: true,
-            message: 'Photo deleted successfully'
+            message: 'Foto berhasil dihapus'
         })
 
     } catch (error) {
         console.error('Delete error:', error)
         return NextResponse.json(
-            { error: 'Failed to delete photo' },
+            { error: 'Gagal menghapus foto' },
             { status: 500 }
         )
     }

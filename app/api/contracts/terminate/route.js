@@ -63,6 +63,8 @@ export async function POST(request) {
     }
 
     // Update contract worker status, application status, and jobseeker employment status
+    const recruiterName = `${recruiter.firstName || ''} ${recruiter.lastName || ''}`.trim() || 'Recruiter'
+    
     const [updatedWorker] = await prisma.$transaction([
       // Update contract worker status
       prisma.contract_workers.update({
@@ -70,7 +72,8 @@ export async function POST(request) {
         data: {
           status: 'TERMINATED',
           terminatedAt: new Date(),
-          terminationReason: reason || 'Diakhiri oleh recruiter'
+          terminationReason: reason || 'Diakhiri oleh recruiter',
+          terminatedBy: recruiterName
         }
       }),
       // Update application status back to allow job seeking
@@ -80,12 +83,15 @@ export async function POST(request) {
           status: 'RESIGNED' // Using RESIGNED status to indicate contract ended
         }
       }),
-      // Update jobseeker employment status to not employed
+      // Update jobseeker employment status to not employed and clear company info
       prisma.jobseekers.update({
         where: { id: worker.jobseekers.id },
         data: {
           isEmployed: false,
-          isLookingForJob: true
+          isLookingForJob: true,
+          employedCompany: null,
+          employedAt: null,
+          currentTitle: null
         }
       })
     ])

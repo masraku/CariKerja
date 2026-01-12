@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
 import { Upload, User, Loader2, X } from "lucide-react";
+import axios from "axios";
 
 export default function RecruiterPhotoUpload({
   currentPhoto,
@@ -19,13 +20,13 @@ export default function RecruiterPhotoUpload({
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      alert("Please select an image file");
+      alert("Silakan pilih file gambar");
       return;
     }
 
     // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert("File size must be less than 5MB");
+      alert("Ukuran file maksimal 5MB");
       return;
     }
 
@@ -48,15 +49,11 @@ export default function RecruiterPhotoUpload({
       formData.append("file", file);
       formData.append("type", "recruiter-photo");
 
-      const response = await fetch("/api/upload", {
-        method: "POST",
+      const { data } = await axios.post("/api/upload", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        body: formData,
       });
-
-      const data = await response.json();
 
       if (data.success) {
         setPreview(data.url);
@@ -64,10 +61,12 @@ export default function RecruiterPhotoUpload({
           onPhotoUpdate(data.url);
         }
       } else {
-        throw new Error(data.error || "Upload failed");
+        throw new Error(data.error || "Gagal mengunggah");
       }
     } catch (error) {
-      alert(error.message || "Failed to upload photo");
+      alert(
+        error.response?.data?.error || error.message || "Gagal mengunggah foto"
+      );
       setPreview(currentPhoto); // Revert preview
     } finally {
       setUploading(false);
@@ -139,16 +138,12 @@ export default function RecruiterPhotoUpload({
           }`}
         >
           <Upload className="w-4 h-4" />
-          {uploading
-            ? "Uploading..."
-            : preview
-            ? "Change Photo"
-            : "Upload Photo"}
+          {uploading ? "Mengunggah..." : preview ? "Ganti Foto" : "Unggah Foto"}
         </label>
       </div>
 
       <p className="text-xs text-gray-500 text-center">
-        JPG, PNG or GIF. Max size 5MB.
+        JPG, PNG atau GIF. Maksimal 5MB.
       </p>
     </div>
   );

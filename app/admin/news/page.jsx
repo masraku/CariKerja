@@ -26,7 +26,12 @@ import {
   MoreVertical,
 } from "lucide-react";
 import Swal from "sweetalert2";
-import { useQueryAdminNews, useMutationCreateNews, useMutationUpdateNews, useMutationDeleteNews } from "@/hooks/admin/useAdmin";
+import {
+  useQueryAdminNews,
+  useMutationCreateNews,
+  useMutationUpdateNews,
+  useMutationDeleteNews,
+} from "@/hooks/admin/useAdmin";
 
 export default function AdminNewsPage() {
   const [search, setSearch] = useState("");
@@ -49,7 +54,11 @@ export default function AdminNewsPage() {
   const fileInputRef = useRef(null);
 
   // Use React Query hooks
-  const { data, isPending: loading, refetch } = useQueryAdminNews({
+  const {
+    data,
+    isPending: loading,
+    refetch,
+  } = useQueryAdminNews({
     search,
     status: statusFilter,
     category: categoryFilter,
@@ -97,7 +106,9 @@ export default function AdminNewsPage() {
       ARCHIVED: "Diarsipkan",
     };
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status]}`}>
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status]}`}
+      >
         {labels[status]}
       </span>
     );
@@ -144,13 +155,12 @@ export default function AdminNewsPage() {
     });
   };
 
-
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     // Validate file type
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
     if (!validTypes.includes(file.type)) {
       Swal.fire({
         icon: "error",
@@ -179,15 +189,11 @@ export default function AdminNewsPage() {
       uploadFormData.append("bucket", "news-images");
       uploadFormData.append("folder", "news");
 
-      const response = await fetch("/api/upload", {
-        method: "POST",
+      const { data } = await axios.post("/api/upload", uploadFormData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        body: uploadFormData,
       });
-
-      const data = await response.json();
 
       if (data.url) {
         setFormData({ ...formData, image: data.url });
@@ -218,8 +224,13 @@ export default function AdminNewsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!formData.title || !formData.content || !formData.category || !formData.author) {
+
+    if (
+      !formData.title ||
+      !formData.content ||
+      !formData.category ||
+      !formData.author
+    ) {
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -241,7 +252,9 @@ export default function AdminNewsPage() {
       Swal.fire({
         icon: "success",
         title: "Berhasil",
-        text: editingNews ? "Berita berhasil diperbarui" : "Berita berhasil dibuat",
+        text: editingNews
+          ? "Berita berhasil diperbarui"
+          : "Berita berhasil dibuat",
         timer: 1500,
         showConfirmButton: false,
       });
@@ -290,16 +303,15 @@ export default function AdminNewsPage() {
   const handleUpdateStatus = async (id, newStatus) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`/api/admin/news/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      const data = await response.json();
+      const { data } = await axios.put(
+        `/api/admin/news/${id}`,
+        { status: newStatus },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (data.success) {
         Swal.fire({
@@ -307,7 +319,7 @@ export default function AdminNewsPage() {
           title: "Berhasil",
           text: `Status berita berhasil diubah`,
         });
-        fetchNews();
+        refetch();
       } else {
         Swal.fire({
           icon: "error",
@@ -375,7 +387,9 @@ export default function AdminNewsPage() {
             </div>
             <div>
               <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
-              <p className="text-sm font-medium text-gray-500 mt-1">Total Berita</p>
+              <p className="text-sm font-medium text-gray-500 mt-1">
+                Total Berita
+              </p>
             </div>
           </div>
           <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
@@ -383,11 +397,20 @@ export default function AdminNewsPage() {
               <div className="p-2 bg-green-50 text-green-600 rounded-lg">
                 <Globe className="w-6 h-6" />
               </div>
-              <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">{stats.total > 0 ? Math.round((stats.published / stats.total) * 100) : 0}%</span>
+              <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                {stats.total > 0
+                  ? Math.round((stats.published / stats.total) * 100)
+                  : 0}
+                %
+              </span>
             </div>
             <div>
-              <p className="text-3xl font-bold text-gray-900">{stats.published}</p>
-              <p className="text-sm font-medium text-gray-500 mt-1">Dipublikasi</p>
+              <p className="text-3xl font-bold text-gray-900">
+                {stats.published}
+              </p>
+              <p className="text-sm font-medium text-gray-500 mt-1">
+                Dipublikasi
+              </p>
             </div>
           </div>
           <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
@@ -408,8 +431,12 @@ export default function AdminNewsPage() {
               </div>
             </div>
             <div>
-              <p className="text-3xl font-bold text-gray-900">{stats.archived}</p>
-              <p className="text-sm font-medium text-gray-500 mt-1">Diarsipkan</p>
+              <p className="text-3xl font-bold text-gray-900">
+                {stats.archived}
+              </p>
+              <p className="text-sm font-medium text-gray-500 mt-1">
+                Diarsipkan
+              </p>
             </div>
           </div>
         </div>
@@ -446,11 +473,13 @@ export default function AdminNewsPage() {
               className="px-4 py-2.5 bg-gray-50 border-0 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 focus:ring-2 focus:ring-[#03587f] outline-none cursor-pointer"
             >
               <option value="all">Semua Kategori</option>
-              {[...new Set([...predefinedCategories, ...categories])].map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
+              {[...new Set([...predefinedCategories, ...categories])].map(
+                (cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                )
+              )}
             </select>
 
             <select
@@ -472,14 +501,18 @@ export default function AdminNewsPage() {
         {loading ? (
           <div className="flex flex-col items-center justify-center h-64">
             <div className="w-10 h-10 border-4 border-[#03587f] border-t-transparent rounded-full animate-spin"></div>
-            <p className="mt-4 text-gray-500 font-medium">Memuat data berita...</p>
+            <p className="mt-4 text-gray-500 font-medium">
+              Memuat data berita...
+            </p>
           </div>
         ) : news.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-96 bg-white rounded-xl border border-dashed border-gray-300">
             <div className="p-4 bg-gray-50 rounded-full mb-4">
               <Newspaper className="w-8 h-8 text-gray-400" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">Belum ada berita</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Belum ada berita
+            </h3>
             <p className="text-gray-500 mt-1 max-w-sm text-center">
               Belum ada berita yang ditemukan. Mulai dengan membuat berita baru.
             </p>
@@ -515,7 +548,10 @@ export default function AdminNewsPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {news.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-50/80 transition-colors group">
+                    <tr
+                      key={item.id}
+                      className="hover:bg-gray-50/80 transition-colors group"
+                    >
                       <td className="px-6 py-4 max-w-md">
                         <div className="flex gap-4">
                           <div className="flex-shrink-0 w-24 h-16 rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
@@ -578,7 +614,9 @@ export default function AdminNewsPage() {
                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           {item.status === "DRAFT" && (
                             <button
-                              onClick={() => handleUpdateStatus(item.id, "PUBLISHED")}
+                              onClick={() =>
+                                handleUpdateStatus(item.id, "PUBLISHED")
+                              }
                               className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors tooltip"
                               title="Publikasikan"
                             >
@@ -645,7 +683,7 @@ export default function AdminNewsPage() {
                     </span>
                   </div>
                 </div>
-                
+
                 <div className="p-5 flex flex-col flex-1">
                   <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 h-12 group-hover:text-[#03587f] transition-colors">
                     {item.title}
@@ -653,7 +691,7 @@ export default function AdminNewsPage() {
                   <p className="text-gray-500 text-sm line-clamp-3 mb-4 flex-1">
                     {item.excerpt || item.content.substring(0, 100) + "..."}
                   </p>
-                  
+
                   <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
                     <div className="flex items-center gap-2 text-xs text-gray-500">
                       <Calendar className="w-4 h-4" />
@@ -684,12 +722,12 @@ export default function AdminNewsPage() {
       {/* Drawer Form (Replaces Modal) */}
       {/* Overlay */}
       {isDrawerOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-40 transition-opacity"
           onClick={handleCloseDrawer}
         />
       )}
-      
+
       {/* Drawer */}
       <div
         className={`fixed inset-y-0 right-0 z-50 w-full sm:w-[500px] lg:w-[600px] bg-white shadow-2xl transform transition-transform duration-300 ease-in-out ${
@@ -732,16 +770,18 @@ export default function AdminNewsPage() {
                         className="w-full h-48 sm:h-64 object-cover rounded-lg shadow-sm"
                       />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-3">
-                         <button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            className="p-2 bg-white/90 text-gray-900 rounded-full hover:bg-white"
-                         >
-                            <Edit2 className="w-4 h-4" />
-                         </button>
                         <button
                           type="button"
-                          onClick={() => setFormData({ ...formData, image: "" })}
+                          onClick={() => fileInputRef.current?.click()}
+                          className="p-2 bg-white/90 text-gray-900 rounded-full hover:bg-white"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData({ ...formData, image: "" })
+                          }
                           className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -777,15 +817,17 @@ export default function AdminNewsPage() {
                     className="hidden"
                   />
                   {!formData.image && (
-                     <div className="mt-4 pt-4 border-t border-gray-200">
-                        <input
-                           type="url"
-                           value={formData.image}
-                           onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                           placeholder="Atau tempel URL gambar disini"
-                           className="w-full text-sm px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#03587f]/20 focus:border-[#03587f]"
-                        />
-                     </div>
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <input
+                        type="url"
+                        value={formData.image}
+                        onChange={(e) =>
+                          setFormData({ ...formData, image: e.target.value })
+                        }
+                        placeholder="Atau tempel URL gambar disini"
+                        className="w-full text-sm px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#03587f]/20 focus:border-[#03587f]"
+                      />
+                    </div>
                   )}
                 </div>
               </div>
@@ -809,96 +851,104 @@ export default function AdminNewsPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                       Kategori
-                     </label>
-                     <select
-                       value={formData.category}
-                       onChange={(e) =>
-                         setFormData({ ...formData, category: e.target.value })
-                       }
-                       className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#03587f]/20 focus:border-[#03587f] outline-none bg-white cursor-pointer"
-                       required
-                     >
-                       <option value="">Pilih Kategori</option>
-                       {predefinedCategories.map((cat) => (
-                         <option key={cat} value={cat}>
-                           {cat}
-                         </option>
-                       ))}
-                     </select>
-                   </div>
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                       Penulis
-                     </label>
-                     <input
-                       type="text"
-                       value={formData.author}
-                       onChange={(e) =>
-                         setFormData({ ...formData, author: e.target.value })
-                       }
-                       className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#03587f]/20 focus:border-[#03587f] outline-none"
-                       placeholder="Nama penulis"
-                       required
-                     />
-                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Kategori
+                    </label>
+                    <select
+                      value={formData.category}
+                      onChange={(e) =>
+                        setFormData({ ...formData, category: e.target.value })
+                      }
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#03587f]/20 focus:border-[#03587f] outline-none bg-white cursor-pointer"
+                      required
+                    >
+                      <option value="">Pilih Kategori</option>
+                      {predefinedCategories.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Penulis
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.author}
+                      onChange={(e) =>
+                        setFormData({ ...formData, author: e.target.value })
+                      }
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#03587f]/20 focus:border-[#03587f] outline-none"
+                      placeholder="Nama penulis"
+                      required
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Content Section */}
               <div className="space-y-4">
-                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                       Ringkasan (Excerpt)
-                    </label>
-                    <textarea
-                       value={formData.excerpt}
-                       onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
-                       rows={2}
-                       className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#03587f]/20 focus:border-[#03587f] outline-none resize-none"
-                       placeholder="Ringkasan singkat untuk ditampilkan di kartu berita..."
-                    />
-                 </div>
-                 
-                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 flex justify-between">
-                       <span>Konten Utama</span>
-                       <span className="text-xs text-gray-400 font-normal">Markdown Supported</span>
-                    </label>
-                    <textarea
-                       value={formData.content}
-                       onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                       rows={15}
-                       className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#03587f]/20 focus:border-[#03587f] outline-none font-mono text-sm leading-relaxed"
-                       placeholder="Tulis konten berita lengkap disini..."
-                       required
-                    />
-                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ringkasan (Excerpt)
+                  </label>
+                  <textarea
+                    value={formData.excerpt}
+                    onChange={(e) =>
+                      setFormData({ ...formData, excerpt: e.target.value })
+                    }
+                    rows={2}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#03587f]/20 focus:border-[#03587f] outline-none resize-none"
+                    placeholder="Ringkasan singkat untuk ditampilkan di kartu berita..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex justify-between">
+                    <span>Konten Utama</span>
+                    <span className="text-xs text-gray-400 font-normal">
+                      Markdown Supported
+                    </span>
+                  </label>
+                  <textarea
+                    value={formData.content}
+                    onChange={(e) =>
+                      setFormData({ ...formData, content: e.target.value })
+                    }
+                    rows={15}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#03587f]/20 focus:border-[#03587f] outline-none font-mono text-sm leading-relaxed"
+                    placeholder="Tulis konten berita lengkap disini..."
+                    required
+                  />
+                </div>
               </div>
 
               {/* Settings Section */}
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                 <label className="block text-sm font-medium text-gray-900 mb-2">
-                    Pengaturan Publikasi
-                 </label>
-                 <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#03587f]/20 focus:border-[#03587f] outline-none cursor-pointer"
-                 >
-                    <option value="DRAFT">Simpan sebagai Draft</option>
-                    <option value="PUBLISHED">Langsung Publikasikan</option>
-                    <option value="ARCHIVED">Arsipkan Berita</option>
-                 </select>
-                 <p className="text-xs text-gray-500 mt-2">
-                    {formData.status === 'PUBLISHED' 
-                       ? 'Berita akan langsung muncul di halaman publik.' 
-                       : formData.status === 'DRAFT' 
-                          ? 'Berita tidak akan muncul di publik sampai dipublikasikan.'
-                          : 'Berita disembunyikan dari publik.'}
-                 </p>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Pengaturan Publikasi
+                </label>
+                <select
+                  value={formData.status}
+                  onChange={(e) =>
+                    setFormData({ ...formData, status: e.target.value })
+                  }
+                  className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#03587f]/20 focus:border-[#03587f] outline-none cursor-pointer"
+                >
+                  <option value="DRAFT">Simpan sebagai Draft</option>
+                  <option value="PUBLISHED">Langsung Publikasikan</option>
+                  <option value="ARCHIVED">Arsipkan Berita</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-2">
+                  {formData.status === "PUBLISHED"
+                    ? "Berita akan langsung muncul di halaman publik."
+                    : formData.status === "DRAFT"
+                    ? "Berita tidak akan muncul di publik sampai dipublikasikan."
+                    : "Berita disembunyikan dari publik."}
+                </p>
               </div>
             </form>
           </div>
@@ -912,7 +962,9 @@ export default function AdminNewsPage() {
               Batal
             </button>
             <button
-              onClick={() => document.getElementById('newsForm').requestSubmit()}
+              onClick={() =>
+                document.getElementById("newsForm").requestSubmit()
+              }
               className="px-5 py-2.5 text-sm font-medium text-white bg-[#03587f] rounded-lg hover:bg-[#024666] transition-colors shadow-sm flex items-center gap-2"
             >
               {editingNews ? "Simpan Perubahan" : "Terbitkan Berita"}

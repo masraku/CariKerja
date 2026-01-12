@@ -118,6 +118,7 @@ export async function GET(request) {
               status: true,
               terminatedAt: true,
               terminationReason: true,
+              terminatedBy: true,
               jobseekers: {
                 select: {
                   id: true,

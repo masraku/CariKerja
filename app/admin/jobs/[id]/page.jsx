@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import axios from "axios";
 import {
   ArrowLeft,
   Building2,
@@ -38,10 +39,9 @@ export default function AdminJobDetailPage() {
   const fetchJobDetail = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`/api/admin/jobs/${params.id}`, {
+      const { data } = await axios.get(`/api/admin/jobs/${params.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = await response.json();
 
       if (data.success) {
         setJob(data.job);
@@ -96,34 +96,31 @@ export default function AdminJobDetailPage() {
       }
 
       const token = localStorage.getItem("token");
-      const response = await fetch("/api/admin/jobs", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      await axios.patch(
+        "/api/admin/jobs",
+        {
           jobId: job.id,
           status: newStatus,
           rejectionReason,
-        }),
-      });
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      if (response.ok) {
-        await Swal.fire({
-          icon: "success",
-          title: "Berhasil",
-          text:
-            newStatus === "ACTIVE"
-              ? "Lowongan berhasil disetujui"
-              : "Lowongan berhasil ditolak",
-          timer: 1500,
-          showConfirmButton: false,
-        });
-        router.push("/admin/jobs");
-      } else {
-        throw new Error("Failed to update");
-      }
+      await Swal.fire({
+        icon: "success",
+        title: "Berhasil",
+        text:
+          newStatus === "ACTIVE"
+            ? "Lowongan berhasil disetujui"
+            : "Lowongan berhasil ditolak",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      router.push("/admin/jobs");
     } catch (error) {
       Swal.fire({
         icon: "error",

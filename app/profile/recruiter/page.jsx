@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import axios from "axios";
 import {
   User,
   Briefcase,
@@ -91,30 +92,20 @@ export default function RecruiterProfilePage() {
       setIsSaving(true);
 
       // 1. Save Profile Data
-      const response = await fetch("/api/profile/recruiter", {
-        method: "POST",
+      const { data } = await axios.post("/api/profile/recruiter", formData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Gagal menyimpan profile");
-      }
 
       // 2. Automatically Submit for Validation
       // We use the token to submit validation immediately after saving
-      const validationResponse = await fetch(
+      const validationResponse = await axios.post(
         "/api/profile/recruiter/submit-validation",
+        {},
         {
-          method: "POST",
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "application/json",
           },
         }
       );
@@ -152,61 +143,57 @@ export default function RecruiterProfilePage() {
     try {
       setIsLoading(true);
 
-      const response = await fetch("/api/profile/recruiter", {
+      const { data } = await axios.get("/api/profile/recruiter", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      if (data.profile) {
+        // Set company status - no redirect, allow viewing profile
+        const status =
+          data.profile.companies?.verified === true
+            ? "VERIFIED"
+            : data.profile.companies?.status || null;
+        setCompanyStatus(status);
 
-        if (data.profile) {
-          // Set company status - no redirect, allow viewing profile
-          const status =
-            data.profile.companies?.verified === true
-              ? "VERIFIED"
-              : data.profile.companies?.status || null;
-          setCompanyStatus(status);
+        setIsEditMode(true);
+        setFormData({
+          firstName: data.profile.firstName || "",
+          lastName: data.profile.lastName || "",
+          position: data.profile.position || "",
+          phone: data.profile.phone || "",
+          department: data.profile.department || "",
+          bio: data.profile.bio || "",
 
-          setIsEditMode(true);
-          setFormData({
-            firstName: data.profile.firstName || "",
-            lastName: data.profile.lastName || "",
-            position: data.profile.position || "",
-            phone: data.profile.phone || "",
-            department: data.profile.department || "",
-            bio: data.profile.bio || "",
+          companyId: data.profile.companyId || "",
+          companyName: data.profile.companies?.name || "",
+          companySlug: data.profile.companies?.slug || "",
+          companyLogo: data.profile.companies?.logo || "",
+          tagline: data.profile.companies?.tagline || "",
+          description: data.profile.companies?.description || "",
+          industry: data.profile.companies?.industry || "",
+          companySize: data.profile.companies?.companySize || "",
+          foundedYear: data.profile.companies?.foundedYear || "",
 
-            companyId: data.profile.companyId || "",
-            companyName: data.profile.companies?.name || "",
-            companySlug: data.profile.companies?.slug || "",
-            companyLogo: data.profile.companies?.logo || "",
-            tagline: data.profile.companies?.tagline || "",
-            description: data.profile.companies?.description || "",
-            industry: data.profile.companies?.industry || "",
-            companySize: data.profile.companies?.companySize || "",
-            foundedYear: data.profile.companies?.foundedYear || "",
+          companyEmail: data.profile.companies?.email || "",
+          companyPhone: data.profile.companies?.phone || "",
+          website: data.profile.companies?.website || "",
 
-            companyEmail: data.profile.companies?.email || "",
-            companyPhone: data.profile.companies?.phone || "",
-            website: data.profile.companies?.website || "",
+          address: data.profile.companies?.address || "",
+          city: data.profile.companies?.city || "",
+          province: data.profile.companies?.province || "",
+          postalCode: data.profile.companies?.postalCode || "",
 
-            address: data.profile.companies?.address || "",
-            city: data.profile.companies?.city || "",
-            province: data.profile.companies?.province || "",
-            postalCode: data.profile.companies?.postalCode || "",
+          linkedinUrl: data.profile.companies?.linkedinUrl || "",
+          facebookUrl: data.profile.companies?.facebookUrl || "",
+          twitterUrl: data.profile.companies?.twitterUrl || "",
+          instagramUrl: data.profile.companies?.instagramUrl || "",
 
-            linkedinUrl: data.profile.companies?.linkedinUrl || "",
-            facebookUrl: data.profile.companies?.facebookUrl || "",
-            twitterUrl: data.profile.companies?.twitterUrl || "",
-            instagramUrl: data.profile.companies?.instagramUrl || "",
-
-            culture: data.profile.companies?.culture || "",
-            benefits: data.profile.companies?.benefits || [],
-            gallery: data.profile.companies?.gallery || [],
-          });
-        }
+          culture: data.profile.companies?.culture || "",
+          benefits: data.profile.companies?.benefits || [],
+          gallery: data.profile.companies?.gallery || [],
+        });
       }
     } catch (error) {
     } finally {

@@ -7,14 +7,14 @@ export async function POST(request) {
     try {
         const authHeader = request.headers.get('authorization')
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+            return NextResponse.json({ error: 'Tidak memiliki akses' }, { status: 401 })
         }
 
         const token = authHeader.split(' ')[1]
         const decoded = verifyToken(token)
 
         if (!decoded) {
-            return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+            return NextResponse.json({ error: 'Token tidak valid' }, { status: 401 })
         }
 
         const body = await request.json()
@@ -35,7 +35,7 @@ export async function POST(request) {
         // Validate required fields
         if (!title || !date || !time || !jobId || !applicationIds || applicationIds.length === 0) {
             return NextResponse.json({ 
-                error: 'Missing required fields' 
+                error: 'Field yang wajib diisi tidak lengkap' 
             }, { status: 400 })
         }
 
@@ -48,7 +48,7 @@ export async function POST(request) {
         })
 
         if (!user || !user.recruiters) {
-            return NextResponse.json({ error: 'Recruiter not found' }, { status: 404 })
+            return NextResponse.json({ error: 'Rekruter tidak ditemukan' }, { status: 404 })
         }
 
         // Verify job belongs to recruiter's company
@@ -61,7 +61,7 @@ export async function POST(request) {
 
         if (!job) {
             return NextResponse.json({ 
-                error: 'Job not found or not authorized' 
+                error: 'Lowongan tidak ditemukan atau tidak diizinkan' 
             }, { status: 404 })
         }
 
@@ -75,7 +75,7 @@ export async function POST(request) {
 
         if (applications.length !== applicationIds.length) {
             return NextResponse.json({ 
-                error: 'Some applications not found or do not belong to this job' 
+                error: 'Beberapa lamaran tidak ditemukan atau bukan milik lowongan ini' 
             }, { status: 400 })
         }
 
@@ -165,12 +165,12 @@ export async function POST(request) {
         return NextResponse.json({
             success: true,
             interview: completeInterview,
-            message: `Interview scheduled for ${applicationIds.length} candidate(s)`
+            message: `Interview dijadwalkan untuk ${applicationIds.length} kandidat`
         })
 
     } catch (error) {
         return NextResponse.json({ 
-            error: 'Failed to schedule interview',
+            error: 'Gagal menjadwalkan interview',
             details: error.message 
         }, { status: 500 })
     }

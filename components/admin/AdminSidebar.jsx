@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import axios from "axios";
 import {
   LayoutDashboard,
   Building2,
@@ -27,42 +28,27 @@ export default function AdminSidebar() {
     const fetchPendingCounts = async () => {
       try {
         const token = localStorage.getItem("token");
+        const headers = { Authorization: `Bearer ${token}` };
 
-        // Fetch pending companies count
-        const companiesRes = await fetch("/api/admin/companies/pending-count", {
-          headers: { Authorization: `Bearer ${token}` },
+        // Fetch all pending counts in parallel
+        const [companiesRes, jobsRes, contractsRes] = await Promise.allSettled([
+          axios.get("/api/admin/companies/pending-count", { headers }),
+          axios.get("/api/admin/jobs/pending-count", { headers }),
+          axios.get("/api/admin/contracts/pending-count", { headers }),
+        ]);
+
+        setPendingCounts({
+          companies:
+            companiesRes.status === "fulfilled"
+              ? companiesRes.value.data.count || 0
+              : 0,
+          jobs:
+            jobsRes.status === "fulfilled" ? jobsRes.value.data.count || 0 : 0,
+          contracts:
+            contractsRes.status === "fulfilled"
+              ? contractsRes.value.data.count || 0
+              : 0,
         });
-
-        // Fetch pending jobs count
-        const jobsRes = await fetch("/api/admin/jobs/pending-count", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        // Fetch pending contracts count
-        const contractsRes = await fetch("/api/admin/contracts/pending-count", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (companiesRes.ok) {
-          const companiesData = await companiesRes.json();
-          setPendingCounts((prev) => ({
-            ...prev,
-            companies: companiesData.count || 0,
-          }));
-        }
-
-        if (jobsRes.ok) {
-          const jobsData = await jobsRes.json();
-          setPendingCounts((prev) => ({ ...prev, jobs: jobsData.count || 0 }));
-        }
-
-        if (contractsRes.ok) {
-          const contractsData = await contractsRes.json();
-          setPendingCounts((prev) => ({
-            ...prev,
-            contracts: contractsData.count || 0,
-          }));
-        }
       } catch (error) {
         console.error("Failed to fetch pending counts:", error);
       }

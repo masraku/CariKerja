@@ -45,13 +45,13 @@ export function useQueryCompanyDetail(slug, enabled = true) {
     return useQuery({
         queryKey: [...queryKeyCompanyDetail, slug],
         queryFn: async () => {
-            if (!slug) throw new Error("No slug provided");
+            if (!slug) throw new Error("Tidak ada slug yang diberikan");
 
             const { data } = await axios.get(`/api/companies/${slug}`);
 
-            if (!data.success) throw new Error("Failed to fetch company detail");
+            if (!data.success) throw new Error("Gagal memuat detail perusahaan");
 
-            return data.data;
+            return data.company;
         },
         enabled: enabled && !!slug,
         staleTime: 1000 * 60 * 5, // 5 minutes

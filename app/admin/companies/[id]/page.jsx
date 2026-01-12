@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import axios from "axios";
 import {
   Building2,
   CheckCircle,
@@ -34,11 +35,10 @@ export default function CompanyDetailPage() {
   const loadCompanyDetail = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`/api/admin/companies?status=all`, {
+      const { data } = await axios.get(`/api/admin/companies?status=all`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const data = await response.json();
       if (data.success) {
         const foundCompany = data.data.companies.find(
           (c) => c.id === params.id
@@ -73,19 +73,15 @@ export default function CompanyDetailPage() {
     if (result.isConfirmed) {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(
+        const { data } = await axios.patch(
           `/api/admin/companies/${company.id}/verify`,
+          { notes: result.value || "" },
           {
-            method: "PATCH",
             headers: {
               Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
             },
-            body: JSON.stringify({ notes: result.value || "" }),
           }
         );
-
-        const data = await response.json();
 
         if (data.success) {
           await Swal.fire({
@@ -102,7 +98,7 @@ export default function CompanyDetailPage() {
         Swal.fire({
           icon: "error",
           title: "Gagal",
-          text: error.message,
+          text: error.response?.data?.error || error.message,
         });
       }
     }
@@ -138,19 +134,15 @@ export default function CompanyDetailPage() {
     if (result.isConfirmed) {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(
+        const { data } = await axios.patch(
           `/api/admin/companies/${company.id}/reject`,
+          { reason: result.value },
           {
-            method: "PATCH",
             headers: {
               Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
             },
-            body: JSON.stringify({ reason: result.value }),
           }
         );
-
-        const data = await response.json();
 
         if (data.success) {
           await Swal.fire({
@@ -167,7 +159,7 @@ export default function CompanyDetailPage() {
         Swal.fire({
           icon: "error",
           title: "Gagal",
-          text: error.message,
+          text: error.response?.data?.error || error.message,
         });
       }
     }

@@ -10,7 +10,7 @@ export async function GET(request) {
     const cronSecret = process.env.CRON_SECRET
     
     if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Tidak memiliki akses' }, { status: 401 })
     }
 
     const now = new Date()
@@ -44,7 +44,7 @@ export async function GET(request) {
     if (expiredContracts.length === 0) {
       return NextResponse.json({
         success: true,
-        message: 'No expired contracts found',
+        message: 'Tidak ada kontrak kedaluwarsa',
         completed: 0
       })
     }
@@ -81,7 +81,7 @@ export async function GET(request) {
 
     return NextResponse.json({
       success: true,
-      message: `Completed ${expiredContracts.length} expired contracts`,
+      message: `Menyelesaikan ${expiredContracts.length} kontrak kedaluwarsa`,
       completed: expiredContracts.length,
       workers: completedNames
     })
@@ -89,7 +89,7 @@ export async function GET(request) {
   } catch (error) {
     console.error('Error completing expired contracts:', error)
     return NextResponse.json({ 
-      error: 'Failed to complete expired contracts',
+      error: 'Gagal menyelesaikan kontrak kedaluwarsa',
       details: error.message 
     }, { status: 500 })
   }

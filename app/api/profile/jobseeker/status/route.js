@@ -63,8 +63,9 @@ export async function GET(request) {
                 // Status is now computed from contract workers
                 isEmployed: hasActiveContract,
                 isLookingForJob: !hasActiveContract,
-                employedAt: hasActiveContract ? new Date() : null,
-                employedCompany: employedCompanyName || jobseeker.employedCompany
+                employedAt: hasActiveContract ? (jobseeker.employedAt || new Date()) : null,
+                // Only show company info if actively employed
+                employedCompany: hasActiveContract ? (employedCompanyName || jobseeker.employedCompany) : null
             }
         })
 

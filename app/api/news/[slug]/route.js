@@ -11,7 +11,7 @@ export async function GET(request, { params }) {
         })
 
         if (!news || news.status !== 'PUBLISHED') {
-            return NextResponse.json({ error: 'News not found' }, { status: 404 })
+            return NextResponse.json({ error: 'Berita tidak ditemukan' }, { status: 404 })
         }
 
         // Increment view count

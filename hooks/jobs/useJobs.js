@@ -38,7 +38,7 @@ export function useQueryJobs({
                 withCredentials: true,
             });
 
-            if (!data.success) throw new Error("Failed to fetch jobs");
+            if (!data.success) throw new Error("Gagal memuat daftar lowongan");
 
             return {
                 jobs: data.data,
@@ -57,13 +57,13 @@ export function useQueryJobDetail(slug, enabled = true) {
     return useQuery({
         queryKey: [...queryKeyJobDetail, slug],
         queryFn: async () => {
-            if (!slug) throw new Error("No slug provided");
+            if (!slug) throw new Error("Tidak ada slug yang diberikan");
 
             const { data } = await axios.get(`/api/jobs/${slug}`, {
                 withCredentials: true,
             });
 
-            if (!data.success) throw new Error("Failed to fetch job detail");
+            if (!data.success) throw new Error("Gagal memuat detail lowongan");
 
             return data.data;
         },
@@ -84,7 +84,7 @@ export function useMutationApplyJob() {
                 { headers: getAuthHeader() }
             );
 
-            if (!data.success) throw new Error(data.error || "Failed to apply");
+            if (!data.success) throw new Error(data.error || "Gagal melamar pekerjaan");
 
             return data;
         },

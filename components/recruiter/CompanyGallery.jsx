@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
+import axios from "axios";
 
 export default function CompanyGallery({
   gallery = [],
@@ -18,12 +19,12 @@ export default function CompanyGallery({
 
     // Validate
     if (!file.type.startsWith("image/")) {
-      alert("Please select an image file");
+      alert("Silakan pilih file gambar");
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("File size must be less than 5MB");
+      alert("Ukuran file maksimal 5MB");
       return;
     }
 
@@ -35,25 +36,23 @@ export default function CompanyGallery({
       formData.append("type", "company-gallery");
       formData.append("companyId", companyId);
 
-      const response = await fetch("/api/upload", {
-        method: "POST",
+      const { data } = await axios.post("/api/upload", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        body: formData,
       });
-
-      const data = await response.json();
 
       if (data.success) {
         if (onGalleryUpdate) {
           onGalleryUpdate([...gallery, data.url]);
         }
       } else {
-        throw new Error(data.error || "Upload failed");
+        throw new Error(data.error || "Gagal mengunggah");
       }
     } catch (error) {
-      alert(error.message || "Failed to upload photo");
+      alert(
+        error.response?.data?.error || error.message || "Gagal mengunggah foto"
+      );
     } finally {
       setUploading(false);
       // Reset input
@@ -63,31 +62,29 @@ export default function CompanyGallery({
 
   const handleDelete = async (photoUrl) => {
     if (disabled) return;
-    if (!confirm("Remove this photo from gallery?")) return;
+    if (!confirm("Hapus foto ini dari galeri?")) return;
 
     setDeleting(photoUrl);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("/api/upload", {
-        method: "DELETE",
+      const { data } = await axios.delete("/api/upload", {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ photoUrl, companyId }),
+        data: { photoUrl, companyId },
       });
-
-      const data = await response.json();
 
       if (data.success) {
         if (onGalleryUpdate) {
           onGalleryUpdate(gallery.filter((url) => url !== photoUrl));
         }
       } else {
-        throw new Error(data.error || "Delete failed");
+        throw new Error(data.error || "Gagal menghapus");
       }
     } catch (error) {
-      alert(error.message || "Failed to delete photo");
+      alert(
+        error.response?.data?.error || error.message || "Gagal menghapus foto"
+      );
     } finally {
       setDeleting(null);
     }

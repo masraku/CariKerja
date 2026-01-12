@@ -23,7 +23,7 @@ export function useQueryNews({
                 },
             });
 
-            if (!data.success) throw new Error("Failed to fetch news");
+            if (!data.success) throw new Error("Gagal memuat berita");
 
             return {
                 news: data.news || [],
@@ -48,13 +48,16 @@ export function useQueryNewsDetail(slug, enabled = true) {
     return useQuery({
         queryKey: [...queryKeyNewsDetail, slug],
         queryFn: async () => {
-            if (!slug) throw new Error("No slug provided");
+            if (!slug) throw new Error("Tidak ada slug yang diberikan");
 
             const { data } = await axios.get(`/api/news/${slug}`);
 
-            if (!data.success) throw new Error("Failed to fetch news detail");
+            if (!data.success) throw new Error("Gagal memuat detail berita");
 
-            return data.data;
+            return {
+                news: data.news,
+                relatedNews: data.relatedNews || [],
+            };
         },
         enabled: enabled && !!slug,
         staleTime: 1000 * 60 * 5, // 5 minutes
