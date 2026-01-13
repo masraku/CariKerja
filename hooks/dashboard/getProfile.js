@@ -18,6 +18,8 @@ export function useQueryGetProfile() {
             });
             return data;
         },
+        staleTime: 0, // Always consider data stale to ensure fresh fetch
+        refetchOnMount: "always", // Always refetch when component mounts
     });
 }
 

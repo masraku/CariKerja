@@ -39,6 +39,8 @@ export function useQueryRecruiterProfile(enabled = true) {
             return data.profile;
         },
         enabled,
+        staleTime: 0, // Always consider data stale to ensure fresh fetch
+        refetchOnMount: "always", // Always refetch when component mounts
     });
 }
 
@@ -222,9 +224,12 @@ export function useMutationSaveRecruiterProfile() {
 
             return data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeyRecruiterProfile });
-            queryClient.invalidateQueries({ queryKey: queryKeyRecruiterDashboard });
+        onSuccess: async () => {
+            // Await both invalidations to ensure cache is properly updated before navigation
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: queryKeyRecruiterProfile }),
+                queryClient.invalidateQueries({ queryKey: queryKeyRecruiterDashboard }),
+            ]);
         },
     });
 }
