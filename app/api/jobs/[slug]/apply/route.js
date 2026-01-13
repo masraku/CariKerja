@@ -73,15 +73,29 @@ export async function POST(request, context) {
       )
     }
 
-    // Check if already applied and still in progress
-    const existingApplication = await prisma.applications.findUnique({
+    // Check if already applied TO THIS SPECIFIC JOB and still in progress
+    // Using findFirst with explicit conditions to ensure per-job checking
+    console.log(`[APPLY DEBUG] Checking for existing application:`, {
+      jobId: job.id,
+      jobTitle: job.title,
+      jobSlug: job.slug,
+      jobseekerId: user.jobseekers.id
+    })
+    
+    const existingApplication = await prisma.applications.findFirst({
       where: {
-        jobId_jobseekerId: {
-          jobId: job.id,
-          jobseekerId: user.jobseekers.id
-        }
+        AND: [
+          { jobId: job.id },
+          { jobseekerId: user.jobseekers.id }
+        ]
       }
     })
+    
+    console.log(`[APPLY DEBUG] Existing application found:`, existingApplication ? {
+      id: existingApplication.id,
+      jobId: existingApplication.jobId,
+      status: existingApplication.status
+    } : 'None')
 
     if (existingApplication) {
       // Define completed statuses
@@ -92,10 +106,12 @@ export async function POST(request, context) {
         return NextResponse.json(
           { 
             error: 'Lamaran Anda masih dalam proses seleksi',
-            message: `Anda sudah melamar ke lowongan ini dan masih dalam tahap ${existingApplication.status}. Silakan tunggu hasil seleksi sebelum melamar kembali.`,
+            message: `Anda sudah melamar ke lowongan "${job.title}" dan masih dalam tahap ${existingApplication.status}. Silakan tunggu hasil seleksi sebelum melamar kembali.`,
             applicationId: existingApplication.id,
             status: existingApplication.status,
-            appliedAt: existingApplication.appliedAt
+            appliedAt: existingApplication.appliedAt,
+            jobTitle: job.title,
+            jobSlug: job.slug
           },
           { status: 400 }
         )
@@ -103,7 +119,7 @@ export async function POST(request, context) {
         return NextResponse.json(
           { 
             error: 'Anda sudah diterima di lowongan ini',
-            message: 'Anda sudah diterima bekerja untuk posisi ini.',
+            message: `Anda sudah diterima bekerja untuk posisi "${job.title}".`,
           },
           { status: 400 }
         )

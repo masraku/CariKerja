@@ -581,9 +581,91 @@ export default function AllApplicationsPage() {
                 >
                   Prev
                 </button>
-                <div className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium">
-                  {currentPage} / {totalPages}
+
+                {/* Page Numbers */}
+                <div className="flex items-center gap-1">
+                  {(() => {
+                    const pages = [];
+                    const showEllipsis = totalPages > 7;
+
+                    if (!showEllipsis) {
+                      for (let i = 1; i <= totalPages; i++) {
+                        pages.push(i);
+                      }
+                    } else {
+                      if (currentPage <= 4) {
+                        pages.push(1, 2, 3, 4, 5, "...", totalPages);
+                      } else if (currentPage >= totalPages - 3) {
+                        pages.push(
+                          1,
+                          "...",
+                          totalPages - 4,
+                          totalPages - 3,
+                          totalPages - 2,
+                          totalPages - 1,
+                          totalPages
+                        );
+                      } else {
+                        pages.push(
+                          1,
+                          "...",
+                          currentPage - 1,
+                          currentPage,
+                          currentPage + 1,
+                          "...",
+                          totalPages
+                        );
+                      }
+                    }
+
+                    return pages.map((page, idx) =>
+                      page === "..." ? (
+                        <span
+                          key={`ellipsis-${idx}`}
+                          className="px-2 text-gray-400"
+                        >
+                          ...
+                        </span>
+                      ) : (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`w-10 h-10 rounded-lg text-sm font-medium transition ${
+                            currentPage === page
+                              ? "bg-[#03587f] text-white"
+                              : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      )
+                    );
+                  })()}
                 </div>
+
+                {/* Go to page input - always show when more than 1 page */}
+                {totalPages > 1 && (
+                  <div className="flex items-center gap-2 ml-2">
+                    <span className="text-sm text-gray-500">Ke:</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max={totalPages}
+                      placeholder="#"
+                      className="w-14 h-10 px-2 text-center text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#03587f] focus:border-transparent text-gray-900"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          const val = parseInt(e.target.value);
+                          if (val >= 1 && val <= totalPages) {
+                            setCurrentPage(val);
+                            e.target.value = "";
+                          }
+                        }
+                      }}
+                    />
+                  </div>
+                )}
+
                 <button
                   onClick={() =>
                     setCurrentPage((p) => Math.min(totalPages, p + 1))

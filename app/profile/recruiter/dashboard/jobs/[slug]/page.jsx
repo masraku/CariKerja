@@ -803,12 +803,8 @@ export default function JobDetailPage() {
         timer: 1500,
         showConfirmButton: false,
       });
-      // Update local state
-      setApplications((prev) =>
-        prev.map((app) =>
-          app.id === application.id ? { ...app, status: "SHORTLISTED" } : app
-        )
-      );
+      // Refresh data from server to sync stats
+      loadApplications();
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -1012,12 +1008,8 @@ export default function JobDetailPage() {
         timer: 2000,
         showConfirmButton: false,
       });
-      // Update local state
-      setApplications((prev) =>
-        prev.map((app) =>
-          app.id === applicationId ? { ...app, status: "REJECTED" } : app
-        )
-      );
+      // Refresh data from server to sync stats
+      loadApplications();
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -2149,8 +2141,8 @@ export default function JobDetailPage() {
                       })()}
                     </div>
 
-                    {/* Go to page input - only show if more than 7 pages */}
-                    {totalPages > 7 && (
+                    {/* Go to page input - always show */}
+                    {totalPages > 1 && (
                       <div className="flex items-center gap-2 ml-2">
                         <span className="text-sm text-gray-500">Ke:</span>
                         <input
@@ -2158,7 +2150,7 @@ export default function JobDetailPage() {
                           min="1"
                           max={totalPages}
                           placeholder="#"
-                          className="w-14 h-10 px-2 text-center text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#03587f] focus:border-transparent"
+                          className="w-14 h-10 px-2 text-center text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#03587f] focus:border-transparent text-gray-900"
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
                               const val = parseInt(e.target.value);
