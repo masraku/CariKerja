@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 
 // Combined daily tasks cron job
 // Runs at 1 AM daily
@@ -91,7 +92,6 @@ export async function GET(request) {
     })
     results.expiredJobs = expiredJobs.count
 
-    console.log(`Daily tasks completed:`, results)
 
     return NextResponse.json({
       success: true,
@@ -105,7 +105,7 @@ export async function GET(request) {
     return NextResponse.json({
       success: false,
       error: 'Gagal menjalankan tugas harian',
-      details: error.message
+      ...createErrorResponse('Terjadi kesalahan', error)
     }, { status: 500 })
   }
 }

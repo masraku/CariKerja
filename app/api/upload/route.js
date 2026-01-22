@@ -1,17 +1,24 @@
 import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/authHelper'
+
 import { supabaseAdmin } from '@/lib/supabase'
+
 import { prisma } from '@/lib/prisma'
+
 import sharp from 'sharp'
+import { validateFile, sanitizeFilename, generateSafeFilename } from '@/lib/fileValidation'
+
 
 /**
  * Convert image to WebP format
  * Returns original buffer if file is PDF or conversion fails
+ * @param {Buffer} buffer - File buffer (already read)
+ * @param {string} mimeType - File MIME type
+ * @param {string} originalName - Original filename for extension
  */
-async function convertToWebP(file) {
+async function convertToWebP(buffer, mimeType, originalName) {
     // Skip PDF files - keep original
-    if (file.type === 'application/pdf') {
-        const buffer = Buffer.from(await file.arrayBuffer())
+    if (mimeType === 'application/pdf') {
         return {
             buffer,
             extension: 'pdf',
@@ -20,18 +27,16 @@ async function convertToWebP(file) {
     }
 
     // Only process image files
-    if (!file.type.startsWith('image/')) {
-        const buffer = Buffer.from(await file.arrayBuffer())
-        const ext = file.name.split('.').pop()
+    if (!mimeType.startsWith('image/')) {
+        const ext = originalName.split('.').pop()
         return {
             buffer,
             extension: ext,
-            contentType: file.type
+            contentType: mimeType
         }
     }
 
     try {
-        const buffer = Buffer.from(await file.arrayBuffer())
         const webpBuffer = await sharp(buffer)
             .webp({ quality: 80 })
             .toBuffer()
@@ -44,12 +49,11 @@ async function convertToWebP(file) {
     } catch (error) {
         console.error('WebP conversion failed:', error)
         // Fallback to original if conversion fails
-        const buffer = Buffer.from(await file.arrayBuffer())
-        const ext = file.name.split('.').pop()
+        const ext = originalName.split('.').pop()
         return {
             buffer,
             extension: ext,
-            contentType: file.type
+            contentType: mimeType
         }
     }
 }
@@ -114,7 +118,7 @@ export async function POST(request) {
             )
         }
 
-        // Validate file type based on bucket/purpose
+        // Determine if documents are allowed based on bucket/purpose
         const isDocument = bucket?.includes('cv') || 
                           bucket?.includes('diploma') || 
                           bucket?.includes('certificate') ||
@@ -126,33 +130,25 @@ export async function POST(request) {
                           bucket?.includes('resume') ||
                           type === 'contract-doc' ||
                           type === 'admin-doc'
-        
-        if (isDocument) {
-            // Allow PDF and Images for documents
-            if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
-                return NextResponse.json(
-                    { error: 'File harus berupa gambar (JPG, PNG) atau PDF' },
-                    { status: 400 }
-                )
-            }
-        } else {
-            // Default to images only (for photos)
-            if (!file.type.startsWith('image/')) {
-                return NextResponse.json(
-                    { error: 'File harus berupa gambar (JPG, PNG)' },
-                    { status: 400 }
-                )
-            }
-        }
 
-        // Validate file size (max 2MB for Supabase free tier)
-        const maxSize = 2 * 1024 * 1024 // 2MB
-        if (file.size > maxSize) {
+        // Read file buffer for validation
+        const fileBuffer = Buffer.from(await file.arrayBuffer())
+
+        // Comprehensive file validation (magic numbers, filename, size, etc.)
+        const validation = await validateFile(file, fileBuffer, {
+            allowDocuments: isDocument,
+            maxSize: 2 * 1024 * 1024 // 2MB
+        })
+
+        if (!validation.valid) {
             return NextResponse.json(
-                { error: `Ukuran file terlalu besar (${(file.size / 1024 / 1024).toFixed(2)}MB). Maksimal 2MB.` },
+                { error: validation.error },
                 { status: 400 }
             )
         }
+
+        // Sanitize filename for security
+        const safeFilename = sanitizeFilename(file.name)
 
         let photoUrl
         const targetBucket = getBucketName(type, bucket)
@@ -172,7 +168,7 @@ export async function POST(request) {
             }
 
             // Convert image to WebP
-            const { buffer, extension, contentType } = await convertToWebP(file)
+            const { buffer, extension, contentType } = await convertToWebP(fileBuffer, file.type, safeFilename)
             const fileName = `profile.${extension}`
             const filePath = `recruiter/${recruiter.id}/${fileName}`
 
@@ -194,7 +190,7 @@ export async function POST(request) {
             if (error) {
                 console.error('Upload error:', error)
                 return NextResponse.json(
-                    { error: `Gagal mengunggah: ${error.message}` },
+                    createErrorResponse('Gagal mengunggah', error),
                     { status: 500 }
                 )
             }
@@ -244,7 +240,7 @@ export async function POST(request) {
             }
 
             // Convert image to WebP
-            const { buffer, extension, contentType } = await convertToWebP(file)
+            const { buffer, extension, contentType } = await convertToWebP(fileBuffer, file.type, safeFilename)
             const fileName = `${Date.now()}.${extension}`
             const filePath = `company/${companyId}/gallery/${fileName}`
 
@@ -293,7 +289,7 @@ export async function POST(request) {
             }
 
             // Convert image to WebP
-            const { buffer, extension, contentType } = await convertToWebP(file)
+            const { buffer, extension, contentType } = await convertToWebP(fileBuffer, file.type, safeFilename)
             const fileName = `${Date.now()}.${extension}`
             const filePath = `${recruiter.companyId}/${fileName}`
 
@@ -372,7 +368,7 @@ export async function POST(request) {
             }
 
             // Convert image to WebP (PDFs will remain unchanged)
-            const { buffer, extension, contentType } = await convertToWebP(file)
+            const { buffer, extension, contentType } = await convertToWebP(fileBuffer, file.type, safeFilename)
             const fileName = `${folderName}-${Date.now()}.${extension}`
             const filePath = `jobseeker/${jobseeker.id}/${folderName}/${fileName}`
 
@@ -406,7 +402,7 @@ export async function POST(request) {
                 let uploadBucket = targetBucket || 'Lowongan' // Default to Lowongan bucket for admin docs
                 
                 // Convert image to WebP (PDFs will remain unchanged)
-                const { buffer, extension, contentType } = await convertToWebP(file)
+                const { buffer, extension, contentType } = await convertToWebP(fileBuffer, file.type, safeFilename)
                 const fileName = `${Date.now()}.${extension}`
                 const filePath = `${uploadFolder}/${fileName}`
 
@@ -443,7 +439,7 @@ export async function POST(request) {
                 let uploadBucket = targetBucket
 
                 // Convert image to WebP (PDFs will remain unchanged)
-                const { buffer, extension, contentType } = await convertToWebP(file)
+                const { buffer, extension, contentType } = await convertToWebP(fileBuffer, file.type, safeFilename)
                 let filePath = ''
 
                 if (recruiter) {
@@ -503,7 +499,7 @@ export async function POST(request) {
     } catch (error) {
         console.error('Upload error:', error)
         return NextResponse.json(
-            { error: 'Gagal mengunggah file', details: error.message },
+            createErrorResponse('Gagal mengunggah file', error),
             { status: 500 }
         )
     }
@@ -578,7 +574,7 @@ export async function DELETE(request) {
     } catch (error) {
         console.error('Delete error:', error)
         return NextResponse.json(
-            { error: 'Gagal menghapus foto' },
+            createErrorResponse('Gagal menghapus foto', error),
             { status: 500 }
         )
     }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { verifyToken } from '@/lib/auth'
 
 export async function GET(request) {
@@ -116,7 +117,7 @@ export async function GET(request) {
     return NextResponse.json(
       { 
         error: 'Failed to fetch jobs',
-        details: error.message 
+        ...createErrorResponse('Terjadi kesalahan', error) 
       },
       { status: 500 }
     )

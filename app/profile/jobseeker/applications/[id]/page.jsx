@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import axios from "axios";
+import api from "@/lib/api";
 import Swal from "sweetalert2";
 import {
   ArrowLeft,
@@ -59,13 +59,14 @@ export default function ApplicationDetailPage() {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      const { data } = await axios.get(
+      const { data } = await api.get(
         `/api/profile/jobseeker/applications/${params.id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+          withCredentials: true,
+        },
       );
 
       // API returns data in data field
@@ -95,13 +96,14 @@ export default function ApplicationDetailPage() {
   const loadInterviewDetail = async (applicationId) => {
     try {
       const token = localStorage.getItem("token");
-      const { data } = await axios.get(
+      const { data } = await api.get(
         `/api/profile/jobseeker/applications/${applicationId}/interview`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+          withCredentials: true,
+        },
       );
 
       setInterview(data.interview);
@@ -145,14 +147,15 @@ export default function ApplicationDetailPage() {
       });
 
       const token = localStorage.getItem("token");
-      const { data } = await axios.post(
+      const { data } = await api.post(
         `/api/profile/jobseeker/applications/${params.id}/reschedule`,
         { reason },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+          withCredentials: true,
+        },
       );
 
       await Swal.fire({
@@ -192,10 +195,11 @@ export default function ApplicationDetailPage() {
       formData.append("bucket", "resignation"); // Specify bucket to allow PDF upload
 
       const token = localStorage.getItem("token");
-      const { data } = await axios.post("/api/upload", formData, {
+      const { data } = await api.post("/api/upload", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        withCredentials: true,
       });
 
       if (data.url) {
@@ -244,7 +248,7 @@ export default function ApplicationDetailPage() {
     try {
       setSubmittingResign(true);
       const token = localStorage.getItem("token");
-      const { data } = await axios.post(
+      const { data } = await api.post(
         "/api/resignations/submit",
         {
           applicationId: application.id,
@@ -255,7 +259,8 @@ export default function ApplicationDetailPage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+          withCredentials: true,
+        },
       );
 
       if (data.success) {
@@ -524,11 +529,15 @@ export default function ApplicationDetailPage() {
                   <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-gray-600 text-sm sm:text-base">
                     <span className="flex items-center gap-1">
                       <MapPin className="w-4 h-4 flex-shrink-0" />
-                      <span className="truncate">{application.jobs?.location || application.jobs?.city}</span>
+                      <span className="truncate">
+                        {application.jobs?.location || application.jobs?.city}
+                      </span>
                     </span>
                     <span className="flex items-center gap-1">
                       <Calendar className="w-4 h-4 flex-shrink-0" />
-                      <span className="truncate">Dilamar {formatDate(application.appliedAt)}</span>
+                      <span className="truncate">
+                        Dilamar {formatDate(application.appliedAt)}
+                      </span>
                     </span>
                   </div>
                 </div>
@@ -538,8 +547,12 @@ export default function ApplicationDetailPage() {
               <div
                 className={`px-4 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 ${statusConfig.color} flex items-center gap-2 self-start sm:self-center flex-shrink-0`}
               >
-                <StatusIcon className={`w-5 h-5 sm:w-6 sm:h-6 ${statusConfig.iconColor}`} />
-                <span className="font-bold text-sm sm:text-lg whitespace-nowrap">{statusConfig.label}</span>
+                <StatusIcon
+                  className={`w-5 h-5 sm:w-6 sm:h-6 ${statusConfig.iconColor}`}
+                />
+                <span className="font-bold text-sm sm:text-lg whitespace-nowrap">
+                  {statusConfig.label}
+                </span>
               </div>
             </div>
           </div>
@@ -617,8 +630,8 @@ export default function ApplicationDetailPage() {
                           application.resignation.status === "PENDING"
                             ? "bg-yellow-50 border-yellow-200"
                             : application.resignation.status === "APPROVED"
-                            ? "bg-green-50 border-green-200"
-                            : "bg-red-50 border-red-200"
+                              ? "bg-green-50 border-green-200"
+                              : "bg-red-50 border-red-200"
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -627,8 +640,8 @@ export default function ApplicationDetailPage() {
                               application.resignation.status === "PENDING"
                                 ? "text-yellow-600"
                                 : application.resignation.status === "APPROVED"
-                                ? "text-green-600"
-                                : "text-red-600"
+                                  ? "text-green-600"
+                                  : "text-red-600"
                             }`}
                           />
                           <div>
@@ -637,8 +650,8 @@ export default function ApplicationDetailPage() {
                               {application.resignation.status === "PENDING"
                                 ? "Menunggu Proses"
                                 : application.resignation.status === "APPROVED"
-                                ? "Disetujui"
-                                : "Ditolak"}
+                                  ? "Disetujui"
+                                  : "Ditolak"}
                             </p>
                             <p className="text-sm text-gray-600">
                               Diajukan pada{" "}

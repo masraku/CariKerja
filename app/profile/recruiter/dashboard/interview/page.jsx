@@ -2,7 +2,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import axios from "axios";
+import api from "@/lib/api";
 import {
   Calendar,
   Clock,
@@ -63,13 +63,14 @@ function ScheduleInterviewContent() {
       const token = localStorage.getItem("token");
 
       // Load applicants first - this includes job data
-      const { data: applicantData } = await axios.get(
+      const { data: applicantData } = await api.get(
         `/api/applications/batch?ids=${applicantIds}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+          withCredentials: true,
+        },
       );
 
       setApplicants(applicantData.applications || []);
@@ -165,7 +166,7 @@ function ScheduleInterviewContent() {
       setSaving(true);
 
       const token = localStorage.getItem("token");
-      const { data } = await axios.post(
+      const { data } = await api.post(
         "/api/interviews/schedule",
         {
           ...formData,
@@ -176,7 +177,8 @@ function ScheduleInterviewContent() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+          withCredentials: true,
+        },
       );
 
       // Format date for WhatsApp message
@@ -187,12 +189,12 @@ function ScheduleInterviewContent() {
           day: "numeric",
           month: "long",
           year: "numeric",
-        }
+        },
       );
 
       // Send WhatsApp to each candidate with phone number
       const candidatesWithPhone = applicants.filter(
-        (app) => app.jobseeker?.phone
+        (app) => app.jobseeker?.phone,
       );
 
       if (candidatesWithPhone.length > 0) {
@@ -232,14 +234,14 @@ ${meetingInfo}
 ${formData.description ? `📝 *Info:* ${formData.description}\n` : ""}
 Mohon konfirmasi kehadiran Anda dengan membalas pesan ini.
 
-Terima kasih dan sampai jumpa!`
+Terima kasih dan sampai jumpa!`,
           );
 
           // Delay opening each tab to prevent blocking
           setTimeout(() => {
             window.open(
               `https://wa.me/${formattedPhone}?text=${message}`,
-              "_blank"
+              "_blank",
             );
           }, index * 800);
         });

@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import axios from "axios";
+
+import api from "@/lib/api";
 import {
   Briefcase,
   MapPin,
@@ -50,8 +51,9 @@ export default function PostJobPage() {
         return;
       }
 
-      const { data } = await axios.get("/api/profile/recruiter", {
+      const { data } = await api.get("/api/profile/recruiter", {
         headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
 
       const profile = data.profile;
@@ -320,14 +322,15 @@ export default function PostJobPage() {
             parseInt(formData.femalePositions || 0) || 1,
       };
 
-      const { data } = await axios.post(
+      const { data } = await api.post(
         "/api/profile/recruiter/jobs/create",
         submitData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+          withCredentials: true,
+        },
       );
 
       await Swal.fire({
@@ -425,8 +428,8 @@ export default function PostJobPage() {
           companyStatus === "REJECTED"
             ? "Perusahaan Anda ditolak. Silakan edit profile perusahaan dan kirim ulang untuk di-review."
             : companyStatus === "PENDING_RESUBMISSION"
-            ? "Perusahaan Anda sedang dalam proses review ulang oleh admin."
-            : "Perusahaan Anda harus terverifikasi terlebih dahulu oleh admin sebelum dapat memposting lowongan.",
+              ? "Perusahaan Anda sedang dalam proses review ulang oleh admin."
+              : "Perusahaan Anda harus terverifikasi terlebih dahulu oleh admin sebelum dapat memposting lowongan.",
         buttonText:
           companyStatus === "REJECTED"
             ? "Edit Profile Perusahaan"
@@ -435,7 +438,7 @@ export default function PostJobPage() {
           router.push(
             companyStatus === "REJECTED"
               ? "/profile/recruiter"
-              : "/profile/recruiter/dashboard"
+              : "/profile/recruiter/dashboard",
           ),
       },
       error: {
@@ -493,8 +496,8 @@ export default function PostJobPage() {
                       currentStep === step.number
                         ? "bg-blue-600 text-white"
                         : currentStep > step.number
-                        ? "bg-green-500 text-white"
-                        : "bg-gray-200 text-gray-600"
+                          ? "bg-green-500 text-white"
+                          : "bg-gray-200 text-gray-600"
                     }`}
                   >
                     {currentStep > step.number ? (
@@ -973,16 +976,17 @@ export default function PostJobPage() {
                             formDataUpload.append("file", file);
                             formDataUpload.append("folder", "jobs");
 
-                            const { data } = await axios.post(
+                            const { data } = await api.post(
                               "/api/upload",
                               formDataUpload,
                               {
                                 headers: {
                                   Authorization: `Bearer ${localStorage.getItem(
-                                    "token"
+                                    "token",
                                   )}`,
                                 },
-                              }
+                                withCredentials: true,
+                              },
                             );
 
                             if (data.url) {
@@ -1210,14 +1214,14 @@ export default function PostJobPage() {
                                   ...prev,
                                   workingDays: [...prev.workingDays, day],
                                   holidays: prev.holidays.filter(
-                                    (d) => d !== day
+                                    (d) => d !== day,
                                   ),
                                 }));
                               } else {
                                 setFormData((prev) => ({
                                   ...prev,
                                   workingDays: prev.workingDays.filter(
-                                    (d) => d !== day
+                                    (d) => d !== day,
                                   ),
                                 }));
                               }
@@ -1260,14 +1264,14 @@ export default function PostJobPage() {
                                   ...prev,
                                   holidays: [...prev.holidays, day],
                                   workingDays: prev.workingDays.filter(
-                                    (d) => d !== day
+                                    (d) => d !== day,
                                   ),
                                 }));
                               } else {
                                 setFormData((prev) => ({
                                   ...prev,
                                   holidays: prev.holidays.filter(
-                                    (d) => d !== day
+                                    (d) => d !== day,
                                   ),
                                 }));
                               }

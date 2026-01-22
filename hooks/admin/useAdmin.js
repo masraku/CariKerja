@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import api from "@/lib/api"; // CSRF-protected axios instance
 
 // Helper to get auth header
 const getAuthHeader = () => ({
@@ -92,10 +93,11 @@ export function useMutationVerifyCompany() {
 
     return useMutation({
         mutationFn: async ({ companyId, verified }) => {
-            const { data } = await axios.patch(
+            // Use api for PATCH (CSRF protected)
+            const { data } = await api.patch(
                 `/api/admin/companies/${companyId}`,
                 { verified },
-                { headers: getAuthHeader() }
+                { headers: getAuthHeader(), withCredentials: true }
             );
 
             if (!data.success) throw new Error(data.error || "Gagal memverifikasi");
@@ -157,10 +159,11 @@ export function useMutationUpdateJobStatus() {
 
     return useMutation({
         mutationFn: async ({ jobId, status, rejectionReason }) => {
-            const { data } = await axios.patch(
+            // Use api for PATCH (CSRF protected)
+            const { data } = await api.patch(
                 "/api/admin/jobs",
                 { jobId, status, rejectionReason },
-                { headers: getAuthHeader() }
+                { headers: getAuthHeader(), withCredentials: true }
             );
 
             if (!data.success) throw new Error(data.error || "Gagal memperbarui status");
@@ -234,10 +237,11 @@ export function useMutationProcessContract() {
 
     return useMutation({
         mutationFn: async ({ id, action, adminNotes, adminResponseDocUrl }) => {
-            const { data } = await axios.patch(
+            // Use api for PATCH (CSRF protected)
+            const { data } = await api.patch(
                 `/api/admin/contracts/${id}`,
                 { action, adminNotes, adminResponseDocUrl },
-                { headers: getAuthHeader() }
+                { headers: getAuthHeader(), withCredentials: true }
             );
 
             if (!data.success) throw new Error(data.error || "Gagal memproses kontrak");
@@ -295,10 +299,11 @@ export function useMutationCreateNews() {
 
     return useMutation({
         mutationFn: async (newsData) => {
-            const { data } = await axios.post(
+            // Use api for POST (CSRF protected)
+            const { data } = await api.post(
                 "/api/admin/news",
                 newsData,
-                { headers: getAuthHeader() }
+                { headers: getAuthHeader(), withCredentials: true }
             );
 
             if (!data.success) throw new Error(data.error || "Gagal membuat berita");
@@ -316,10 +321,11 @@ export function useMutationUpdateNews() {
 
     return useMutation({
         mutationFn: async ({ newsId, newsData }) => {
-            const { data } = await axios.put(
+            // Use api for PUT (CSRF protected)
+            const { data } = await api.put(
                 `/api/admin/news/${newsId}`,
                 newsData,
-                { headers: getAuthHeader() }
+                { headers: getAuthHeader(), withCredentials: true }
             );
 
             if (!data.success) throw new Error(data.error || "Gagal memperbarui berita");
@@ -337,9 +343,10 @@ export function useMutationDeleteNews() {
 
     return useMutation({
         mutationFn: async (newsId) => {
-            const { data } = await axios.delete(
+            // Use api for DELETE (CSRF protected)
+            const { data } = await api.delete(
                 `/api/admin/news/${newsId}`,
-                { headers: getAuthHeader() }
+                { headers: getAuthHeader(), withCredentials: true }
             );
 
             if (!data.success) throw new Error(data.error || "Gagal menghapus berita");
@@ -378,3 +385,4 @@ export function useQueryAdminSidebarCounts(enabled = true) {
         refetchInterval: 30000, // Refresh every 30 seconds
     });
 }
+

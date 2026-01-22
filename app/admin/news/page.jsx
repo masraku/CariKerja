@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
 import Link from "next/link";
-import axios from "axios";
+import api from "@/lib/api";
 import {
   Newspaper,
   Search,
@@ -189,10 +189,11 @@ export default function AdminNewsPage() {
       uploadFormData.append("bucket", "news-images");
       uploadFormData.append("folder", "news");
 
-      const { data } = await axios.post("/api/upload", uploadFormData, {
+      const { data } = await api.post("/api/upload", uploadFormData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        withCredentials: true,
       });
 
       if (data.url) {
@@ -303,14 +304,15 @@ export default function AdminNewsPage() {
   const handleUpdateStatus = async (id, newStatus) => {
     try {
       const token = localStorage.getItem("token");
-      const { data } = await axios.put(
+      const { data } = await api.put(
         `/api/admin/news/${id}`,
         { status: newStatus },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+          withCredentials: true,
+        },
       );
 
       if (data.success) {
@@ -478,7 +480,7 @@ export default function AdminNewsPage() {
                   <option key={cat} value={cat}>
                     {cat}
                   </option>
-                )
+                ),
               )}
             </select>
 
@@ -946,8 +948,8 @@ export default function AdminNewsPage() {
                   {formData.status === "PUBLISHED"
                     ? "Berita akan langsung muncul di halaman publik."
                     : formData.status === "DRAFT"
-                    ? "Berita tidak akan muncul di publik sampai dipublikasikan."
-                    : "Berita disembunyikan dari publik."}
+                      ? "Berita tidak akan muncul di publik sampai dipublikasikan."
+                      : "Berita disembunyikan dari publik."}
                 </p>
               </div>
             </form>

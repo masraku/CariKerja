@@ -3,7 +3,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Swal from "sweetalert2";
-import axios from "axios";
+import {
+  useQueryRecruiterInterviews,
+  useMutationUpdateApplicationStatus,
+  useMutationUpdateInterviewParticipant,
+  useMutationDeleteInterview,
+} from "@/hooks/recruiter/useRecruiter";
 import {
   Calendar,
   Clock,
@@ -26,9 +31,15 @@ import {
 
 export default function RecruiterInterviewsPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [interviews, setInterviews] = useState([]);
-  const [stats, setStats] = useState(null);
+  // Hooks
+  const { data: queryData, isLoading: loading } = useQueryRecruiterInterviews();
+  const updateStatusMutation = useMutationUpdateApplicationStatus();
+  const updateParticipantMutation = useMutationUpdateInterviewParticipant();
+  const deleteInterviewMutation = useMutationDeleteInterview();
+
+  const interviews = queryData?.interviews || [];
+  const stats = queryData?.stats || null;
+
   const [activeFilter, setActiveFilter] = useState("all");
   const [processingId, setProcessingId] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -40,41 +51,6 @@ export default function RecruiterInterviewsPage() {
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    loadInterviews();
-  }, []);
-
-  const loadInterviews = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("token");
-
-      const { data } = await axios.get(
-        "/api/profile/recruiter/interviews/list",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (data.success) {
-        setInterviews(data.data.interviews);
-        setStats(data.data.stats);
-      } else {
-        throw new Error(data.error);
-      }
-    } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Gagal",
-        text: "Gagal memuat data interview",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Helper to check if interview has started
   const isInterviewStarted = (scheduledAt) => {
     return currentTime >= new Date(scheduledAt);
@@ -84,7 +60,7 @@ export default function RecruiterInterviewsPage() {
   const handleUpdateApplicationStatus = async (
     applicationId,
     newStatus,
-    candidateName
+    candidateName,
   ) => {
     const actionText = newStatus === "ACCEPTED" ? "Terima" : "Tolak";
     const color = newStatus === "ACCEPTED" ? "#10b981" : "#ef4444";
@@ -111,23 +87,17 @@ export default function RecruiterInterviewsPage() {
 
     try {
       setProcessingId(applicationId);
-      const token = localStorage.getItem("token");
 
       const body = { status: newStatus };
       if (newStatus === "REJECTED") {
-        body.reason = result.value; // Assuming API accepts reason/notes
-        body.recruiterNotes = result.value;
+        body.notes = result.value; // Map to expected field
       }
 
-      const { data } = await axios.patch(
-        `/api/profile/recruiter/applications/${applicationId}`,
-        body,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await updateStatusMutation.mutateAsync({
+        applicationId,
+        status: newStatus,
+        notes: result.value || undefined,
+      });
 
       Swal.fire({
         icon: "success",
@@ -136,7 +106,6 @@ export default function RecruiterInterviewsPage() {
         timer: 1500,
         showConfirmButton: false,
       });
-      loadInterviews(); // Reload to reflect changes
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -151,7 +120,7 @@ export default function RecruiterInterviewsPage() {
   // Handle approve reschedule
   const handleApproveReschedule = (interview, participant) => {
     router.push(
-      `/profile/recruiter/dashboard/interview/reschedule?interviewId=${interview.id}&participantId=${participant.id}`
+      `/profile/recruiter/dashboard/interview/reschedule?interviewId=${interview.id}&participantId=${participant.id}`,
     );
   };
 
@@ -176,20 +145,15 @@ export default function RecruiterInterviewsPage() {
 
     try {
       setProcessingId(participant.id);
-      const token = localStorage.getItem("token");
 
-      const { data } = await axios.patch(
-        `/api/profile/recruiter/interviews/${interview.id}/participants/${participant.id}`,
-        {
+      await updateParticipantMutation.mutateAsync({
+        interviewId: interview.id,
+        participantId: participant.id,
+        data: {
           status: "DECLINED",
           rejectReschedule: true,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      });
 
       Swal.fire({
         icon: "success",
@@ -197,7 +161,6 @@ export default function RecruiterInterviewsPage() {
         timer: 1500,
         showConfirmButton: false,
       });
-      loadInterviews();
     } catch (error) {
       Swal.fire({ icon: "error", title: "Gagal", text: error.message });
     } finally {
@@ -220,13 +183,13 @@ export default function RecruiterInterviewsPage() {
     if (!result.isConfirmed) return;
 
     try {
-      const token = localStorage.getItem("token");
-      await axios.delete(`/api/profile/recruiter/interviews/${interview.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      loadInterviews();
+      await deleteInterviewMutation.mutateAsync(interview.id);
     } catch (error) {
-      Swal.fire({ icon: "error", title: "Error" });
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Gagal menghapus interview",
+      });
     }
   };
 
@@ -259,7 +222,7 @@ export default function RecruiterInterviewsPage() {
       return interviews.filter((i) => i.status === "SCHEDULED");
     if (activeFilter === "reschedule")
       return interviews.filter((i) =>
-        i.participants?.some((p) => p.status === "RESCHEDULE_REQUESTED")
+        i.participants?.some((p) => p.status === "RESCHEDULE_REQUESTED"),
       );
     if (activeFilter === "completed")
       return interviews.filter((i) => i.status === "COMPLETED");
@@ -273,7 +236,7 @@ export default function RecruiterInterviewsPage() {
     return (
       count +
       (interview.participants?.filter(
-        (p) => p.status === "RESCHEDULE_REQUESTED"
+        (p) => p.status === "RESCHEDULE_REQUESTED",
       ).length || 0)
     );
   }, 0);
@@ -358,7 +321,7 @@ export default function RecruiterInterviewsPage() {
             const isCompleted = interview.status === "COMPLETED";
             const rescheduleParticipants =
               interview.participants?.filter(
-                (p) => p.status === "RESCHEDULE_REQUESTED"
+                (p) => p.status === "RESCHEDULE_REQUESTED",
               ) || [];
 
             return (
@@ -435,7 +398,7 @@ export default function RecruiterInterviewsPage() {
                       <div className="bg-emerald-50 rounded-lg p-3 text-center border border-emerald-200">
                         <p className="text-2xl font-bold text-emerald-600">
                           {interview.participants?.filter(
-                            (p) => p.applications?.status === "ACCEPTED"
+                            (p) => p.applications?.status === "ACCEPTED",
                           ).length || 0}
                         </p>
                         <p className="text-xs text-emerald-600">Diterima</p>
@@ -443,7 +406,7 @@ export default function RecruiterInterviewsPage() {
                       <div className="bg-red-50 rounded-lg p-3 text-center border border-red-200">
                         <p className="text-2xl font-bold text-red-600">
                           {interview.participants?.filter(
-                            (p) => p.applications?.status === "REJECTED"
+                            (p) => p.applications?.status === "REJECTED",
                           ).length || 0}
                         </p>
                         <p className="text-xs text-red-600">Ditolak</p>
@@ -452,7 +415,7 @@ export default function RecruiterInterviewsPage() {
                         <p className="text-2xl font-bold text-purple-600">
                           {interview.participants?.filter(
                             (p) =>
-                              p.applications?.status === "INTERVIEW_COMPLETED"
+                              p.applications?.status === "INTERVIEW_COMPLETED",
                           ).length || 0}
                         </p>
                         <p className="text-xs text-purple-600">Pending</p>
@@ -487,7 +450,7 @@ export default function RecruiterInterviewsPage() {
                                 onClick={() =>
                                   handleApproveReschedule(
                                     interview,
-                                    participant
+                                    participant,
                                   )
                                 }
                                 className="text-xs bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700"
@@ -568,8 +531,8 @@ export default function RecruiterInterviewsPage() {
                               isCompleted && appStatus === "ACCEPTED"
                                 ? "bg-emerald-50 border-emerald-200"
                                 : isCompleted && appStatus === "REJECTED"
-                                ? "bg-red-50 border-red-200"
-                                : "bg-gray-50 border-gray-100"
+                                  ? "bg-red-50 border-red-200"
+                                  : "bg-gray-50 border-gray-100"
                             }`}
                           >
                             <div className="flex items-center gap-3">
@@ -607,7 +570,7 @@ export default function RecruiterInterviewsPage() {
                                       handleUpdateApplicationStatus(
                                         participant.applicationId,
                                         "ACCEPTED",
-                                        participant.jobseeker.firstName
+                                        participant.jobseeker.firstName,
                                       )
                                     }
                                     disabled={
@@ -622,7 +585,7 @@ export default function RecruiterInterviewsPage() {
                                       handleUpdateApplicationStatus(
                                         participant.applicationId,
                                         "REJECTED",
-                                        participant.jobseeker.firstName
+                                        participant.jobseeker.firstName,
                                       )
                                     }
                                     disabled={
@@ -667,7 +630,7 @@ export default function RecruiterInterviewsPage() {
                         <span
                           className="text-sm text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg flex items-center gap-2"
                           title={`Akan mulai pada ${formatTime(
-                            interview.scheduledAt
+                            interview.scheduledAt,
                           )}`}
                         >
                           <Clock className="w-4 h-4 text-orange-500" />

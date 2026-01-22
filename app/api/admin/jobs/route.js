@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { verifyToken } from '@/lib/auth'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
 
 export async function GET(request) {
     try {
@@ -177,7 +179,7 @@ export async function GET(request) {
 
     } catch (error) {
         return NextResponse.json(
-            { error: 'Internal server error', details: error.message },
+            createErrorResponse('Terjadi kesalahan server', error),
             { status: 500 }
         )
     }
@@ -185,6 +187,11 @@ export async function GET(request) {
 
 export async function PATCH(request) {
     try {
+        // CSRF validation
+        if (!validateCSRFToken(request)) {
+            return csrfErrorResponse()
+        }
+
         const authHeader = request.headers.get('authorization')
         if (!authHeader) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -231,7 +238,7 @@ export async function PATCH(request) {
 
     } catch (error) {
         return NextResponse.json(
-            { error: 'Failed to update job status', details: error.message },
+            createErrorResponse('Gagal memperbarui job status', error),
             { status: 500 }
         )
     }

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
+import { validateBody } from '@/lib/validations'
+import { updateNewsSchema } from '@/lib/validations/admin'
 
 // Helper to generate slug
 function generateSlug(title) {
@@ -64,8 +66,12 @@ export async function PUT(request, { params }) {
         }
 
         const { id } = await params
-        const body = await request.json()
-        const { title, excerpt, content, image, category, author, status } = body
+        
+        const validation = await validateBody(request, updateNewsSchema)
+        if (!validation.success) {
+            return validation.response
+        }
+        const { title, excerpt, content, image, category, author, status } = validation.data
 
         // Check if news exists
         const existingNews = await prisma.news.findUnique({

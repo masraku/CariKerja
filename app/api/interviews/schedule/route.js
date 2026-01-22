@@ -1,7 +1,25 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { verifyToken } from '@/lib/auth'
 import { v4 as uuidv4 } from 'uuid'
+import { validateBody } from '@/lib/validations'
+import { z } from 'zod'
+
+// Validation schema
+const scheduleInterviewSchema = z.object({
+  title: z.string().min(3, 'Judul minimal 3 karakter'),
+  date: z.string().min(1, 'Tanggal wajib diisi'),
+  time: z.string().min(1, 'Waktu wajib diisi'),
+  duration: z.union([z.string(), z.number()]).optional(),
+  meetingType: z.string().optional(),
+  meetingUrl: z.string().url().optional().nullable(),
+  location: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  jobId: z.string().min(1, 'Job ID wajib diisi'),
+  applicationIds: z.array(z.string()).min(1, 'Minimal 1 aplikasi harus dipilih')
+})
 
 export async function POST(request) {
     try {
@@ -17,7 +35,10 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Token tidak valid' }, { status: 401 })
         }
 
-        const body = await request.json()
+        const validation = await validateBody(request, scheduleInterviewSchema)
+        if (!validation.success) {
+            return validation.response
+        }
         const {
             title,
             date,
@@ -30,14 +51,7 @@ export async function POST(request) {
             notes,
             jobId,
             applicationIds
-        } = body
-
-        // Validate required fields
-        if (!title || !date || !time || !jobId || !applicationIds || applicationIds.length === 0) {
-            return NextResponse.json({ 
-                error: 'Field yang wajib diisi tidak lengkap' 
-            }, { status: 400 })
-        }
+        } = validation.data
 
         // Get the recruiter
         const user = await prisma.users.findUnique({
@@ -171,7 +185,7 @@ export async function POST(request) {
     } catch (error) {
         return NextResponse.json({ 
             error: 'Gagal menjadwalkan interview',
-            details: error.message 
+            ...createErrorResponse('Terjadi kesalahan', error) 
         }, { status: 500 })
     }
 }

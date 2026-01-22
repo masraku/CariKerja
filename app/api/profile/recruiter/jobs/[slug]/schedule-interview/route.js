@@ -2,6 +2,7 @@
 
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { verifyToken } from '@/lib/auth'
 
 export async function POST(request, { params }) {
@@ -98,7 +99,7 @@ export async function POST(request, { params }) {
     return NextResponse.json(
       { 
         error: 'Failed to schedule interview',
-        details: error.message 
+        ...createErrorResponse('Terjadi kesalahan', error) 
       },
       { status: 500 }
     )
@@ -172,7 +173,7 @@ export async function GET(request, { params }) {
 
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to fetch applications' },
+      createErrorResponse('Gagal mengambil applications', error),
       { status: 500 }
     )
   }

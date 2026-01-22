@@ -65,7 +65,7 @@ const Footer = () => {
             <h3 className="font-semibold text-slate-900 mb-6">Lokasi Kantor</h3>
             <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm mb-4">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3962.539947168774!2d108.55461!3d-6.7066667!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e6efc8c3f76b9d9%3A0x5d61d9c8c9d8c9d8!2sDinas%20Ketenagakerjaan%20Kabupaten%20Cirebon!5e0!3m2!1sid!2sid!4v1703764800000!5m2!1sid!2sid"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3962.5399471687738!2d108.55199347475992!3d-6.706666666666667!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e6f0403a0000001%3A0x1!2zNsKwNDInMjQuMCJTIDEwOMKwMzMnMTIuMCJF!5e0!3m2!1sen!2sid!4v1703764800000!5m2!1sen!2sid"
                 width="100%"
                 height="150"
                 style={{ border: 0 }}
@@ -119,6 +119,12 @@ const Footer = () => {
             © {currentYear} Dinas Ketenagakerjaan Kabupaten Cirebon
           </p>
           <div className="flex gap-6 text-sm text-slate-500">
+            <Link
+              href="/privacy"
+              className="hover:text-blue-600 transition-colors"
+            >
+              Kebijakan Privasi
+            </Link>
             <Link
               href="/warning"
               className="hover:text-blue-600 transition-colors"

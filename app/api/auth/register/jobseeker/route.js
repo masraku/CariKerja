@@ -1,20 +1,25 @@
 import { NextResponse } from 'next/server'
+import { validateBody } from '@/lib/validations'
+import { registerJobseekerSchema } from '@/lib/validations/auth'
 import { prisma } from '@/lib/prisma'
-import bcrypt from 'bcryptjs'
+import { hashPassword } from '@/lib/password'
 import { v4 as uuidv4 } from 'uuid'
+import { authLimiter, getIP, rateLimitResponse } from '@/lib/rateLimit'
 
 export async function POST(request) {
   try {
-    const body = await request.json()
-    const { name, email, password, phone } = body
-
-    // Validasi input
-    if (!name || !email || !password || !phone) {
-      return NextResponse.json(
-        { error: 'Semua field wajib diisi' },
-        { status: 400 }
-      )
+    // Rate limiting - 5 requests per 15 minutes
+    const ip = getIP(request)
+    const { success, reset } = await authLimiter.limit(ip)
+    if (!success) {
+      return rateLimitResponse(reset)
     }
+
+    const validation = await validateBody(request, registerJobseekerSchema)
+    if (!validation.success) {
+      return validation.response
+    }
+    const { name, email, password, phone } = validation.data
 
     // Cek apakah email sudah terdaftar
     const existingUser = await prisma.users.findUnique({
@@ -28,8 +33,8 @@ export async function POST(request) {
       )
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10)
+    // Hash password using Argon2
+    const hashedPassword = await hashPassword(password)
 
     // Split nama untuk firstName dan lastName
     const nameParts = name.trim().split(' ')
@@ -75,6 +80,9 @@ export async function POST(request) {
       { status: 201 }
     )
   } catch (error) {
+    if (error instanceof NextResponse) {
+      return error
+    }
     return NextResponse.json(
       { error: error.message || 'Terjadi kesalahan saat registrasi' },
       { status: 500 }

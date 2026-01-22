@@ -95,10 +95,16 @@ export default function RootLayout({ children }) {
         <meta name="geo.placename" content="Cirebon" />
       </head>
       <body className={`${poppins.className} bg-slate-50 text-slate-900 antialiased selection:bg-blue-100 selection:text-blue-900`}>
+        {/* Skip Link for Keyboard Navigation - WCAG AA */}
+        <a href="#main-content" className="skip-link">
+          Lewati ke Konten Utama
+        </a>
         <TanStackProvider>
           <AuthProvider>
             <MainLayout>
-              {children}
+              <main id="main-content" tabIndex="-1">
+                {children}
+              </main>
             </MainLayout>
           </AuthProvider>
         </TanStackProvider>

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import api from "@/lib/api"; // CSRF-protected axios instance
 
 // Helper to get auth header
 const getAuthHeader = () => ({
@@ -19,9 +19,10 @@ export function useQueryJobseekerApplications({
             const params = {};
             if (status !== "ALL") params.status = status;
 
-            const { data } = await axios.get("/api/profile/jobseeker/my-applications", {
+            const { data } = await api.get("/api/profile/jobseeker/my-applications", {
                 headers: getAuthHeader(),
                 params,
+                withCredentials: true,
             });
 
             if (!data.success) throw new Error("Gagal memuat daftar lamaran");
@@ -45,8 +46,9 @@ export function useQueryApplicationDetail(id, enabled = true) {
         queryFn: async () => {
             if (!id) throw new Error("Tidak ada ID lamaran");
 
-            const { data } = await axios.get(`/api/applications/${id}`, {
+            const { data } = await api.get(`/api/applications/${id}`, {
                 headers: getAuthHeader(),
+                withCredentials: true,
             });
 
             if (!data.success) throw new Error("Gagal memuat detail lamaran");
@@ -63,10 +65,11 @@ export function useMutationWithdrawApplication() {
 
     return useMutation({
         mutationFn: async (applicationId) => {
-            const { data } = await axios.patch(
+            // Use api for PATCH (CSRF protected)
+            const { data } = await api.patch(
                 `/api/applications/${applicationId}/withdraw`,
                 {},
-                { headers: getAuthHeader() }
+                { headers: getAuthHeader(), withCredentials: true }
             );
 
             if (!data.success) throw new Error(data.error || "Gagal menarik lamaran");
@@ -86,15 +89,18 @@ export function useQueryJobseekerInterviews(enabled = true) {
     return useQuery({
         queryKey: queryKeyJobseekerInterviews,
         queryFn: async () => {
-            const { data } = await axios.get("/api/profile/jobseeker/interviews", {
+            const { data } = await api.get("/api/profile/jobseeker/interviews", {
                 headers: getAuthHeader(),
+                withCredentials: true,
             });
 
             if (!data.success) throw new Error("Gagal memuat daftar interview");
 
             return {
-                upcoming: data.data.upcoming || [],
-                past: data.data.past || [],
+                interviews: data.data.interviews || [],
+                pending: data.data.pending || [],
+                responded: data.data.responded || [],
+                stats: data.data.stats || {},
             };
         },
         enabled,
@@ -110,8 +116,9 @@ export function useQueryInterviewDetail(id, enabled = true) {
         queryFn: async () => {
             if (!id) throw new Error("Tidak ada ID interview");
 
-            const { data } = await axios.get(`/api/interviews/${id}`, {
+            const { data } = await api.get(`/api/interviews/${id}`, {
                 headers: getAuthHeader(),
+                withCredentials: true,
             });
 
             if (!data.success) throw new Error("Gagal memuat detail interview");
@@ -131,8 +138,9 @@ export function useQueryInterviewRoom(id, enabled = true) {
         queryFn: async () => {
             if (!id) throw new Error("Tidak ada ID interview");
 
-            const { data } = await axios.get(`/api/interviews/${id}/room`, {
+            const { data } = await api.get(`/api/interviews/${id}/room`, {
                 headers: getAuthHeader(),
+                withCredentials: true,
             });
 
             if (!data.success) throw new Error(data.error || "Gagal memuat ruang interview");
@@ -143,6 +151,27 @@ export function useQueryInterviewRoom(id, enabled = true) {
     });
 }
 
+// ============ RESPOND TO INTERVIEW ============
+export function useMutationRespondInterview() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ participantId, status, message }) => {
+            const { data } = await api.patch(
+                `/api/profile/jobseeker/interviews/${participantId}/respond`,
+                { status, message },
+                { headers: getAuthHeader(), withCredentials: true }
+            );
+
+            if (!data.success) throw new Error(data.error || "Gagal mengirim respon");
+            return data;
+        },
+        onSuccess: () => {
+             queryClient.invalidateQueries({ queryKey: queryKeyJobseekerInterviews });
+        },
+    });
+}
+
 // ============ JOBSEEKER PROFILE VIEW ============
 const queryKeyJobseekerProfile = ["jobseekerProfileView"];
 
@@ -150,8 +179,9 @@ export function useQueryJobseekerProfileView(enabled = true) {
     return useQuery({
         queryKey: queryKeyJobseekerProfile,
         queryFn: async () => {
-            const { data } = await axios.get("/api/profile/jobseeker", {
+            const { data } = await api.get("/api/profile/jobseeker", {
                 withCredentials: true,
+                headers: getAuthHeader(),
             });
 
             return data.profile;
@@ -168,7 +198,8 @@ export function useMutationUpdateJobSeekingStatus() {
 
     return useMutation({
         mutationFn: async (isLookingForJob) => {
-            const { data } = await axios.put(
+            // Use api for PUT (CSRF protected)
+            const { data } = await api.put(
                 "/api/profile/jobseeker/status",
                 { isLookingForJob },
                 {
@@ -192,8 +223,9 @@ export function useQueryJobseekerProfileFull(enabled = true) {
     return useQuery({
         queryKey: queryKeyJobseekerProfileFull,
         queryFn: async () => {
-            const { data } = await axios.get("/api/profile/jobseeker", {
+            const { data } = await api.get("/api/profile/jobseeker", {
                 withCredentials: true,
+                headers: getAuthHeader(),
             });
             return data.profile;
         },
@@ -208,7 +240,8 @@ export function useMutationSaveJobseekerProfile() {
 
     return useMutation({
         mutationFn: async (profileData) => {
-            const { data } = await axios.post("/api/profile/jobseeker", profileData, {
+            // Use api for POST (CSRF protected)
+            const { data } = await api.post("/api/profile/jobseeker", profileData, {
                 withCredentials: true,
             });
             return data;
@@ -222,3 +255,31 @@ export function useMutationSaveJobseekerProfile() {
         },
     });
 }
+
+// ============ UPLOAD FILE ============
+export function useMutationUploadFile() {
+    return useMutation({
+        mutationFn: async ({ file, bucket, userId }) => {
+            const maxSize = 2 * 1024 * 1024; // 2MB
+            if (file.size > maxSize) {
+                throw new Error("Ukuran file terlalu besar. Maksimal 2MB.");
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("bucket", bucket);
+            if (userId) formData.append("userId", userId);
+
+            // Use api for POST (CSRF protected)
+            const { data } = await api.post("/api/upload", formData, {
+                withCredentials: true,
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+
+            return data;
+        },
+    });
+}
+

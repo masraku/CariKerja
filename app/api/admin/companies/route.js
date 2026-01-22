@@ -1,9 +1,18 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { requireAdmin } from '@/lib/authHelper'
+import { adminLimiter, getIP, rateLimitResponse } from '@/lib/rateLimit'
 
 export async function GET(request) {
     try {
+        // Rate limiting - 120 requests per minute for admin
+        const ip = getIP(request)
+        const { success, reset } = await adminLimiter.limit(ip)
+        if (!success) {
+            return rateLimitResponse(reset)
+        }
+
         // Authenticate and check admin role
         const auth = await requireAdmin(request)
         
@@ -140,7 +149,7 @@ export async function GET(request) {
 
     } catch (error) {
         return NextResponse.json(
-            { error: 'Failed to fetch companies', details: error.message },
+            createErrorResponse('Gagal mengambil companies', error),
             { status: 500 }
         )
     }

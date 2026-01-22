@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useParams } from "next/navigation";
-import axios from "axios";
+import api from "@/lib/api";
 import {
   Calendar,
   Clock,
@@ -37,13 +37,14 @@ function InterviewRoomContent() {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      const { data } = await axios.get(
+      const { data } = await api.get(
         `/api/profile/recruiter/interviews/${interviewId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+          withCredentials: true,
+        },
       );
 
       setInterview(data.data.interview);
@@ -84,14 +85,15 @@ function InterviewRoomContent() {
         setCompleting(true);
         const token = localStorage.getItem("token");
 
-        const { data } = await axios.patch(
+        const { data } = await api.patch(
           `/api/profile/recruiter/interviews/${id}/complete`,
           { participantId: participantId || null },
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+            withCredentials: true,
+          },
         );
 
         await Swal.fire({
@@ -295,10 +297,10 @@ function InterviewRoomContent() {
                           p.status === "ACCEPTED"
                             ? "bg-green-100 text-green-700"
                             : p.status === "PENDING"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : p.status === "COMPLETED"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-gray-100 text-gray-600"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : p.status === "COMPLETED"
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-gray-100 text-gray-600"
                         }`}
                       >
                         {p.status}

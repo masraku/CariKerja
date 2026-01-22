@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import axios from "axios";
+import api from "@/lib/api";
 import {
   Building2,
   CheckCircle,
@@ -35,13 +35,14 @@ export default function CompanyDetailPage() {
   const loadCompanyDetail = async () => {
     try {
       const token = localStorage.getItem("token");
-      const { data } = await axios.get(`/api/admin/companies?status=all`, {
+      const { data } = await api.get(`/api/admin/companies?status=all`, {
         headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
 
       if (data.success) {
         const foundCompany = data.data.companies.find(
-          (c) => c.id === params.id
+          (c) => c.id === params.id,
         );
         setCompany(foundCompany);
       }
@@ -73,14 +74,15 @@ export default function CompanyDetailPage() {
     if (result.isConfirmed) {
       try {
         const token = localStorage.getItem("token");
-        const { data } = await axios.patch(
+        const { data } = await api.patch(
           `/api/admin/companies/${company.id}/verify`,
           { notes: result.value || "" },
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+            withCredentials: true,
+          },
         );
 
         if (data.success) {
@@ -125,7 +127,7 @@ export default function CompanyDetailPage() {
       stopKeydownPropagation: true,
       focusConfirm: false,
       didOpen: () => {
-        // Focus on textarea when modal opens
+        // Fokus ke textarea saat modal terbuka
         const textarea = Swal.getInput();
         if (textarea) textarea.focus();
       },
@@ -134,14 +136,15 @@ export default function CompanyDetailPage() {
     if (result.isConfirmed) {
       try {
         const token = localStorage.getItem("token");
-        const { data } = await axios.patch(
+        const { data } = await api.patch(
           `/api/admin/companies/${company.id}/reject`,
           { reason: result.value },
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+            withCredentials: true,
+          },
         );
 
         if (data.success) {
@@ -219,7 +222,7 @@ export default function CompanyDetailPage() {
               )}
             </div>
 
-            {/* Company Info */}
+            {/* Info Perusahaan */}
             <div className="flex-1">
               <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-3">
                 {company.name}
@@ -231,7 +234,7 @@ export default function CompanyDetailPage() {
                 {company.tagline || company.industry}
               </p>
 
-              {/* Status Badge */}
+              {/* Lencana Status */}
               {!company.verified &&
                 company.status === "PENDING_VERIFICATION" && (
                   <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-amber-400/20 text-amber-300 rounded-full text-sm font-medium">
@@ -254,7 +257,7 @@ export default function CompanyDetailPage() {
               )}
             </div>
 
-            {/* Action Buttons */}
+            {/* Tombol Aksi */}
             {!company.verified &&
               (company.status === "PENDING_VERIFICATION" ||
                 company.status === "PENDING_RESUBMISSION") && (
@@ -278,7 +281,7 @@ export default function CompanyDetailPage() {
           </div>
         </div>
 
-        {/* Quick Stats */}
+        {/* Statistik Cepat */}
         <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-slate-100">
           <div className="p-5 text-center">
             <div className="text-2xl font-bold text-slate-800">
@@ -307,11 +310,11 @@ export default function CompanyDetailPage() {
         </div>
       </div>
 
-      {/* Content Grid */}
+      {/* Grid Konten */}
       <div className="max-w-6xl mx-auto grid lg:grid-cols-3 gap-6">
-        {/* Main Content */}
+        {/* Konten Utama */}
         <div className="lg:col-span-2 space-y-6">
-          {/* About Section */}
+          {/* Bagian Tentang */}
           {company.description && (
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
               <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
@@ -324,7 +327,7 @@ export default function CompanyDetailPage() {
             </div>
           )}
 
-          {/* Culture Section */}
+          {/* Bagian Budaya */}
           {company.culture && (
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
               <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
@@ -337,7 +340,7 @@ export default function CompanyDetailPage() {
             </div>
           )}
 
-          {/* Benefits Section */}
+          {/* Bagian Benefit */}
           {company.benefits && company.benefits.length > 0 && (
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
               <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
@@ -357,7 +360,7 @@ export default function CompanyDetailPage() {
             </div>
           )}
 
-          {/* Gallery Section */}
+          {/* Bagian Galeri */}
           {company.gallery && company.gallery.length > 0 && (
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
               <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
@@ -403,7 +406,7 @@ export default function CompanyDetailPage() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Contact Card */}
+          {/* Kartu Kontak */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
             <h3 className="text-sm font-semibold text-slate-800 mb-4 uppercase tracking-wider">
               Kontak
@@ -448,7 +451,7 @@ export default function CompanyDetailPage() {
             </div>
           </div>
 
-          {/* Location Card */}
+          {/* Kartu Lokasi */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
             <h3 className="text-sm font-semibold text-slate-800 mb-4 uppercase tracking-wider">
               Lokasi
@@ -470,7 +473,7 @@ export default function CompanyDetailPage() {
             </div>
           </div>
 
-          {/* Industry Card */}
+          {/* Kartu Industri */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
             <h3 className="text-sm font-semibold text-slate-800 mb-4 uppercase tracking-wider">
               Industri
@@ -485,7 +488,7 @@ export default function CompanyDetailPage() {
             </div>
           </div>
 
-          {/* Timeline Card */}
+          {/* Kartu Timeline */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
             <h3 className="text-sm font-semibold text-slate-800 mb-4 uppercase tracking-wider">
               Timeline
@@ -516,7 +519,7 @@ export default function CompanyDetailPage() {
             </div>
           </div>
 
-          {/* Recruiter Card */}
+          {/* Kartu Penanggung Jawab */}
           {company.recruiterEmail && (
             <div className="bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl p-6 text-white">
               <h3 className="text-sm font-semibold mb-4 uppercase tracking-wider opacity-80">

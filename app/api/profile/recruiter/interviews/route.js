@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { requireRecruiter } from '@/lib/authHelper'
 import { sendInterviewInvitation } from '@/lib/email/sendInterviewInvitation'
 
@@ -173,7 +174,7 @@ export async function POST(request) {
 
     } catch (error) {
         return NextResponse.json(
-            { error: 'Failed to schedule interview', details: error.message },
+            createErrorResponse('Gagal menjadwalkan interview', error),
             { status: 500 }
         )
     }

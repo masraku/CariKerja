@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { requireRecruiter } from '@/lib/authHelper'
 
 // PATCH - Mark interview as completed
@@ -169,7 +170,7 @@ export async function PATCH(request, context) {
 
     } catch (error) {
         return NextResponse.json(
-            { error: 'Failed to mark interview as completed', details: error.message },
+            createErrorResponse('Gagal menandai interview as completed', error),
             { status: 500 }
         )
     }

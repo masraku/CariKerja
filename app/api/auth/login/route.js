@@ -1,22 +1,30 @@
 import { NextResponse } from 'next/server'
+import { validateBody } from '@/lib/validations'
+import { loginSchema } from '@/lib/validations/auth'
 import { prisma } from '@/lib/prisma'
-import bcrypt from 'bcryptjs'
+import { verifyPassword, hashPassword, needsRehash } from '@/lib/password'
 import jwt from 'jsonwebtoken'
+import { authLimiter, getIP, rateLimitResponse } from '@/lib/rateLimit'
+import { generateCSRFToken } from '@/lib/csrf'
+import { createAuditLog, AuditAction } from '@/lib/audit'
+import { createErrorResponse } from '@/lib/errorHandler'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
+const JWT_SECRET = process.env.JWT_SECRET
 
 export async function POST(request) {
   try {
-    const body = await request.json()
-    const { email, password, role } = body
-
-    // Validasi input
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email dan password wajib diisi' },
-        { status: 400 }
-      )
+    // Rate limiting - 5 requests per 15 minutes
+    const ip = getIP(request)
+    const { success, reset } = await authLimiter.limit(ip)
+    if (!success) {
+      return rateLimitResponse(reset)
     }
+
+    const validation = await validateBody(request, loginSchema)
+    if (!validation.success) {
+      return validation.response
+    }
+    const { email, password, role } = validation.data
 
     // Cari user berdasarkan email
     const user = await prisma.users.findUnique({
@@ -32,6 +40,11 @@ export async function POST(request) {
     })
 
     if (!user) {
+      await createAuditLog({
+        action: AuditAction.LOGIN_FAILED,
+        changes: { email, reason: 'User not found' },
+        request
+      })
       return NextResponse.json(
         { error: 'Email atau password salah' },
         { status: 401 }
@@ -55,9 +68,29 @@ export async function POST(request) {
     }
 
     // Verifikasi password
-    const isPasswordValid = await bcrypt.compare(password, user.password)
+    const isPasswordValid = await verifyPassword(password, user.password)
+    
+    // Auto-migration to Argon2 if legacy hash
+    if (isPasswordValid && needsRehash(user.password)) {
+      try {
+        const newHash = await hashPassword(password)
+        await prisma.users.update({
+          where: { id: user.id },
+          data: { password: newHash }
+        })
+      } catch (err) {
+        console.error('Password migration failed:', err)
+      }
+    }
 
     if (!isPasswordValid) {
+      await createAuditLog({
+        action: AuditAction.LOGIN_FAILED,
+        userId: user.id,
+        userRole: user.role,
+        changes: { email, reason: 'Invalid password' },
+        request
+      })
       return NextResponse.json(
         { error: 'Email atau password salah' },
         { status: 401 }
@@ -68,6 +101,16 @@ export async function POST(request) {
     await prisma.users.update({
       where: { id: user.id },
       data: { lastLogin: new Date() }
+    })
+
+    // Audit log - successful login
+    await createAuditLog({
+      action: AuditAction.LOGIN,
+      userId: user.id,
+      userRole: user.role,
+      targetType: 'user',
+      targetId: user.id,
+      request
     })
 
     // Generate JWT token with 1 hour expiry
@@ -116,16 +159,20 @@ export async function POST(request) {
       userData.company = recruiter.companies
     }
 
+    // Generate CSRF token
+    const csrfToken = generateCSRFToken()
+
     const response = NextResponse.json(
       {
         message: 'Login berhasil',
         user: userData,
-        token
+        token,
+        csrfToken // Also send in response body for client storage
       },
       { status: 200 }
     )
 
-    // Set cookie untuk token (1 hour)
+    // Set cookie untuk auth token (1 hour, httpOnly)
     response.cookies.set('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -133,11 +180,22 @@ export async function POST(request) {
       maxAge: 60 * 60 // 1 hour
     })
 
+    // Set CSRF token cookie (NOT httpOnly - JS needs to read it)
+    response.cookies.set('csrf_token', csrfToken, {
+      httpOnly: false, // JS must be able to read this
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 60 * 60 // 1 hour
+    })
+
     return response
   } catch (error) {
+    if (error instanceof NextResponse) {
+      return error
+    }
     console.error('Login error:', error)
     return NextResponse.json(
-      { error: 'Terjadi kesalahan saat login', details: error.message },
+      createErrorResponse('Terjadi kesalahan saat login', error),
       { status: 500 }
     )
   }

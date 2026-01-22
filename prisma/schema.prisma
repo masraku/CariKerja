@@ -639,7 +639,7 @@ model contract_workers {
   status                 ContractWorkerStatus @default(ACTIVE)
   terminatedAt           DateTime?
   terminationReason      String?
-  terminatedBy           String?              // "RECRUITER" or "ADMIN" or recruiter name
+  terminatedBy           String? // "RECRUITER" or "ADMIN" or recruiter name
   attachmentUrl          String?
   notes                  String?
   createdAt              DateTime             @default(now())
@@ -787,4 +787,18 @@ model news {
   @@index([status])
   @@index([publishedAt])
   @@index([category])
+}
+
+model system_settings {
+  id                 String   @id @default("default")
+  maintenanceMode    Boolean  @default(false)
+  allowRegistration  Boolean  @default(true)
+  autoApproveJobs    Boolean  @default(false)
+  maxUploadSize      Int      @default(10)
+  emailNotifications Boolean  @default(true)
+  newCompanyAlert    Boolean  @default(true)
+  newContractAlert   Boolean  @default(true)
+  weeklyReport       Boolean  @default(false)
+  updatedAt          DateTime @updatedAt
+  updatedBy          String?
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { requireRecruiter } from '@/lib/authHelper'
 import { sendApplicationDecision } from '@/lib/email/sendApplicationDecision'
 
@@ -129,7 +130,7 @@ export async function GET(request, context) {
 
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to fetch application details' },
+      createErrorResponse('Gagal mengambil application details', error),
       { status: 500 }
     )
   }
@@ -315,7 +316,7 @@ export async function PATCH(request, context) {
 
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to update application', details: error.message },
+      createErrorResponse('Gagal memperbarui application', error),
       { status: 500 }
     )
   }

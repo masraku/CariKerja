@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { requireJobseeker } from '@/lib/authHelper'
 
 // GET - Fetch interview details for jobseeker
@@ -140,7 +141,7 @@ export async function GET(request, { params }) {
     return NextResponse.json(
       { 
         error: 'Failed to fetch interview details',
-        details: error.message
+        ...createErrorResponse('Terjadi kesalahan', error)
       },
       { status: 500 }
     )

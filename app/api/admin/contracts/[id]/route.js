@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { requireAdmin } from '@/lib/authHelper'
 import { serializeBigInt } from '@/lib/utils'
+import { validateBody } from '@/lib/validations'
+import { processContractSchema } from '@/lib/validations/admin'
 
 // GET /api/admin/contracts/[id] - Get contract registration detail
 export async function GET(request, { params }) {
@@ -83,7 +86,7 @@ export async function GET(request, { params }) {
     console.error('Error fetching contract detail:', error)
     return NextResponse.json({ 
       error: 'Failed to fetch contract detail',
-      details: error.message 
+      ...createErrorResponse('Terjadi kesalahan', error) 
     }, { status: 500 })
   }
 }
@@ -97,14 +100,12 @@ export async function PATCH(request, { params }) {
     }
 
     const { id } = await params
-    const body = await request.json()
-    const { action, adminNotes } = body
-
-    if (!action || !['approve', 'reject'].includes(action)) {
-      return NextResponse.json({ 
-        error: 'Invalid action. Must be "approve" or "reject"' 
-      }, { status: 400 })
+    
+    const validation = await validateBody(request, processContractSchema)
+    if (!validation.success) {
+      return validation.response
     }
+    const { action, adminNotes, adminResponseDocUrl } = validation.data
 
     const contract = await prisma.contract_registrations.findUnique({
       where: { id }
@@ -130,7 +131,7 @@ export async function PATCH(request, { params }) {
       data: {
         status: newStatus,
         adminNotes: adminNotes || null,
-        adminResponseDocUrl: body.adminResponseDocUrl || null,
+        adminResponseDocUrl: adminResponseDocUrl || null,
         processedAt: new Date(),
         processedBy: auth.admin.id
       },
@@ -163,7 +164,7 @@ export async function PATCH(request, { params }) {
     console.error('Error processing contract registration:', error)
     return NextResponse.json({ 
       error: 'Failed to process contract registration',
-      details: error.message 
+      ...createErrorResponse('Terjadi kesalahan', error) 
     }, { status: 500 })
   }
 }

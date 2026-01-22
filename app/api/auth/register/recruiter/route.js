@@ -1,63 +1,39 @@
 import { NextResponse } from 'next/server'
+import { validateBody } from '@/lib/validations'
+import { createErrorResponse } from '@/lib/errorHandler'
+import { registerRecruiterSchema } from '@/lib/validations/auth'
 import { prisma } from '@/lib/prisma'
-import bcrypt from 'bcryptjs'
+import { hashPassword } from '@/lib/password'
 import { v4 as uuidv4 } from 'uuid'
+import { authLimiter, getIP, rateLimitResponse } from '@/lib/rateLimit'
 
 export async function POST(request) {
   try {
-    const body = await request.json()
+    // Rate limiting - 5 requests per 15 minutes
+    const ip = getIP(request)
+    const { success, reset } = await authLimiter.limit(ip)
+    if (!success) {
+      return rateLimitResponse(reset)
+    }
+
+    const validation = await validateBody(request, registerRecruiterSchema)
+    if (!validation.success) {
+      return validation.response
+    }
     const {
       companyName,
-      companyEmail,
-      contactPersonName,
-      contactPersonPhone,   
-      password
-    } = body
+      email,
+      firstName,
+      lastName,
+      phone,   
+      password,
+      position
+    } = validation.data
 
-    // ✅ Validasi input dengan field yang benar
-    if (!companyName?.trim()) {
-      return NextResponse.json(
-        { error: 'Nama perusahaan wajib diisi' },
-        { status: 400 }
-      )
-    }
-
-    if (!companyEmail?.trim()) {
-      return NextResponse.json(
-        { error: 'Email perusahaan wajib diisi' },
-        { status: 400 }
-      )
-    }
-
-    if (!contactPersonName?.trim()) {
-      return NextResponse.json(
-        { error: 'Nama contact person wajib diisi' },
-        { status: 400 }
-      )
-    }
-
-    if (!contactPersonPhone?.trim()) {
-      return NextResponse.json(
-        { error: 'Nomor telepon wajib diisi' },
-        { status: 400 }
-      )
-    }
-
-    if (!password || password.length < 6) {
-      return NextResponse.json(
-        { error: 'Password minimal 6 karakter' },
-        { status: 400 }
-      )
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(companyEmail)) {
-      return NextResponse.json(
-        { error: 'Format email tidak valid' },
-        { status: 400 }
-      )
-    }
+    // Rename variables to match existing logic if needed, or update logic
+    const companyEmail = email
+    const contactPersonPhone = phone
+    const contactPersonName = `${firstName} ${lastName || ''}`.trim()
 
     // Cek apakah email sudah terdaftar
     const existingUser = await prisma.users.findUnique({
@@ -88,8 +64,8 @@ export async function POST(request) {
       )
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10)
+    // Hash password using Argon2
+    const hashedPassword = await hashPassword(password)
 
     // Generate slug dari nama perusahaan
     let slug = companyName
@@ -108,10 +84,10 @@ export async function POST(request) {
       slug = `${slug}-${Date.now()}`
     }
 
-    // Split nama contact person
-    const nameParts = contactPersonName.trim().split(' ')
-    const firstName = nameParts[0]
-    const lastName = nameParts.slice(1).join(' ') || ''
+    // Names are already split from schema validation
+    // const nameParts = contactPersonName.trim().split(' ')
+    // const firstName = nameParts[0]
+    // const lastName = nameParts.slice(1).join(' ') || ''
 
     // ✅ Buat company dengan field yang required saja
     const company = await prisma.companies.create({
@@ -176,6 +152,10 @@ export async function POST(request) {
     )
 
   } catch (error) {
+    if (error instanceof NextResponse) {
+      return error
+    }
+
     console.error('Registration error:', error)
     
     // Handle specific Prisma errors
@@ -189,7 +169,7 @@ export async function POST(request) {
     return NextResponse.json(
       { 
         error: 'Terjadi kesalahan saat registrasi',
-        details: error.message
+        ...createErrorResponse('Terjadi kesalahan', error)
       },
       { status: 500 }
     )

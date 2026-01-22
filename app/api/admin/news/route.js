@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
+import { validateBody, validateQuery } from '@/lib/validations'
+import { newsQuerySchema, createNewsSchema } from '@/lib/validations/admin'
 
 // Helper to generate slug
 function generateSlug(title) {
@@ -28,12 +31,12 @@ export async function GET(request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        // Get query params
-        const { searchParams } = new URL(request.url)
-        const search = searchParams.get('search') || ''
-        const status = searchParams.get('status') || 'all'
-        const category = searchParams.get('category') || 'all'
-        const sort = searchParams.get('sort') || 'newest'
+        // Validate query params
+        const validation = validateQuery(request, newsQuerySchema)
+        if (!validation.success) {
+            return validation.response
+        }
+        const { search, status, category, sort } = validation.data
 
         // Build where clause
         let where = {}
@@ -112,6 +115,11 @@ export async function GET(request) {
 // POST - Create news
 export async function POST(request) {
     try {
+        // CSRF validation
+        if (!validateCSRFToken(request)) {
+            return csrfErrorResponse()
+        }
+
         // Verify admin
         const authHeader = request.headers.get('authorization')
         if (!authHeader) {
@@ -125,15 +133,11 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const body = await request.json()
-        const { title, excerpt, content, image, category, author, status } = body
-
-        // Validate required fields
-        if (!title || !content || !category || !author) {
-            return NextResponse.json({ 
-                error: 'Title, content, category, and author are required' 
-            }, { status: 400 })
+        const validation = await validateBody(request, createNewsSchema)
+        if (!validation.success) {
+            return validation.response
         }
+        const { title, excerpt, content, image, category, author, status } = validation.data
 
         // Generate unique slug
         let baseSlug = generateSlug(title)

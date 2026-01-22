@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { cookies } from 'next/headers'
 import jwt from 'jsonwebtoken'
 
@@ -200,7 +201,7 @@ export async function GET(request, context) {
       { 
         success: false,
         error: 'Gagal memuat detail lowongan',
-        details: error.message 
+        ...createErrorResponse('Terjadi kesalahan', error) 
       },
       { status: 500 }
     )

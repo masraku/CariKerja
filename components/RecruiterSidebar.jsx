@@ -50,7 +50,12 @@ export default function RecruiterSidebar() {
     { icon: Settings2, label: "Profil Perusahaan", href: "/profile/recruiter" },
   ];
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (e) {
+      console.error("Logout failed", e);
+    }
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     window.location.href = "/login";
@@ -96,21 +101,21 @@ export default function RecruiterSidebar() {
               isActive = pathname === "/profile/recruiter";
             } else if (item.href === "/profile/recruiter/dashboard/jobs") {
               isActive = pathname.startsWith(
-                "/profile/recruiter/dashboard/jobs"
+                "/profile/recruiter/dashboard/jobs",
               );
             } else if (
               item.href === "/profile/recruiter/dashboard/interviews"
             ) {
               isActive =
                 pathname.startsWith(
-                  "/profile/recruiter/dashboard/interviews"
+                  "/profile/recruiter/dashboard/interviews",
                 ) ||
                 pathname.startsWith("/profile/recruiter/dashboard/interview?");
             } else if (
               item.href === "/profile/recruiter/dashboard/resignations"
             ) {
               isActive = pathname.startsWith(
-                "/profile/recruiter/dashboard/resignations"
+                "/profile/recruiter/dashboard/resignations",
               );
             } else {
               isActive = pathname === item.href;

@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { requireRecruiter } from '@/lib/authHelper'
 import { serializeBigInt } from '@/lib/utils'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
+import { validateBody } from '@/lib/validations'
+import { createContractSchema } from '@/lib/validations/profile'
 
 // GET /api/contracts - Get contract registrations for recruiter's company
 export async function GET(request) {
@@ -109,7 +113,7 @@ export async function GET(request) {
     console.error('Error fetching contracts:', error)
     return NextResponse.json({ 
       error: 'Failed to fetch contracts',
-      details: error.message 
+      ...createErrorResponse('Terjadi kesalahan', error) 
     }, { status: 500 })
   }
 }
@@ -117,30 +121,26 @@ export async function GET(request) {
 // POST /api/contracts - Create new contract registration
 export async function POST(request) {
   try {
+    // CSRF validation
+    if (!validateCSRFToken(request)) {
+      return csrfErrorResponse()
+    }
+
     const auth = await requireRecruiter(request)
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status })
     }
 
     const { recruiter } = auth
-    const body = await request.json()
-    const { workers, recruiterDocUrl } = body
-
-    if (!workers || !Array.isArray(workers) || workers.length === 0) {
-      return NextResponse.json({ 
-        error: 'At least one worker is required' 
-      }, { status: 400 })
+    
+    const validation = await validateBody(request, createContractSchema)
+    if (!validation.success) {
+      return validation.response
     }
+    const { workers, recruiterDocUrl } = validation.data
 
     // Validate each worker
     for (const worker of workers) {
-      if (!worker.applicationId || !worker.jobseekerId || !worker.jobTitle || 
-          !worker.startDate || !worker.endDate || !worker.salary) {
-        return NextResponse.json({ 
-          error: 'Missing required fields for worker' 
-        }, { status: 400 })
-      }
-
       // Check if application belongs to recruiter's company and is ACCEPTED
       const application = await prisma.applications.findUnique({
         where: { id: worker.applicationId },
@@ -234,7 +234,7 @@ export async function POST(request) {
     console.error('Error creating contract registration:', error)
     return NextResponse.json({ 
       error: 'Failed to create contract registration',
-      details: error.message 
+      ...createErrorResponse('Terjadi kesalahan', error) 
     }, { status: 500 })
   }
 }

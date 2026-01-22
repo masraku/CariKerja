@@ -2,7 +2,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import axios from "axios";
+import api from "@/lib/api";
 import {
   Calendar,
   Clock,
@@ -61,13 +61,14 @@ function RescheduleContent() {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      const { data } = await axios.get(
+      const { data } = await api.get(
         `/api/profile/recruiter/interviews/${interviewId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+          withCredentials: true,
+        },
       );
 
       const interviewData = data.data.interview;
@@ -82,7 +83,7 @@ function RescheduleContent() {
       } else {
         // Or try to find one with RESCHEDULE_REQUESTED status
         const found = participantsData.find(
-          (p) => p.status === "RESCHEDULE_REQUESTED"
+          (p) => p.status === "RESCHEDULE_REQUESTED",
         );
         setParticipant(found);
       }
@@ -154,7 +155,7 @@ function RescheduleContent() {
       // Combine date and time
       const scheduledAt = new Date(`${formData.date}T${formData.time}`);
 
-      const { data } = await axios.patch(
+      const { data } = await api.patch(
         `/api/profile/recruiter/interviews/${interview.id}/reschedule`,
         {
           scheduledAt: scheduledAt.toISOString(),
@@ -167,7 +168,8 @@ function RescheduleContent() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+          withCredentials: true,
+        },
       );
 
       await Swal.fire({

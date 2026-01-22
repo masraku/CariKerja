@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { requireJobseeker } from '@/lib/authHelper'
+import { validateBody } from '@/lib/validations'
+import { interviewRespondSchema } from '@/lib/validations/profile'
 
 // PATCH - Respond to interview (Accept/Decline/Request Reschedule)
 export async function PATCH(request, context) {
@@ -14,24 +17,12 @@ export async function PATCH(request, context) {
         const { jobseeker } = auth
         const params = await context.params
         const { id: participantId } = params
-        const body = await request.json()
-        const { status, message } = body // status: ACCEPTED, DECLINED, or RESCHEDULE_REQUESTED
-
-        // Validate status
-        if (!['ACCEPTED', 'DECLINED', 'RESCHEDULE_REQUESTED'].includes(status)) {
-            return NextResponse.json(
-                { error: 'Invalid status. Must be ACCEPTED, DECLINED, or RESCHEDULE_REQUESTED' },
-                { status: 400 }
-            )
+        
+        const validation = await validateBody(request, interviewRespondSchema)
+        if (!validation.success) {
+            return validation.response
         }
-
-        // Validate reschedule must have message
-        if (status === 'RESCHEDULE_REQUESTED' && (!message || message.trim().length < 10)) {
-            return NextResponse.json(
-                { error: 'Reschedule request must include a reason (min 10 characters)' },
-                { status: 400 }
-            )
-        }
+        const { status, message } = validation.data
 
         // Get participant with interview details
         const participant = await prisma.interview_participants.findUnique({
@@ -113,7 +104,7 @@ export async function PATCH(request, context) {
 
     } catch (error) {
         return NextResponse.json(
-            { error: 'Failed to respond to interview', details: error.message },
+            createErrorResponse('Gagal merespons to interview', error),
             { status: 500 }
         )
     }

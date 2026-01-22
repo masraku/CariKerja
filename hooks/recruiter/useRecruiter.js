@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import api from "@/lib/api"; // CSRF-protected axios instance
 
 // Helper to get auth header
 const getAuthHeader = () => ({
@@ -13,8 +13,9 @@ export function useQueryRecruiterDashboard(enabled = true) {
     return useQuery({
         queryKey: queryKeyRecruiterDashboard,
         queryFn: async () => {
-            const { data } = await axios.get("/api/profile/recruiter/dashboard", {
+            const { data } = await api.get("/api/profile/recruiter/dashboard", {
                 headers: getAuthHeader(),
+                withCredentials: true,
             });
 
             return data.data;
@@ -30,8 +31,9 @@ export function useQueryRecruiterProfile(enabled = true) {
     return useQuery({
         queryKey: queryKeyRecruiterProfile,
         queryFn: async () => {
-            const { data } = await axios.get("/api/profile/recruiter", {
+            const { data } = await api.get("/api/profile/recruiter", {
                 headers: getAuthHeader(),
+                withCredentials: true,
             });
 
             if (!data.success) throw new Error("Gagal memuat profil");
@@ -49,20 +51,23 @@ const queryKeyRecruiterJobs = ["recruiterJobs"];
 
 export function useQueryRecruiterJobs({
     status = "all",
+    search = "",
     page = 1,
     limit = 10,
     enabled = true,
 } = {}) {
     return useQuery({
-        queryKey: [...queryKeyRecruiterJobs, { status, page, limit }],
+        queryKey: [...queryKeyRecruiterJobs, { status, search, page, limit }],
         queryFn: async () => {
-            const { data } = await axios.get("/api/profile/recruiter/jobs", {
+            const { data } = await api.get("/api/profile/recruiter/jobs", {
                 headers: getAuthHeader(),
                 params: {
                     status: status !== "all" ? status : undefined,
+                    search: search || undefined,
                     page,
                     limit,
                 },
+                withCredentials: true,
             });
 
             if (!data.success) throw new Error("Gagal memuat daftar lowongan");
@@ -70,6 +75,7 @@ export function useQueryRecruiterJobs({
             return {
                 jobs: data.data.jobs || [],
                 pagination: data.data.pagination,
+                stats: data.data.stats,
             };
         },
         enabled,
@@ -82,29 +88,26 @@ const queryKeyRecruiterApplications = ["recruiterApplications"];
 export function useQueryRecruiterApplications({
     jobId,
     status = "all",
-    page = 1,
-    limit = 20,
     enabled = true,
 } = {}) {
     return useQuery({
-        queryKey: [...queryKeyRecruiterApplications, { jobId, status, page, limit }],
+        queryKey: [...queryKeyRecruiterApplications, { jobId, status }],
         queryFn: async () => {
-            const { data } = await axios.get("/api/profile/recruiter/applications", {
+            const { data } = await api.get("/api/profile/recruiter/dashboard/applications", {
                 headers: getAuthHeader(),
                 params: {
                     jobId: jobId || undefined,
                     status: status !== "all" ? status : undefined,
-                    page,
-                    limit,
                 },
+                withCredentials: true,
             });
 
-            if (!data.success) throw new Error("Gagal memuat daftar lamaran");
-
+            // Note: Dashboard endpoint structure might differ from standard list
+            // Based on page usage: data.applications, data.stats, data.jobs
             return {
-                applications: data.data.applications || [],
-                pagination: data.data.pagination,
-                stats: data.data.stats,
+                applications: data.applications || [],
+                stats: data.stats, // stats might be here
+                jobs: data.jobs || [], // useful for filtering
             };
         },
         enabled,
@@ -117,10 +120,11 @@ export function useMutationUpdateApplicationStatus() {
 
     return useMutation({
         mutationFn: async ({ applicationId, status, notes }) => {
-            const { data } = await axios.patch(
-                `/api/applications/${applicationId}`,
+            // Use api for PATCH (CSRF protected)
+            const { data } = await api.patch(
+                `/api/profile/recruiter/applications/${applicationId}`,
                 { status, notes },
-                { headers: getAuthHeader() }
+                { headers: getAuthHeader(), withCredentials: true }
             );
 
             if (!data.success) throw new Error(data.error || "Gagal memperbarui status");
@@ -138,28 +142,22 @@ export function useMutationUpdateApplicationStatus() {
 const queryKeyRecruiterInterviews = ["recruiterInterviews"];
 
 export function useQueryRecruiterInterviews({
-    status = "all",
-    page = 1,
-    limit = 20,
     enabled = true,
 } = {}) {
     return useQuery({
-        queryKey: [...queryKeyRecruiterInterviews, { status, page, limit }],
+        queryKey: queryKeyRecruiterInterviews,
         queryFn: async () => {
-            const { data } = await axios.get("/api/profile/recruiter/interviews", {
+            // Updated to match dashboard usage
+            const { data } = await api.get("/api/profile/recruiter/interviews/list", {
                 headers: getAuthHeader(),
-                params: {
-                    status: status !== "all" ? status : undefined,
-                    page,
-                    limit,
-                },
+                withCredentials: true,
             });
 
             if (!data.success) throw new Error("Gagal memuat daftar interview");
 
             return {
-                interviews: data.data.interviews || data.data || [],
-                pagination: data.data.pagination,
+                interviews: data.data.interviews || [],
+                stats: data.data.stats,
             };
         },
         enabled,
@@ -172,10 +170,11 @@ export function useMutationScheduleInterview() {
 
     return useMutation({
         mutationFn: async (interviewData) => {
-            const { data } = await axios.post(
+            // Use api for POST (CSRF protected)
+            const { data } = await api.post(
                 "/api/interviews",
                 interviewData,
-                { headers: getAuthHeader() }
+                { headers: getAuthHeader(), withCredentials: true }
             );
 
             if (!data.success) throw new Error(data.error || "Gagal menjadwalkan interview");
@@ -189,6 +188,47 @@ export function useMutationScheduleInterview() {
     });
 }
 
+// ============ UPDATE INTERVIEW PARTICIPANT (RESCHEDULE ETC) ============
+export function useMutationUpdateInterviewParticipant() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ interviewId, participantId, data: updateData }) => {
+            const { data } = await api.patch(
+                `/api/profile/recruiter/interviews/${interviewId}/participants/${participantId}`,
+                updateData,
+                { headers: getAuthHeader(), withCredentials: true }
+            );
+
+            if (!data.success) throw new Error(data.error || "Gagal memperbarui status kandidat");
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeyRecruiterInterviews });
+        },
+    });
+}
+
+// ============ DELETE INTERVIEW ============
+export function useMutationDeleteInterview() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (interviewId) => {
+            const { data } = await api.delete(
+                `/api/profile/recruiter/interviews/${interviewId}`,
+                { headers: getAuthHeader(), withCredentials: true }
+            );
+
+            if (!data.success) throw new Error(data.error || "Gagal menghapus interview");
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeyRecruiterInterviews });
+        },
+    });
+}
+
 // ============ HIRED EMPLOYEES ============
 const queryKeyHiredEmployees = ["hiredEmployees"];
 
@@ -196,8 +236,9 @@ export function useQueryHiredEmployees(enabled = true) {
     return useQuery({
         queryKey: queryKeyHiredEmployees,
         queryFn: async () => {
-            const { data } = await axios.get("/api/profile/recruiter/hired", {
+            const { data } = await api.get("/api/profile/recruiter/hired", {
                 headers: getAuthHeader(),
+                withCredentials: true,
             });
 
             if (!data.success) throw new Error("Gagal memuat data karyawan");
@@ -214,10 +255,11 @@ export function useMutationSaveRecruiterProfile() {
 
     return useMutation({
         mutationFn: async (profileData) => {
-            const { data } = await axios.post(
+            // Use api for POST (CSRF protected)
+            const { data } = await api.post(
                 "/api/profile/recruiter",
                 profileData,
-                { headers: { ...getAuthHeader(), "Content-Type": "application/json" } }
+                { headers: { ...getAuthHeader(), "Content-Type": "application/json" }, withCredentials: true }
             );
 
             if (!data.success) throw new Error(data.error || "Gagal menyimpan profil");
@@ -240,10 +282,11 @@ export function useMutationSubmitForVerification() {
 
     return useMutation({
         mutationFn: async () => {
-            const { data } = await axios.post(
+            // Use api for POST (CSRF protected)
+            const { data } = await api.post(
                 "/api/profile/recruiter/submit-verification",
                 {},
-                { headers: getAuthHeader() }
+                { headers: getAuthHeader(), withCredentials: true }
             );
 
             if (!data.success) throw new Error(data.error || "Gagal mengajukan verifikasi");
@@ -262,10 +305,11 @@ export function useMutationPostJob() {
 
     return useMutation({
         mutationFn: async (jobData) => {
-            const { data } = await axios.post(
+            // Use api for POST (CSRF protected)
+            const { data } = await api.post(
                 "/api/jobs",
                 jobData,
-                { headers: getAuthHeader() }
+                { headers: getAuthHeader(), withCredentials: true }
             );
 
             if (!data.success) throw new Error(data.error || "Gagal memposting lowongan");
@@ -285,10 +329,11 @@ export function useMutationUpdateJob() {
 
     return useMutation({
         mutationFn: async ({ jobId, jobData }) => {
-            const { data } = await axios.put(
+            // Use api for PUT (CSRF protected)
+            const { data } = await api.put(
                 `/api/jobs/${jobId}`,
                 jobData,
-                { headers: getAuthHeader() }
+                { headers: getAuthHeader(), withCredentials: true }
             );
 
             if (!data.success) throw new Error(data.error || "Gagal memperbarui lowongan");
@@ -300,3 +345,47 @@ export function useMutationUpdateJob() {
         },
     });
 }
+
+// ============ TOGGLE JOB STATUS ============
+export function useMutationToggleJobStatus() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (slug) => {
+            const { data } = await api.post(
+                `/api/profile/recruiter/jobs/${slug}/toggle-status`,
+                {},
+                { headers: getAuthHeader(), withCredentials: true }
+            );
+
+            if (!data.success) throw new Error(data.error || "Gagal mengubah status lowongan");
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeyRecruiterJobs });
+            queryClient.invalidateQueries({ queryKey: queryKeyRecruiterDashboard });
+        },
+    });
+}
+
+// ============ DELETE JOB ============
+export function useMutationDeleteJob() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (slug) => {
+            const { data } = await api.delete(
+                `/api/profile/recruiter/jobs/${slug}`,
+                { headers: getAuthHeader(), withCredentials: true }
+            );
+
+            if (!data.success) throw new Error(data.error || "Gagal menghapus lowongan");
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeyRecruiterJobs });
+            queryClient.invalidateQueries({ queryKey: queryKeyRecruiterDashboard });
+        },
+    });
+}
+

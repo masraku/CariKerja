@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+
+import api from "@/lib/api"; // CSRF-protected axios instance
 
 // Helper to get auth header
 const getAuthHeader = () => ({
@@ -13,8 +14,9 @@ export function useQueryGetProfile() {
     return useQuery({
         queryKey: queryKeyGetProfile,
         queryFn: async () => {
-            const { data } = await axios.get("/api/profile/jobseeker", {
+            const { data } = await api.get("/api/profile/jobseeker", {
                 headers: getAuthHeader(),
+                withCredentials: true,
             });
             return data;
         },
@@ -33,8 +35,9 @@ export function useQueryDashboardStats(enabled = true) {
             const token = localStorage.getItem("token");
             if (!token) throw new Error("No token");
 
-            const { data } = await axios.get("/api/profile/jobseeker/my-applications", {
+            const { data } = await api.get("/api/profile/jobseeker/my-applications", {
                 headers: getAuthHeader(),
+                withCredentials: true,
             });
             
             if (!data.success) throw new Error("Failed to fetch stats");
@@ -61,8 +64,9 @@ export function useQueryEmploymentStatus(enabled = true) {
             const token = localStorage.getItem("token");
             if (!token) throw new Error("No token");
 
-            const { data } = await axios.get("/api/profile/jobseeker/status", {
+            const { data } = await api.get("/api/profile/jobseeker/status", {
                 headers: getAuthHeader(),
+                withCredentials: true,
             });
             
             if (!data.success) throw new Error("Failed to fetch status");
@@ -83,8 +87,10 @@ export function useMutationEmploymentStatus() {
     
     return useMutation({
         mutationFn: async (updateData) => {
-            const { data } = await axios.put("/api/profile/jobseeker/status", updateData, {
+            // Use api for PUT (CSRF protected)
+            const { data } = await api.put("/api/profile/jobseeker/status", updateData, {
                 headers: getAuthHeader(),
+                withCredentials: true,
             });
             
             return {

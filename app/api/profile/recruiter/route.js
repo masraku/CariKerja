@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireRecruiter, getCurrentUser } from '@/lib/authHelper'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
 
 // GET - Fetch recruiter profile
 export async function GET(request) {
@@ -92,6 +93,11 @@ export async function GET(request) {
 // POST/PUT - Create or Update recruiter profile
 export async function POST(request) {
     try {
+        // CSRF validation
+        if (!validateCSRFToken(request)) {
+            return csrfErrorResponse()
+        }
+
         // ✅ Use getCurrentUser instead of requireRecruiter
         // Because recruiter profile might not exist yet on first create
         const auth = await getCurrentUser(request)

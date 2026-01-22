@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import axios from "axios";
+
 import {
   User,
   Briefcase,
@@ -274,8 +274,8 @@ export default function RecruiterProfilePage() {
             {companyStatus === "VERIFIED"
               ? "Profil Perusahaan"
               : isEditMode
-              ? "Edit Profile Recruiter"
-              : "Lengkapi Profile Recruiter"}
+                ? "Edit Profile Recruiter"
+                : "Lengkapi Profile Recruiter"}
           </h1>
           <p className="text-gray-600">
             {companyStatus === "VERIFIED"
@@ -295,8 +295,8 @@ export default function RecruiterProfilePage() {
                       currentStep === step.number
                         ? "bg-blue-600 text-white"
                         : currentStep > step.number
-                        ? "bg-green-500 text-white"
-                        : "bg-gray-200 text-gray-600"
+                          ? "bg-green-500 text-white"
+                          : "bg-gray-200 text-gray-600"
                     }`}
                   >
                     {currentStep > step.number ? (
@@ -980,10 +980,10 @@ export default function RecruiterProfilePage() {
                 companyStatus === "VERIFIED"
                   ? "bg-green-50 border border-green-200"
                   : companyStatus === "PENDING_RESUBMISSION"
-                  ? "bg-blue-50 border border-blue-200"
-                  : companyStatus === "REJECTED"
-                  ? "bg-red-50 border border-red-200"
-                  : "bg-orange-50 border border-orange-200"
+                    ? "bg-blue-50 border border-blue-200"
+                    : companyStatus === "REJECTED"
+                      ? "bg-red-50 border border-red-200"
+                      : "bg-orange-50 border border-orange-200"
               }`}
             >
               <p
@@ -991,10 +991,10 @@ export default function RecruiterProfilePage() {
                   companyStatus === "VERIFIED"
                     ? "text-green-700"
                     : companyStatus === "PENDING_RESUBMISSION"
-                    ? "text-blue-700"
-                    : companyStatus === "REJECTED"
-                    ? "text-red-700"
-                    : "text-orange-700"
+                      ? "text-blue-700"
+                      : companyStatus === "REJECTED"
+                        ? "text-red-700"
+                        : "text-orange-700"
                 }`}
               >
                 {companyStatus === "VERIFIED" &&

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { requireRecruiter } from '@/lib/authHelper'
 
 // PATCH - Update participant status (for reject reschedule)
@@ -94,7 +95,7 @@ export async function PATCH(request, context) {
 
     } catch (error) {
         return NextResponse.json(
-            { error: 'Failed to update participant', details: error.message },
+            createErrorResponse('Gagal memperbarui participant', error),
             { status: 500 }
         )
     }

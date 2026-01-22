@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { requireRecruiter } from '@/lib/authHelper'
 
 // GET - Fetch all interviews for recruiter with participants
@@ -102,7 +103,7 @@ export async function GET(request) {
 
     } catch (error) {
         return NextResponse.json(
-            { error: 'Failed to fetch interviews', details: error.message },
+            createErrorResponse('Gagal mengambil interviews', error),
             { status: 500 }
         )
     }

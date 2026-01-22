@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
+import { validateQuery } from '@/lib/validations'
+import { createErrorResponse } from '@/lib/errorHandler'
+import { jobSearchSchema } from '@/lib/validations/jobs'
 import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
 import jwt from 'jsonwebtoken'
+import { publicLimiter, getIP, rateLimitResponse } from '@/lib/rateLimit'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 
@@ -28,10 +32,15 @@ async function autoDeactivateExpiredJobs() {
 
 export async function GET(request) {
   try {
+    // Rate limiting - 100 requests per minute
+    const ip = getIP(request)
+    const { success, reset } = await publicLimiter.limit(ip)
+    if (!success) {
+      return rateLimitResponse(reset)
+    }
+
     // Run auto-deactivation in background (non-blocking)
     autoDeactivateExpiredJobs()
-    
-    const { searchParams } = new URL(request.url)
     
     // Check if user is authenticated
     let userId = null
@@ -58,16 +67,24 @@ export async function GET(request) {
     } catch (error) {
       // Not authenticated, continue without user info
     }
+
+    // Validate and parse query parameters
+    const validation = validateQuery(request, jobSearchSchema)
+    if (!validation.success) {
+      return validation.response
+    }
     
-    // Get query parameters
-    const search = searchParams.get('search') || ''
-    const location = searchParams.get('location') || ''
-    const jobType = searchParams.get('jobType') || ''
-    const category = searchParams.get('category') || ''
-    const experience = searchParams.get('experience') || ''
-    const sortBy = searchParams.get('sortBy') || 'latest'
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
+    // Extract validated params
+    const { 
+      search, 
+      location, 
+      jobType, 
+      category, 
+      experience, 
+      sortBy, 
+      page, 
+      limit 
+    } = validation.data
 
     // Build where clause with AND for proper filtering
     const where = {
@@ -263,11 +280,14 @@ export async function GET(request) {
     })
 
   } catch (error) {
+    if (error instanceof NextResponse) {
+      return error
+    }
     return NextResponse.json(
       { 
         success: false,
         error: 'Gagal memuat daftar lowongan',
-        details: error.message 
+        ...createErrorResponse('Terjadi kesalahan', error) 
       },
       { status: 500 }
     )

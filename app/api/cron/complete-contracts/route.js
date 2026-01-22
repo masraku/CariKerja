@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 
 // GET /api/cron/complete-contracts - Auto-complete expired contracts
 // This should be called daily by a cron job
@@ -76,9 +77,6 @@ export async function GET(request) {
     const completedNames = expiredContracts.map(w => 
       `${w.jobseekers.firstName} ${w.jobseekers.lastName}`
     )
-
-    console.log(`Auto-completed ${expiredContracts.length} contracts:`, completedNames)
-
     return NextResponse.json({
       success: true,
       message: `Menyelesaikan ${expiredContracts.length} kontrak kedaluwarsa`,
@@ -90,7 +88,7 @@ export async function GET(request) {
     console.error('Error completing expired contracts:', error)
     return NextResponse.json({ 
       error: 'Gagal menyelesaikan kontrak kedaluwarsa',
-      details: error.message 
+      ...createErrorResponse('Terjadi kesalahan', error) 
     }, { status: 500 })
   }
 }

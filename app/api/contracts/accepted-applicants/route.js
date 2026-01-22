@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { requireRecruiter } from '@/lib/authHelper'
 import { serializeBigInt } from '@/lib/utils'
 
@@ -201,7 +202,7 @@ export async function GET(request) {
     console.error('Error fetching accepted applicants:', error)
     return NextResponse.json({ 
       error: 'Failed to fetch accepted applicants',
-      details: error.message 
+      ...createErrorResponse('Terjadi kesalahan', error) 
     }, { status: 500 })
   }
 }

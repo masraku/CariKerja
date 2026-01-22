@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import axios from "axios";
+import api from "@/lib/api";
 import {
   ArrowLeft,
   Building2,
@@ -39,8 +39,9 @@ export default function AdminJobDetailPage() {
   const fetchJobDetail = async () => {
     try {
       const token = localStorage.getItem("token");
-      const { data } = await axios.get(`/api/admin/jobs/${params.id}`, {
+      const { data } = await api.get(`/api/admin/jobs/${params.id}`, {
         headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
 
       if (data.success) {
@@ -96,7 +97,7 @@ export default function AdminJobDetailPage() {
       }
 
       const token = localStorage.getItem("token");
-      await axios.patch(
+      await api.patch(
         "/api/admin/jobs",
         {
           jobId: job.id,
@@ -107,7 +108,8 @@ export default function AdminJobDetailPage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+          withCredentials: true,
+        },
       );
 
       await Swal.fire({
@@ -154,10 +156,10 @@ export default function AdminJobDetailPage() {
             status === "ACTIVE"
               ? "bg-emerald-500"
               : status === "PENDING"
-              ? "bg-orange-500 animate-pulse"
-              : status === "REJECTED"
-              ? "bg-red-500"
-              : "bg-slate-500"
+                ? "bg-orange-500 animate-pulse"
+                : status === "REJECTED"
+                  ? "bg-red-500"
+                  : "bg-slate-500"
           }`}
         />
         {labels[status] || status}

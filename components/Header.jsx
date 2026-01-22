@@ -97,7 +97,10 @@ const Header = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-1 bg-white/50 backdrop-blur-sm px-2 py-1.5 rounded-full border border-slate-200/50 shadow-sm">
+          <nav
+            aria-label="Navigasi utama"
+            className="hidden lg:flex items-center gap-1 bg-white/50 backdrop-blur-sm px-2 py-1.5 rounded-full border border-slate-200/50 shadow-sm"
+          >
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -133,8 +136,8 @@ const Header = () => {
                       {user.role === "RECRUITER"
                         ? "Rekruter"
                         : user.role === "JOBSEEKER"
-                        ? "Pencaker"
-                        : user.role}
+                          ? "Pencaker"
+                          : user.role}
                     </span>
                   </div>
                   <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#03587f] to-[#024666] flex items-center justify-center text-white font-bold shadow-sm overflow-hidden">
@@ -248,7 +251,9 @@ const Header = () => {
                   href="/login"
                   className={`px-5 py-2.5 text-sm font-semibold transition-colors ${
                     !isScrolled &&
-                    (isHomePage || pathname.startsWith("/companies") || pathname.startsWith("/news"))
+                    (isHomePage ||
+                      pathname.startsWith("/companies") ||
+                      pathname.startsWith("/news"))
                       ? "text-white hover:text-blue-100"
                       : "text-slate-600 hover:text-[#03587f]"
                   }`}
@@ -269,11 +274,14 @@ const Header = () => {
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="lg:hidden p-2.5 text-slate-600 bg-white/90 backdrop-blur-md rounded-xl shadow-sm border border-slate-200/50 hover:bg-white transition-all active:scale-95"
+            aria-label={isMobileMenuOpen ? "Tutup menu" : "Buka menu"}
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-menu"
           >
             {isMobileMenuOpen ? (
-              <X className="w-6 h-6" />
+              <X className="w-6 h-6" aria-hidden="true" />
             ) : (
-              <Menu className="w-6 h-6" />
+              <Menu className="w-6 h-6" aria-hidden="true" />
             )}
           </button>
         </div>
@@ -281,8 +289,14 @@ const Header = () => {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden absolute top-full left-0 right-0 bg-white border-t border-slate-100 shadow-xl p-4 animate-in slide-in-from-top-5">
-          <nav className="flex flex-col gap-2">
+        <div
+          id="mobile-menu"
+          className="lg:hidden absolute top-full left-0 right-0 bg-white border-t border-slate-100 shadow-xl p-4 animate-in slide-in-from-top-5"
+        >
+          <nav
+            aria-label="Menu navigasi mobile"
+            className="flex flex-col gap-2"
+          >
             {navLinks.map((link) => (
               <Link
                 key={link.href}

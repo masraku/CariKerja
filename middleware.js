@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
+import { Redis } from '@upstash/redis'
 
-export function middleware(request) {
+const redis = Redis.fromEnv()
+
+export async function middleware(request) {
   const token = request.cookies.get('token')?.value
   const pathname = request.nextUrl.pathname
 
@@ -16,8 +19,46 @@ export function middleware(request) {
     '/warning',
     '/terms',
     '/privacy',
-    '/news'
+    '/news',
+    '/maintenance'
   ]
+
+  // --- MAINTENANCE MODE CHECK ---
+  if (!pathname.startsWith('/api') && 
+      !pathname.startsWith('/_next') && 
+      !pathname.includes('favicon.ico') &&
+      pathname !== '/maintenance') {
+      
+    try {
+      const isMaintenance = await redis.get('system:maintenance');      
+      if (isMaintenance === 'true' || isMaintenance === true || isMaintenance === 1) { // Menangani berbagai kemungkinan tipe data
+
+        // Allow Login page for admins to access
+        if (pathname === '/login' || pathname === '/api/auth/login') {
+            // Continue to normal flow (will allow login page)
+        } else {
+            // Check if user is admin based on token
+            let isAdmin = false
+            if (token) {
+                try {
+                    const base64Url = token.split('.')[1]
+                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+                    const decoded = JSON.parse(atob(base64))
+                    if (decoded.role === 'ADMIN') isAdmin = true
+                } catch (e) {}
+            }
+
+            // If not admin, redirect to maintenance
+            if (!isAdmin) {
+                return NextResponse.redirect(new URL('/maintenance', request.url))
+            }
+        }
+      }
+    } catch (e) {
+      console.error('Error checking maintenance mode:', e)
+    }
+  }
+  // ------------------------------
 
   // Check if route is public
   const isPublicRoute = publicRoutes.some(route => 

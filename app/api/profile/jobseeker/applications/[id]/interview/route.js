@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { verifyToken } from '@/lib/auth'
 
 export async function GET(request, { params }) {
@@ -71,7 +72,7 @@ export async function GET(request, { params }) {
         })
     } catch (error) {
         return NextResponse.json(
-            { error: 'Internal server error', details: error.message },
+            createErrorResponse('Terjadi kesalahan server', error),
             { status: 500 }
         )
     }

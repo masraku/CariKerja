@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import axios from "axios";
+import api from "@/lib/api";
 import {
   User,
   Mail,
@@ -52,8 +52,9 @@ export default function AdminJobseekerDetail() {
       const headers = { Authorization: `Bearer ${token}` };
 
       try {
-        const { data } = await axios.get(`/api/admin/jobseekers/${params.id}`, {
+        const { data } = await api.get(`/api/admin/jobseekers/${params.id}`, {
           headers,
+          withCredentials: true,
         });
         if (data.success) {
           setProfile(data.data);
@@ -61,12 +62,13 @@ export default function AdminJobseekerDetail() {
         }
       } catch (err) {
         // If specific endpoint fails, try list endpoint
-        const { data: listData } = await axios.get("/api/admin/jobseekers", {
+        const { data: listData } = await api.get("/api/admin/jobseekers", {
           headers,
+          withCredentials: true,
         });
         if (listData.success) {
           const found = listData.data.jobseekers.find(
-            (j) => j.id === params.id
+            (j) => j.id === params.id,
           );
           setProfile(found);
         }
@@ -489,7 +491,7 @@ export default function AdminJobseekerDetail() {
                       <p className="text-sm text-slate-500 mt-2">
                         Sejak{" "}
                         {formatDate(
-                          profile.currentJob?.startDate || profile.employedAt
+                          profile.currentJob?.startDate || profile.employedAt,
                         )}
                       </p>
                     )}

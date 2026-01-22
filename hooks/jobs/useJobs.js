@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import api from "@/lib/api"; // CSRF-protected axios instance
 
 // Helper to get auth header
 const getAuthHeader = () => ({
@@ -78,10 +79,11 @@ export function useMutationApplyJob() {
 
     return useMutation({
         mutationFn: async ({ jobId, coverLetter }) => {
-            const { data } = await axios.post(
+            // Use api for POST (CSRF protected)
+            const { data } = await api.post(
                 "/api/applications",
                 { jobId, coverLetter },
-                { headers: getAuthHeader() }
+                { headers: getAuthHeader(), withCredentials: true }
             );
 
             if (!data.success) throw new Error(data.error || "Gagal melamar pekerjaan");
@@ -93,3 +95,4 @@ export function useMutationApplyJob() {
         },
     });
 }
+

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { requireJobseeker } from '@/lib/authHelper'
 
 // GET - Get interview room details
@@ -117,7 +118,7 @@ export async function GET(request, context) {
 
     } catch (error) {
         return NextResponse.json(
-            { error: 'Gagal memuat ruang interview', details: error.message },
+            createErrorResponse('Gagal memuat ruang interview', error),
             { status: 500 }
         )
     }
@@ -176,7 +177,7 @@ export async function PATCH(request, context) {
 
     } catch (error) {
         return NextResponse.json(
-            { error: 'Gagal menandai interview selesai' },
+            createErrorResponse('Gagal menandai interview selesai', error),
             { status: 500 }
         )
     }

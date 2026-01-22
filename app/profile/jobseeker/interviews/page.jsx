@@ -2,8 +2,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import axios from "axios";
 import Swal from "sweetalert2";
+import {
+  useQueryJobseekerInterviews,
+  useMutationRespondInterview,
+} from "@/hooks/jobseeker/useJobseeker";
 import {
   Calendar,
   Clock,
@@ -22,46 +25,15 @@ import {
 
 export default function JobseekerInterviewsPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [interviews, setInterviews] = useState([]);
-  const [pending, setPending] = useState([]);
-  const [responded, setResponded] = useState([]);
-  const [stats, setStats] = useState(null);
+  // Hooks
+  const { data: queryData, isLoading: loading } = useQueryJobseekerInterviews();
+  const respondMutation = useMutationRespondInterview();
+
+  const interviews = queryData?.interviews || [];
+  const pending = queryData?.pending || [];
+  const responded = queryData?.responded || [];
+  const stats = queryData?.stats || null;
   const [activeFilter, setActiveFilter] = useState("all");
-
-  useEffect(() => {
-    loadInterviews();
-  }, []);
-
-  const loadInterviews = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("token");
-
-      const { data } = await axios.get("/api/profile/jobseeker/interviews", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (data.success) {
-        setInterviews(data.data.interviews);
-        setPending(data.data.pending);
-        setResponded(data.data.responded);
-        setStats(data.data.stats);
-      } else {
-        throw new Error(data.error);
-      }
-    } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Gagal",
-        text: "Gagal memuat data interview",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleRespond = async (participantId, status) => {
     const isAccept = status === "ACCEPTED";
@@ -116,20 +88,11 @@ export default function JobseekerInterviewsPage() {
     if (!result.isConfirmed) return;
 
     try {
-      const token = localStorage.getItem("token");
-
-      const { data } = await axios.patch(
-        `/api/profile/jobseeker/interviews/${participantId}/respond`,
-        {
-          status: status,
-          message: result.value || null,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await respondMutation.mutateAsync({
+        participantId,
+        status,
+        message: result.value || null,
+      });
 
       let successText = "";
       if (isAccept) {
@@ -523,7 +486,7 @@ export default function JobseekerInterviewsPage() {
                           onClick={() =>
                             handleRespond(
                               interview.participantId,
-                              "RESCHEDULE_REQUESTED"
+                              "RESCHEDULE_REQUESTED",
                             )
                           }
                           className="flex-1 min-w-[150px] bg-gradient-to-r from-orange-500 to-amber-500 text-white px-4 py-3 rounded-lg hover:from-orange-600 hover:to-amber-600 transition font-semibold shadow-lg flex items-center justify-center gap-2"
@@ -551,7 +514,7 @@ export default function JobseekerInterviewsPage() {
 
         {/* Reschedule Requested */}
         {filteredData.responded.filter(
-          (i) => i.status === "RESCHEDULE_REQUESTED"
+          (i) => i.status === "RESCHEDULE_REQUESTED",
         ).length > 0 && (
           <div className="mb-8">
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -559,7 +522,7 @@ export default function JobseekerInterviewsPage() {
               Menunggu Reschedule (
               {
                 filteredData.responded.filter(
-                  (i) => i.status === "RESCHEDULE_REQUESTED"
+                  (i) => i.status === "RESCHEDULE_REQUESTED",
                 ).length
               }
               )

@@ -27,7 +27,7 @@ import {
 import { useQueryAdminStats, useQueryAdminChartStats } from "@/hooks/admin/useAdmin";
 
 export default function AdminDashboard() {
-  // Use React Query hooks
+  // Menggunakan Custom Hooks untuk ambil data nya
   const { data: stats, isPending: loadingStats } = useQueryAdminStats();
   const { data: chartData, isPending: loadingChart } = useQueryAdminChartStats();
   
@@ -59,9 +59,8 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
         {/* Stats Grid */}
-        {/* Stats Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-          {/* Verified Companies */}
+          {/* Verifikasi Perusahaan */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition">
             <div className="flex items-start justify-between mb-4">
               <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
@@ -76,10 +75,10 @@ export default function AdminDashboard() {
                 chartData?.verifiedCompanies || 0
               )}
             </div>
-            <div className="text-sm text-slate-500">Perusahaan Verified</div>
+            <div className="text-sm text-slate-500">Perusahaan Terverifikasi</div>
           </div>
 
-          {/* Active Jobs */}
+          {/* Lowongan Aktif */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition">
             <div className="flex items-start justify-between mb-4">
               <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
@@ -100,7 +99,7 @@ export default function AdminDashboard() {
             <div className="text-sm text-slate-500">Total Lowongan Dibuka</div>
           </div>
 
-          {/* Pending Jobs (Clickable) */}
+          {/* Lowongan Pending (Clickable) */}
           <Link
             href="/admin/jobs?status=PENDING"
             className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-lg hover:border-orange-200 transition group cursor-pointer block"
@@ -145,7 +144,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Application Stats Summary - Moved here */}
+        {/* Ringkasan Statistik Lamaran - Dipindahkan ke sini */}
         <div className="mb-8 bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
           <h2 className="text-lg font-semibold text-slate-800 mb-4">
             Ringkasan Lamaran
@@ -181,9 +180,9 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Charts Section */}
+        {/* Bagian Grafik */}
         <div className="grid lg:grid-cols-2 gap-6 mb-8">
-          {/* Monthly Jobs Bar Chart */}
+          {/* Grafik Batang Lowongan per Bulan */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
             <h2 className="text-lg font-semibold text-slate-800 mb-4">
               Lowongan per Bulan
@@ -242,7 +241,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Employment Pie Chart */}
+          {/* Grafik Lingkaran Status Pekerjaan */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
             <h2 className="text-lg font-semibold text-slate-800 mb-4">
               Status Pekerjaan
@@ -293,7 +292,7 @@ export default function AdminDashboard() {
                 )
               )}
             </div>
-            {/* Legend */}
+            {/* Legenda */}
             <div className="flex justify-center gap-6 mt-4">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
@@ -311,12 +310,12 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Quick Actions */}
+        {/* Menu Cepat */}
         <h2 className="text-lg font-semibold text-slate-800 mb-4">
           Menu Cepat
         </h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
-          {/* Companies */}
+          {/* Perusahaan */}
           <Link
             href="/admin/companies"
             className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-lg hover:border-orange-200 transition group"
@@ -336,7 +335,7 @@ export default function AdminDashboard() {
             </span>
           </Link>
 
-          {/* Jobseekers */}
+          {/* Pencari Kerja */}
           <Link
             href="/admin/jobseekers"
             className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-lg hover:border-blue-200 transition group"
@@ -345,7 +344,7 @@ export default function AdminDashboard() {
               <Users className="w-7 h-7 text-white" />
             </div>
             <h3 className="font-semibold text-slate-800 mb-1">
-              Kelola Jobseeker
+              Kelola Pencari Kerja
             </h3>
             <p className="text-sm text-slate-500 mb-4">
               Monitor semua pencari kerja terdaftar
@@ -356,7 +355,7 @@ export default function AdminDashboard() {
             </span>
           </Link>
 
-          {/* Jobs */}
+          {/* Lowongan */}
           <Link
             href="/admin/jobs"
             className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-lg hover:border-emerald-200 transition group"
@@ -376,7 +375,7 @@ export default function AdminDashboard() {
             </span>
           </Link>
 
-          {/* Verified Companies */}
+          {/* Perusahaan Terverifikasi */}
           <Link
             href="/admin/companies?status=verified"
             className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-lg hover:border-purple-200 transition group"

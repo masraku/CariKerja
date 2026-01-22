@@ -1,6 +1,14 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { requireRecruiter } from '@/lib/authHelper'
+import { validateBody } from '@/lib/validations'
+import { z } from 'zod'
+
+// Validation schema
+const resubmitSchema = z.object({
+  contractId: z.string().min(1, 'Contract ID diperlukan')
+})
 
 // POST /api/contracts/resubmit - Resubmit a rejected contract
 export async function POST(request) {
@@ -11,12 +19,12 @@ export async function POST(request) {
     }
 
     const { recruiter } = auth
-    const body = await request.json()
-    const { contractId } = body
-
-    if (!contractId) {
-      return NextResponse.json({ error: 'Contract ID diperlukan' }, { status: 400 })
+    
+    const validation = await validateBody(request, resubmitSchema)
+    if (!validation.success) {
+      return validation.response
     }
+    const { contractId } = validation.data
 
     // Get the rejected contract
     const contract = await prisma.contract_registrations.findUnique({
@@ -74,7 +82,7 @@ export async function POST(request) {
     console.error('Error resubmitting contract:', error)
     return NextResponse.json({ 
       error: 'Gagal melakukan resubmit',
-      details: error.message 
+      ...createErrorResponse('Terjadi kesalahan', error) 
     }, { status: 500 })
   }
 }

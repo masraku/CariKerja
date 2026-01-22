@@ -12,6 +12,7 @@ import {
   CheckCircle,
   FileText,
   Newspaper,
+  ClipboardList,
 } from "lucide-react";
 
 export default function AdminSidebar() {
@@ -41,10 +42,16 @@ export default function AdminSidebar() {
       showBullet: pendingCounts.contracts > 0,
     },
     { icon: Newspaper, label: "Berita", href: "/admin/news" },
+    { icon: ClipboardList, label: "Audit Logs", href: "/admin/audit-logs" },
     { icon: Settings, label: "Pengaturan", href: "/admin/settings" },
   ];
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (e) {
+      console.error("Logout failed", e);
+    }
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     window.location.href = "/login";

@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { publicLimiter, getIP, rateLimitResponse } from '@/lib/rateLimit'
 
 // GET - Get all published news (public)
 export async function GET(request) {
     try {
+        // Rate limiting - 100 requests per minute
+        const ip = getIP(request)
+        const { success, reset } = await publicLimiter.limit(ip)
+        if (!success) {
+            return rateLimitResponse(reset)
+        }
+
         const { searchParams } = new URL(request.url)
         const search = searchParams.get('search') || ''
         const category = searchParams.get('category') || 'all'

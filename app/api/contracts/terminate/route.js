@@ -1,6 +1,15 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { requireRecruiter } from '@/lib/authHelper'
+import { validateBody } from '@/lib/validations'
+import { z } from 'zod'
+
+// Validation schema
+const terminateSchema = z.object({
+  workerId: z.string().min(1, 'ID pekerja diperlukan'),
+  reason: z.string().optional()
+})
 
 // POST /api/contracts/terminate - Terminate a contract worker
 export async function POST(request) {
@@ -11,12 +20,12 @@ export async function POST(request) {
     }
 
     const { recruiter } = auth
-    const body = await request.json()
-    const { workerId, reason } = body
-
-    if (!workerId) {
-      return NextResponse.json({ error: 'ID pekerja diperlukan' }, { status: 400 })
+    
+    const validation = await validateBody(request, terminateSchema)
+    if (!validation.success) {
+      return validation.response
     }
+    const { workerId, reason } = validation.data
 
     // Get the contract worker and verify ownership
     const worker = await prisma.contract_workers.findUnique({
@@ -105,7 +114,7 @@ export async function POST(request) {
     console.error('Error terminating contract:', error)
     return NextResponse.json({ 
       error: 'Gagal mengakhiri kontrak',
-      details: error.message 
+      ...createErrorResponse('Terjadi kesalahan', error) 
     }, { status: 500 })
   }
 }

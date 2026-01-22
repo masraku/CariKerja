@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { requireRecruiter } from '@/lib/authHelper'
 import { sendRescheduleNotification } from '@/lib/email/sendRescheduleNotification'
 import { v4 as uuidv4 } from 'uuid'
+import { validateBody } from '@/lib/validations'
+import { recruiterRescheduleSchema } from '@/lib/validations/profile'
 
 // PATCH - Reschedule interview
 export async function PATCH(request, context) {
@@ -22,17 +25,12 @@ export async function PATCH(request, context) {
 
     const { recruiter } = auth
     
-    // Parse request body
-    const body = await request.json()
-    const { scheduledAt, duration, meetingUrl, description } = body
-    
-    // Validate required fields
-    if (!scheduledAt) {
-      return NextResponse.json(
-        { error: 'Scheduled date and time are required' },
-        { status: 400 }
-      )
+    // Validate body
+    const validation = await validateBody(request, recruiterRescheduleSchema)
+    if (!validation.success) {
+      return validation.response
     }
+    const { scheduledAt, duration, meetingUrl, description, participantId } = validation.data
 
     // Check if interview exists and belongs to recruiter
     const interview = await prisma.interviews.findUnique({
@@ -104,8 +102,6 @@ export async function PATCH(request, context) {
     const oldScheduledAt = interview.scheduledAt
 
     // Check if rescheduling a specific participant
-    const { participantId } = body
-
     if (participantId) {
       // 1. Verify participant belongs to this interview
       const participant = interview.interview_participants.find(p => p.id === participantId)
@@ -242,7 +238,7 @@ export async function PATCH(request, context) {
     return NextResponse.json(
       { 
         error: 'Failed to reschedule interview',
-        details: error.message
+        ...createErrorResponse('Terjadi kesalahan', error)
       },
       { status: 500 }
     )

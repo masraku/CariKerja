@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { verifyToken } from '@/lib/auth'
+import { validateBody } from '@/lib/validations'
+import { updateJobSchema } from '@/lib/validations/profile'
 
 export async function PUT(request, { params }) {
   try {
@@ -11,7 +14,11 @@ export async function PUT(request, { params }) {
 
     const decoded = verifyToken(token)
     const { slug } = await params
-    const body = await request.json()
+    
+    const validation = await validateBody(request, updateJobSchema)
+    if (!validation.success) {
+      return validation.response
+    }
 
     // Verify job ownership
     const existingJob = await prisma.jobs.findUnique({
@@ -57,15 +64,7 @@ export async function PUT(request, { params }) {
       isDisabilityFriendly,
       disabilityDescription,
       gallery
-    } = body
-
-    // Validation
-    if (!title || !description || !location || !jobType) {
-      return NextResponse.json(
-        { error: 'Please fill all required fields' },
-        { status: 400 }
-      )
-    }
+    } = validation.data
 
     // Generate new slug if title changed
     let newSlug = slug
@@ -163,7 +162,7 @@ export async function PUT(request, { params }) {
     return NextResponse.json(
       { 
         error: 'Failed to update job',
-        details: error.message 
+        ...createErrorResponse('Terjadi kesalahan', error) 
       },
       { status: 500 }
     )

@@ -33,7 +33,7 @@ export default function AdminJobsPage() {
   const [sortOrder, setSortOrder] = useState("newest");
   const [scopeFilter, setScopeFilter] = useState("all");
 
-  // Use React Query hooks
+  // menggunakan hook untuk mengambil data lowongan
   const {
     data,
     isPending: loading,
@@ -93,7 +93,7 @@ export default function AdminJobsPage() {
     try {
       let rejectionReason = null;
 
-      // UI Confirmation
+      // UI Konfirmasi
       if (newStatus === "ACTIVE") {
         const result = await Swal.fire({
           title: "Setujui Lowongan?",
@@ -128,7 +128,7 @@ export default function AdminJobsPage() {
         rejectionReason = result.value;
       }
 
-      // Use mutation
+      // pakai mutasi untuk update status
       await updateStatusMutation.mutateAsync({
         jobId,
         status: newStatus,
@@ -190,7 +190,7 @@ export default function AdminJobsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Header - Always visible */}
+      {/* Header - Selalu terlihat */}
       <div className="bg-gradient-to-r from-slate-800 to-slate-700 px-6 lg:px-8 py-8">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-2xl lg:text-3xl font-bold text-white mb-2">
@@ -200,7 +200,7 @@ export default function AdminJobsPage() {
             Kelola semua lowongan pekerjaan yang terdaftar
           </p>
 
-          {/* Quick Stats in Header */}
+          {/* Statistik Cepat di Header */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
               <div className="text-3xl font-bold text-white">
@@ -232,11 +232,10 @@ export default function AdminJobsPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6">
-        {/* Filters */}
-        {/* Filters & Search */}
+        {/* Filter & Pencarian */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6 sticky top-4 z-30">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            {/* Search Input */}
+            {/* Input Pencarian */}
             <div className="lg:col-span-4 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input

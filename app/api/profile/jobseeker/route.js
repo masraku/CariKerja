@@ -1,13 +1,28 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { cookies } from 'next/headers'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
+import { standardLimiter, getIP, rateLimitResponse } from '@/lib/rateLimit'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 
 export async function POST(request) {
   try {
+    // Rate limiting - 60 requests per minute
+    const ip = getIP(request)
+    const { success, reset } = await standardLimiter.limit(ip)
+    if (!success) {
+      return rateLimitResponse(reset)
+    }
+
+    // CSRF validation
+    if (!validateCSRFToken(request)) {
+      return csrfErrorResponse()
+    }
+
     // Verify authentication
     const cookieStore = await cookies()
     const token = cookieStore.get('token')
@@ -363,7 +378,7 @@ export async function POST(request) {
     return NextResponse.json(
       { 
         error: 'Failed to save profile', 
-        details: error.message,
+        ...createErrorResponse('Terjadi kesalahan', error),
         type: error.name
       },
       { status: 500 }
@@ -583,7 +598,7 @@ export async function GET(request) {
     return NextResponse.json(
       { 
         error: 'Failed to get profile',
-        details: error.message
+        ...createErrorResponse('Terjadi kesalahan', error)
       },
       { status: 500 }
     )
@@ -624,7 +639,7 @@ export async function PATCH(request) {
     return NextResponse.json(
       { 
         error: 'Failed to update profile',
-        details: error.message
+        ...createErrorResponse('Terjadi kesalahan', error)
       },
       { status: 500 }
     )
@@ -684,7 +699,7 @@ export async function DELETE(request) {
     return NextResponse.json(
       { 
         error: 'Failed to delete profile',
-        details: error.message
+        ...createErrorResponse('Terjadi kesalahan', error)
       },
       { status: 500 }
     )

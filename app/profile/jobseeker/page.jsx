@@ -2,7 +2,6 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import axios from "axios";
 import Swal from "sweetalert2";
 import {
   User,
@@ -38,6 +37,7 @@ import DokumenStep from "./components/DokumenStep";
 import {
   useQueryJobseekerProfileFull,
   useMutationSaveJobseekerProfile,
+  useMutationUploadFile,
 } from "@/hooks/jobseeker/useJobseeker";
 
 function JobseekerProfileContent() {
@@ -52,6 +52,7 @@ function JobseekerProfileContent() {
   // React Query hooks
   const { data: profileData, isLoading } = useQueryJobseekerProfileFull();
   const saveProfileMutation = useMutationSaveJobseekerProfile();
+  const uploadMutation = useMutationUploadFile();
 
   // Format helpers
   const formatRupiah = (value) => {
@@ -389,21 +390,14 @@ function JobseekerProfileContent() {
     }
   }, [profileData]);
 
-  // Upload Logic
+  // Upload Logic - uses CSRF-protected mutation
   const uploadFile = async (file, bucket) => {
-    const maxSize = 2 * 1024 * 1024; // 2MB
-    if (file.size > maxSize)
-      throw new Error(`Ukuran file terlalu besar. Maksimal 2MB.`);
-
-    const formDataUpload = new FormData();
-    formDataUpload.append("file", file);
-    formDataUpload.append("bucket", bucket);
-    formDataUpload.append("userId", user?.id || "");
-
-    const { data } = await axios.post("/api/upload", formDataUpload, {
-      withCredentials: true,
+    const result = await uploadMutation.mutateAsync({
+      file,
+      bucket,
+      userId: user?.id || "",
     });
-    return data;
+    return result;
   };
 
   // Upload Handlers
@@ -633,7 +627,7 @@ function JobseekerProfileContent() {
         index,
         "certificateFileName",
         file.name,
-        "certifications"
+        "certifications",
       );
       handleArrayChange(index, "certificateUrl", result.url, "certifications");
       Swal.fire({
@@ -662,7 +656,7 @@ function JobseekerProfileContent() {
     setFormData((prev) => ({
       ...prev,
       [arrayName]: prev[arrayName].map((item, i) =>
-        i === index ? { ...item, [field]: value } : item
+        i === index ? { ...item, [field]: value } : item,
       ),
     }));
   };
@@ -686,7 +680,7 @@ function JobseekerProfileContent() {
     childIndex,
     value,
     parentArray,
-    childArray
+    childArray,
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -695,10 +689,10 @@ function JobseekerProfileContent() {
           ? {
               ...item,
               [childArray]: item[childArray].map((child, j) =>
-                j === childIndex ? value : child
+                j === childIndex ? value : child,
               ),
             }
-          : item
+          : item,
       ),
     }));
   };
@@ -707,14 +701,14 @@ function JobseekerProfileContent() {
     parentIndex,
     parentArray,
     childArray,
-    defaultValue
+    defaultValue,
   ) => {
     setFormData((prev) => ({
       ...prev,
       [parentArray]: prev[parentArray].map((item, i) =>
         i === parentIndex
           ? { ...item, [childArray]: [...item[childArray], defaultValue] }
-          : item
+          : item,
       ),
     }));
   };
@@ -888,8 +882,8 @@ function JobseekerProfileContent() {
                         isActive
                           ? "bg-blue-50/80 shadow-sm ring-1 ring-blue-100"
                           : isCompleted
-                          ? "hover:bg-gray-50"
-                          : "hover:bg-gray-50/50"
+                            ? "hover:bg-gray-50"
+                            : "hover:bg-gray-50/50"
                       }`}
                     >
                       <div
@@ -899,8 +893,8 @@ function JobseekerProfileContent() {
                                   isActive
                                     ? `bg-gradient-to-br ${step.gradient} text-white shadow-md scale-105`
                                     : isCompleted
-                                    ? "bg-green-100 text-green-600"
-                                    : "bg-gray-100 text-gray-400"
+                                      ? "bg-green-100 text-green-600"
+                                      : "bg-gray-100 text-gray-400"
                                 }
                             `}
                       >

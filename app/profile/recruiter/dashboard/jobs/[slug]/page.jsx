@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import axios from "axios";
+import api from "@/lib/api";
 import {
   ArrowLeft,
   Users,
@@ -84,7 +84,7 @@ export default function JobDetailPage() {
       // Exclude terminal/hidden statuses from stats
       const hiddenStatuses = ["WITHDRAWN", "RESIGNED", "REJECTED"];
       const activeApplications = applications.filter(
-        (a) => !hiddenStatuses.includes(a.status)
+        (a) => !hiddenStatuses.includes(a.status),
       );
 
       setStats({
@@ -94,10 +94,10 @@ export default function JobDetailPage() {
         shortlisted: applications.filter((a) => a.status === "SHORTLISTED")
           .length,
         interview: applications.filter(
-          (a) => a.status === "INTERVIEW_SCHEDULED"
+          (a) => a.status === "INTERVIEW_SCHEDULED",
         ).length,
         interviewCompleted: applications.filter(
-          (a) => a.status === "INTERVIEW_COMPLETED"
+          (a) => a.status === "INTERVIEW_COMPLETED",
         ).length,
         accepted: applications.filter((a) => a.status === "ACCEPTED").length,
       });
@@ -123,7 +123,7 @@ export default function JobDetailPage() {
       setLoadingAI((prev) => ({ ...prev, [application.id]: true }));
 
       // Use internal API route to avoid CORS issues
-      const response = await axios.post(
+      const response = await api.post(
         "/api/profile/recruiter/jobs/ai-match",
         {
           cv_url: application.jobseekers?.cvUrl,
@@ -138,7 +138,10 @@ export default function JobDetailPage() {
               job?.skills ||
               [],
           },
-        }
+        },
+        {
+          withCredentials: true,
+        },
       );
 
       const data = response.data;
@@ -164,18 +167,19 @@ export default function JobDetailPage() {
       // Redirect to login if no token
       if (!token) {
         router.push(
-          `/login?redirect=${encodeURIComponent(window.location.pathname)}`
+          `/login?redirect=${encodeURIComponent(window.location.pathname)}`,
         );
         return;
       }
 
-      const { data } = await axios.get(
+      const { data } = await api.get(
         `/api/profile/recruiter/jobs/${params.slug}/applications`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+          withCredentials: true,
+        },
       );
 
       setApplications(data.applications || []);
@@ -204,17 +208,17 @@ export default function JobDetailPage() {
       filtered = filtered.filter(
         (app) =>
           aiRecommendations[app.id]?.isRecommended &&
-          !hiddenStatuses.includes(app.status)
+          !hiddenStatuses.includes(app.status),
       );
     } else if (statusFilter === "SELEKSI_ALL") {
       // Show all applications in Seleksi pipeline
       filtered = filtered.filter((app) =>
-        ["PENDING", "REVIEWING", "SHORTLISTED"].includes(app.status)
+        ["PENDING", "REVIEWING", "SHORTLISTED"].includes(app.status),
       );
     } else if (statusFilter === "INTERVIEW_ALL") {
       // Show all applications in Interview pipeline
       filtered = filtered.filter((app) =>
-        ["INTERVIEW_SCHEDULED", "INTERVIEW_COMPLETED"].includes(app.status)
+        ["INTERVIEW_SCHEDULED", "INTERVIEW_COMPLETED"].includes(app.status),
       );
     } else if (statusFilter === "all") {
       // Default "all" view - exclude hidden/terminal statuses
@@ -252,7 +256,7 @@ export default function JobDetailPage() {
     } else {
       // For other filters, just sort by date (oldest first - FIFO)
       filtered = [...filtered].sort(
-        (a, b) => new Date(a.appliedAt) - new Date(b.appliedAt)
+        (a, b) => new Date(a.appliedAt) - new Date(b.appliedAt),
       );
     }
 
@@ -347,23 +351,23 @@ export default function JobDetailPage() {
   // Get selected applications info for dynamic buttons
   const getSelectedAppsInfo = () => {
     const selected = applications.filter((app) =>
-      selectedApplications.includes(app.id)
+      selectedApplications.includes(app.id),
     );
     const statuses = [...new Set(selected.map((app) => app.status))];
     const pendingCount = selected.filter(
-      (app) => app.status === "PENDING"
+      (app) => app.status === "PENDING",
     ).length;
     const reviewingCount = selected.filter(
-      (app) => app.status === "REVIEWING"
+      (app) => app.status === "REVIEWING",
     ).length;
     const shortlistedCount = selected.filter(
-      (app) => app.status === "SHORTLISTED"
+      (app) => app.status === "SHORTLISTED",
     ).length;
     const interviewScheduledCount = selected.filter(
-      (app) => app.status === "INTERVIEW_SCHEDULED"
+      (app) => app.status === "INTERVIEW_SCHEDULED",
     ).length;
     const interviewCompletedCount = selected.filter(
-      (app) => app.status === "INTERVIEW_COMPLETED"
+      (app) => app.status === "INTERVIEW_COMPLETED",
     ).length;
 
     return {
@@ -384,7 +388,7 @@ export default function JobDetailPage() {
   // Handle bulk review (PENDING -> REVIEWING)
   const handleBulkReview = async () => {
     const selectedApps = filteredApplications.filter((app) =>
-      selectedApplications.includes(app.id)
+      selectedApplications.includes(app.id),
     );
     const validApps = selectedApps.filter((app) => app.status === "PENDING");
 
@@ -415,16 +419,17 @@ export default function JobDetailPage() {
 
       await Promise.all(
         validApps.map((app) =>
-          axios.patch(
+          api.patch(
             `/api/profile/recruiter/applications/${app.id}`,
             { status: "REVIEWING" },
             {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
-            }
-          )
-        )
+              withCredentials: true,
+            },
+          ),
+        ),
       );
 
       Swal.fire({
@@ -440,8 +445,8 @@ export default function JobDetailPage() {
         prev.map((app) =>
           validApps.find((v) => v.id === app.id)
             ? { ...app, status: "REVIEWING" }
-            : app
-        )
+            : app,
+        ),
       );
       setSelectedApplications([]);
       setSelectMode(false);
@@ -457,10 +462,10 @@ export default function JobDetailPage() {
   // Handle bulk accept (INTERVIEW_COMPLETED -> ACCEPTED)
   const handleBulkAccept = async () => {
     const selectedApps = filteredApplications.filter((app) =>
-      selectedApplications.includes(app.id)
+      selectedApplications.includes(app.id),
     );
     const validApps = selectedApps.filter(
-      (app) => app.status === "INTERVIEW_COMPLETED"
+      (app) => app.status === "INTERVIEW_COMPLETED",
     );
 
     if (validApps.length === 0) {
@@ -495,7 +500,7 @@ export default function JobDetailPage() {
 
       await Promise.all(
         validApps.map((app) =>
-          axios.patch(
+          api.patch(
             `/api/profile/recruiter/applications/${app.id}`,
             {
               status: "ACCEPTED",
@@ -505,9 +510,10 @@ export default function JobDetailPage() {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
-            }
-          )
-        )
+              withCredentials: true,
+            },
+          ),
+        ),
       );
 
       Swal.fire({
@@ -523,8 +529,8 @@ export default function JobDetailPage() {
         prev.map((app) =>
           validApps.find((v) => v.id === app.id)
             ? { ...app, status: "ACCEPTED" }
-            : app
-        )
+            : app,
+        ),
       );
       setSelectedApplications([]);
       setSelectMode(false);
@@ -540,12 +546,12 @@ export default function JobDetailPage() {
   // Handle bulk shortlist (REVIEWING -> SHORTLISTED)
   const handleBulkShortlist = async () => {
     const selectedApps = filteredApplications.filter((app) =>
-      selectedApplications.includes(app.id)
+      selectedApplications.includes(app.id),
     );
     const validApps = selectedApps.filter((app) =>
       ["REVIEWING", "INTERVIEW_SCHEDULED", "INTERVIEW_COMPLETED"].includes(
-        app.status
-      )
+        app.status,
+      ),
     );
 
     if (validApps.length === 0) {
@@ -575,16 +581,17 @@ export default function JobDetailPage() {
 
       await Promise.all(
         validApps.map((app) =>
-          axios.patch(
+          api.patch(
             `/api/profile/recruiter/applications/${app.id}`,
             { status: "SHORTLISTED" },
             {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
-            }
-          )
-        )
+              withCredentials: true,
+            },
+          ),
+        ),
       );
 
       Swal.fire({
@@ -600,8 +607,8 @@ export default function JobDetailPage() {
         prev.map((app) =>
           validApps.find((v) => v.id === app.id)
             ? { ...app, status: "SHORTLISTED" }
-            : app
-        )
+            : app,
+        ),
       );
       setSelectedApplications([]);
       setSelectMode(false);
@@ -640,7 +647,7 @@ export default function JobDetailPage() {
 
       await Promise.all(
         selectedApplications.map((appId) =>
-          axios.patch(
+          api.patch(
             `/api/profile/recruiter/applications/${appId}`,
             {
               status: "REJECTED",
@@ -650,9 +657,10 @@ export default function JobDetailPage() {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
-            }
-          )
-        )
+              withCredentials: true,
+            },
+          ),
+        ),
       );
 
       Swal.fire({
@@ -668,8 +676,8 @@ export default function JobDetailPage() {
         prev.map((app) =>
           selectedApplications.includes(app.id)
             ? { ...app, status: "REJECTED" }
-            : app
-        )
+            : app,
+        ),
       );
       setSelectedApplications([]);
       setSelectMode(false);
@@ -694,10 +702,10 @@ export default function JobDetailPage() {
     }
 
     const selectedApps = filteredApplications.filter((app) =>
-      selectedApplications.includes(app.id)
+      selectedApplications.includes(app.id),
     );
     const invalidApps = selectedApps.filter(
-      (app) => app.status !== "SHORTLISTED"
+      (app) => app.status !== "SHORTLISTED",
     );
     if (invalidApps.length > 0) {
       Swal.fire({
@@ -712,7 +720,7 @@ export default function JobDetailPage() {
     router.push(
       `/profile/recruiter/dashboard/interview?job=${
         job.id
-      }&applicants=${selectedApplications.join(",")}`
+      }&applicants=${selectedApplications.join(",")}`,
     );
   };
 
@@ -721,21 +729,22 @@ export default function JobDetailPage() {
     if (application.status === "PENDING") {
       try {
         const token = localStorage.getItem("token");
-        await axios.patch(
+        await api.patch(
           `/api/profile/recruiter/applications/${application.id}`,
           { status: "REVIEWING" },
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+            withCredentials: true,
+          },
         );
 
         // Update local state only if API succeeded
         setApplications((prev) =>
           prev.map((app) =>
-            app.id === application.id ? { ...app, status: "REVIEWING" } : app
-          )
+            app.id === application.id ? { ...app, status: "REVIEWING" } : app,
+          ),
         );
         return true;
       } catch (error) {
@@ -786,14 +795,15 @@ export default function JobDetailPage() {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.patch(
+      await api.patch(
         `/api/profile/recruiter/applications/${application.id}`,
         { status: "SHORTLISTED" },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+          withCredentials: true,
+        },
       );
 
       Swal.fire({
@@ -825,7 +835,7 @@ export default function JobDetailPage() {
       return;
     }
     router.push(
-      `/profile/recruiter/dashboard/interview?job=${job.id}&applicants=${application.id}`
+      `/profile/recruiter/dashboard/interview?job=${job.id}&applicants=${application.id}`,
     );
   };
 
@@ -867,7 +877,7 @@ export default function JobDetailPage() {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.patch(
+      await api.patch(
         `/api/profile/recruiter/applications/${application.id}`,
         {
           status: "ACCEPTED",
@@ -877,7 +887,8 @@ export default function JobDetailPage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+          withCredentials: true,
+        },
       );
 
       Swal.fire({
@@ -920,8 +931,8 @@ export default function JobDetailPage() {
                   recommendation.score >= 80
                     ? "Excellent Match! Highly Recommended"
                     : recommendation.score >= 60
-                    ? "Good Match with Potential"
-                    : "Partial Match"
+                      ? "Good Match with Potential"
+                      : "Partial Match"
                 }
              </p>
           </div>
@@ -944,7 +955,7 @@ export default function JobDetailPage() {
                   </span>
                   <span>Matched skill: <strong class="text-gray-900">${h}</strong></span>
                 </li>
-              `
+              `,
                       )
                       .join("")
                   : '<li class="text-sm text-gray-500 italic">Matching based on general profile, job title relevance, and keyword analysis.</li>'
@@ -988,7 +999,7 @@ export default function JobDetailPage() {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.patch(
+      await api.patch(
         `/api/profile/recruiter/applications/${applicationId}`,
         {
           status: "REJECTED",
@@ -998,7 +1009,8 @@ export default function JobDetailPage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+          withCredentials: true,
+        },
       );
 
       Swal.fire({
@@ -1021,7 +1033,7 @@ export default function JobDetailPage() {
 
   const totalPages = Math.max(
     1,
-    Math.ceil(filteredApplications.length / itemsPerPage)
+    Math.ceil(filteredApplications.length / itemsPerPage),
   );
 
   const handleBulkCompleteInterview = async () => {
@@ -1060,16 +1072,15 @@ export default function JobDetailPage() {
           const interviewId = app.interview.id;
           const participantId = app.interview_participants[0].id;
 
-          return fetch(
+          return api.patch(
             `/api/profile/recruiter/interviews/${interviewId}/complete`,
+            { participantId },
             {
-              method: "PATCH",
               headers: {
                 Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
               },
-              body: JSON.stringify({ participantId }),
-            }
+              withCredentials: true,
+            },
           );
         });
 
@@ -1197,7 +1208,7 @@ export default function JobDetailPage() {
                   e.stopPropagation();
                   handleShowAIMatchDetails(
                     application,
-                    aiRecommendations[application.id]
+                    aiRecommendations[application.id],
                   );
                 }}
                 className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-100 to-orange-100 border border-amber-200 text-amber-800 rounded-full text-xs font-semibold hover:from-amber-200 hover:to-orange-200 transition shadow-sm animate-fade-in"
@@ -1248,7 +1259,7 @@ export default function JobDetailPage() {
                     handleViewDocument(
                       application,
                       application.jobseekers.cvUrl,
-                      "CV"
+                      "CV",
                     );
                   }}
                   className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-medium hover:bg-indigo-100 transition"
@@ -1265,7 +1276,7 @@ export default function JobDetailPage() {
                     handleViewDocument(
                       application,
                       application.jobseekers.ktpUrl,
-                      "KTP"
+                      "KTP",
                     );
                   }}
                   className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-medium hover:bg-green-100 transition"
@@ -1282,7 +1293,7 @@ export default function JobDetailPage() {
                     handleViewDocument(
                       application,
                       application.jobseekers.ak1Url,
-                      "Kartu AK-1"
+                      "Kartu AK-1",
                     );
                   }}
                   className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-orange-50 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-100 transition"
@@ -1299,7 +1310,7 @@ export default function JobDetailPage() {
                     handleViewDocument(
                       application,
                       application.jobseekers.ijazahUrl,
-                      "Ijazah"
+                      "Ijazah",
                     );
                   }}
                   className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-100 transition"
@@ -1316,7 +1327,7 @@ export default function JobDetailPage() {
                     handleViewDocument(
                       application,
                       application.jobseekers.sertifikatUrl,
-                      "Sertifikat"
+                      "Sertifikat",
                     );
                   }}
                   className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-xs font-medium hover:bg-amber-100 transition"
@@ -1333,7 +1344,7 @@ export default function JobDetailPage() {
                     handleViewDocument(
                       application,
                       application.jobseekers.suratPengalamanUrl,
-                      "Surat Pengalaman"
+                      "Surat Pengalaman",
                     );
                   }}
                   className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-teal-50 text-teal-700 rounded-lg text-xs font-medium hover:bg-teal-100 transition"
@@ -1397,7 +1408,7 @@ export default function JobDetailPage() {
                   e.stopPropagation();
                   handleRejectApplication(
                     application.id,
-                    `${application.jobseekers?.firstName} ${application.jobseekers?.lastName}`
+                    `${application.jobseekers?.firstName} ${application.jobseekers?.lastName}`,
                   );
                 }}
                 className="flex items-center justify-center gap-1 px-3 py-2 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition"
@@ -1433,7 +1444,7 @@ export default function JobDetailPage() {
                   e.stopPropagation();
                   handleRejectApplication(
                     application.id,
-                    `${application.jobseekers?.firstName} ${application.jobseekers?.lastName}`
+                    `${application.jobseekers?.firstName} ${application.jobseekers?.lastName}`,
                   );
                 }}
                 className="flex items-center justify-center gap-1 px-3 py-2 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition"
@@ -1469,7 +1480,7 @@ export default function JobDetailPage() {
                   e.stopPropagation();
                   handleRejectApplication(
                     application.id,
-                    `${application.jobseekers?.firstName} ${application.jobseekers?.lastName}`
+                    `${application.jobseekers?.firstName} ${application.jobseekers?.lastName}`,
                   );
                 }}
                 className="flex items-center justify-center gap-1 px-3 py-2 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition"
@@ -1539,7 +1550,7 @@ export default function JobDetailPage() {
                   e.stopPropagation();
                   handleRejectApplication(
                     application.id,
-                    `${application.jobseekers?.firstName} ${application.jobseekers?.lastName}`
+                    `${application.jobseekers?.firstName} ${application.jobseekers?.lastName}`,
                   );
                 }}
                 className="flex items-center justify-center gap-1 px-3 py-2 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition"
@@ -1575,7 +1586,7 @@ export default function JobDetailPage() {
                   e.stopPropagation();
                   handleRejectApplication(
                     application.id,
-                    `${application.jobseekers?.firstName} ${application.jobseekers?.lastName}`
+                    `${application.jobseekers?.firstName} ${application.jobseekers?.lastName}`,
                   );
                 }}
                 className="flex items-center justify-center gap-1 px-3 py-2 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition"
@@ -1623,7 +1634,7 @@ export default function JobDetailPage() {
                   e.stopPropagation();
                   handleRejectApplication(
                     application.id,
-                    `${application.jobseekers?.firstName} ${application.jobseekers?.lastName}`
+                    `${application.jobseekers?.firstName} ${application.jobseekers?.lastName}`,
                   );
                 }}
                 className="flex items-center justify-center gap-1 px-3 py-2 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition"
@@ -1701,14 +1712,14 @@ export default function JobDetailPage() {
                   {job.jobType === "FULL_TIME"
                     ? "Penuh Waktu"
                     : job.jobType === "PART_TIME"
-                    ? "Paruh Waktu"
-                    : job.jobType === "CONTRACT"
-                    ? "Kontrak"
-                    : job.jobType === "FREELANCE"
-                    ? "Freelance"
-                    : job.jobType === "INTERNSHIP"
-                    ? "Magang"
-                    : job.jobType}
+                      ? "Paruh Waktu"
+                      : job.jobType === "CONTRACT"
+                        ? "Kontrak"
+                        : job.jobType === "FREELANCE"
+                          ? "Freelance"
+                          : job.jobType === "INTERNSHIP"
+                            ? "Magang"
+                            : job.jobType}
                 </div>
               </div>
             </div>
@@ -1771,14 +1782,16 @@ export default function JobDetailPage() {
                       ? statusFilter === "PENDING"
                         ? stats.pending
                         : statusFilter === "REVIEWING"
-                        ? stats.reviewing
-                        : statusFilter === "SHORTLISTED"
-                        ? stats.shortlisted
-                        : statusFilter === "AI_RECOMMENDED"
-                        ? Object.values(aiRecommendations).filter(
-                            (r) => r.isRecommended
-                          ).length
-                        : stats.pending + stats.reviewing + stats.shortlisted
+                          ? stats.reviewing
+                          : statusFilter === "SHORTLISTED"
+                            ? stats.shortlisted
+                            : statusFilter === "AI_RECOMMENDED"
+                              ? Object.values(aiRecommendations).filter(
+                                  (r) => r.isRecommended,
+                                ).length
+                              : stats.pending +
+                                stats.reviewing +
+                                stats.shortlisted
                       : stats.pending + stats.reviewing + stats.shortlisted}
                   </p>
                 </div>
@@ -1811,8 +1824,8 @@ export default function JobDetailPage() {
                       ? statusFilter === "INTERVIEW_SCHEDULED"
                         ? stats.interview
                         : statusFilter === "INTERVIEW_COMPLETED"
-                        ? stats.interviewCompleted
-                        : stats.interview + stats.interviewCompleted
+                          ? stats.interviewCompleted
+                          : stats.interview + stats.interviewCompleted
                       : stats.interview + stats.interviewCompleted}
                   </p>
                 </div>
@@ -2033,7 +2046,7 @@ export default function JobDetailPage() {
             const start = (currentPage - 1) * itemsPerPage;
             const pageItems = filteredApplications.slice(
               start,
-              start + itemsPerPage
+              start + itemsPerPage,
             );
             const half = Math.ceil(pageItems.length / 2);
             const left = pageItems.slice(0, half);
@@ -2056,12 +2069,12 @@ export default function JobDetailPage() {
                     Menampilkan{" "}
                     {Math.min(
                       (currentPage - 1) * itemsPerPage + 1,
-                      filteredApplications.length
+                      filteredApplications.length,
                     )}{" "}
                     -{" "}
                     {Math.min(
                       currentPage * itemsPerPage,
-                      filteredApplications.length
+                      filteredApplications.length,
                     )}{" "}
                     dari {filteredApplications.length} pelamar
                   </div>
@@ -2101,7 +2114,7 @@ export default function JobDetailPage() {
                               totalPages - 3,
                               totalPages - 2,
                               totalPages - 1,
-                              totalPages
+                              totalPages,
                             );
                           } else {
                             pages.push(
@@ -2111,7 +2124,7 @@ export default function JobDetailPage() {
                               currentPage,
                               currentPage + 1,
                               "...",
-                              totalPages
+                              totalPages,
                             );
                           }
                         }
@@ -2136,7 +2149,7 @@ export default function JobDetailPage() {
                             >
                               {page}
                             </button>
-                          )
+                          ),
                         );
                       })()}
                     </div>
@@ -2208,14 +2221,16 @@ export default function JobDetailPage() {
                                 info.statuses[0] === "PENDING"
                                   ? "Lamaran Masuk"
                                   : info.statuses[0] === "REVIEWING"
-                                  ? "Sedang Ditinjau"
-                                  : info.statuses[0] === "SHORTLISTED"
-                                  ? "Lolos Seleksi"
-                                  : info.statuses[0] === "INTERVIEW_SCHEDULED"
-                                  ? "Tahap Interview"
-                                  : info.statuses[0] === "INTERVIEW_COMPLETED"
-                                  ? "Selesai Interview"
-                                  : info.statuses[0]
+                                    ? "Sedang Ditinjau"
+                                    : info.statuses[0] === "SHORTLISTED"
+                                      ? "Lolos Seleksi"
+                                      : info.statuses[0] ===
+                                          "INTERVIEW_SCHEDULED"
+                                        ? "Tahap Interview"
+                                        : info.statuses[0] ===
+                                            "INTERVIEW_COMPLETED"
+                                          ? "Selesai Interview"
+                                          : info.statuses[0]
                               }`
                             : `${info.statuses.length} status berbeda`}
                         </p>
@@ -2405,7 +2420,7 @@ export default function JobDetailPage() {
                     />
                   ) : (
                     applicantModal.application.jobseekers?.firstName?.charAt(
-                      0
+                      0,
                     ) || "U"
                   )}
                 </div>
@@ -2469,7 +2484,7 @@ export default function JobDetailPage() {
                         >
                           {skill}
                         </span>
-                      )
+                      ),
                     )}
                   </div>
                 </div>
@@ -2483,7 +2498,7 @@ export default function JobDetailPage() {
                     <button
                       onClick={async () => {
                         await updateStatusToReviewing(
-                          applicantModal.application
+                          applicantModal.application,
                         );
                         setApplicantModal({ isOpen: false, application: null });
                         setDocumentModal({
@@ -2502,7 +2517,7 @@ export default function JobDetailPage() {
                     <button
                       onClick={async () => {
                         await updateStatusToReviewing(
-                          applicantModal.application
+                          applicantModal.application,
                         );
                         setApplicantModal({ isOpen: false, application: null });
                         setDocumentModal({
@@ -2521,7 +2536,7 @@ export default function JobDetailPage() {
                     <button
                       onClick={async () => {
                         await updateStatusToReviewing(
-                          applicantModal.application
+                          applicantModal.application,
                         );
                         setApplicantModal({ isOpen: false, application: null });
                         setDocumentModal({
@@ -2540,7 +2555,7 @@ export default function JobDetailPage() {
                     <button
                       onClick={async () => {
                         await updateStatusToReviewing(
-                          applicantModal.application
+                          applicantModal.application,
                         );
                         setApplicantModal({ isOpen: false, application: null });
                         setDocumentModal({
@@ -2559,7 +2574,7 @@ export default function JobDetailPage() {
                     <button
                       onClick={async () => {
                         await updateStatusToReviewing(
-                          applicantModal.application
+                          applicantModal.application,
                         );
                         setApplicantModal({ isOpen: false, application: null });
                         setDocumentModal({
@@ -2580,7 +2595,7 @@ export default function JobDetailPage() {
                     <button
                       onClick={async () => {
                         await updateStatusToReviewing(
-                          applicantModal.application
+                          applicantModal.application,
                         );
                         setApplicantModal({ isOpen: false, application: null });
                         setDocumentModal({
@@ -2612,7 +2627,7 @@ export default function JobDetailPage() {
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600 font-bold shrink-0">
                         {applicantModal.application.jobseekers?.lastEducationLevel?.charAt(
-                          0
+                          0,
                         ) || "?"}
                       </div>
                       <div>
@@ -2658,7 +2673,7 @@ export default function JobDetailPage() {
                             {edu.startYear} - {edu.endYear || "Sekarang"}
                           </p>
                         </div>
-                      )
+                      ),
                     )}
                   </div>
                 ) : (
@@ -2699,7 +2714,7 @@ export default function JobDetailPage() {
                             </p>
                           )}
                         </div>
-                      )
+                      ),
                     )}
                   </div>
                 </div>
@@ -2722,7 +2737,7 @@ export default function JobDetailPage() {
                           </p>
                           <p className="text-sm text-gray-600">{cert.issuer}</p>
                         </div>
-                      )
+                      ),
                     )}
                   </div>
                 </div>

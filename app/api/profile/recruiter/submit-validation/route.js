@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { getCurrentUser } from '@/lib/authHelper'
 
 export async function POST(request) {
@@ -72,7 +73,7 @@ export async function POST(request) {
         return NextResponse.json(
             { 
                 error: 'Failed to submit for validation',
-                details: error.message 
+                ...createErrorResponse('Terjadi kesalahan', error) 
             },
             { status: 500 }
         )

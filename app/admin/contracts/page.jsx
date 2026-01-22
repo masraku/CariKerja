@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
-import axios from "axios";
+import api from "@/lib/api";
 import {
   ArrowLeft,
   Building2,
@@ -44,7 +44,7 @@ export default function AdminContractsPage() {
   const [uploading, setUploading] = useState(false);
   const [previewDocUrl, setPreviewDocUrl] = useState(null);
 
-  // Use React Query hooks
+  // Kustom hook untuk mengambil data kontrak admin
   const {
     data,
     isPending: loading,
@@ -66,8 +66,6 @@ export default function AdminContractsPage() {
 
   const handleProcess = async (id, action) => {
     const actionText = action === "approve" ? "menyetujui" : "menolak";
-
-    // For reject, keep using Swal
     if (action === "reject") {
       const { value: notes, isConfirmed } = await Swal.fire({
         title: "Tolak Pendaftaran Kontrak?",
@@ -87,7 +85,7 @@ export default function AdminContractsPage() {
 
       if (!isConfirmed) return;
 
-      // Proceed with reject
+      // Proses Penolakan
       try {
         setProcessingId(id);
 
@@ -117,9 +115,9 @@ export default function AdminContractsPage() {
       return;
     }
 
-    // For approve, logic is moved to submitApproval
+    // Untuk approve, logika dipindahkan ke submitApproval
     if (action === "approve") {
-      setSelectedContract(contracts.find((c) => c.id === id)); // Ensure selectedContract is set for the modal
+      setSelectedContract(contracts.find((c) => c.id === id)); // Pastikan selectedContract diatur untuk modal
       setShowApprovalModal(true);
     }
   };
@@ -132,18 +130,19 @@ export default function AdminContractsPage() {
       const token = localStorage.getItem("token");
       let adminResponseDocUrl = null;
 
-      // Upload file if present
+      // Upload file jika ada
       if (approvalFile) {
         const formData = new FormData();
         formData.append("file", approvalFile);
-        formData.append("type", "admin-doc"); // or whatever logic in API
-        formData.append("bucket", "Lowongan"); // Use Lowongan as decided
+        formData.append("type", "admin-doc");
+        formData.append("bucket", "Lowongan");
         formData.append("folder", "admin-approvals");
 
-        const uploadRes = await axios.post("/api/upload", formData, {
+        const uploadRes = await api.post("/api/upload", formData, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          withCredentials: true,
         });
 
         if (!uploadRes.data.success) {
@@ -152,7 +151,7 @@ export default function AdminContractsPage() {
         adminResponseDocUrl = uploadRes.data.url;
       }
 
-      // Approve contract using mutation
+      //Setujui Kontrak dengan mutasi
       await processContractMutation.mutateAsync({
         id: selectedContract.id,
         action: "approve",
@@ -181,11 +180,11 @@ export default function AdminContractsPage() {
         title: "Gagal",
         text: errorMessage,
       });
-      // Close modal and refresh data if contract was already processed or other error
+      //  Tutup modal dan refresh data jika kontrak sudah diproses atau terjadi error lain
       if (error.response?.status === 400) {
         setShowApprovalModal(false);
         setShowDetail(false);
-        // refetch is handled by hook
+        // refetch ditangani oleh hook
       }
     } finally {
       setUploading(false);
@@ -245,16 +244,7 @@ export default function AdminContractsPage() {
     );
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Memuat data kontrak...</p>
-        </div>
-      </div>
-    );
-  }
+  // Loading tidak full page - gunakan contentLoading di area list
 
   return (
     <div className="min-h-screen bg-gray-50 pb-8">
@@ -692,8 +682,8 @@ export default function AdminContractsPage() {
                           isTerminated
                             ? "bg-red-50 border-red-200"
                             : isCompleted
-                            ? "bg-gray-50 border-gray-200"
-                            : "bg-white border-gray-200"
+                              ? "bg-gray-50 border-gray-200"
+                              : "bg-white border-gray-200"
                         }`}
                       >
                         <div className="flex items-start gap-4">
@@ -702,8 +692,8 @@ export default function AdminContractsPage() {
                               isTerminated
                                 ? "bg-gradient-to-br from-red-500 to-rose-500"
                                 : isCompleted
-                                ? "bg-gradient-to-br from-gray-400 to-gray-500"
-                                : "bg-gradient-to-br from-green-500 to-emerald-500"
+                                  ? "bg-gradient-to-br from-gray-400 to-gray-500"
+                                  : "bg-gradient-to-br from-green-500 to-emerald-500"
                             }`}
                           >
                             {worker.jobseekers?.photo ? (
@@ -729,15 +719,15 @@ export default function AdminContractsPage() {
                                   isTerminated
                                     ? "bg-red-100 text-red-700"
                                     : isCompleted
-                                    ? "bg-gray-100 text-gray-700"
-                                    : "bg-green-100 text-green-700"
+                                      ? "bg-gray-100 text-gray-700"
+                                      : "bg-green-100 text-green-700"
                                 }`}
                               >
                                 {isTerminated
                                   ? "Diakhiri"
                                   : isCompleted
-                                  ? "Selesai"
-                                  : "Aktif"}
+                                    ? "Selesai"
+                                    : "Aktif"}
                               </span>
                             </div>
                             <p className="text-sm text-gray-500 flex items-center gap-1">

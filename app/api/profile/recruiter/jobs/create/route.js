@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/authHelper'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
+import { validateBody } from '@/lib/validations'
+import { createJobSchema } from '@/lib/validations/profile'
 
 export async function POST(request) {
   try {
+    // CSRF validation
+    if (!validateCSRFToken(request)) {
+      return csrfErrorResponse()
+    }
+
     // ✅ Use getCurrentUser instead of requireRecruiter
     const auth = await getCurrentUser(request)
     
@@ -52,7 +60,10 @@ export async function POST(request) {
       )
     }
 
-    const body = await request.json()
+    const validation = await validateBody(request, createJobSchema)
+    if (!validation.success) {
+      return validation.response
+    }
 
     const {
       // Basic Info
@@ -103,15 +114,7 @@ export async function POST(request) {
       
       // Skills
       skills
-    } = body
-
-    // Validate required fields
-    if (!title || !description) {
-      return NextResponse.json(
-        { error: 'Title and description are required' },
-        { status: 400 }
-      )
-    }
+    } = validation.data
 
     // Generate slug from title
     const slug = title
@@ -129,7 +132,13 @@ export async function POST(request) {
       allBenefits.push(`Hari Libur: ${holidays}`)
     }
 
-    // Create job - set isActive to false for admin validation
+    // Check system settings for auto-approve logic
+    const settings = await prisma.system_settings.findUnique({
+      where: { id: 'default' }
+    });
+    const autoApprove = settings?.autoApproveJobs ?? false;
+
+    // Create job
     const job = await prisma.jobs.create({
       data: {
         companyId: recruiter.companyId,
@@ -172,9 +181,9 @@ export async function POST(request) {
         disabilityDescription: disabilityDescription || null,
         jobScope: jobScope || 'DOMESTIC',
         
-        // Set inactive for admin validation
-        isActive: false,
-        publishedAt: null
+        // Auto-approve logic
+        isActive: autoApprove,
+        publishedAt: autoApprove ? new Date() : null
       }
     })
 
@@ -210,7 +219,9 @@ export async function POST(request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Lowongan berhasil diajukan! Menunggu validasi admin sebelum dipublikasikan.',
+      message: autoApprove 
+        ? 'Lowongan berhasil dipublikasikan secara otomatis!' 
+        : 'Lowongan berhasil diajukan! Menunggu validasi admin sebelum dipublikasikan.',
       job
     })
 

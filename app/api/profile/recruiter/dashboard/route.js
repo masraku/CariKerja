@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createErrorResponse } from '@/lib/errorHandler'
 import { prisma } from "@/lib/prisma";
 import { requireRecruiter } from "@/lib/authHelper";
 
@@ -159,7 +160,7 @@ export async function GET(request) {
     return NextResponse.json(
       {
         error: "Failed to fetch dashboard data",
-        details: error.message,
+        ...createErrorResponse('Terjadi kesalahan', error),
       },
       { status: 500 }
     );

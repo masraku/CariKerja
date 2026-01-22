@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
-import axios from "axios";
+import api from "@/lib/api";
 import {
   Briefcase,
   MapPin,
@@ -87,8 +87,9 @@ export default function EditJobPage() {
   const loadCompanyProfile = async () => {
     try {
       const token = localStorage.getItem("token");
-      const { data } = await axios.get("/api/profile/recruiter", {
+      const { data } = await api.get("/api/profile/recruiter", {
         headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
 
       if (data.profile?.companies) {
@@ -129,13 +130,14 @@ export default function EditJobPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const { data } = await axios.get(
+      const { data } = await api.get(
         `/api/profile/recruiter/jobs/${params.slug}/edit`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+          withCredentials: true,
+        },
       );
 
       const job = data.job;
@@ -289,10 +291,11 @@ export default function EditJobPage() {
       formDataUpload.append("file", file);
       formDataUpload.append("folder", "jobs");
 
-      const { data } = await axios.post("/api/upload", formDataUpload, {
+      const { data } = await api.post("/api/upload", formDataUpload, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
+        withCredentials: true,
       });
 
       if (data.url) {
@@ -374,14 +377,15 @@ export default function EditJobPage() {
         isActive: isActivateMode ? true : formData.isActive,
       };
 
-      const { data } = await axios.put(
+      const { data } = await api.put(
         `/api/profile/recruiter/jobs/${params.slug}/update`,
         submitData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+          withCredentials: true,
+        },
       );
 
       await Swal.fire({

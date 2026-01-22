@@ -1,7 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import Link from "next/link";
+import Swal from "sweetalert2";
+import {
+  useQueryRecruiterJobs,
+  useMutationToggleJobStatus,
+  useMutationDeleteJob,
+} from "@/hooks/recruiter/useRecruiter";
 import {
   Briefcase,
   Users,
@@ -25,65 +31,34 @@ import {
   MoreHorizontal,
   FileText,
 } from "lucide-react";
-import Swal from "sweetalert2";
 
 export default function RecruiterJobsPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [jobs, setJobs] = useState([]);
-  const [stats, setStats] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
-    loadJobs();
-  }, [statusFilter]);
-
-  useEffect(() => {
-    // Debounce search
     const timer = setTimeout(() => {
-      if (searchQuery !== null) {
-        loadJobs();
-      }
+      setDebouncedSearch(searchQuery);
     }, 500);
-
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const loadJobs = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("token");
+  // Hooks
+  const { data: queryData, isLoading: loading } = useQueryRecruiterJobs({
+    search: debouncedSearch,
+    status: statusFilter,
+  });
+  const toggleStatusMutation = useMutationToggleJobStatus();
+  const deleteJobMutation = useMutationDeleteJob();
 
-      const params = new URLSearchParams();
-      if (statusFilter !== "all") params.append("status", statusFilter);
-      if (searchQuery) params.append("search", searchQuery);
+  const jobs = queryData?.jobs || [];
+  const stats = queryData?.stats || null;
 
-      const { data } = await axios.get(
-        `/api/profile/recruiter/jobs?${params.toString()}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      setJobs(data.jobs);
-      setStats(data.stats);
-    } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Failed to load jobs",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleToggleStatus = async (slug, currentStatus) => {
+  const handleToggleStatus = async (slug, isActive) => {
     // If currently active (deactivating), just toggle immediately
-    if (currentStatus) {
+    if (isActive) {
       const result = await Swal.fire({
         title: "Nonaktifkan Lowongan?",
         text: "Lowongan akan disembunyikan dari pencarian",
@@ -98,16 +73,7 @@ export default function RecruiterJobsPage() {
       if (!result.isConfirmed) return;
 
       try {
-        const token = localStorage.getItem("token");
-        await axios.post(
-          `/api/profile/recruiter/jobs/${slug}/toggle-status`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        await toggleStatusMutation.mutateAsync(slug);
 
         Swal.fire({
           icon: "success",
@@ -116,7 +82,6 @@ export default function RecruiterJobsPage() {
           timer: 2000,
           showConfirmButton: false,
         });
-        loadJobs();
       } catch (error) {
         Swal.fire({
           icon: "error",
@@ -146,7 +111,7 @@ export default function RecruiterJobsPage() {
 
       if (result.isConfirmed) {
         router.push(
-          `/profile/recruiter/dashboard/jobs/${slug}/edit?activate=true`
+          `/profile/recruiter/dashboard/jobs/${slug}/edit?activate=true`,
         );
       }
     }
@@ -171,12 +136,7 @@ export default function RecruiterJobsPage() {
     if (!result.isConfirmed) return;
 
     try {
-      const token = localStorage.getItem("token");
-      await axios.delete(`/api/profile/recruiter/jobs/${slug}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await deleteJobMutation.mutateAsync(slug);
 
       Swal.fire({
         icon: "success",
@@ -185,7 +145,6 @@ export default function RecruiterJobsPage() {
         timer: 2000,
         showConfirmButton: false,
       });
-      loadJobs();
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -486,7 +445,7 @@ export default function RecruiterJobsPage() {
                   <button
                     onClick={() =>
                       router.push(
-                        `/profile/recruiter/dashboard/jobs/${job.slug}`
+                        `/profile/recruiter/dashboard/jobs/${job.slug}`,
                       )
                     }
                     className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition text-sm font-medium"
@@ -498,7 +457,7 @@ export default function RecruiterJobsPage() {
                   <button
                     onClick={() =>
                       router.push(
-                        `/profile/recruiter/dashboard/jobs/${job.slug}/preview`
+                        `/profile/recruiter/dashboard/jobs/${job.slug}/preview`,
                       )
                     }
                     className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition text-sm font-medium"
@@ -513,7 +472,7 @@ export default function RecruiterJobsPage() {
                     <button
                       onClick={() =>
                         router.push(
-                          `/profile/recruiter/dashboard/jobs/${job.slug}/edit`
+                          `/profile/recruiter/dashboard/jobs/${job.slug}/edit`,
                         )
                       }
                       className="flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-xl hover:bg-yellow-600 transition text-sm font-medium"
@@ -525,7 +484,7 @@ export default function RecruiterJobsPage() {
                     <button
                       onClick={() =>
                         router.push(
-                          `/profile/recruiter/dashboard/jobs/${job.slug}/edit`
+                          `/profile/recruiter/dashboard/jobs/${job.slug}/edit`,
                         )
                       }
                       className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition text-sm font-medium"

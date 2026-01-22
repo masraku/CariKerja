@@ -13,7 +13,7 @@ export default function AdminCompaniesPage() {
     const [filter, setFilter] = useState('pending')
     const [searchQuery, setSearchQuery] = useState('')
 
-    // Use React Query hook
+    // Menggunakan Custom Hook untuk mengambil data perusahaan berdasarkan filter status
     const { data, isPending: loading } = useQueryAdminCompanies({
         status: filter,
     });
@@ -71,13 +71,13 @@ export default function AdminCompaniesPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-            {/* Header - Always visible */}
+            {/* Header - Selalu Terlihat */}
             <div className="bg-gradient-to-r from-slate-800 to-slate-700 px-6 lg:px-8 py-8">
                 <div className="max-w-7xl mx-auto">
                     <h1 className="text-2xl lg:text-3xl font-bold text-white mb-2">Verifikasi Perusahaan</h1>
                     <p className="text-slate-300 text-sm">Review dan verifikasi perusahaan yang mendaftar</p>
                     
-                    {/* Status Tabs in Header */}
+                    {/* Tab Status di Header */}
                     <div className="flex flex-wrap gap-3 mt-6">
                         <button
                             onClick={() => setFilter('pending')}
@@ -127,9 +127,9 @@ export default function AdminCompaniesPage() {
                 </div>
             </div>
 
-            {/* Main Content */}
+            {/* Konten Utama */}
             <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6">
-                {/* Search */}
+                {/* Pencarian */}
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-6">
                     <div className="relative">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -143,14 +143,14 @@ export default function AdminCompaniesPage() {
                     </div>
                 </div>
 
-                {/* Results Count */}
+                {/* Jumlah Hasil */}
                 <div className="flex items-center justify-between mb-4">
                     <p className="text-sm text-slate-500">
                         Menampilkan <span className="font-semibold text-slate-700">{loading ? '...' : filteredCompanies.length}</span> perusahaan
                     </p>
                 </div>
 
-                {/* Loading State - Inline, not full screen */}
+                {/* Status Memuat - Inline, bukan layar penuh */}
                 {loading ? (
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
                         {[1, 2, 3, 4, 5, 6].map(i => (
@@ -203,7 +203,7 @@ export default function AdminCompaniesPage() {
                                     </div>
                                 </div>
 
-                                {/* Company Info */}
+                                {/* Informasi Perusahaan */}
                                 <div className="space-y-2 mb-4">
                                     <div className="flex items-center gap-2 text-sm text-slate-600">
                                         <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0" />
@@ -223,7 +223,7 @@ export default function AdminCompaniesPage() {
                                     </div>
                                 </div>
 
-                                {/* Status & Date */}
+                                {/* Status & Tanggal */}
                                 <div className="flex items-center justify-between mb-4">
                                     {getStatusBadge(company)}
                                     <span className="text-xs text-slate-400 flex items-center gap-1">
@@ -232,7 +232,7 @@ export default function AdminCompaniesPage() {
                                     </span>
                                 </div>
 
-                                {/* Rejection Reason */}
+                                {/* Alasan Penolakan */}
                                 {filter === 'rejected' && company.rejectionReason && (
                                     <div className="mb-4 p-3 bg-red-50 rounded-xl">
                                         <p className="text-xs text-red-600 line-clamp-2">
@@ -241,7 +241,7 @@ export default function AdminCompaniesPage() {
                                     </div>
                                 )}
 
-                                {/* Action Button */}
+                                {/* Tombol Aksi */}
                                 <Link
                                     href={`/admin/companies/${company.id}`}
                                     className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 text-white rounded-xl hover:bg-slate-700 transition font-medium text-sm"

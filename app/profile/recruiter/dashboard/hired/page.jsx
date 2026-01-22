@@ -2,7 +2,14 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
-import axios from "axios";
+import {
+  useQueryAcceptedApplicants,
+  useQueryContracts,
+  useMutationCreateContract,
+  useMutationTerminateContract,
+  useMutationResubmitContract,
+  useMutationUploadContractDoc,
+} from "@/hooks/recruiter/useContracts";
 import {
   ArrowLeft,
   Users,
@@ -29,32 +36,35 @@ import {
 
 export default function ContractRegistrationPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("pendaftaran"); // total, pendaftaran, menunggu, terdaftar
-  const [acceptedApplicants, setAcceptedApplicants] = useState([]);
-  const [pendingContracts, setPendingContracts] = useState([]); // Contract batches waiting for admin
-  const [rejectedContracts, setRejectedContracts] = useState([]); // Rejected contract batches
-  const [registeredWorkers, setRegisteredWorkers] = useState([]); // Approved contract batches
-  const [stats, setStats] = useState({
-    total: 0,
-    pendingRegistration: 0,
-    pendingContract: 0,
-    pendingContractWorkers: 0,
-    registered: 0,
-    registeredWorkers: 0,
-    rejectedContracts: 0,
-  });
+  // Hooks
+  const { data: applicantsData, isLoading: loadingApplicants } =
+    useQueryAcceptedApplicants();
+  const { data: contractsData, isLoading: loadingContracts } =
+    useQueryContracts();
+
+  const createContractMutation = useMutationCreateContract();
+  const terminateContractMutation = useMutationTerminateContract();
+  const resubmitContractMutation = useMutationResubmitContract();
+  const uploadDocMutation = useMutationUploadContractDoc();
+
+  const loading = loadingApplicants || loadingContracts;
+  const acceptedApplicants = applicantsData?.acceptedApplicants || [];
+
+  const pendingContracts = contractsData?.pendingContracts || [];
+  const rejectedContracts = contractsData?.rejectedContracts || [];
+  const registeredWorkers = contractsData?.approvedContracts || [];
+
+  const [activeTab, setActiveTab] = useState("pendaftaran");
   const [selectedWorkers, setSelectedWorkers] = useState([]);
   const [showFormModal, setShowFormModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [previewDocUrl, setPreviewDocUrl] = useState(null); // For document preview modal
-  const [selectedWorkerDetail, setSelectedWorkerDetail] = useState(null); // For worker detail modal
-  const [terminatingId, setTerminatingId] = useState(null); // For termination loading state
-  const [selectedBatchDetail, setSelectedBatchDetail] = useState(null); // For batch detail modal
-  const [resubmittingId, setResubmittingId] = useState(null); // For resubmit loading state
-  const [searchQuery, setSearchQuery] = useState(""); // Search query for registered workers
+  const [previewDocUrl, setPreviewDocUrl] = useState(null);
+  const [selectedWorkerDetail, setSelectedWorkerDetail] = useState(null);
+  const [terminatingId, setTerminatingId] = useState(null);
+  const [selectedBatchDetail, setSelectedBatchDetail] = useState(null);
+  const [resubmittingId, setResubmittingId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Form state
   const [formData, setFormData] = useState({
     startDate: "",
     endDate: "",
@@ -63,59 +73,19 @@ export default function ContractRegistrationPage() {
   });
   const [attachmentFile, setAttachmentFile] = useState(null);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("token");
-
-      // Load accepted applicants and registered workers
-      const [applicantsRes, contractsRes] = await Promise.all([
-        axios.get("/api/contracts/accepted-applicants", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get("/api/contracts", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
-
-      const applicantsData = applicantsRes.data;
-      const contractsData = contractsRes.data;
-
-      if (applicantsData.success) {
-        setAcceptedApplicants(applicantsData.acceptedApplicants || []);
-        setPendingContracts(applicantsData.pendingContracts || []);
-        setRejectedContracts(applicantsData.rejectedContracts || []);
-        setRegisteredWorkers(applicantsData.approvedContracts || []);
-      }
-
-      // Calculate stats from API response
-      const stats = applicantsData.stats || {};
-      setStats({
-        total:
-          (stats.totalAccepted || 0) +
-          (stats.totalPendingWorkers || 0) +
-          (stats.totalApprovedWorkers || 0),
-        pendingRegistration: stats.totalAccepted || 0,
-        pendingContract: stats.totalPendingContracts || 0,
-        pendingContractWorkers: stats.totalPendingWorkers || 0,
-        registered: stats.totalApprovedContracts || 0,
-        registeredWorkers: stats.totalApprovedWorkers || 0,
-        rejectedContracts: stats.totalRejectedContracts || 0,
-      });
-    } catch (error) {
-      console.error("Error loading data:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Gagal memuat data pekerja",
-      });
-    } finally {
-      setLoading(false);
-    }
+  // Calculate stats
+  const appStats = applicantsData?.stats || {};
+  const stats = {
+    total:
+      (appStats.totalAccepted || 0) +
+      (appStats.totalPendingWorkers || 0) +
+      (appStats.totalApprovedWorkers || 0),
+    pendingRegistration: appStats.totalAccepted || 0,
+    pendingContract: appStats.totalPendingContracts || 0,
+    pendingContractWorkers: appStats.totalPendingWorkers || 0,
+    registered: appStats.totalApprovedContracts || 0,
+    registeredWorkers: appStats.totalApprovedWorkers || 0,
+    rejectedContracts: appStats.totalRejectedContracts || 0,
   };
 
   const handleSelectWorker = (applicationId) => {
@@ -152,31 +122,17 @@ export default function ContractRegistrationPage() {
     if (result.isConfirmed) {
       try {
         setTerminatingId(worker.id);
-        const token = localStorage.getItem("token");
 
-        const { data } = await axios.post(
-          "/api/contracts/terminate",
-          {
-            workerId: worker.id,
-            reason: result.value || "Diakhiri oleh recruiter",
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        await terminateContractMutation.mutateAsync({
+          workerId: worker.id,
+          reason: result.value || "Diakhiri oleh recruiter",
+        });
 
-        if (data.success) {
-          Swal.fire({
-            icon: "success",
-            title: "Kontrak Diakhiri",
-            text: data.message,
-          });
-          loadData();
-        } else {
-          throw new Error(data.error);
-        }
+        Swal.fire({
+          icon: "success",
+          title: "Kontrak Diakhiri",
+          text: "Kontrak telah berhasil diakhiri",
+        });
       } catch (error) {
         console.error("Error terminating contract:", error);
         Swal.fire({
@@ -207,28 +163,15 @@ export default function ContractRegistrationPage() {
     if (result.isConfirmed) {
       try {
         setResubmittingId(contract.id);
-        const token = localStorage.getItem("token");
-        const { data } = await axios.post(
-          "/api/contracts/resubmit",
-          { contractId: contract.id },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
 
-        if (data.success) {
-          Swal.fire({
-            icon: "success",
-            title: "Berhasil",
-            text: data.message,
-          });
-          setActiveTab("pendaftaran");
-          loadData();
-        } else {
-          throw new Error(data.error);
-        }
+        await resubmitContractMutation.mutateAsync(contract.id);
+
+        Swal.fire({
+          icon: "success",
+          title: "Berhasil",
+          text: "Kontrak berhasil didaftarkan ulang",
+        });
+        setActiveTab("pendaftaran");
       } catch (error) {
         console.error("Error resubmitting contract:", error);
         Swal.fire({
@@ -310,27 +253,12 @@ export default function ContractRegistrationPage() {
 
     try {
       setSubmitting(true);
-      const token = localStorage.getItem("token");
+
       let uploadedFileUrl = null;
 
       // Upload file if exists
       if (attachmentFile) {
-        const uploadFormData = new FormData();
-        uploadFormData.append("file", attachmentFile);
-        uploadFormData.append("type", "contract-doc");
-        uploadFormData.append("bucket", "Lowongan");
-        uploadFormData.append("folder", "contracts");
-
-        const uploadRes = await axios.post("/api/upload", uploadFormData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!uploadRes.data.success) {
-          throw new Error(uploadRes.data.error || "Gagal mengupload lampiran");
-        }
-        uploadedFileUrl = uploadRes.data.url;
+        uploadedFileUrl = await uploadDocMutation.mutateAsync(attachmentFile);
       }
 
       // Prepare workers data (without attachmentUrl, it's now at registration level)
@@ -347,35 +275,22 @@ export default function ContractRegistrationPage() {
         };
       });
 
-      const { data } = await axios.post(
-        "/api/contracts",
-        {
-          workers,
-          recruiterDocUrl: uploadedFileUrl, // Document at registration level
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await createContractMutation.mutateAsync({
+        workers,
+        recruiterDocUrl: uploadedFileUrl,
+      });
 
-      if (data.success) {
-        Swal.fire({
-          icon: "success",
-          title: "Berhasil",
-          text: "Pendaftaran kontrak berhasil dikirim ke admin untuk review",
-          timer: 2000,
-          showConfirmButton: false,
-        });
-        setShowFormModal(false);
-        setSelectedWorkers([]);
-        setFormData({ startDate: "", endDate: "", salary: "", notes: "" });
-        setAttachmentFile(null);
-        loadData();
-      } else {
-        throw new Error(data.error);
-      }
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil",
+        text: "Pendaftaran kontrak berhasil dikirim ke admin untuk review",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+      setShowFormModal(false);
+      setSelectedWorkers([]);
+      setFormData({ startDate: "", endDate: "", salary: "", notes: "" });
+      setAttachmentFile(null);
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -687,7 +602,7 @@ export default function ContractRegistrationPage() {
                           <p className="text-sm text-gray-500">
                             {contract.workers?.length || 0} pekerja • Ditolak{" "}
                             {new Date(contract.updatedAt).toLocaleDateString(
-                              "id-ID"
+                              "id-ID",
                             )}
                           </p>
                         </div>
@@ -722,7 +637,7 @@ export default function ContractRegistrationPage() {
                             <p className="text-sm font-medium text-gray-900">
                               {contract.workers[0].startDate
                                 ? new Date(
-                                    contract.workers[0].startDate
+                                    contract.workers[0].startDate,
                                   ).toLocaleDateString("id-ID", {
                                     day: "numeric",
                                     month: "short",
@@ -732,7 +647,7 @@ export default function ContractRegistrationPage() {
                               -{" "}
                               {contract.workers[0].endDate
                                 ? new Date(
-                                    contract.workers[0].endDate
+                                    contract.workers[0].endDate,
                                   ).toLocaleDateString("id-ID", {
                                     day: "numeric",
                                     month: "short",
@@ -749,7 +664,7 @@ export default function ContractRegistrationPage() {
                             <p className="text-sm font-medium text-gray-900">
                               {contract.workers[0].salary
                                 ? `Rp ${Number(
-                                    contract.workers[0].salary
+                                    contract.workers[0].salary,
                                   ).toLocaleString("id-ID")}`
                                 : "-"}
                             </p>
@@ -846,7 +761,7 @@ export default function ContractRegistrationPage() {
                           <p className="text-sm text-gray-500">
                             {contract.workers?.length || 0} pekerja • Diajukan{" "}
                             {new Date(contract.createdAt).toLocaleDateString(
-                              "id-ID"
+                              "id-ID",
                             )}
                           </p>
                         </div>
@@ -869,7 +784,7 @@ export default function ContractRegistrationPage() {
                             <p className="text-sm font-medium text-gray-900">
                               {contract.workers[0].startDate
                                 ? new Date(
-                                    contract.workers[0].startDate
+                                    contract.workers[0].startDate,
                                   ).toLocaleDateString("id-ID", {
                                     day: "numeric",
                                     month: "short",
@@ -879,7 +794,7 @@ export default function ContractRegistrationPage() {
                               -{" "}
                               {contract.workers[0].endDate
                                 ? new Date(
-                                    contract.workers[0].endDate
+                                    contract.workers[0].endDate,
                                   ).toLocaleDateString("id-ID", {
                                     day: "numeric",
                                     month: "short",
@@ -896,7 +811,7 @@ export default function ContractRegistrationPage() {
                             <p className="text-sm font-medium text-gray-900">
                               {contract.workers[0].salary
                                 ? `Rp ${Number(
-                                    contract.workers[0].salary
+                                    contract.workers[0].salary,
                                   ).toLocaleString("id-ID")}`
                                 : "-"}
                             </p>
@@ -1020,7 +935,7 @@ export default function ContractRegistrationPage() {
                           `${w.jobseekers?.firstName} ${w.jobseekers?.lastName}`
                             .toLowerCase()
                             .includes(query) ||
-                          w.jobTitle?.toLowerCase().includes(query)
+                          w.jobTitle?.toLowerCase().includes(query),
                       );
                       return batchMatch || workerMatch;
                     })
@@ -1029,7 +944,7 @@ export default function ContractRegistrationPage() {
                         contract.workers?.filter(
                           (w) =>
                             w.status === "ACTIVE" &&
-                            new Date(w.endDate) >= new Date()
+                            new Date(w.endDate) >= new Date(),
                         ).length || 0;
                       const totalWorkers = contract.workers?.length || 0;
                       const completedWorkers =
@@ -1037,11 +952,11 @@ export default function ContractRegistrationPage() {
                           (w) =>
                             w.status === "COMPLETED" ||
                             (w.status === "ACTIVE" &&
-                              new Date(w.endDate) < new Date())
+                              new Date(w.endDate) < new Date()),
                         ).length || 0;
                       const terminatedWorkers =
                         contract.workers?.filter(
-                          (w) => w.status === "TERMINATED"
+                          (w) => w.status === "TERMINATED",
                         ).length || 0;
 
                       return (
@@ -1062,7 +977,7 @@ export default function ContractRegistrationPage() {
                                 <p className="text-sm text-gray-500">
                                   Disetujui{" "}
                                   {new Date(
-                                    contract.updatedAt || contract.createdAt
+                                    contract.updatedAt || contract.createdAt,
                                   ).toLocaleDateString("id-ID")}
                                 </p>
                               </div>
@@ -1108,9 +1023,9 @@ export default function ContractRegistrationPage() {
                                     worker.status === "TERMINATED"
                                       ? "bg-red-100 text-red-700"
                                       : worker.status === "COMPLETED" ||
-                                        new Date(worker.endDate) < new Date()
-                                      ? "bg-gray-100 text-gray-600"
-                                      : "bg-green-100 text-green-700"
+                                          new Date(worker.endDate) < new Date()
+                                        ? "bg-gray-100 text-gray-600"
+                                        : "bg-green-100 text-green-700"
                                   }`}
                                 >
                                   {worker.jobseekers?.firstName}
@@ -1161,7 +1076,7 @@ export default function ContractRegistrationPage() {
                         `${w.jobseekers?.firstName} ${w.jobseekers?.lastName}`
                           .toLowerCase()
                           .includes(query) ||
-                        w.jobTitle?.toLowerCase().includes(query)
+                        w.jobTitle?.toLowerCase().includes(query),
                     );
                     return batchMatch || workerMatch;
                   }).length === 0 && (
@@ -1236,7 +1151,7 @@ export default function ContractRegistrationPage() {
                           <p className="text-sm text-gray-500">
                             Diajukan{" "}
                             {new Date(contract.createdAt).toLocaleDateString(
-                              "id-ID"
+                              "id-ID",
                             )}
                           </p>
                         </div>
@@ -1272,7 +1187,7 @@ export default function ContractRegistrationPage() {
                           <p className="text-sm text-gray-500">
                             Disetujui{" "}
                             {new Date(
-                              contract.updatedAt || contract.createdAt
+                              contract.updatedAt || contract.createdAt,
                             ).toLocaleDateString("id-ID")}
                           </p>
                         </div>
@@ -1326,7 +1241,7 @@ export default function ContractRegistrationPage() {
                   {getSelectedWorkersInfo()
                     .map(
                       (w) =>
-                        `${w.jobseekers?.firstName} ${w.jobseekers?.lastName}`
+                        `${w.jobseekers?.firstName} ${w.jobseekers?.lastName}`,
                     )
                     .join(", ")}
                 </div>
@@ -1343,7 +1258,7 @@ export default function ContractRegistrationPage() {
                 <div className="p-3 bg-gray-100 rounded-lg text-gray-700">
                   {[
                     ...new Set(
-                      getSelectedWorkersInfo().map((w) => w.jobs?.title)
+                      getSelectedWorkersInfo().map((w) => w.jobs?.title),
                     ),
                   ].join(", ")}
                 </div>
@@ -1568,7 +1483,7 @@ export default function ContractRegistrationPage() {
                     />
                   ) : (
                     selectedWorkerDetail.worker.jobseekers?.firstName?.charAt(
-                      0
+                      0,
                     ) || "U"
                   )}
                 </div>
@@ -1698,7 +1613,7 @@ export default function ContractRegistrationPage() {
                       onClick={() => {
                         setSelectedWorkerDetail(null);
                         setPreviewDocUrl(
-                          selectedWorkerDetail.contract.recruiterDocUrl
+                          selectedWorkerDetail.contract.recruiterDocUrl,
                         );
                       }}
                       className="px-3 py-2 bg-white border border-amber-300 text-amber-700 text-sm font-medium rounded-lg hover:bg-amber-100 transition flex items-center gap-2"
@@ -1712,7 +1627,7 @@ export default function ContractRegistrationPage() {
                       onClick={() => {
                         setSelectedWorkerDetail(null);
                         setPreviewDocUrl(
-                          selectedWorkerDetail.contract.adminResponseDocUrl
+                          selectedWorkerDetail.contract.adminResponseDocUrl,
                         );
                       }}
                       className="px-3 py-2 bg-white border border-green-300 text-green-700 text-sm font-medium rounded-lg hover:bg-green-100 transition flex items-center gap-2"
@@ -1738,7 +1653,7 @@ export default function ContractRegistrationPage() {
                       setSelectedWorkerDetail(null);
                       handleTerminateContract(
                         selectedWorkerDetail.worker,
-                        selectedWorkerDetail.contract
+                        selectedWorkerDetail.contract,
                       );
                     }}
                     className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 flex items-center gap-2"
@@ -1773,7 +1688,7 @@ export default function ContractRegistrationPage() {
                   Disetujui{" "}
                   {new Date(
                     selectedBatchDetail.updatedAt ||
-                      selectedBatchDetail.createdAt
+                      selectedBatchDetail.createdAt,
                   ).toLocaleDateString("id-ID", {
                     day: "numeric",
                     month: "long",
@@ -1803,7 +1718,7 @@ export default function ContractRegistrationPage() {
                     {selectedBatchDetail.workers?.filter(
                       (w) =>
                         w.status === "ACTIVE" &&
-                        new Date(w.endDate) >= new Date()
+                        new Date(w.endDate) >= new Date(),
                     ).length || 0}
                   </p>
                   <p className="text-xs text-green-600">Aktif</p>
@@ -1814,7 +1729,7 @@ export default function ContractRegistrationPage() {
                       (w) =>
                         w.status === "COMPLETED" ||
                         (w.status === "ACTIVE" &&
-                          new Date(w.endDate) < new Date())
+                          new Date(w.endDate) < new Date()),
                     ).length || 0}
                   </p>
                   <p className="text-xs text-gray-600">Selesai</p>
@@ -1822,7 +1737,7 @@ export default function ContractRegistrationPage() {
                 <div className="bg-red-50 rounded-xl p-3 text-center">
                   <p className="text-2xl font-bold text-red-600">
                     {selectedBatchDetail.workers?.filter(
-                      (w) => w.status === "TERMINATED"
+                      (w) => w.status === "TERMINATED",
                     ).length || 0}
                   </p>
                   <p className="text-xs text-red-600">Diakhiri</p>
@@ -1889,9 +1804,9 @@ export default function ContractRegistrationPage() {
                           worker.status === "TERMINATED"
                             ? "bg-red-50 border-red-200"
                             : worker.status === "COMPLETED" ||
-                              new Date(worker.endDate) < new Date()
-                            ? "bg-gray-50 border-gray-200"
-                            : "bg-green-50 border-green-200"
+                                new Date(worker.endDate) < new Date()
+                              ? "bg-gray-50 border-gray-200"
+                              : "bg-green-50 border-green-200"
                         }`}
                       >
                         <div className="flex items-start justify-between gap-4">
@@ -1968,7 +1883,7 @@ export default function ContractRegistrationPage() {
                                   setSelectedBatchDetail(null);
                                   handleTerminateContract(
                                     worker,
-                                    selectedBatchDetail
+                                    selectedBatchDetail,
                                   );
                                 }}
                                 disabled={terminatingId === worker.id}

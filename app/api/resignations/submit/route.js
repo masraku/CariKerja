@@ -1,6 +1,16 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { verifyToken } from '@/lib/auth'
+import { validateBody } from '@/lib/validations'
+import { z } from 'zod'
+
+// Validation schema
+const submitResignationSchema = z.object({
+  applicationId: z.string().min(1, 'Application ID wajib diisi'),
+  reason: z.string().min(10, 'Alasan wajib diisi minimal 10 karakter'),
+  letterUrl: z.string().url('URL surat pengunduran diri tidak valid')
+})
 
 // POST /api/resignations/submit
 // Jobseeker submits a resignation request
@@ -16,15 +26,11 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Only jobseekers can submit resignations' }, { status: 403 })
     }
 
-    const body = await request.json()
-    const { applicationId, reason, letterUrl } = body
-
-    // Validate required fields
-    if (!applicationId || !reason || !letterUrl) {
-      return NextResponse.json({ 
-        error: 'Application ID, reason, and resignation letter are required' 
-      }, { status: 400 })
+    const validation = await validateBody(request, submitResignationSchema)
+    if (!validation.success) {
+      return validation.response
     }
+    const { applicationId, reason, letterUrl } = validation.data
 
     // Get jobseeker profile
     const jobseeker = await prisma.jobseekers.findUnique({
@@ -100,7 +106,7 @@ export async function POST(request) {
     console.error('Error submitting resignation:', error)
     return NextResponse.json({ 
       error: 'Failed to submit resignation',
-      details: error.message 
+      ...createErrorResponse('Terjadi kesalahan', error) 
     }, { status: 500 })
   }
 }

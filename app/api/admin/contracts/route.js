@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { requireAdmin } from '@/lib/authHelper'
 import { serializeBigInt } from '@/lib/utils'
 
@@ -123,7 +124,7 @@ export async function GET(request) {
     console.error('Error fetching contracts for admin:', error)
     return NextResponse.json({ 
       error: 'Failed to fetch contracts',
-      details: error.message 
+      ...createErrorResponse('Terjadi kesalahan', error) 
     }, { status: 500 })
   }
 }

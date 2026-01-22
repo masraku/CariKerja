@@ -1,12 +1,19 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { cookies } from 'next/headers'
 import jwt from 'jsonwebtoken'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 
 export async function PATCH(request, context) {
     try {
+        // CSRF validation
+        if (!validateCSRFToken(request)) {
+            return csrfErrorResponse()
+        }
+
         const params = await context.params
         const { id: applicationId } = params
 
@@ -86,7 +93,7 @@ export async function PATCH(request, context) {
 
     } catch (error) {
         return NextResponse.json(
-            { error: 'Gagal menarik lamaran', details: error.message },
+            createErrorResponse('Gagal menarik lamaran', error),
             { status: 500 }
         )
     }

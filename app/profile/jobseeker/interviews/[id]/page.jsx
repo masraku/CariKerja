@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import axios from "axios";
+import api from "@/lib/api";
 import {
   Calendar,
   Clock,
@@ -47,13 +47,14 @@ export default function JobseekerInterviewDetailPage() {
   const loadInterviewDetails = async () => {
     try {
       const token = localStorage.getItem("token");
-      const { data } = await axios.get(
+      const { data } = await api.get(
         `/api/profile/jobseeker/interviews/${params.id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+          withCredentials: true,
+        },
       );
 
       if (data.success) {
@@ -72,7 +73,7 @@ export default function JobseekerInterviewDetailPage() {
   const handleResponse = async (response) => {
     if (
       !confirm(
-        `Are you sure you want to ${response.toLowerCase()} this interview invitation?`
+        `Are you sure you want to ${response.toLowerCase()} this interview invitation?`,
       )
     ) {
       return;
@@ -82,14 +83,15 @@ export default function JobseekerInterviewDetailPage() {
 
     try {
       const token = localStorage.getItem("token");
-      const { data } = await axios.patch(
+      const { data } = await api.patch(
         `/api/profile/jobseeker/interviews/${params.id}/respond`,
         { response },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+          withCredentials: true,
+        },
       );
 
       if (data.success) {
@@ -249,10 +251,10 @@ export default function JobseekerInterviewDetailPage() {
               interview.myParticipation.status === "ACCEPTED"
                 ? "bg-green-50 border border-green-200"
                 : interview.myParticipation.status === "DECLINED"
-                ? "bg-red-50 border border-red-200"
-                : interview.myParticipation.status === "COMPLETED"
-                ? "bg-blue-50 border border-blue-200"
-                : "bg-gray-50 border border-gray-200"
+                  ? "bg-red-50 border border-red-200"
+                  : interview.myParticipation.status === "COMPLETED"
+                    ? "bg-blue-50 border border-blue-200"
+                    : "bg-gray-50 border border-gray-200"
             }`}
           >
             <div className="flex items-center gap-3">
@@ -271,10 +273,10 @@ export default function JobseekerInterviewDetailPage() {
                     interview.myParticipation.status === "ACCEPTED"
                       ? "text-green-900"
                       : interview.myParticipation.status === "DECLINED"
-                      ? "text-red-900"
-                      : interview.myParticipation.status === "COMPLETED"
-                      ? "text-blue-900"
-                      : "text-gray-900"
+                        ? "text-red-900"
+                        : interview.myParticipation.status === "COMPLETED"
+                          ? "text-blue-900"
+                          : "text-gray-900"
                   }`}
                 >
                   {interview.myParticipation.status === "ACCEPTED" &&
@@ -290,7 +292,7 @@ export default function JobseekerInterviewDetailPage() {
                   <p className="text-sm text-gray-600">
                     Responded on{" "}
                     {new Date(
-                      interview.myParticipation.respondedAt
+                      interview.myParticipation.respondedAt,
                     ).toLocaleDateString("id-ID")}
                   </p>
                 )}

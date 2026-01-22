@@ -1,6 +1,17 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { verifyToken } from '@/lib/auth'
+import { validateBody } from '@/lib/validations'
+import { z } from 'zod'
+
+// Validation schema
+const processResignationSchema = z.object({
+  action: z.enum(['approve', 'reject'], {
+    errorMap: () => ({ message: 'Action harus "approve" atau "reject"' })
+  }),
+  recruiterNotes: z.string().optional()
+})
 
 // PATCH /api/resignations/[id]
 // Recruiter approves or rejects a resignation
@@ -17,12 +28,12 @@ export async function PATCH(request, { params }) {
     }
 
     const { id } = await params
-    const body = await request.json()
-    const { action, recruiterNotes } = body // action: 'approve' or 'reject'
-
-    if (!action || !['approve', 'reject'].includes(action)) {
-      return NextResponse.json({ error: 'Invalid action. Use "approve" or "reject"' }, { status: 400 })
+    
+    const validation = await validateBody(request, processResignationSchema)
+    if (!validation.success) {
+      return validation.response
     }
+    const { action, recruiterNotes } = validation.data
 
     // Get recruiter profile
     const recruiter = await prisma.recruiters.findUnique({
@@ -105,7 +116,7 @@ export async function PATCH(request, { params }) {
     console.error('Error processing resignation:', error)
     return NextResponse.json({ 
       error: 'Failed to process resignation',
-      details: error.message 
+      ...createErrorResponse('Terjadi kesalahan', error) 
     }, { status: 500 })
   }
 }
@@ -179,7 +190,7 @@ export async function GET(request, { params }) {
     console.error('Error fetching resignation:', error)
     return NextResponse.json({ 
       error: 'Failed to fetch resignation',
-      details: error.message 
+      ...createErrorResponse('Terjadi kesalahan', error) 
     }, { status: 500 })
   }
 }

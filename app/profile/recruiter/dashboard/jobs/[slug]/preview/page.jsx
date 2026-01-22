@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import axios from "axios";
+import api from "@/lib/api";
 import {
   ArrowLeft,
   Building2,
@@ -34,11 +34,12 @@ export default function JobPreviewPage() {
   const fetchJobDetail = async () => {
     try {
       const token = localStorage.getItem("token");
-      const { data } = await axios.get(
+      const { data } = await api.get(
         `/api/profile/recruiter/jobs/${params.slug}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+          withCredentials: true,
+        },
       );
 
       if (data.success) {
@@ -88,10 +89,10 @@ export default function JobPreviewPage() {
             status === "ACTIVE"
               ? "bg-emerald-500"
               : status === "PENDING"
-              ? "bg-orange-500 animate-pulse"
-              : status === "REJECTED"
-              ? "bg-red-500"
-              : "bg-slate-500"
+                ? "bg-orange-500 animate-pulse"
+                : status === "REJECTED"
+                  ? "bg-red-500"
+                  : "bg-slate-500"
           }`}
         />
         {labels[status] || status}

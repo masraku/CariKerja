@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { requireRecruiter } from '@/lib/authHelper'
 
 // GET - Fetch interview details for recruiter
@@ -143,7 +144,7 @@ export async function GET(request, context) {
     return NextResponse.json(
       { 
         error: 'Failed to fetch interview details',
-        details: error.message
+        ...createErrorResponse('Terjadi kesalahan', error)
       },
       { status: 500 }
     )
@@ -228,7 +229,7 @@ export async function DELETE(request, context) {
     return NextResponse.json(
       { 
         error: 'Failed to delete interview',
-        details: error.message
+        ...createErrorResponse('Terjadi kesalahan', error)
       },
       { status: 500 }
     )

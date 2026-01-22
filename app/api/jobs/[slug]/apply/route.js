@@ -1,12 +1,21 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { cookies } from 'next/headers'
 import jwt from 'jsonwebtoken'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
+import { validateBody } from '@/lib/validations'
+import { applyJobSchema } from '@/lib/validations/profile'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 
 export async function POST(request, context) {
   try {
+    // CSRF validation
+    if (!validateCSRFToken(request)) {
+      return csrfErrorResponse()
+    }
+
     const params = await context.params
     const { slug } = params
 
@@ -127,9 +136,14 @@ export async function POST(request, context) {
       // If REJECTED or WITHDRAWN, they can apply again (allow re-apply)
     }
 
-    // Get request body
-    const body = await request.json()
-    const { coverLetter, resumeUrl, portfolioUrl } = body
+    // Validate request body
+    const validation = await validateBody(request, applyJobSchema)
+    if (!validation.success) {
+      return validation.response
+    }
+    const { coverLetter, expectedSalary, availableDate, notes } = validation.data
+    const resumeUrl = user.jobseekers.cvUrl
+    const portfolioUrl = user.jobseekers.portfolioUrl
 
     // Create application
     const application = await prisma.applications.create({
@@ -168,7 +182,7 @@ export async function POST(request, context) {
     return NextResponse.json(
       { 
         error: 'Gagal mengirim lamaran',
-        details: error.message 
+        ...createErrorResponse('Terjadi kesalahan', error) 
       },
       { status: 500 }
     )

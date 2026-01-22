@@ -1,6 +1,7 @@
 //app/api/profile/recruiter/jobs/[slug]/applications/my-applications/route.js
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { requireJobseeker } from '@/lib/authHelper'
 
 // GET - Fetch all applications for logged-in jobseeker
@@ -111,7 +112,7 @@ export async function GET(request) {
     return NextResponse.json(
       { 
         error: 'Failed to fetch applications',
-        details: error.message,
+        ...createErrorResponse('Terjadi kesalahan', error),
         type: error.constructor.name
       },
       { status: 500 }

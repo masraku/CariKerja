@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import { useQueryRecruiterApplications } from "@/hooks/recruiter/useRecruiter";
 import {
   ArrowLeft,
   Users,
@@ -17,56 +17,26 @@ import Swal from "sweetalert2";
 
 export default function AllApplicationsPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [applications, setApplications] = useState([]);
-  const [stats, setStats] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [jobFilter, setJobFilter] = useState("all");
-  const [jobs, setJobs] = useState([]);
   const [filteredApplications, setFilteredApplications] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    loadAllApplications();
-  }, []);
+  // Use React Query hook
+  const { data: queryData, isLoading: loading } =
+    useQueryRecruiterApplications();
+
+  const applications = (queryData?.applications || []).sort(
+    (a, b) => new Date(b.appliedAt) - new Date(a.appliedAt),
+  );
+  const jobs = queryData?.jobs || [];
+  const stats = queryData?.stats || null;
 
   useEffect(() => {
     filterApplications();
   }, [applications, searchQuery, statusFilter, jobFilter]);
-
-  const loadAllApplications = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("token");
-
-      const { data } = await axios.get(
-        "/api/profile/recruiter/dashboard/applications",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      // Sort by appliedAt date (newest first)
-      const sortedApps = (data.applications || []).sort(
-        (a, b) => new Date(b.appliedAt) - new Date(a.appliedAt)
-      );
-      setApplications(sortedApps);
-      setStats(data.stats || null);
-      setJobs(data.jobs || []);
-    } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Failed to load applications",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const filterApplications = () => {
     let filtered = applications;
@@ -148,7 +118,7 @@ export default function AllApplicationsPage() {
 
   const totalPages = Math.max(
     1,
-    Math.ceil(filteredApplications.length / itemsPerPage)
+    Math.ceil(filteredApplications.length / itemsPerPage),
   );
 
   useEffect(() => {
@@ -550,7 +520,7 @@ export default function AllApplicationsPage() {
               {filteredApplications
                 .slice(
                   (currentPage - 1) * itemsPerPage,
-                  currentPage * itemsPerPage
+                  currentPage * itemsPerPage,
                 )
                 .map((app) => renderApplicationCard(app))}
             </div>
@@ -560,12 +530,12 @@ export default function AllApplicationsPage() {
                 Menampilkan{" "}
                 {Math.min(
                   filteredApplications.length,
-                  (currentPage - 1) * itemsPerPage + 1
+                  (currentPage - 1) * itemsPerPage + 1,
                 )}
                 -
                 {Math.min(
                   currentPage * itemsPerPage,
-                  filteredApplications.length
+                  filteredApplications.length,
                 )}{" "}
                 dari {filteredApplications.length} pelamar
               </div>
@@ -603,7 +573,7 @@ export default function AllApplicationsPage() {
                           totalPages - 3,
                           totalPages - 2,
                           totalPages - 1,
-                          totalPages
+                          totalPages,
                         );
                       } else {
                         pages.push(
@@ -613,7 +583,7 @@ export default function AllApplicationsPage() {
                           currentPage,
                           currentPage + 1,
                           "...",
-                          totalPages
+                          totalPages,
                         );
                       }
                     }
@@ -638,7 +608,7 @@ export default function AllApplicationsPage() {
                         >
                           {page}
                         </button>
-                      )
+                      ),
                     );
                   })()}
                 </div>

@@ -4,6 +4,7 @@
 
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse } from '@/lib/errorHandler'
 
 export async function GET(request) {
   try {
@@ -87,7 +88,7 @@ export async function GET(request) {
     return NextResponse.json(
       { 
         error: 'Gagal menyelesaikan interview otomatis',
-        details: error.message 
+        ...createErrorResponse('Terjadi kesalahan', error) 
       },
       { status: 500 }
     )
