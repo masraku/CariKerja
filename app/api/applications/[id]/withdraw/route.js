@@ -2,10 +2,8 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createErrorResponse } from '@/lib/errorHandler'
 import { cookies } from 'next/headers'
-import jwt from 'jsonwebtoken'
+import { verifyToken } from '@/lib/auth'
 import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 
 export async function PATCH(request, context) {
     try {
@@ -28,10 +26,8 @@ export async function PATCH(request, context) {
             )
         }
 
-        let decoded
-        try {
-            decoded = jwt.verify(token.value, JWT_SECRET)
-        } catch (jwtError) {
+        const decoded = verifyToken(token.value)
+        if (!decoded) {
             return NextResponse.json(
                 { error: 'Token tidak valid' },
                 { status: 401 }

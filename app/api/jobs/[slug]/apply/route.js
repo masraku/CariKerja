@@ -2,12 +2,10 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createErrorResponse } from '@/lib/errorHandler'
 import { cookies } from 'next/headers'
-import jwt from 'jsonwebtoken'
+import { verifyToken } from '@/lib/auth'
 import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
 import { validateBody } from '@/lib/validations'
 import { applyJobSchema } from '@/lib/validations/profile'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 
 export async function POST(request, context) {
   try {
@@ -30,10 +28,8 @@ export async function POST(request, context) {
       )
     }
 
-    let decoded
-    try {
-      decoded = jwt.verify(token.value, JWT_SECRET)
-    } catch (jwtError) {
+    const decoded = verifyToken(token.value)
+    if (!decoded) {
       return NextResponse.json(
         { error: 'Token tidak valid' },
         { status: 401 }
@@ -84,13 +80,6 @@ export async function POST(request, context) {
 
     // Check if already applied TO THIS SPECIFIC JOB and still in progress
     // Using findFirst with explicit conditions to ensure per-job checking
-    console.log(`[APPLY DEBUG] Checking for existing application:`, {
-      jobId: job.id,
-      jobTitle: job.title,
-      jobSlug: job.slug,
-      jobseekerId: user.jobseekers.id
-    })
-    
     const existingApplication = await prisma.applications.findFirst({
       where: {
         AND: [
@@ -99,12 +88,6 @@ export async function POST(request, context) {
         ]
       }
     })
-    
-    console.log(`[APPLY DEBUG] Existing application found:`, existingApplication ? {
-      id: existingApplication.id,
-      jobId: existingApplication.jobId,
-      status: existingApplication.status
-    } : 'None')
 
     if (existingApplication) {
       // Define completed statuses

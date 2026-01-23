@@ -3,11 +3,8 @@ import { validateQuery } from '@/lib/validations'
 import { createErrorResponse } from '@/lib/errorHandler'
 import { jobSearchSchema } from '@/lib/validations/jobs'
 import { prisma } from '@/lib/prisma'
-import { cookies } from 'next/headers'
-import jwt from 'jsonwebtoken'
+import { getAuthFromCookies } from '@/lib/auth'
 import { publicLimiter, getIP, rateLimitResponse } from '@/lib/rateLimit'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 
 // Auto-deactivate expired jobs (runs in background, non-blocking)
 async function autoDeactivateExpiredJobs() {
@@ -48,10 +45,8 @@ export async function GET(request) {
     let jobseekerId = null
     
     try {
-      const cookieStore = await cookies()
-      const token = cookieStore.get('token')
-      if (token) {
-        const decoded = jwt.verify(token.value, JWT_SECRET)
+      const decoded = await getAuthFromCookies()
+      if (decoded) {
         userId = decoded.userId
         userRole = decoded.role
         

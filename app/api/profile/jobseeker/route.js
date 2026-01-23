@@ -2,12 +2,10 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createErrorResponse } from '@/lib/errorHandler'
 import { cookies } from 'next/headers'
-import jwt from 'jsonwebtoken'
+import { verifyToken } from '@/lib/auth'
 import crypto from 'crypto'
 import { standardLimiter, getIP, rateLimitResponse } from '@/lib/rateLimit'
 import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 
 export async function POST(request) {
   try {
@@ -34,10 +32,8 @@ export async function POST(request) {
       )
     }
 
-    let decoded
-    try {
-      decoded = jwt.verify(token.value, JWT_SECRET)
-    } catch (jwtError) {
+    const decoded = verifyToken(token.value)
+    if (!decoded) {
       return NextResponse.json(
         { error: 'Invalid token' },
         { status: 401 }
@@ -399,10 +395,8 @@ export async function GET(request) {
       )
     }
 
-    let decoded
-    try {
-      decoded = jwt.verify(token.value, JWT_SECRET)
-    } catch (jwtError) {
+    const decoded = verifyToken(token.value)
+    if (!decoded) {
       return NextResponse.json(
         { error: 'Invalid token' },
         { status: 401 }
@@ -618,7 +612,13 @@ export async function PATCH(request) {
       )
     }
 
-    const decoded = jwt.verify(token.value, JWT_SECRET)
+    const decoded = verifyToken(token.value)
+    if (!decoded) {
+      return NextResponse.json(
+        { error: 'Invalid token' },
+        { status: 401 }
+      )
+    }
     const userId = decoded.userId
 
     // Get only the fields to update
@@ -659,7 +659,13 @@ export async function DELETE(request) {
       )
     }
 
-    const decoded = jwt.verify(token.value, JWT_SECRET)
+    const decoded = verifyToken(token.value)
+    if (!decoded) {
+      return NextResponse.json(
+        { error: 'Invalid token' },
+        { status: 401 }
+      )
+    }
     const userId = decoded.userId
 
     // Get jobseeker

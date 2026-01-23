@@ -2,9 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createErrorResponse } from '@/lib/errorHandler'
 import { cookies } from 'next/headers'
-import jwt from 'jsonwebtoken'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
+import { verifyToken } from '@/lib/auth'
 
 export async function GET(request, context) {
   try {
@@ -26,9 +24,11 @@ export async function GET(request, context) {
       const token = cookieToken?.value || headerToken
       
       if (token) {
-        const decoded = jwt.verify(token, JWT_SECRET)
-        userId = decoded.userId
-        userRole = decoded.role
+        const decoded = verifyToken(token)
+        if (decoded) {
+          userId = decoded.userId
+          userRole = decoded.role
+        }
       }
     } catch (error) {
       // Not authenticated, continue without user info

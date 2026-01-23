@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryJobDetail } from "@/hooks/jobs/useJobs";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 export default function JobDetailPage() {
   const params = useParams();
@@ -190,13 +191,13 @@ export default function JobDetailPage() {
       return "Negotiable";
     }
     return `Rp ${job.salaryMin.toLocaleString(
-      "id-ID"
+      "id-ID",
     )} - ${job.salaryMax.toLocaleString("id-ID")}`;
   };
 
   const getTimeSince = (date) => {
     const days = Math.floor(
-      (new Date() - new Date(date)) / (1000 * 60 * 60 * 24)
+      (new Date() - new Date(date)) / (1000 * 60 * 60 * 24),
     );
     if (days === 0) return "Hari ini";
     if (days === 1) return "Kemarin";
@@ -430,7 +431,9 @@ export default function JobDetailPage() {
               </h2>
               <div
                 className="prose prose-slate max-w-none text-slate-600 leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: job.description }}
+                dangerouslySetInnerHTML={{
+                  __html: sanitizeHtml(job.description),
+                }}
               />
             </div>
 
@@ -506,7 +509,9 @@ export default function JobDetailPage() {
               {job.requirements && (
                 <div
                   className="prose prose-slate max-w-none text-slate-600 leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: job.requirements }}
+                  dangerouslySetInnerHTML={{
+                    __html: sanitizeHtml(job.requirements),
+                  }}
                 />
               )}
 
@@ -598,7 +603,7 @@ export default function JobDetailPage() {
                             day: "numeric",
                             month: "short",
                             year: "numeric",
-                          }
+                          },
                         )
                       : "Tidak ada batas"}
                   </span>

@@ -3,13 +3,11 @@ import { validateBody } from '@/lib/validations'
 import { loginSchema } from '@/lib/validations/auth'
 import { prisma } from '@/lib/prisma'
 import { verifyPassword, hashPassword, needsRehash } from '@/lib/password'
-import jwt from 'jsonwebtoken'
+import { signToken } from '@/lib/auth'
 import { authLimiter, getIP, rateLimitResponse } from '@/lib/rateLimit'
 import { generateCSRFToken } from '@/lib/csrf'
 import { createAuditLog, AuditAction } from '@/lib/audit'
 import { createErrorResponse } from '@/lib/errorHandler'
-
-const JWT_SECRET = process.env.JWT_SECRET
 
 export async function POST(request) {
   try {
@@ -114,15 +112,11 @@ export async function POST(request) {
     })
 
     // Generate JWT token with 1 hour expiry
-    const token = jwt.sign(
-      {
-        userId: user.id,
-        email: user.email,
-        role: user.role
-      },
-      JWT_SECRET,
-      { expiresIn: '1h' } // Token expires in 1 hour
-    )
+    const token = signToken({
+      userId: user.id,
+      email: user.email,
+      role: user.role
+    })
 
     // Hapus password dari response
     const { password: _, ...userWithoutPassword } = user
