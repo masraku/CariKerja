@@ -280,55 +280,67 @@ export default function LandingPage() {
       <section className="px-4 lg:px-8 py-20 lg:py-28 bg-white relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Perusahaan Terverifikasi
-            </h2>
-            <p className="text-gray-500 text-lg">
-              Perusahaan terpercaya yang sudah diverifikasi oleh Disnaker
-            </p>
-          </div>
+          <div className="border border-gray-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.06)] overflow-hidden">
+            <div className="px-6 py-10 sm:px-10 lg:px-14 lg:py-14 border-b border-gray-200">
+              <p className="text-sm font-semibold uppercase tracking-[0.28em] text-blue-600 mb-5">
+                Perusahaan Terverifikasi
+              </p>
+              <div className="max-w-4xl">
+                <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-gray-950 leading-[1.05]">
+                  Dipercaya perusahaan terbaik, aman untuk talenta lokal.
+                </h2>
+                <p className="mt-5 text-base sm:text-lg text-gray-500 max-w-2xl">
+                  Mitra perusahaan yang telah diverifikasi Disnaker ditampilkan
+                  dalam format yang lebih ringkas agar fokus langsung ke brand.
+                </p>
+              </div>
+            </div>
 
-          {/* Companies Grid */}
-          {isLoadingCompanies ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div
-                  key={i}
-                  className="bg-gray-50 rounded-2xl h-40 animate-pulse"
-                ></div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
-              {topCompanies.map((company) => (
-                <Link
-                  key={company.id}
-                  href={`/companies/${company.slug || company.id}`}
-                  className="group flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-gray-100 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 text-center h-full"
-                >
-                  <div className="w-16 h-16 rounded-xl bg-white border border-gray-100 flex items-center justify-center overflow-hidden mb-4 group-hover:scale-110 transition-transform duration-300 shadow-sm">
-                    {company.logo ? (
-                      <img
-                        src={company.logo}
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <Building2 className="w-8 h-8 text-gray-300" />
-                    )}
-                  </div>
-                  <h3 className="font-bold text-gray-900 text-sm mb-1 line-clamp-1 group-hover:text-blue-600 transition-colors">
-                    {company.name}
-                  </h3>
-                  <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-medium">
-                    <CheckCircle className="w-3.5 h-3.5" />
-                    Terverifikasi
-                  </span>
-                </Link>
-              ))}
-            </div>
-          )}
+            {/* Companies Grid */}
+            {isLoadingCompanies ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 border-r border-b border-gray-200 -mr-px -mb-px">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                  <div
+                    key={i}
+                    className="h-36 sm:h-40 border-l border-t border-gray-200 bg-gray-50 animate-pulse"
+                  ></div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 border-r border-b border-gray-200 -mr-px -mb-px">
+                {topCompanies.slice(0, 12).map((company) => (
+                  <Link
+                    key={company.id}
+                    href={`/companies/${company.slug || company.id}`}
+                    className="group relative h-36 sm:h-40 lg:h-44 border-l border-t border-gray-200 bg-white flex items-center justify-center p-6 sm:p-8 transition-colors duration-300 hover:bg-gray-50"
+                  >
+                    <div className="flex max-w-full flex-col items-center justify-center text-center">
+                      {company.logo ? (
+                        <img
+                          src={company.logo}
+                          alt={company.name}
+                          className="max-h-12 sm:max-h-14 lg:max-h-16 w-auto max-w-[150px] sm:max-w-[180px] object-contain transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <>
+                          <div className="w-14 h-14 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center mb-3 transition-colors duration-300 group-hover:bg-blue-50 group-hover:text-blue-600">
+                            <Building2 className="w-7 h-7" />
+                          </div>
+                          <h3 className="font-semibold text-gray-900 text-sm sm:text-base leading-tight line-clamp-2">
+                            {company.name}
+                          </h3>
+                        </>
+                      )}
+                      <span className="absolute left-4 top-4 inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-600 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        Verified
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
