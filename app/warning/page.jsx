@@ -257,550 +257,437 @@ const WarningPage = () => {
       question:
         "Apa yang harus dilakukan jika diminta transfer uang oleh rekruter?",
       answer:
-        "JANGAN TRANSFER! Ini adalah red flag penipuan. Segera laporkan kepada kami dan jangan lanjutkan proses apapun dengan rekruter tersebut. Perusahaan legitimate tidak akan meminta uang dalam proses rekrutmen.",
+        "Jangan transfer. Ini adalah tanda kuat penipuan. Segera laporkan kepada kami dan jangan lanjutkan proses apa pun dengan rekruter tersebut. Perusahaan yang benar tidak akan meminta uang dalam proses rekrutmen.",
     },
     {
       question: "Bolehkah melamar ke banyak posisi sekaligus?",
       answer:
-        "Ya, Anda boleh melamar ke berbagai posisi, namun pastikan Anda benar-benar memenuhi kualifikasi dan serius dengan setiap lamaran. Quality over quantity.",
+        "Ya, Anda boleh melamar ke berbagai posisi, namun pastikan Anda benar-benar memenuhi kualifikasi dan serius dengan setiap lamaran. Utamakan kualitas lamaran dibanding jumlahnya.",
+    },
+  ];
+
+  const audiences = {
+    jobseeker: {
+      tabLabel: "Untuk Jobseeker",
+      tipsTitle: "Tips Melamar dengan Rapi",
+      consequenceIntro:
+        "Jika aturan diabaikan, akun atau lamaran dapat terkena tindakan berikut:",
+      icon: Users,
+    },
+    recruiter: {
+      tabLabel: "Untuk Rekruter",
+      tipsTitle: "Praktik Baik untuk Rekruter",
+      consequenceIntro:
+        "Perusahaan yang melanggar aturan dapat menerima sanksi berikut:",
+      icon: Briefcase,
+    },
+  };
+
+  const activeAudience = audiences[activeTab];
+  const activeRules =
+    activeTab === "jobseeker" ? jobseekerRules : recruiterRules;
+  const activeConsequences = consequences[activeTab];
+
+  const principles = [
+    {
+      icon: Eye,
+      title: "Transparan",
+      description: "Informasi lowongan, profil, dan proses seleksi harus jelas.",
+    },
+    {
+      icon: Shield,
+      title: "Aman",
+      description: "Data pengguna digunakan sesuai kebutuhan layanan.",
+    },
+    {
+      icon: Award,
+      title: "Profesional",
+      description: "Komunikasi dilakukan dengan sopan dan bertanggung jawab.",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
-      {" "}
-      {/* Fixed header padding */}
-      <div className="container mx-auto px-4 pb-12">
-        {/* New Integrated Alert Banner */}
-        <div className="mt-6 mb-8 bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl shadow-sm flex items-start gap-4">
-          <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5 animate-pulse" />
-          <div>
-            <h3 className="font-bold text-amber-800">PENTING!</h3>
-            <p className="text-amber-700 text-sm mt-1">
-              Mohon baca halaman ini dengan teliti sebelum menggunakan platform.
-              Pelanggaran terhadap syarat dan ketentuan dapat berakibat pada
-              sanksi tegas.
-            </p>
-          </div>
-        </div>
-
-        {/* Hero Section - Card Style matching LandingPage */}
-        <div className="relative rounded-3xl overflow-hidden bg-[#03587f] shadow-xl mb-12">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#03587f] to-indigo-900 opacity-90" />
-          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-
-          {/* Decorative elements */}
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl"></div>
-
-          <div className="relative z-10 p-8 md:p-12 lg:p-16 text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-white/10 backdrop-blur-md rounded-2xl mb-8 border border-white/20 shadow-lg shadow-blue-900/20">
-              <Shield className="w-10 h-10 text-white" />
-            </div>
-
-            <h1 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">
-              Syarat & Ketentuan <span className="text-blue-200">Platform</span>
-            </h1>
-
-            <p className="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed mb-12">
-              Panduan lengkap untuk menjaga ekosistem karir yang aman,
-              profesional, dan terpercaya bagi semua pengguna.
-            </p>
-
-            <div className="grid md:grid-cols-3 gap-6 text-left">
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 hover:bg-white/15 transition-colors">
-                <div className="w-10 h-10 bg-blue-500/30 rounded-xl flex items-center justify-center mb-4">
-                  <Eye className="w-5 h-5 text-blue-200" />
-                </div>
-                <h3 className="font-bold text-white text-lg mb-2">
-                  Transparansi
-                </h3>
-                <p className="text-sm text-blue-100">
-                  Informasi jujur dan akurat dari semua pihak
-                </p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 hover:bg-white/15 transition-colors">
-                <div className="w-10 h-10 bg-indigo-500/30 rounded-xl flex items-center justify-center mb-4">
-                  <Shield className="w-5 h-5 text-indigo-200" />
-                </div>
-                <h3 className="font-bold text-white text-lg mb-2">Keamanan</h3>
-                <p className="text-sm text-blue-100">
-                  Data dan privasi terlindungi dengan baik
-                </p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 hover:bg-white/15 transition-colors">
-                <div className="w-10 h-10 bg-purple-500/30 rounded-xl flex items-center justify-center mb-4">
-                  <Award className="w-5 h-5 text-purple-200" />
-                </div>
-                <h3 className="font-bold text-white text-lg mb-2">
-                  Profesionalisme
-                </h3>
-                <p className="text-sm text-blue-100">
-                  Komunikasi dan proses yang profesional
-                </p>
-              </div>
+    <div className="min-h-screen bg-slate-50 pt-20">
+      <div className="container mx-auto px-4 pb-14 sm:px-6 lg:px-8">
+        <div className="mb-6 mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-6 w-6 flex-none text-amber-600" />
+            <div>
+              <h3 className="font-semibold text-amber-900">Penting untuk dibaca</h3>
+              <p className="mt-1 text-sm leading-6 text-amber-800">
+                Halaman ini menjelaskan aturan dasar penggunaan platform agar
+                proses rekrutmen tetap aman, jelas, dan bertanggung jawab.
+              </p>
             </div>
           </div>
         </div>
-        {/* Tab Navigation - Redesigned */}
-        <div className="bg-white p-2 rounded-2xl shadow-sm border border-slate-200 mb-8 max-w-2xl mx-auto">
-          <div className="flex gap-2">
-            <button
-              onClick={() => setActiveTab("jobseeker")}
-              className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-bold text-sm md:text-base transition-all duration-300 ${
-                activeTab === "jobseeker"
-                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
-                  : "text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              <Users className="w-5 h-5" />
-              <span>Untuk Jobseeker</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("recruiter")}
-              className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-bold text-sm md:text-base transition-all duration-300 ${
-                activeTab === "recruiter"
-                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
-                  : "text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              <Briefcase className="w-5 h-5" />
-              <span>Untuk Rekruter</span>
-            </button>
+
+        <section className="relative overflow-hidden rounded-[2rem] bg-primary text-white shadow-sm">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary to-primary-hover" />
+          <div className="absolute right-0 top-0 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+          <div className="relative z-10 px-6 py-10 sm:px-8 md:py-14 lg:px-14">
+            <div className="mx-auto max-w-4xl text-center">
+              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/15 bg-white/10">
+                <Shield className="h-8 w-8" />
+              </div>
+              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+                Syarat & Ketentuan Platform SIMPel
+              </h1>
+              <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-blue-100 sm:text-lg">
+                Panduan singkat untuk menjaga layanan lowongan kerja tetap rapi,
+                aman, dan nyaman bagi pencari kerja maupun perusahaan.
+              </p>
+            </div>
+
+            <div className="mt-10 grid gap-4 md:grid-cols-3">
+              {principles.map(({ icon: Icon, title, description }) => (
+                <div
+                  key={title}
+                  className="rounded-2xl border border-white/10 bg-white/10 p-5 backdrop-blur-sm"
+                >
+                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-blue-100">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-lg font-semibold">{title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-blue-100">
+                    {description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <div className="mx-auto mt-8 max-w-2xl rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+          <div className="grid gap-2 sm:grid-cols-2">
+            {Object.entries(audiences).map(([key, audience]) => {
+              const Icon = audience.icon;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setActiveTab(key)}
+                  className={`flex items-center justify-center gap-3 rounded-xl px-5 py-4 text-sm font-semibold transition ${
+                    activeTab === key
+                      ? "bg-primary text-white shadow-sm"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-primary"
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
+                  {audience.tabLabel}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Jobseeker Content */}
-        {activeTab === "jobseeker" && (
-          <div className="space-y-8">
-            {/* Requirements Section */}
-            <div className="bg-white rounded-2xl shadow-lg p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-blue-600" />
-                </div>
-                <h2 className="text-3xl font-bold text-gray-900">
+        <div className="mt-8 space-y-8">
+          <section className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+            <div className="mb-6 flex items-start gap-4">
+              <div className="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <CheckCircle className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
+                  {activeAudience.tabLabel}
+                </p>
+                <h2 className="mt-1 text-2xl font-bold text-slate-950 md:text-3xl">
                   Syarat yang Harus Dipenuhi
                 </h2>
               </div>
+            </div>
 
-              <div className="space-y-6">
-                {jobseekerRules.requirements.map((req, index) => (
-                  <div
-                    key={index}
-                    className="border-l-4 border-blue-600 bg-blue-50 rounded-r-xl p-6"
-                  >
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      {req.title}
-                    </h3>
-                    <p className="text-gray-700 mb-4">{req.description}</p>
-                    <ul className="space-y-2">
-                      {req.items.map((item, idx) => (
-                        <li key={idx} className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                          <span className="text-gray-700">{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
+            <div className="space-y-5">
+              {activeRules.requirements.map((req) => (
+                <div
+                  key={req.title}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
+                >
+                  <h3 className="text-lg font-semibold text-slate-950">
+                    {req.title}
+                  </h3>
+                  <p className="mt-2 leading-7 text-slate-600">
+                    {req.description}
+                  </p>
+                  <ul className="mt-4 grid gap-3 md:grid-cols-2">
+                    {req.items.map((item) => (
+                      <li key={item} className="flex items-start gap-3">
+                        <CheckCircle className="mt-0.5 h-5 w-5 flex-none text-primary" />
+                        <span className="text-sm leading-6 text-slate-700">
+                          {item}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+            <div className="mb-6 flex items-start gap-4">
+              <div className="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-red-50 text-red-600">
+                <XCircle className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-red-600">
+                  Batasan Penggunaan
+                </p>
+                <h2 className="mt-1 text-2xl font-bold text-slate-950 md:text-3xl">
+                  Hal yang Dilarang
+                </h2>
               </div>
             </div>
 
-            {/* Prohibited Section */}
-            <div className="bg-white rounded-2xl shadow-lg p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                  <XCircle className="w-6 h-6 text-red-600" />
-                </div>
-                <h2 className="text-3xl font-bold text-gray-900">
-                  Yang TIDAK BOLEH Dilakukan
-                </h2>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                {jobseekerRules.prohibited.map((item, index) => {
-                  const Icon = item.icon;
-                  return (
-                    <div
-                      key={index}
-                      className="bg-red-50 border-2 border-red-200 rounded-xl p-6 hover:shadow-lg transition"
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                          <Icon className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-gray-900 mb-2">
-                            {item.title}
-                          </h3>
-                          <p className="text-gray-700 text-sm">
-                            {item.description}
-                          </p>
-                        </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              {activeRules.prohibited.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={item.title}
+                    className="rounded-2xl border border-red-100 bg-red-50/70 p-5"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="flex h-11 w-11 flex-none items-center justify-center rounded-xl border border-red-100 bg-white text-red-600">
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-slate-950">
+                          {item.title}
+                        </h3>
+                        <p className="mt-2 text-sm leading-6 text-slate-700">
+                          {item.description}
+                        </p>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Tips Section */}
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl shadow-lg p-8 border-2 border-green-200">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center">
-                  <Info className="w-6 h-6 text-white" />
-                </div>
-                <h2 className="text-3xl font-bold text-gray-900">
-                  Tips Sukses Melamar Kerja
-                </h2>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                {jobseekerRules.tips.map((tip, index) => (
-                  <div
-                    key={index}
-                    className="flex items-start gap-3 bg-white rounded-xl p-4 shadow-sm"
-                  >
-                    <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">
-                      {index + 1}
-                    </div>
-                    <p className="text-gray-700">{tip}</p>
                   </div>
-                ))}
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="rounded-[1.5rem] border border-primary/15 bg-primary/5 p-6 shadow-sm md:p-8">
+            <div className="mb-6 flex items-start gap-4">
+              <div className="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-primary text-white">
+                <Info className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
+                  Rekomendasi
+                </p>
+                <h2 className="mt-1 text-2xl font-bold text-slate-950 md:text-3xl">
+                  {activeAudience.tipsTitle}
+                </h2>
               </div>
             </div>
 
-            {/* Kartu AK-1 Section */}
-            <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl shadow-lg p-8 border-2 border-indigo-200">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center">
-                  <FileText className="w-6 h-6 text-white" />
+            <div className="grid gap-4 md:grid-cols-2">
+              {activeRules.tips.map((tip, index) => (
+                <div
+                  key={tip}
+                  className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"
+                >
+                  <div className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
+                    {index + 1}
+                  </div>
+                  <p className="text-sm leading-6 text-slate-700">{tip}</p>
                 </div>
-                <h2 className="text-3xl font-bold text-gray-900">
-                  Cara Mendapatkan Kartu AK-1
-                </h2>
+              ))}
+            </div>
+          </section>
+
+          {activeTab === "jobseeker" && (
+            <section className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+              <div className="mb-6 flex items-start gap-4">
+                <div className="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <FileText className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
+                    Informasi AK-1
+                  </p>
+                  <h2 className="mt-1 text-2xl font-bold text-slate-950 md:text-3xl">
+                    Cara Mendapatkan Kartu AK-1
+                  </h2>
+                </div>
               </div>
 
-              <div className="bg-white rounded-xl p-6 mb-6">
-                <h3 className="font-bold text-gray-900 mb-3 text-lg">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 md:p-6">
+                <h3 className="text-lg font-semibold text-slate-950">
                   Apa itu Kartu AK-1?
                 </h3>
-                <p className="text-gray-700 mb-4">
+                <p className="mt-3 leading-7 text-slate-600">
                   Kartu Kuning atau Kartu AK-1 (Antar Kerja) adalah kartu tanda
                   pencari kerja yang dikeluarkan oleh Dinas Tenaga Kerja
-                  (Disnaker). Kartu ini menjadi syarat penting bagi pencari
-                  kerja untuk melamar pekerjaan di instansi pemerintah maupun
-                  perusahaan swasta tertentu.
+                  (Disnaker). Kartu ini dapat menjadi dokumen pendukung saat
+                  melamar pekerjaan di instansi pemerintah maupun perusahaan
+                  tertentu.
                 </p>
 
-                <h3 className="font-bold text-gray-900 mb-3 text-lg">
-                  Syarat Pembuatan Kartu AK-1:
+                <h3 className="mt-6 text-lg font-semibold text-slate-950">
+                  Syarat Pembuatan Kartu AK-1
                 </h3>
-                <ul className="space-y-2 mb-6">
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700">
-                      Fotokopi KTP yang masih berlaku
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700">
-                      Fotokopi Kartu Keluarga (KK)
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700">
-                      Fotokopi ijazah terakhir yang telah dilegalisir
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700">
-                      Pas foto ukuran 3x4 (2 lembar) dengan latar belakang merah
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700">
-                      Surat pengantar dari Kelurahan/Desa (jika diperlukan)
-                    </span>
-                  </li>
+                <ul className="mt-4 grid gap-3 md:grid-cols-2">
+                  {[
+                    "Fotokopi KTP yang masih berlaku",
+                    "Fotokopi Kartu Keluarga (KK)",
+                    "Fotokopi ijazah terakhir yang telah dilegalisir",
+                    "Pas foto ukuran 3x4, 2 lembar dengan latar belakang merah",
+                    "Surat pengantar dari Kelurahan/Desa jika diperlukan",
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-3">
+                      <CheckCircle className="mt-0.5 h-5 w-5 flex-none text-primary" />
+                      <span className="text-sm leading-6 text-slate-700">
+                        {item}
+                      </span>
+                    </li>
+                  ))}
                 </ul>
 
-                <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
-                  <p className="text-indigo-800 font-medium mb-3">
-                    📌 Untuk penduduk Kabupaten Cirebon, Anda dapat mendaftar
-                    antrian pembuatan Kartu AK-1 secara online melalui:
+                <div className="mt-6 rounded-2xl border border-primary/15 bg-white p-4">
+                  <p className="mb-4 text-sm font-medium leading-6 text-slate-700">
+                    Untuk penduduk Kabupaten Cirebon, pendaftaran antrian
+                    pembuatan Kartu AK-1 dapat dilakukan melalui layanan online
+                    Disnaker Kabupaten Cirebon.
                   </p>
                   <a
                     href="https://disnaker.cirebonkab.go.id/form_antrian_ak1"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition font-semibold shadow-lg hover:shadow-xl"
+                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-hover"
                   >
-                    <FileText className="w-5 h-5" />
+                    <FileText className="h-5 w-5" />
                     Daftar Antrian Kartu AK-1 Online
-                    <ExternalLink className="w-4 h-4" />
+                    <ExternalLink className="h-4 w-4" />
                   </a>
                 </div>
               </div>
 
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+              <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
+                  <AlertCircle className="mt-0.5 h-6 w-6 flex-none text-amber-600" />
                   <div>
-                    <p className="font-semibold text-amber-800">
-                      Catatan Penting:
-                    </p>
-                    <p className="text-amber-700 text-sm mt-1">
+                    <p className="font-semibold text-amber-900">Catatan penting</p>
+                    <p className="mt-1 text-sm leading-6 text-amber-800">
                       Kartu AK-1 berlaku selama 2 tahun dan dapat diperpanjang.
-                      Pastikan untuk memperbarui kartu Anda sebelum masa berlaku
-                      habis. Pembuatan Kartu AK-1 tidak dipungut biaya (GRATIS).
+                      Pembuatan Kartu AK-1 tidak dipungut biaya.
                     </p>
                   </div>
                 </div>
               </div>
-            </div>
+            </section>
+          )}
 
-            {/* Consequences */}
-            <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl shadow-lg p-8 border-2 border-orange-200">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-orange-600 rounded-xl flex items-center justify-center">
-                  <AlertTriangle className="w-6 h-6 text-white" />
-                </div>
-                <h2 className="text-3xl font-bold text-gray-900">
+          <section className="rounded-[1.5rem] border border-amber-200 bg-amber-50 p-6 shadow-sm md:p-8">
+            <div className="mb-6 flex items-start gap-4">
+              <div className="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-700">
+                  Sanksi
+                </p>
+                <h2 className="mt-1 text-2xl font-bold text-slate-950 md:text-3xl">
                   Konsekuensi Pelanggaran
                 </h2>
               </div>
-
-              <div className="bg-white rounded-xl p-6">
-                <p className="text-gray-700 mb-4 font-semibold">
-                  Jika Anda melanggar peraturan di atas, konsekuensi yang akan
-                  diterima:
-                </p>
-                <ul className="space-y-3">
-                  {consequences.jobseeker.map((item, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-gray-700">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
             </div>
-          </div>
-        )}
 
-        {/* Recruiter Content */}
-        {activeTab === "recruiter" && (
-          <div className="space-y-8">
-            {/* Requirements Section */}
-            <div className="bg-white rounded-2xl shadow-lg p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-green-600" />
-                </div>
-                <h2 className="text-3xl font-bold text-gray-900">
-                  Syarat yang Harus Dipenuhi
-                </h2>
-              </div>
-
-              <div className="space-y-6">
-                {recruiterRules.requirements.map((req, index) => (
-                  <div
-                    key={index}
-                    className="border-l-4 border-green-600 bg-green-50 rounded-r-xl p-6"
-                  >
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      {req.title}
-                    </h3>
-                    <p className="text-gray-700 mb-4">{req.description}</p>
-                    <ul className="space-y-2">
-                      {req.items.map((item, idx) => (
-                        <li key={idx} className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                          <span className="text-gray-700">{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+            <div className="rounded-2xl border border-amber-100 bg-white p-5">
+              <p className="mb-4 font-semibold text-slate-800">
+                {activeAudience.consequenceIntro}
+              </p>
+              <ul className="space-y-3">
+                {activeConsequences.map((item) => (
+                  <li key={item} className="flex items-start gap-3">
+                    <AlertCircle className="mt-0.5 h-5 w-5 flex-none text-amber-600" />
+                    <span className="text-sm leading-6 text-slate-700">
+                      {item}
+                    </span>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
+          </section>
+        </div>
 
-            {/* Prohibited Section */}
-            <div className="bg-white rounded-2xl shadow-lg p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                  <XCircle className="w-6 h-6 text-red-600" />
-                </div>
-                <h2 className="text-3xl font-bold text-gray-900">
-                  Yang TIDAK BOLEH Dilakukan
-                </h2>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                {recruiterRules.prohibited.map((item, index) => {
-                  const Icon = item.icon;
-                  return (
-                    <div
-                      key={index}
-                      className="bg-red-50 border-2 border-red-200 rounded-xl p-6 hover:shadow-lg transition"
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                          <Icon className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-gray-900 mb-2">
-                            {item.title}
-                          </h3>
-                          <p className="text-gray-700 text-sm">
-                            {item.description}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+        <section className="mt-8 rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+          <div className="mb-6 flex items-start gap-4">
+            <div className="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <FileText className="h-6 w-6" />
             </div>
-
-            {/* Tips Section */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-lg p-8 border-2 border-blue-200">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
-                  <Info className="w-6 h-6 text-white" />
-                </div>
-                <h2 className="text-3xl font-bold text-gray-900">
-                  Best Practices untuk Recruiter
-                </h2>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                {recruiterRules.tips.map((tip, index) => (
-                  <div
-                    key={index}
-                    className="flex items-start gap-3 bg-white rounded-xl p-4 shadow-sm"
-                  >
-                    <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">
-                      {index + 1}
-                    </div>
-                    <p className="text-gray-700">{tip}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Consequences */}
-            <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl shadow-lg p-8 border-2 border-orange-200">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-orange-600 rounded-xl flex items-center justify-center">
-                  <AlertTriangle className="w-6 h-6 text-white" />
-                </div>
-                <h2 className="text-3xl font-bold text-gray-900">
-                  Konsekuensi Pelanggaran
-                </h2>
-              </div>
-
-              <div className="bg-white rounded-xl p-6">
-                <p className="text-gray-700 mb-4 font-semibold">
-                  Perusahaan yang melanggar peraturan akan menerima sanksi
-                  berikut:
-                </p>
-                <ul className="space-y-3">
-                  {consequences.recruiter.map((item, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-gray-700">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
+                FAQ
+              </p>
+              <h2 className="mt-1 text-2xl font-bold text-slate-950 md:text-3xl">
+                Pertanyaan yang Sering Diajukan
+              </h2>
             </div>
           </div>
-        )}
 
-        {/* FAQ Section */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 mt-8">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-              <FileText className="w-6 h-6 text-purple-600" />
-            </div>
-            <h2 className="text-3xl font-bold text-gray-900">
-              Pertanyaan yang Sering Diajukan
-            </h2>
-          </div>
-
-          <div className="space-y-4">
+          <div className="space-y-3">
             {faqs.map((faq, index) => (
               <div
-                key={index}
-                className="border-2 border-gray-200 rounded-xl overflow-hidden hover:border-purple-300 transition"
+                key={faq.question}
+                className="overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:border-primary/25"
               >
                 <button
                   onClick={() =>
                     setExpandedFaq(expandedFaq === index ? null : index)
                   }
-                  className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50 transition"
+                  className="flex w-full items-center justify-between gap-4 p-5 text-left transition hover:bg-slate-50"
                 >
-                  <h3 className="font-bold text-gray-900 pr-4">
+                  <h3 className="font-semibold text-slate-950">
                     {faq.question}
                   </h3>
                   {expandedFaq === index ? (
-                    <ChevronUp className="w-5 h-5 text-purple-600 flex-shrink-0" />
+                    <ChevronUp className="h-5 w-5 flex-none text-primary" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                    <ChevronDown className="h-5 w-5 flex-none text-slate-400" />
                   )}
                 </button>
                 {expandedFaq === index && (
-                  <div className="px-6 pb-6 bg-purple-50">
-                    <p className="text-gray-700 leading-relaxed">
-                      {faq.answer}
-                    </p>
+                  <div className="border-t border-slate-100 bg-slate-50 px-5 py-4">
+                    <p className="leading-7 text-slate-700">{faq.answer}</p>
                   </div>
                 )}
               </div>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* Contact Support */}
-        <div className="bg-gradient-to-r from-[#03587f] to-[#024666] rounded-2xl shadow-xl p-8 text-white text-center mt-8">
-          <h2 className="text-3xl font-bold mb-4">Masih Ada Pertanyaan?</h2>
-          <p className="text-xl text-indigo-100 mb-6 max-w-2xl mx-auto">
-            Tim support kami siap membantu Anda 24/7
+        <section className="mt-8 rounded-[1.5rem] bg-primary p-6 text-center text-white shadow-sm md:p-8">
+          <h2 className="text-2xl font-bold md:text-3xl">Masih Ada Pertanyaan?</h2>
+          <p className="mx-auto mt-3 max-w-2xl leading-7 text-blue-100">
+            Hubungi tim pengelola jika ada lowongan mencurigakan atau kendala
+            saat menggunakan platform.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
             <Link
               href="mailto:support@jobseeker.id"
-              className="inline-flex items-center justify-center gap-2 bg-white text-indigo-600 px-8 py-4 rounded-xl hover:bg-gray-100 transition-all font-bold shadow-lg"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-primary transition hover:bg-blue-50"
             >
-              <FileText className="w-5 h-5" />
-              <span>Hubungi Support</span>
+              <FileText className="h-5 w-5" />
+              Hubungi Support
             </Link>
             <Link
               href="/help"
-              className="inline-flex items-center justify-center gap-2 bg-transparent text-white border-2 border-white px-8 py-4 rounded-xl hover:bg-white hover:text-indigo-600 transition-all font-bold"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
             >
-              <Info className="w-5 h-5" />
-              <span>Pusat Bantuan</span>
+              <Info className="h-5 w-5" />
+              Pusat Bantuan
             </Link>
           </div>
-        </div>
+        </section>
 
-        {/* Agreement */}
-        <div className="bg-yellow-50 border-2 border-yellow-300 rounded-2xl p-6 mt-8">
+        <section className="mt-8 rounded-2xl border border-amber-200 bg-white p-6 shadow-sm">
           <div className="flex items-start gap-4">
-            <AlertTriangle className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-1" />
+            <AlertTriangle className="mt-1 h-6 w-6 flex-none text-amber-600" />
             <div>
-              <h3 className="font-bold text-gray-900 mb-2 text-lg">
+              <h3 className="text-lg font-semibold text-slate-950">
                 Pernyataan Persetujuan
               </h3>
-              <p className="text-gray-700 leading-relaxed">
+              <p className="mt-2 leading-7 text-slate-700">
                 Dengan menggunakan platform ini, Anda menyatakan telah membaca,
                 memahami, dan menyetujui semua syarat dan ketentuan yang
                 berlaku. Anda bertanggung jawab penuh atas setiap tindakan yang
@@ -809,7 +696,7 @@ const WarningPage = () => {
               </p>
             </div>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );

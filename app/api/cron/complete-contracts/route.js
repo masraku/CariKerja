@@ -1,18 +1,14 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createErrorResponse } from '@/lib/errorHandler'
+import { authorizeCronRequest } from '@/lib/cron'
 
 // GET /api/cron/complete-contracts - Auto-complete expired contracts
 // This should be called daily by a cron job
 export async function GET(request) {
   try {
-    // Verify cron secret (optional, for security)
-    const authHeader = request.headers.get('authorization')
-    const cronSecret = process.env.CRON_SECRET
-    
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Tidak memiliki akses' }, { status: 401 })
-    }
+    const unauthorized = authorizeCronRequest(request)
+    if (unauthorized) return unauthorized
 
     const now = new Date()
     

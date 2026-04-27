@@ -14,23 +14,27 @@ export async function GET(request, { params }) {
     }
 
     const decoded = verifyToken(token)
-    const { applicationId } = await params
+    if (!decoded) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+    }
+
+    const { id } = await params
 
     // Get application with full jobseeker details
     let application = await prisma.applications.findUnique({
-      where: { id: applicationId },
+      where: { id },
       include: {
         jobseekers: {
           include: {
             educations: {
               orderBy: { startDate: 'desc' }
             },
-            workExperiences: {
+            work_experiences: {
               orderBy: { startDate: 'desc' }
             },
-            jobseekerSkills: {
+            jobseeker_skills: {
               include: {
-                skill: true
+                skills: true
               }
             },
             certifications: {
@@ -119,8 +123,8 @@ export async function GET(request, { params }) {
     if (jobseeker.summary) completeness++
     if (jobseeker.cvUrl) completeness++
     if (jobseeker.educations?.length > 0) completeness++
-    if (jobseeker.workExperiences?.length > 0) completeness++
-    if (jobseeker.jobseekerSkills?.length > 0) completeness++
+    if (jobseeker.work_experiences?.length > 0) completeness++
+    if (jobseeker.jobseeker_skills?.length > 0) completeness++
     if (jobseeker.certifications?.length > 0) completeness++
     if (jobseeker.photo) completeness++
     if (jobseeker.city && jobseeker.province) completeness++
@@ -128,7 +132,7 @@ export async function GET(request, { params }) {
     const completenessPercentage = Math.round((completeness / totalFields) * 100)
 
     // Extract skill names
-    const skills = jobseeker.jobseekerSkills?.map(js => js.skill?.name).filter(Boolean) || []
+    const skills = jobseeker.jobseeker_skills?.map(js => js.skills?.name).filter(Boolean) || []
 
     // Format response
     const formattedApplication = {
@@ -167,7 +171,11 @@ export async function PATCH(request, { params }) {
     }
 
     const decoded = verifyToken(token)
-    const { applicationId } = await params
+    if (!decoded) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+    }
+
+    const { id } = await params
     const body = await request.json()
     const { status, recruiterNotes } = body
 
@@ -192,7 +200,7 @@ export async function PATCH(request, { params }) {
 
     // Verify recruiter owns this job
     const application = await prisma.applications.findUnique({
-      where: { id: applicationId },
+      where: { id },
       include: {
         jobs: {
           include: {
@@ -217,7 +225,7 @@ export async function PATCH(request, { params }) {
 
     // Update application
     const updatedApplication = await prisma.applications.update({
-      where: { id: applicationId },
+      where: { id },
       data: {
         ...(status && { status }),
         ...(recruiterNotes !== undefined && { recruiterNotes }),

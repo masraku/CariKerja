@@ -5,17 +5,12 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createErrorResponse } from '@/lib/errorHandler'
+import { authorizeCronRequest } from '@/lib/cron'
 
 export async function GET(request) {
   try {
-    // Verify cron secret for security (optional)
-    const authHeader = request.headers.get('authorization')
-    const cronSecret = process.env.CRON_SECRET
-    
-    // If CRON_SECRET is set, verify it
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Tidak memiliki akses' }, { status: 401 })
-    }
+    const unauthorized = authorizeCronRequest(request)
+    if (unauthorized) return unauthorized
 
     const now = new Date()
     const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
@@ -25,11 +20,14 @@ export async function GET(request) {
     // 2. Have participant status as INTERVIEW_SCHEDULED
     const overdueParticipants = await prisma.interview_participants.findMany({
       where: {
-        status: 'INTERVIEW_SCHEDULED',
+        status: { in: ['PENDING', 'ACCEPTED', 'INTERVIEW_SCHEDULED'] },
         interviews: {
           scheduledAt: {
             lte: twentyFourHoursAgo
           }
+        },
+        applications: {
+          status: 'INTERVIEW_SCHEDULED'
         }
       },
       include: {
@@ -64,7 +62,7 @@ export async function GET(request) {
       const remainingScheduled = await prisma.interview_participants.count({
         where: {
           interviewId,
-          status: 'INTERVIEW_SCHEDULED'
+          status: { in: ['PENDING', 'ACCEPTED', 'INTERVIEW_SCHEDULED'] }
         }
       })
 

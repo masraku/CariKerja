@@ -1,38 +1,51 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
 import {
-  Building2,
-  MapPin,
-  Users,
-  Briefcase,
-  Globe,
-  Mail,
-  Phone,
-  Star,
-  CheckCircle,
-  Calendar,
-  TrendingUp,
+  ArrowLeft,
+  ArrowRight,
   Award,
+  Briefcase,
+  Building2,
+  Calendar,
+  CheckCircle,
+  Clock,
+  ExternalLink,
   Facebook,
-  Twitter,
+  Flag,
+  Globe,
   Instagram,
   Linkedin,
-  ArrowLeft,
-  ExternalLink,
+  Mail,
+  MapPin,
+  Phone,
   Share2,
-  Flag,
+  Star,
+  TrendingUp,
+  Twitter,
+  Users,
 } from "lucide-react";
 import { useQueryCompanyDetail } from "@/hooks/companies/useCompanies";
+
+const tabs = [
+  { id: "about", label: "Tentang", icon: Building2 },
+  { id: "jobs", label: "Lowongan", icon: Briefcase },
+  { id: "benefits", label: "Benefits", icon: Award },
+  { id: "reviews", label: "Reviews", icon: Star },
+];
 
 export default function CompanyProfilePage() {
   const params = useParams();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("about");
 
-  // Use React Query hook
-  const { data: company, isPending: loading, isError } = useQueryCompanyDetail(params?.slug);
+  const {
+    data: company,
+    isPending: loading,
+    isError,
+  } = useQueryCompanyDetail(params?.slug);
 
   useEffect(() => {
     if (isError) {
@@ -44,7 +57,8 @@ export default function CompanyProfilePage() {
     const labels = {
       FULL_TIME: "Full Time",
       PART_TIME: "Part Time",
-      CONTRACT: "Contract",
+      CONTRACT: "Kontrak",
+      FREELANCE: "Freelance",
       INTERNSHIP: "Magang",
     };
     return labels[type] || type;
@@ -65,7 +79,7 @@ export default function CompanyProfilePage() {
 
   const formatSalary = (min, max, type) => {
     const formatNumber = (num) => new Intl.NumberFormat("id-ID").format(num);
-    if (!min || !max) return "Negotiable";
+    if (!min || !max) return "Gaji kompetitif";
 
     const typeLabel = {
       monthly: "/ bulan",
@@ -81,26 +95,36 @@ export default function CompanyProfilePage() {
   const getTimeAgo = (date) => {
     const seconds = Math.floor((new Date() - new Date(date)) / 1000);
     let interval = seconds / 31536000;
-    if (interval > 1) return Math.floor(interval) + " tahun lalu";
+    if (interval > 1) return `${Math.floor(interval)} tahun lalu`;
     interval = seconds / 2592000;
-    if (interval > 1) return Math.floor(interval) + " bulan lalu";
+    if (interval > 1) return `${Math.floor(interval)} bulan lalu`;
     interval = seconds / 86400;
-    if (interval > 1) return Math.floor(interval) + " hari lalu";
+    if (interval > 1) return `${Math.floor(interval)} hari lalu`;
     interval = seconds / 3600;
-    if (interval > 1) return Math.floor(interval) + " jam lalu";
+    if (interval > 1) return `${Math.floor(interval)} jam lalu`;
     interval = seconds / 60;
-    if (interval > 1) return Math.floor(interval) + " menit lalu";
+    if (interval > 1) return `${Math.floor(interval)} menit lalu`;
     return "Baru saja";
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600 border-r-transparent mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">
-            Memuat profil perusahaan...
-          </p>
+      <div className="min-h-screen bg-slate-50 pt-32">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="animate-pulse lg:flex lg:gap-8">
+              <div className="mb-6 h-36 w-36 rounded-3xl bg-slate-100 lg:mb-0" />
+              <div className="flex-1 space-y-4">
+                <div className="h-10 w-2/3 rounded bg-slate-100" />
+                <div className="h-5 w-1/2 rounded bg-slate-100" />
+                <div className="grid gap-3 sm:grid-cols-4">
+                  {[1, 2, 3, 4].map((item) => (
+                    <div key={item} className="h-16 rounded-2xl bg-slate-100" />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -108,23 +132,23 @@ export default function CompanyProfilePage() {
 
   if (!company) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center max-w-md px-4">
-          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Building2 className="w-10 h-10 text-gray-400" />
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+        <div className="max-w-md rounded-[2rem] border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-slate-50 text-slate-300">
+            <Building2 className="h-10 w-10" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <h2 className="text-2xl font-bold text-slate-950">
             Perusahaan Tidak Ditemukan
           </h2>
-          <p className="text-gray-600 mb-8">
+          <p className="mt-3 leading-7 text-slate-500">
             Perusahaan yang Anda cari mungkin telah dihapus atau tautan yang
-            Anda gunakan salah.
+            digunakan salah.
           </p>
           <Link
             href="/companies"
-            className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-600/20"
+            className="mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white transition hover:bg-primary-hover"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className="h-4 w-4" />
             Kembali ke Daftar Perusahaan
           </Link>
         </div>
@@ -132,237 +156,217 @@ export default function CompanyProfilePage() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 pb-12 overflow-hidden w-full max-w-[100vw]">
-      {/* Hero Banner */}
-      <div className="relative h-64 lg:h-80 bg-blue-600 w-full">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#03587f] to-[#024666] opacity-90" />
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')] bg-cover bg-center mix-blend-overlay opacity-20" />
+  const activeJobsCount = company.jobs?.length || 0;
+  const ratingValue = Number(company.averageRatings?.overall || 0);
+  const profileDescription = company.bio || company.description;
 
-        <div className="absolute top-24 left-4 lg:left-8 z-10">
+  return (
+    <div className="min-h-screen overflow-hidden bg-slate-50 pb-16">
+      <section className="relative bg-slate-950 pt-32 text-white lg:pt-36">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_22%,rgba(14,116,144,0.5),transparent_34%),linear-gradient(135deg,#011d29_0%,#03587f_52%,#012b3d_100%)]" />
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-50 to-transparent" />
+        <div className="container relative z-10 mx-auto px-4 pb-28 sm:px-6 lg:px-8">
           <Link
             href="/companies"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white rounded-xl transition-all text-sm font-medium border border-white/20"
+            className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-blue-100 backdrop-blur transition hover:bg-white/15 hover:text-white"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Kembali
+            <ArrowLeft className="h-4 w-4" />
+            Kembali ke perusahaan
           </Link>
         </div>
-      </div>
+      </section>
 
-      <div className="max-w-7xl mx-auto px-4 lg:px-8 relative z-10 -mt-32">
-        {/* Company Header Card */}
-        <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-4 lg:p-8 mb-8 w-full">
-          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start w-full">
-            {/* Logo */}
-            <div className="w-20 h-20 lg:w-40 lg:h-40 bg-white rounded-2xl shadow-lg border-4 border-white overflow-hidden flex-shrink-0 relative z-10 mx-auto lg:mx-0">
+      <main className="container relative z-10 mx-auto -mt-24 px-4 sm:px-6 lg:px-8">
+        <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_24px_90px_rgba(15,23,42,0.12)]">
+          <div className="grid gap-8 p-6 lg:grid-cols-[180px_1fr_auto] lg:p-8">
+            <div className="mx-auto flex h-36 w-36 items-center justify-center rounded-[1.75rem] border border-slate-100 bg-white p-4 shadow-xl shadow-slate-200/70 lg:mx-0 lg:h-44 lg:w-44">
               {company.logo ? (
                 <img
                   src={company.logo}
                   alt={company.name}
-                  className="w-full h-full object-cover"
+                  className="h-full w-full object-contain"
                 />
               ) : (
-                <div className="w-full h-full bg-gray-50 flex items-center justify-center">
-                  <Building2 className="w-10 h-10 lg:w-16 lg:h-16 text-gray-300" />
-                </div>
+                <Building2 className="h-16 w-16 text-slate-300" />
               )}
             </div>
 
-            {/* Info */}
-            <div className="flex-1 min-w-0 pt-0 lg:pt-2 w-full">
-              <div className="flex flex-col gap-4 mb-4 text-center lg:text-left">
-                <div className="flex-1 min-w-0">
-                  <h1 className="text-2xl lg:text-4xl font-bold text-gray-900 mb-2 leading-tight">
-                    {company.name}
-                    {company.verified && (
-                      <CheckCircle className="inline-block w-6 h-6 text-blue-500 fill-blue-50 ml-2 align-text-bottom" />
-                    )}
-                  </h1>
-                  {company.tagline && (
-                    <p className="text-base lg:text-lg text-gray-500 break-words">{company.tagline}</p>
-                  )}
-                </div>
-                <div className="flex gap-2 justify-center lg:justify-start flex-wrap">
-                  <button className="p-2 sm:p-2.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all border border-gray-200 hover:border-blue-200 flex-1 sm:flex-none justify-center">
-                    <Share2 className="w-4 h-4 sm:w-5 sm:h-5 mx-auto" />
-                  </button>
-                  <button className="p-2 sm:p-2.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all border border-gray-200 hover:border-red-200 flex-1 sm:flex-none justify-center">
-                    <Flag className="w-4 h-4 sm:w-5 sm:h-5 mx-auto" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-y-3 gap-x-6 text-sm text-gray-600 mb-6 w-full justify-center lg:justify-start">
-                <div className="flex items-center gap-2 max-w-full">
-                  <Building2 className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                  <span className="truncate">{company.industry}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                  <span>{company.companySize} karyawan</span>
-                </div>
-                <div className="flex items-start gap-2 max-w-full">
-                  <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                  <span className="break-words text-left">
-                    {company.city}, {company.province}
+            <div className="min-w-0 text-center lg:text-left">
+              <div className="mb-4 flex flex-wrap justify-center gap-2 lg:justify-start">
+                {company.verified && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/15 bg-primary/5 px-3 py-1.5 text-sm font-semibold text-primary">
+                    <CheckCircle className="h-4 w-4" />
+                    Terverifikasi
                   </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Briefcase className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                  <span className="font-medium text-blue-600 truncate">
-                    {company._count.jobs} lowongan aktif
+                )}
+                {activeJobsCount > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-700">
+                    <Briefcase className="h-4 w-4" />
+                    {activeJobsCount} lowongan aktif
                   </span>
-                </div>
-                {company.averageRatings && (
-                  <div className="flex items-center gap-2 px-2 py-0.5 bg-amber-50 rounded-lg border border-amber-100 max-w-full">
-                    <Star className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />
-                    <span className="font-bold text-amber-700">
-                      {company.averageRatings.overall}
-                    </span>
-                    <span className="text-amber-600 truncate">
-                      ({company._count.reviews} reviews)
-                    </span>
-                  </div>
                 )}
               </div>
 
-              {/* Social Links */}
-              <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
-                {company.website && (
-                  <a
-                    href={company.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-xl text-sm font-medium hover:bg-gray-800 transition-all shadow-lg shadow-gray-900/10"
-                  >
-                    <Globe className="w-4 h-4" />
-                    Website
-                    <ExternalLink className="w-3 h-3 opacity-50" />
-                  </a>
-                )}
-                {company.linkedinUrl && (
-                  <a
-                    href={company.linkedinUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2.5 bg-gray-100 text-gray-600 rounded-xl hover:bg-[#0077b5] hover:text-white transition-all"
-                  >
-                    <Linkedin className="w-5 h-5" />
-                  </a>
-                )}
-                {company.facebookUrl && (
-                  <a
-                    href={company.facebookUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2.5 bg-gray-100 text-gray-600 rounded-xl hover:bg-[#1877f2] hover:text-white transition-all"
-                  >
-                    <Facebook className="w-5 h-5" />
-                  </a>
-                )}
-                {company.twitterUrl && (
-                  <a
-                    href={company.twitterUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2.5 bg-gray-100 text-gray-600 rounded-xl hover:bg-black hover:text-white transition-all"
-                  >
-                    <Twitter className="w-5 h-5" />
-                  </a>
-                )}
-                {company.instagramUrl && (
-                  <a
-                    href={company.instagramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2.5 bg-gray-100 text-gray-600 rounded-xl hover:bg-pink-600 hover:text-white transition-all"
-                  >
-                    <Instagram className="w-5 h-5" />
-                  </a>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+              <h1 className="text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+                {company.name}
+              </h1>
+              <p className="mx-auto mt-4 max-w-3xl text-base leading-8 text-slate-600 lg:mx-0 lg:text-lg">
+                {company.tagline ||
+                  "Profil perusahaan terverifikasi dengan informasi lowongan dan detail perusahaan yang dapat ditinjau sebelum melamar."}
+              </p>
 
-        <div className="grid lg:grid-cols-3 gap-8 max-w-full">
-          {/* Main Column */}
-          <div className="lg:col-span-2 space-y-8 min-w-0 max-w-full">
-            {/* Tabs */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 sticky top-4 z-30 max-w-full">
-              <div className="flex overflow-x-auto no-scrollbar gap-2 w-full pb-1 touch-pan-x">
+              <div className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 {[
-                  { id: "about", label: "Tentang", icon: Building2 },
                   {
-                    id: "jobs",
-                    label: `Lowongan (${company.jobs.length})`,
-                    icon: Briefcase,
+                    icon: Building2,
+                    label: "Industri",
+                    value: company.industry || "Belum dilengkapi",
                   },
-                  { id: "benefits", label: "Benefits", icon: Award },
                   {
-                    id: "reviews",
-                    label: `Reviews (${company._count.reviews})`,
+                    icon: Users,
+                    label: "Ukuran",
+                    value: `${company.companySize || "-"} karyawan`,
+                  },
+                  {
+                    icon: MapPin,
+                    label: "Lokasi",
+                    value: [company.city, company.province]
+                      .filter(Boolean)
+                      .join(", "),
+                  },
+                  {
                     icon: Star,
+                    label: "Rating",
+                    value:
+                      ratingValue > 0
+                        ? `${ratingValue.toFixed(1)} dari ${company._count.reviews} ulasan`
+                        : "Belum ada ulasan",
                   },
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 justify-center ${
-                      activeTab === tab.id
-                        ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                    }`}
-                  >
-                    <tab.icon className="w-4 h-4" />
-                    {tab.label}
-                  </button>
+                ].map(({ icon: Icon, label, value }) => (
+                  <div key={label} className="rounded-2xl bg-slate-50 p-4">
+                    <div className="mb-2 flex items-center justify-center gap-2 text-sm font-semibold text-slate-500 lg:justify-start">
+                      <Icon className="h-4 w-4 text-primary" />
+                      {label}
+                    </div>
+                    <p className="truncate font-bold text-slate-950">{value}</p>
+                  </div>
                 ))}
               </div>
             </div>
 
-            {/* Tab Content */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8 min-h-[400px]">
+            <div className="flex flex-col gap-3 lg:min-w-[180px]">
+              {company.website && (
+                <a
+                  href={company.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-hover"
+                >
+                  <Globe className="h-4 w-4" />
+                  Website
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              )}
+              <button className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-primary/20 hover:bg-primary/5 hover:text-primary">
+                <Share2 className="h-4 w-4" />
+                Bagikan
+              </button>
+              <button className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600">
+                <Flag className="h-4 w-4" />
+                Laporkan
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="min-w-0 space-y-6">
+            <nav className="sticky top-24 z-30 rounded-[1.5rem] border border-slate-200 bg-white/95 p-2 shadow-sm backdrop-blur">
+              <div className="flex gap-2 overflow-x-auto">
+                {tabs.map((tab) => {
+                  const Icon = tab.icon;
+                  const count =
+                    tab.id === "jobs"
+                      ? ` (${activeJobsCount})`
+                      : tab.id === "reviews"
+                        ? ` (${company._count.reviews})`
+                        : "";
+
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`inline-flex flex-none items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition ${
+                        activeTab === tab.id
+                          ? "bg-primary text-white shadow-sm"
+                          : "text-slate-600 hover:bg-slate-50 hover:text-primary"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {tab.label}
+                      {count}
+                    </button>
+                  );
+                })}
+              </div>
+            </nav>
+
+            <section className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
               {activeTab === "about" && (
-                <div className="space-y-8">
+                <div className="space-y-10">
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-4">
+                    <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">
+                      Profil
+                    </p>
+                    <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">
                       Tentang Perusahaan
                     </h2>
-                    <div className="prose prose-blue max-w-none text-gray-600 leading-relaxed whitespace-pre-line break-words">
-                      {company.bio ||
-                        company.description ||
-                        "Belum ada deskripsi perusahaan."}
-                    </div>
+                    {profileDescription ? (
+                      <div className="mt-5 whitespace-pre-line text-base leading-8 text-slate-600">
+                        {profileDescription}
+                      </div>
+                    ) : (
+                      <div className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-slate-600">
+                        Perusahaan ini belum menambahkan deskripsi. Anda tetap
+                        dapat melihat informasi dasar, lokasi, dan lowongan aktif
+                        yang tersedia.
+                      </div>
+                    )}
                   </div>
 
                   {company.culture && (
-                    <div>
-                      <h2 className="text-xl font-bold text-gray-900 mb-4">
+                    <div className="rounded-2xl border border-primary/15 bg-primary/5 p-6">
+                      <h3 className="text-xl font-bold text-slate-950">
                         Budaya Kerja
-                      </h2>
-                      <div className="prose prose-blue max-w-none text-gray-600 leading-relaxed break-words">
+                      </h3>
+                      <p className="mt-4 leading-8 text-slate-600">
                         {company.culture}
-                      </div>
+                      </p>
                     </div>
                   )}
 
                   {company.gallery?.length > 0 && (
                     <div>
-                      <h2 className="text-xl font-bold text-gray-900 mb-4">
-                        Galeri
-                      </h2>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <div className="mb-5 flex items-end justify-between gap-4">
+                        <div>
+                          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">
+                            Galeri
+                          </p>
+                          <h3 className="mt-2 text-2xl font-bold text-slate-950">
+                            Suasana Perusahaan
+                          </h3>
+                        </div>
+                      </div>
+                      <div className="grid gap-4 sm:grid-cols-2">
                         {company.gallery.map((image, index) => (
                           <div
-                            key={index}
-                            className="aspect-video rounded-xl overflow-hidden shadow-sm border border-gray-100 group"
+                            key={image || index}
+                            className="group aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-sm"
                           >
                             <img
                               src={image}
-                              alt={`Gallery ${index + 1}`}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                              alt={`Galeri ${company.name} ${index + 1}`}
+                              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                             />
                           </div>
                         ))}
@@ -373,98 +377,116 @@ export default function CompanyProfilePage() {
               )}
 
               {activeTab === "jobs" && (
-                <div className="space-y-4">
-                  <h2 className="text-xl font-bold text-gray-900 mb-6">
-                    Lowongan Kerja Aktif
-                  </h2>
-                  {company.jobs.length === 0 ? (
-                    <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                      <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                      <p className="text-gray-500 font-medium">
+                <div>
+                  <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">
+                        Lowongan
+                      </p>
+                      <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">
+                        Lowongan Kerja Aktif
+                      </h2>
+                    </div>
+                    <span className="w-fit rounded-full bg-primary/5 px-4 py-2 text-sm font-semibold text-primary">
+                      {activeJobsCount} posisi tersedia
+                    </span>
+                  </div>
+
+                  {activeJobsCount === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center">
+                      <Briefcase className="mx-auto mb-4 h-12 w-12 text-slate-300" />
+                      <p className="font-semibold text-slate-700">
                         Belum ada lowongan aktif saat ini
                       </p>
                     </div>
                   ) : (
-                    company.jobs.map((job) => (
-                      <Link
-                        key={job.id}
-                        href={`/jobs/${job.slug}`}
-                        className="block p-5 border border-gray-100 rounded-xl hover:border-blue-300 hover:shadow-lg hover:shadow-blue-500/5 transition-all group bg-white"
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <h3 className="font-bold text-gray-900 text-lg mb-2 group-hover:text-blue-600 transition-colors">
-                              {job.title}
-                            </h3>
-                            <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
-                              <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1 rounded-lg">
-                                <MapPin className="w-3.5 h-3.5" />
-                                {job.city}
+                    <div className="space-y-4">
+                      {company.jobs.map((job) => (
+                        <Link
+                          key={job.id}
+                          href={`/jobs/${job.slug}`}
+                          className="group block rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-lg hover:shadow-primary/5"
+                        >
+                          <div className="flex gap-4">
+                            <div className="hidden h-12 w-12 flex-none items-center justify-center rounded-xl bg-primary/10 text-primary sm:flex">
+                              <Briefcase className="h-5 w-5" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-start justify-between gap-4">
+                                <div>
+                                  <h3 className="text-xl font-bold text-slate-950 transition group-hover:text-primary">
+                                    {job.title}
+                                  </h3>
+                                  <div className="mt-3 flex flex-wrap gap-2 text-sm text-slate-500">
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1.5">
+                                      <MapPin className="h-3.5 w-3.5" />
+                                      {job.city || job.location}
+                                    </span>
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1.5">
+                                      <Briefcase className="h-3.5 w-3.5" />
+                                      {getJobTypeLabel(job.jobType)}
+                                    </span>
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1.5">
+                                      <TrendingUp className="h-3.5 w-3.5" />
+                                      {getLevelLabel(job.level)}
+                                    </span>
+                                  </div>
+                                </div>
+                                <ArrowRight className="mt-1 h-5 w-5 flex-none text-slate-300 transition group-hover:translate-x-1 group-hover:text-primary" />
                               </div>
-                              <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1 rounded-lg">
-                                <Briefcase className="w-3.5 h-3.5" />
-                                {getJobTypeLabel(job.jobType)}
-                              </div>
-                              <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1 rounded-lg">
-                                <TrendingUp className="w-3.5 h-3.5" />
-                                {getLevelLabel(job.level)}
+
+                              <div className="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                                <p className="font-bold text-primary">
+                                  {job.showSalary && job.salaryMin && job.salaryMax
+                                    ? formatSalary(
+                                        job.salaryMin,
+                                        job.salaryMax,
+                                        job.salaryType
+                                      )
+                                    : "Gaji kompetitif"}
+                                </p>
+                                <span className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-400">
+                                  <Clock className="h-4 w-4" />
+                                  {getTimeAgo(job.createdAt)}
+                                </span>
                               </div>
                             </div>
                           </div>
-                          <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all">
-                            <ArrowLeft className="w-4 h-4 rotate-180" />
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-4 border-t border-gray-50 mt-4">
-                          {job.showSalary && job.salaryMin && job.salaryMax ? (
-                            <p className="text-blue-600 font-bold text-sm">
-                              {formatSalary(
-                                job.salaryMin,
-                                job.salaryMax,
-                                job.salaryType
-                              )}
-                            </p>
-                          ) : (
-                            <p className="text-blue-600 font-bold text-sm">
-                              Gaji Kompetitif
-                            </p>
-                          )}
-                          <span className="text-xs text-gray-400 font-medium">
-                            Posted {getTimeAgo(job.createdAt)}
-                          </span>
-                        </div>
-                      </Link>
-                    ))
+                        </Link>
+                      ))}
+                    </div>
                   )}
                 </div>
               )}
 
               {activeTab === "benefits" && (
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 mb-6">
+                  <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">
+                    Fasilitas
+                  </p>
+                  <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">
                     Benefits & Fasilitas
                   </h2>
                   {company.benefits?.length > 0 ? (
-                    <div className="grid md:grid-cols-2 gap-4">
-                      {company.benefits.map((benefit, index) => (
+                    <div className="mt-6 grid gap-4 md:grid-cols-2">
+                      {company.benefits.map((benefit) => (
                         <div
-                          key={index}
-                          className="flex items-start gap-3 p-4 bg-green-50/50 border border-green-100 rounded-xl"
+                          key={benefit}
+                          className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4"
                         >
-                          <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <CheckCircle className="w-3.5 h-3.5 text-green-600" />
+                          <div className="mt-0.5 flex h-7 w-7 flex-none items-center justify-center rounded-full bg-white text-emerald-600">
+                            <CheckCircle className="h-4 w-4" />
                           </div>
-                          <span className="text-gray-700 font-medium">
+                          <span className="font-medium leading-7 text-slate-700">
                             {benefit}
                           </span>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                      <Award className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                      <p className="text-gray-500 font-medium">
+                    <div className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center">
+                      <Award className="mx-auto mb-4 h-12 w-12 text-slate-300" />
+                      <p className="font-semibold text-slate-700">
                         Informasi benefits belum tersedia
                       </p>
                     </div>
@@ -474,79 +496,82 @@ export default function CompanyProfilePage() {
 
               {activeTab === "reviews" && (
                 <div>
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-gray-900">
-                      Reviews & Ratings
-                    </h2>
-                    <div className="flex items-center gap-2">
-                      <span className="text-3xl font-bold text-gray-900">
-                        {company.averageRatings?.overall || 0}
-                      </span>
-                      <div className="flex flex-col">
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-4 h-4 ${
-                                i <
-                                Math.floor(company.averageRatings?.overall || 0)
-                                  ? "text-amber-400 fill-amber-400"
-                                  : "text-gray-200"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-xs text-gray-500">
-                          {company._count.reviews} reviews
+                  <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">
+                        Ulasan
+                      </p>
+                      <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">
+                        Reviews & Ratings
+                      </h2>
+                    </div>
+                    <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-3xl font-bold text-slate-950">
+                          {ratingValue.toFixed(1)}
                         </span>
+                        <div>
+                          <div className="flex">
+                            {[...Array(5)].map((_, index) => (
+                              <Star
+                                key={index}
+                                className={`h-4 w-4 ${
+                                  index < Math.floor(ratingValue)
+                                    ? "fill-amber-400 text-amber-400"
+                                    : "text-amber-200"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <p className="mt-1 text-xs font-medium text-amber-700">
+                            {company._count.reviews} ulasan
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {company.reviews.length === 0 ? (
-                    <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                      <Star className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                      <p className="text-gray-500 font-medium">
+                    <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center">
+                      <Star className="mx-auto mb-4 h-12 w-12 text-slate-300" />
+                      <p className="font-semibold text-slate-700">
                         Belum ada review untuk perusahaan ini
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-6">
+                    <div className="space-y-4">
                       {company.reviews.map((review) => (
                         <div
                           key={review.id}
-                          className="p-6 border border-gray-100 rounded-2xl bg-gray-50/50"
+                          className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
                         >
-                          <div className="flex items-start gap-4 mb-4">
-                            <div className="w-10 h-10 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-full flex items-center justify-center text-white font-bold shadow-md">
-                              {review.jobseeker?.firstName?.charAt(0) || "U"}
+                          <div className="mb-4 flex items-start gap-4">
+                            <div className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-primary text-white font-bold">
+                              {review.jobseekers?.firstName?.charAt(0) || "U"}
                             </div>
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-1">
-                                <h4 className="font-bold text-gray-900">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center justify-between gap-3">
+                                <h4 className="font-bold text-slate-950">
                                   {review.isAnonymous
-                                    ? "Anonymous User"
-                                    : review.jobseeker?.firstName}
+                                    ? "Pengguna anonim"
+                                    : review.jobseekers?.firstName || "Pengguna"}
                                 </h4>
-                                <div className="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-gray-200 shadow-sm">
-                                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                                  <span className="font-bold text-sm text-gray-700">
-                                    {review.rating}
-                                  </span>
-                                </div>
+                                <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-sm font-bold text-slate-700">
+                                  <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                                  {review.rating}
+                                </span>
                               </div>
                               {review.position && (
-                                <p className="text-sm text-gray-500">
+                                <p className="mt-1 text-sm text-slate-500">
                                   {review.position}
                                 </p>
                               )}
                             </div>
                           </div>
-
-                          <h5 className="font-bold text-gray-900 mb-2 text-lg">
+                          <h5 className="text-lg font-bold text-slate-950">
                             {review.title}
                           </h5>
-                          <p className="text-gray-600 leading-relaxed">
+                          <p className="mt-2 leading-7 text-slate-600">
                             {review.content}
                           </p>
                         </div>
@@ -555,142 +580,176 @@ export default function CompanyProfilePage() {
                   )}
                 </div>
               )}
-            </div>
+            </section>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6 min-w-0 max-w-full">
-            {/* Company Details Widget */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 w-full overflow-hidden">
-              <h3 className="font-bold text-gray-900 mb-6 flex items-center gap-2 pb-4 border-b border-gray-100">
-                <Building2 className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                Detail Perusahaan
-              </h3>
-
-              <div className="space-y-5 text-sm w-full">
-                <div className="w-full">
-                  <p className="text-gray-500 mb-1 text-xs uppercase tracking-wider font-medium">
-                    Industri
-                  </p>
-                  <p className="font-semibold text-gray-900 text-base break-words">
-                    {company.industry}
-                  </p>
+          <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+            <section className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="mb-6 flex items-center gap-3 border-b border-slate-100 pb-5">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Building2 className="h-5 w-5" />
                 </div>
-
-                <div className="w-full">
-                  <p className="text-gray-500 mb-1 text-xs uppercase tracking-wider font-medium">
-                    Ukuran Perusahaan
-                  </p>
-                  <p className="font-semibold text-gray-900 text-base break-words">
-                    {company.companySize} karyawan
-                  </p>
-                </div>
-
-                {company.foundedYear && (
-                  <div className="w-full">
-                    <p className="text-gray-500 mb-1 text-xs uppercase tracking-wider font-medium">
-                      Tahun Didirikan
-                    </p>
-                    <p className="font-semibold text-gray-900 text-base">
-                      {company.foundedYear}
-                    </p>
-                  </div>
-                )}
-
-                <div className="w-full">
-                  <p className="text-gray-500 mb-1 text-xs uppercase tracking-wider font-medium">
-                    Lokasi Kantor Pusat
-                  </p>
-                  <p className="font-semibold text-gray-900 text-base leading-relaxed whitespace-pre-wrap break-words w-full">
-                    {company.address}
-                    <br />
-                    {company.city}, {company.province}
-                  </p>
-                </div>
-
-                {company.email && (
-                  <div className="w-full">
-                    <p className="text-gray-500 mb-1 text-xs uppercase tracking-wider font-medium">
-                      Email Kontak
-                    </p>
-                    <a
-                      href={`mailto:${company.email}`}
-                      className="font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-2 transition-colors break-all w-full"
-                    >
-                      <Mail className="w-4 h-4 flex-shrink-0" />
-                      <span className="truncate">{company.email}</span>
-                    </a>
-                  </div>
-                )}
-
-                {company.phone && (
-                  <div className="w-full">
-                    <p className="text-gray-500 mb-1 text-xs uppercase tracking-wider font-medium">
-                      Nomor Telepon
-                    </p>
-                    <a
-                      href={`tel:${company.phone}`}
-                      className="font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-2 transition-colors w-full"
-                    >
-                      <Phone className="w-4 h-4 flex-shrink-0" />
-                      <span className="break-all">{company.phone}</span>
-                    </a>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Rating Widget */}
-            {company.averageRatings && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <h3 className="font-bold text-gray-900 mb-6 flex items-center gap-2 pb-4 border-b border-gray-100">
-                  <Star className="w-5 h-5 text-amber-400" />
-                  Rating Breakdown
+                <h3 className="text-xl font-bold text-slate-950">
+                  Detail Perusahaan
                 </h3>
+              </div>
 
-                <div className="space-y-4">
-                  {[
-                    {
-                      label: "Work-Life Balance",
-                      value: company.averageRatings.workLifeBalance,
-                    },
-                    {
-                      label: "Compensation",
-                      value: company.averageRatings.compensation,
-                    },
-                    {
-                      label: "Career Growth",
-                      value: company.averageRatings.careerGrowth,
-                    },
-                    {
-                      label: "Management",
-                      value: company.averageRatings.management,
-                    },
-                    { label: "Culture", value: company.averageRatings.culture },
-                  ].map((item, index) => (
-                    <div key={index}>
-                      <div className="flex items-center justify-between text-sm mb-1.5">
-                        <span className="text-gray-600 font-medium">
-                          {item.label}
-                        </span>
-                        <span className="font-bold text-gray-900">
-                          {item.value}
-                        </span>
+              <div className="space-y-5">
+                {[
+                  {
+                    icon: Building2,
+                    label: "Industri",
+                    value: company.industry,
+                  },
+                  {
+                    icon: Users,
+                    label: "Ukuran Perusahaan",
+                    value: `${company.companySize || "-"} karyawan`,
+                  },
+                  company.foundedYear && {
+                    icon: Calendar,
+                    label: "Tahun Didirikan",
+                    value: company.foundedYear,
+                  },
+                  {
+                    icon: MapPin,
+                    label: "Lokasi Kantor Pusat",
+                    value: [company.address, company.city, company.province]
+                      .filter(Boolean)
+                      .join(", "),
+                  },
+                ]
+                  .filter(Boolean)
+                  .map(({ icon: Icon, label, value }) => (
+                    <div key={label} className="flex gap-3">
+                      <div className="mt-1 flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-slate-50 text-primary">
+                        <Icon className="h-4 w-4" />
                       </div>
-                      <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                        <div
-                          className="bg-gradient-to-r from-amber-300 to-amber-500 h-full rounded-full transition-all duration-500"
-                          style={{ width: `${(item.value / 5) * 100}%` }}
-                        ></div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                          {label}
+                        </p>
+                        <p className="mt-1 break-words font-semibold leading-7 text-slate-900">
+                          {value || "Belum dilengkapi"}
+                        </p>
                       </div>
                     </div>
                   ))}
-                </div>
               </div>
+            </section>
+
+            {(company.email || company.phone || company.website) && (
+              <section className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm">
+                <h3 className="text-xl font-bold text-slate-950">Kontak</h3>
+                <div className="mt-5 space-y-3">
+                  {company.email && (
+                    <a
+                      href={`mailto:${company.email}`}
+                      className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4 font-semibold text-slate-700 transition hover:bg-primary/5 hover:text-primary"
+                    >
+                      <Mail className="h-5 w-5 flex-none text-primary" />
+                      <span className="truncate">{company.email}</span>
+                    </a>
+                  )}
+                  {company.phone && (
+                    <a
+                      href={`tel:${company.phone}`}
+                      className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4 font-semibold text-slate-700 transition hover:bg-primary/5 hover:text-primary"
+                    >
+                      <Phone className="h-5 w-5 flex-none text-primary" />
+                      <span className="break-all">{company.phone}</span>
+                    </a>
+                  )}
+                  {company.website && (
+                    <a
+                      href={company.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4 font-semibold text-slate-700 transition hover:bg-primary/5 hover:text-primary"
+                    >
+                      <Globe className="h-5 w-5 flex-none text-primary" />
+                      <span className="truncate">Website perusahaan</span>
+                    </a>
+                  )}
+                </div>
+              </section>
             )}
-          </div>
+
+            {(company.linkedinUrl ||
+              company.facebookUrl ||
+              company.twitterUrl ||
+              company.instagramUrl) && (
+              <section className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm">
+                <h3 className="text-xl font-bold text-slate-950">Media Sosial</h3>
+                <div className="mt-5 flex flex-wrap gap-3">
+                  {[
+                    [company.linkedinUrl, Linkedin, "LinkedIn"],
+                    [company.facebookUrl, Facebook, "Facebook"],
+                    [company.twitterUrl, Twitter, "Twitter"],
+                    [company.instagramUrl, Instagram, "Instagram"],
+                  ].map(([url, Icon, label]) =>
+                    url ? (
+                      <a
+                        key={label}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={label}
+                        className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
+                      >
+                        <Icon className="h-5 w-5" />
+                      </a>
+                    ) : null
+                  )}
+                </div>
+              </section>
+            )}
+
+            {company.averageRatings && (
+              <section className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="mb-6 flex items-center gap-3 border-b border-slate-100 pb-5">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-500">
+                    <Star className="h-5 w-5 fill-current" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-950">
+                    Rating Breakdown
+                  </h3>
+                </div>
+
+                <div className="space-y-4">
+                  {[
+                    ["Work-Life Balance", company.averageRatings.workLifeBalance],
+                    ["Compensation", company.averageRatings.compensation],
+                    ["Career Growth", company.averageRatings.careerGrowth],
+                    ["Management", company.averageRatings.management],
+                    ["Culture", company.averageRatings.culture],
+                  ].map(([label, value]) => {
+                    const numericValue = Number(value || 0);
+                    return (
+                      <div key={label}>
+                        <div className="mb-2 flex items-center justify-between text-sm">
+                          <span className="font-medium text-slate-600">
+                            {label}
+                          </span>
+                          <span className="font-bold text-slate-950">
+                            {numericValue.toFixed(1)}
+                          </span>
+                        </div>
+                        <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                          <div
+                            className="h-full rounded-full bg-amber-400"
+                            style={{ width: `${(numericValue / 5) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+          </aside>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

@@ -2,20 +2,18 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Menu,
   X,
   User,
   LogOut,
   LayoutDashboard,
-  Briefcase,
-  Building2,
   ChevronDown,
   Settings,
-  Bell,
 } from "lucide-react";
 
 const Header = () => {
@@ -79,7 +77,7 @@ const Header = () => {
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? "bg-white/80 backdrop-blur-md border-b border-slate-200/50 shadow-sm py-3"
+          ? "bg-background/90 backdrop-blur-md border-b border-border/70 shadow-sm py-3"
           : "bg-transparent py-5"
       }`}
     >
@@ -105,11 +103,12 @@ const Header = () => {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
+                className={cn(
+                  "px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300",
                   isActive(link.href)
-                    ? "bg-[#03587f] text-white shadow-md shadow-blue-900/20"
-                    : "text-slate-600 hover:text-[#03587f] hover:bg-blue-50"
-                }`}
+                    ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                    : "text-muted-foreground hover:text-primary hover:bg-primary/10"
+                )}
               >
                 {link.name}
               </Link>
@@ -140,7 +139,7 @@ const Header = () => {
                           : user.role}
                     </span>
                   </div>
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#03587f] to-[#024666] flex items-center justify-center text-white font-bold shadow-sm overflow-hidden">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-primary-hover flex items-center justify-center text-primary-foreground font-bold shadow-sm overflow-hidden">
                     {(user.role === "JOBSEEKER" && user.jobseeker?.photo) ||
                     (user.role === "RECRUITER" &&
                       (user.company?.logo || user.recruiter?.photo)) ? (
@@ -179,10 +178,10 @@ const Header = () => {
                     </div>
 
                     <div className="p-2">
-                      {user.role === "admin" && (
+                      {user.role === "ADMIN" && (
                         <Link
                           href="/admin"
-                          className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
+                          className="flex items-center gap-3 px-3 py-2.5 text-sm text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-colors"
                           onClick={() => setIsProfileOpen(false)}
                         >
                           <LayoutDashboard className="w-4 h-4" />
@@ -193,7 +192,7 @@ const Header = () => {
                       {user.role === "RECRUITER" && (
                         <Link
                           href="/profile/recruiter/dashboard"
-                          className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
+                          className="flex items-center gap-3 px-3 py-2.5 text-sm text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-colors"
                           onClick={() => setIsProfileOpen(false)}
                         >
                           <LayoutDashboard className="w-4 h-4" />
@@ -204,7 +203,7 @@ const Header = () => {
                       {user.role === "JOBSEEKER" && (
                         <Link
                           href="/profile/jobseeker/dashboard"
-                          className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
+                          className="flex items-center gap-3 px-3 py-2.5 text-sm text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-colors"
                           onClick={() => setIsProfileOpen(false)}
                         >
                           <LayoutDashboard className="w-4 h-4" />
@@ -215,7 +214,7 @@ const Header = () => {
                       {user.role !== "RECRUITER" && (
                         <Link
                           href={`/profile/${user.role.toLowerCase()}`}
-                          className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
+                          className="flex items-center gap-3 px-3 py-2.5 text-sm text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-colors"
                           onClick={() => setIsProfileOpen(false)}
                         >
                           <User className="w-4 h-4" />
@@ -225,7 +224,7 @@ const Header = () => {
 
                       <Link
                         href="/settings"
-                        className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
+                        className="flex items-center gap-3 px-3 py-2.5 text-sm text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-colors"
                         onClick={() => setIsProfileOpen(false)}
                       >
                         <Settings className="w-4 h-4" />
@@ -255,25 +254,25 @@ const Header = () => {
                       pathname.startsWith("/companies") ||
                       pathname.startsWith("/news"))
                       ? "text-white hover:text-blue-100"
-                      : "text-slate-600 hover:text-[#03587f]"
+                      : "text-muted-foreground hover:text-primary"
                   }`}
                 >
                   Masuk
                 </Link>
-                <Link
-                  href="/login?action=register"
-                  className="px-5 py-2.5 text-sm font-semibold text-white bg-[#03587f] hover:bg-[#024666] rounded-full shadow-lg shadow-blue-900/20 transition-all hover:scale-105 active:scale-95"
-                >
-                  Daftar
-                </Link>
+                <Button asChild className="rounded-full shadow-lg shadow-primary/20">
+                  <Link href="/login?action=register">Daftar</Link>
+                </Button>
               </div>
             )}
           </div>
 
           {/* Mobile Menu Button - Show on lg and below */}
-          <button
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden p-2.5 text-slate-600 bg-white/90 backdrop-blur-md rounded-xl shadow-sm border border-slate-200/50 hover:bg-white transition-all active:scale-95"
+            className="lg:hidden bg-background/90 backdrop-blur-md"
             aria-label={isMobileMenuOpen ? "Tutup menu" : "Buka menu"}
             aria-expanded={isMobileMenuOpen}
             aria-controls="mobile-menu"
@@ -283,7 +282,7 @@ const Header = () => {
             ) : (
               <Menu className="w-6 h-6" aria-hidden="true" />
             )}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -303,7 +302,7 @@ const Header = () => {
                 href={link.href}
                 className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                   isActive(link.href)
-                    ? "bg-[#03587f]/10 text-[#03587f]"
+                    ? "bg-primary/10 text-primary"
                     : "text-slate-600 hover:bg-slate-50"
                 }`}
               >
@@ -316,7 +315,7 @@ const Header = () => {
             {user ? (
               <>
                 <div className="px-4 py-2 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold overflow-hidden">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden">
                     {(user.role === "JOBSEEKER" && user.jobseeker?.photo) ||
                     (user.role === "RECRUITER" &&
                       (user.company?.logo || user.recruiter?.photo)) ? (
@@ -343,7 +342,7 @@ const Header = () => {
                   </div>
                 </div>
 
-                {user.role === "admin" && (
+                {user.role === "ADMIN" && (
                   <Link
                     href="/admin"
                     className="px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-3"
@@ -396,7 +395,7 @@ const Header = () => {
                 </Link>
                 <Link
                   href="/login?action=register"
-                  className="w-full px-4 py-3 rounded-xl text-sm font-semibold text-center text-white bg-[#03587f] hover:bg-[#024666] shadow-lg shadow-blue-900/20"
+                  className="w-full px-4 py-3 rounded-xl text-sm font-semibold text-center text-primary-foreground bg-primary hover:bg-primary-hover shadow-lg shadow-primary/20"
                 >
                   Daftar Sekarang
                 </Link>

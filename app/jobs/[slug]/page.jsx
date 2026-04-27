@@ -32,6 +32,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryJobDetail } from "@/hooks/jobs/useJobs";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { BRAND_COLOR } from "@/lib/ui/theme";
 
 export default function JobDetailPage() {
   const params = useParams();
@@ -61,7 +62,7 @@ export default function JobDetailPage() {
         icon: "error",
         title: "Job Not Found",
         text: "Lowongan tidak ditemukan",
-        confirmButtonColor: "#03587f",
+        confirmButtonColor: BRAND_COLOR,
       }).then(() => {
         router.push("/jobs");
       });
@@ -77,7 +78,7 @@ export default function JobDetailPage() {
         showCancelButton: true,
         confirmButtonText: "Login",
         cancelButtonText: "Batal",
-        confirmButtonColor: "#03587f",
+        confirmButtonColor: BRAND_COLOR,
       }).then((result) => {
         if (result.isConfirmed) {
           router.push("/login?redirect=/jobs/" + slug);
@@ -122,7 +123,7 @@ export default function JobDetailPage() {
         showCancelButton: true,
         confirmButtonText: "Login",
         cancelButtonText: "Batal",
-        confirmButtonColor: "#03587f",
+        confirmButtonColor: BRAND_COLOR,
       }).then((result) => {
         if (result.isConfirmed) {
           router.push("/login?redirect=/jobs/" + slug);
@@ -136,7 +137,7 @@ export default function JobDetailPage() {
         icon: "error",
         title: "Akses Ditolak",
         text: "Hanya pencaker yang dapat melamar pekerjaan",
-        confirmButtonColor: "#03587f",
+        confirmButtonColor: BRAND_COLOR,
       });
       return;
     }
@@ -579,7 +580,7 @@ export default function JobDetailPage() {
               ) : (
                 <button
                   onClick={handleApply}
-                  className="w-full py-4 bg-[#03587f] hover:bg-[#024666] text-white font-bold rounded-xl transition-all shadow-lg shadow-[#03587f]/20 hover:shadow-[#03587f]/30 hover:-translate-y-0.5 flex items-center justify-center gap-2 mb-4"
+                  className="w-full py-4 bg-primary hover:bg-primary-hover text-primary-foreground font-bold rounded-xl transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5 flex items-center justify-center gap-2 mb-4"
                 >
                   Lamar Sekarang
                   <ArrowLeft className="w-5 h-5 rotate-180" />

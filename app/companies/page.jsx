@@ -1,22 +1,32 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  Search,
-  MapPin,
-  Briefcase,
-  Users,
-  CheckCircle,
-  Heart,
-  HeartOff,
-  Filter,
-  Building2,
-  Star,
   ArrowRight,
-  Globe,
-  Calendar,
+  Briefcase,
+  Building2,
+  CheckCircle,
+  Filter,
+  Heart,
+  MapPin,
+  Search,
+  SlidersHorizontal,
+  Star,
+  Users,
+  X,
 } from "lucide-react";
 import { useQueryCompanies } from "@/hooks/companies/useCompanies";
+
+const companySizes = [
+  "all",
+  "1-10",
+  "11-50",
+  "51-200",
+  "201-500",
+  "501-1000",
+  "1000+",
+];
 
 const CompaniesPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -25,25 +35,14 @@ const CompaniesPage = () => {
   const [selectedIndustry, setSelectedIndustry] = useState("all");
   const [selectedSize, setSelectedSize] = useState("all");
 
-  const companySizes = [
-    "all",
-    "1-10",
-    "11-50",
-    "51-200",
-    "201-500",
-    "501-1000",
-    "1000+",
-  ];
-
-  // Debounce search query
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
-    }, 500);
+      setDebouncedSearch(searchQuery.trim());
+    }, 400);
+
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Use React Query hook
   const { data: companiesData, isPending: loading } = useQueryCompanies({
     search: debouncedSearch,
     industry: selectedIndustry,
@@ -65,6 +64,20 @@ const CompaniesPage = () => {
     );
   }, [followedCompanies]);
 
+  const totalActiveJobs = useMemo(
+    () => companies.reduce((sum, company) => sum + (company.activeJobs || 0), 0),
+    [companies]
+  );
+
+  const hasFilters =
+    searchQuery.trim() || selectedIndustry !== "all" || selectedSize !== "all";
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setSelectedIndustry("all");
+    setSelectedSize("all");
+  };
+
   const toggleFollow = (companyId) => {
     setFollowedCompanies((prev) =>
       prev.includes(companyId)
@@ -73,309 +86,338 @@ const CompaniesPage = () => {
     );
   };
 
-  const totalActiveJobs = useMemo(
-    () => companies.reduce((sum, c) => sum + (c.activeJobs || 0), 0),
-    [companies]
-  );
-  const hasFilters = selectedIndustry !== "all" || selectedSize !== "all";
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <div className="relative bg-[#03587f] overflow-hidden px-4 lg:px-8 py-16 lg:py-24">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#03587f] to-indigo-900 opacity-90" />
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')] bg-cover bg-center mix-blend-overlay opacity-20" />
+    <div className="min-h-screen bg-slate-50">
+      <section className="relative overflow-hidden bg-slate-950 pt-32 text-white lg:pt-36">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(14,116,144,0.45),transparent_34%),linear-gradient(135deg,#012b3d_0%,#03587f_48%,#023952_100%)]" />
+        <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-slate-50 to-transparent" />
+        <div className="absolute right-10 top-24 hidden h-72 w-72 rounded-full bg-cyan-300/10 blur-3xl lg:block" />
 
-        <div className="relative max-w-5xl mx-auto text-center z-10">
-          <h1 className="text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight">
-            Jelajahi Perusahaan Terbaik
-          </h1>
-          <p className="text-blue-100 text-lg lg:text-xl mb-10 max-w-2xl mx-auto">
-            Temukan perusahaan impianmu dan bergabunglah dengan tim luar biasa
-            yang sedang membangun masa depan.
-          </p>
-
-          {/* Search Box */}
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-2 lg:p-3 shadow-2xl border border-white/20 max-w-2xl mx-auto">
-            <div className="relative bg-white rounded-xl overflow-hidden flex items-center">
-              <Search className="absolute left-4 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Cari nama perusahaan atau industri..."
-                className="w-full pl-12 pr-4 py-4 bg-transparent border-0 focus:ring-0 text-gray-900 placeholder-gray-400 text-base"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+        <div className="container relative z-10 mx-auto grid gap-10 px-4 pb-24 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
+          <div className="max-w-3xl">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-blue-100 backdrop-blur">
+              <CheckCircle className="h-4 w-4" />
+              Direktori perusahaan terverifikasi
             </div>
-          </div>
+            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+              Temukan perusahaan yang tepat sebelum melamar.
+            </h1>
+            <p className="mt-5 max-w-2xl text-base leading-8 text-blue-100 sm:text-lg">
+              Lihat profil perusahaan, lokasi, jumlah karyawan, dan lowongan
+              aktif dalam satu halaman yang lebih mudah dipindai.
+            </p>
 
-          {/* Quick Stats */}
-          <div className="flex justify-center gap-8 lg:gap-16 mt-12">
-            <div className="text-center">
-              <div className="text-3xl lg:text-4xl font-bold text-white mb-1">
-                {companies.length}
-              </div>
-              <div className="text-sm text-blue-200 font-medium uppercase tracking-wider">
-                Perusahaan
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl lg:text-4xl font-bold text-emerald-400 mb-1">
-                {totalActiveJobs}
-              </div>
-              <div className="text-sm text-blue-200 font-medium uppercase tracking-wider">
-                Lowongan Aktif
+            <div className="mt-8 max-w-2xl rounded-2xl border border-white/15 bg-white/10 p-2 shadow-2xl shadow-slate-950/20 backdrop-blur-md">
+              <div className="relative flex items-center rounded-xl bg-white">
+                <Search className="absolute left-4 h-5 w-5 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Cari perusahaan, industri, atau kata kunci..."
+                  className="h-14 w-full rounded-xl border-0 bg-transparent pl-12 pr-12 text-base text-slate-900 placeholder:text-slate-400 focus:ring-0"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                    aria-label="Hapus pencarian"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12 -mt-8 relative z-20">
-        {/* Filter Bar */}
-        <div className="bg-white rounded-2xl shadow-lg shadow-gray-200/50 border border-gray-100 p-4 mb-8">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2 text-gray-700 font-bold px-2">
-              <Filter className="w-5 h-5 text-blue-600" />
-              <span>Filter:</span>
-            </div>
-
-            <select
-              value={selectedIndustry}
-              onChange={(e) => setSelectedIndustry(e.target.value)}
-              className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer hover:bg-white"
-            >
-              <option value="all">Semua Industri</option>
-              {industries
-                .filter((i) => i !== "all")
-                .map((ind) => (
-                  <option key={ind} value={ind}>
-                    {ind}
-                  </option>
-                ))}
-            </select>
-
-            <select
-              value={selectedSize}
-              onChange={(e) => setSelectedSize(e.target.value)}
-              className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer hover:bg-white"
-            >
-              <option value="all">Semua Ukuran</option>
-              {companySizes
-                .filter((s) => s !== "all")
-                .map((size) => (
-                  <option key={size} value={size}>
-                    {size} karyawan
-                  </option>
-                ))}
-            </select>
-
-            {hasFilters && (
-              <button
-                onClick={() => {
-                  setSelectedIndustry("all");
-                  setSelectedSize("all");
-                }}
-                className="ml-auto text-sm text-red-600 hover:text-red-700 font-medium px-4 py-2 rounded-lg hover:bg-red-50 transition-colors"
-              >
-                Reset Filter
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Results Count */}
-        <div className="mb-6 flex items-center justify-between">
-          <p className="text-gray-500">
-            Menampilkan{" "}
-            <span className="font-bold text-gray-900">{companies.length}</span>{" "}
-            perusahaan
-          </p>
-        </div>
-
-        {/* Loading Skeleton */}
-        {loading ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div className="grid content-end gap-4 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+            {[
+              {
+                label: "Perusahaan",
+                value: companies.length,
+                helper: "terverifikasi",
+                icon: Building2,
+              },
+              {
+                label: "Lowongan",
+                value: totalActiveJobs,
+                helper: "aktif saat ini",
+                icon: Briefcase,
+              },
+              {
+                label: "Industri",
+                value: Math.max(industries.length - 1, 0),
+                helper: "kategori",
+                icon: SlidersHorizontal,
+              },
+            ].map(({ label, value, helper, icon: Icon }) => (
               <div
-                key={i}
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-pulse"
+                key={label}
+                className="rounded-2xl border border-white/12 bg-white/10 p-5 shadow-lg shadow-slate-950/10 backdrop-blur-md"
               >
-                <div className="h-28 bg-gray-200"></div>
-                <div className="p-6 pt-0 relative">
-                  <div className="w-20 h-20 bg-gray-300 rounded-2xl -mt-10 mb-4 border-4 border-white"></div>
-                  <div className="h-5 bg-gray-200 rounded w-2/3 mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-6"></div>
-                  <div className="space-y-3 mb-6">
-                    <div className="h-3 bg-gray-200 rounded w-full"></div>
-                    <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 text-blue-100">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div className="text-3xl font-bold tracking-tight">{value}</div>
+                <div className="mt-1 text-sm font-medium text-blue-100">
+                  {label} {helper}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <main className="container mx-auto -mt-12 px-4 pb-16 sm:px-6 lg:px-8">
+        <div className="relative z-20 rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-[0_24px_80px_rgba(15,23,42,0.08)] md:p-5">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex items-center gap-3 text-slate-800">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Filter className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="font-semibold">Filter perusahaan</p>
+                <p className="text-sm text-slate-500">
+                  Saring berdasarkan industri dan ukuran tim.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row xl:items-center">
+              <select
+                value={selectedIndustry}
+                onChange={(event) => setSelectedIndustry(event.target.value)}
+                className="h-12 min-w-[190px] rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-700 transition hover:bg-white focus:border-primary focus:ring-2 focus:ring-primary/15"
+              >
+                <option value="all">Semua Industri</option>
+                {industries
+                  .filter((industry) => industry !== "all")
+                  .map((industry) => (
+                    <option key={industry} value={industry}>
+                      {industry}
+                    </option>
+                  ))}
+              </select>
+
+              <select
+                value={selectedSize}
+                onChange={(event) => setSelectedSize(event.target.value)}
+                className="h-12 min-w-[180px] rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-700 transition hover:bg-white focus:border-primary focus:ring-2 focus:ring-primary/15"
+              >
+                <option value="all">Semua Ukuran</option>
+                {companySizes
+                  .filter((size) => size !== "all")
+                  .map((size) => (
+                    <option key={size} value={size}>
+                      {size} karyawan
+                    </option>
+                  ))}
+              </select>
+
+              {hasFilters && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                >
+                  <X className="h-4 w-4" />
+                  Reset
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-6 mt-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">
+              Hasil Pencarian
+            </p>
+            <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 md:text-3xl">
+              {loading ? "Memuat perusahaan..." : `${companies.length} perusahaan ditemukan`}
+            </h2>
+          </div>
+          {hasFilters && (
+            <div className="flex flex-wrap gap-2 text-sm">
+              {searchQuery.trim() && (
+                <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-600">
+                  {searchQuery.trim()}
+                </span>
+              )}
+              {selectedIndustry !== "all" && (
+                <span className="rounded-full border border-primary/15 bg-primary/5 px-3 py-1.5 text-primary">
+                  {selectedIndustry}
+                </span>
+              )}
+              {selectedSize !== "all" && (
+                <span className="rounded-full border border-primary/15 bg-primary/5 px-3 py-1.5 text-primary">
+                  {selectedSize} karyawan
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {loading ? (
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map((item) => (
+              <div
+                key={item}
+                className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm"
+              >
+                <div className="animate-pulse">
+                  <div className="mb-6 h-24 rounded-2xl bg-slate-100" />
+                  <div className="mb-5 h-6 w-2/3 rounded bg-slate-100" />
+                  <div className="mb-8 h-4 w-full rounded bg-slate-100" />
+                  <div className="space-y-3">
+                    <div className="h-10 rounded-xl bg-slate-100" />
+                    <div className="h-10 rounded-xl bg-slate-100" />
+                    <div className="h-12 rounded-xl bg-slate-100" />
                   </div>
-                  <div className="h-12 bg-gray-200 rounded-xl"></div>
                 </div>
               </div>
             ))}
           </div>
         ) : companies.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-16 text-center">
-            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Building2 className="w-10 h-10 text-gray-300" />
+          <div className="rounded-[1.75rem] border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm md:p-16">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-slate-50 text-slate-300">
+              <Building2 className="h-10 w-10" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
-              Tidak ada perusahaan ditemukan
+            <h3 className="text-2xl font-bold text-slate-950">
+              Perusahaan tidak ditemukan
             </h3>
-            <p className="text-gray-500 mb-8">
-              Coba ubah filter pencarian Anda untuk menemukan hasil yang lebih
-              baik
+            <p className="mx-auto mt-3 max-w-md leading-7 text-slate-500">
+              Coba gunakan kata kunci lain atau kosongkan filter agar daftar
+              perusahaan tampil kembali.
             </p>
             <button
-              onClick={() => {
-                setSearchQuery("");
-                setSelectedIndustry("all");
-                setSelectedSize("all");
-              }}
-              className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-600/20"
+              type="button"
+              onClick={clearFilters}
+              className="mt-8 inline-flex items-center justify-center rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white transition hover:bg-primary-hover"
             >
               Reset Filter
             </button>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {companies.map((company) => (
-              <div
-                key={company.id}
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-blue-500/5 hover:border-blue-200 transition-all duration-300 group flex flex-col h-full"
-              >
-                {/* Card Header */}
-                <div className="h-28 bg-gradient-to-r from-gray-800 to-gray-700 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
-                  {/* Verified Badge */}
-                  {company.verified && (
-                    <div className="absolute top-3 right-3 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full flex items-center gap-1.5 text-white text-xs font-medium border border-white/20 shadow-sm">
-                      <CheckCircle className="w-3.5 h-3.5" />
-                      <span>Verified</span>
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {companies.map((company) => {
+              const isFollowed = followedCompanies.includes(company.id);
+
+              return (
+                <article
+                  key={company.id}
+                  className="group relative overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-primary/25 hover:shadow-xl hover:shadow-primary/10"
+                >
+                  <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-br from-primary/12 via-blue-50 to-slate-50" />
+                  <div className="relative p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex h-24 w-24 items-center justify-center rounded-2xl border border-slate-100 bg-white p-3 shadow-lg shadow-slate-200/70">
+                        {company.logo ? (
+                          <img
+                            src={company.logo}
+                            alt={company.name}
+                            className="h-full w-full object-contain"
+                          />
+                        ) : (
+                          <Building2 className="h-10 w-10 text-slate-300" />
+                        )}
+                      </div>
+
+                      <div className="flex flex-col items-end gap-2">
+                        {company.verified && (
+                          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/15 bg-white/90 px-3 py-1 text-xs font-semibold text-primary shadow-sm">
+                            <CheckCircle className="h-3.5 w-3.5" />
+                            Verified
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => toggleFollow(company.id)}
+                          className={`flex h-10 w-10 items-center justify-center rounded-full border bg-white shadow-sm transition ${
+                            isFollowed
+                              ? "border-red-100 text-red-500"
+                              : "border-slate-200 text-slate-400 hover:border-red-100 hover:text-red-500"
+                          }`}
+                          aria-label={
+                            isFollowed
+                              ? "Berhenti ikuti perusahaan"
+                              : "Ikuti perusahaan"
+                          }
+                        >
+                          <Heart
+                            className={`h-5 w-5 ${isFollowed ? "fill-current" : ""}`}
+                          />
+                        </button>
+                      </div>
                     </div>
-                  )}
-                </div>
 
-                {/* Card Body */}
-                <div className="p-6 pt-0 flex-1 flex flex-col relative">
-                  {/* Logo */}
-                  <div className="w-20 h-20 bg-white rounded-2xl shadow-lg border-4 border-white flex items-center justify-center overflow-hidden -mt-10 mb-4 relative z-10 group-hover:scale-105 transition-transform duration-300">
-                    {company.logo ? (
-                      <img
-                        src={company.logo}
-                        alt={company.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <Building2 className="w-10 h-10 text-gray-300" />
-                    )}
-                  </div>
-
-                  <div className="mb-1">
-                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors truncate">
-                      {company.name}
-                    </h3>
-                    {company.tagline && (
-                      <p className="text-sm text-gray-500 truncate mt-1">
-                        {company.tagline}
+                    <div className="mt-6">
+                      <h3 className="line-clamp-2 text-2xl font-bold tracking-tight text-slate-950 transition group-hover:text-primary">
+                        {company.name}
+                      </h3>
+                      <p className="mt-3 line-clamp-2 min-h-[3rem] text-sm leading-6 text-slate-500">
+                        {company.tagline ||
+                          "Perusahaan terverifikasi yang membuka peluang karir untuk talenta lokal."}
                       </p>
-                    )}
-                  </div>
+                    </div>
 
-                  {/* Industry Badge */}
-                  {company.industry &&
-                    company.industry !== "Belum dilengkapi" && (
-                      <div className="mb-4 mt-2">
-                        <span className="inline-block px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-lg border border-blue-100">
+                    {company.industry && company.industry !== "Belum dilengkapi" && (
+                      <div className="mt-5">
+                        <span className="inline-flex rounded-full border border-primary/15 bg-primary/5 px-3 py-1.5 text-sm font-semibold text-primary">
                           {company.industry}
                         </span>
                       </div>
                     )}
 
-                  {/* Info */}
-                  <div className="space-y-3 mb-6 flex-1">
-                    <div className="flex items-center gap-3 text-sm text-gray-600">
-                      <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0 text-gray-400">
-                        <MapPin className="w-4 h-4" />
-                      </div>
-                      <span className="truncate font-medium">
-                        {company.location}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 text-sm text-gray-600">
-                      <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0 text-gray-400">
-                        <Users className="w-4 h-4" />
-                      </div>
-                      <span className="font-medium">
-                        {company.companySize} karyawan
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 text-sm text-gray-600">
-                      <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0 text-blue-500">
-                        <Briefcase className="w-4 h-4" />
-                      </div>
-                      <span className="text-blue-600 font-bold">
-                        {company.activeJobs} lowongan aktif
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Rating */}
-                  {company.rating > 0 && (
-                    <div className="flex items-center gap-2 mb-6 bg-amber-50 p-2 rounded-lg w-fit">
-                      <div className="flex">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-3.5 h-3.5 ${
-                              i < Math.floor(company.rating)
-                                ? "text-amber-400 fill-amber-400"
-                                : "text-gray-300"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-xs font-bold text-amber-700">
-                        {company.rating}{" "}
-                        <span className="font-normal text-amber-600">
-                          ({company.reviews})
+                    <div className="mt-6 grid gap-3 text-sm text-slate-600">
+                      <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3">
+                        <MapPin className="h-5 w-5 flex-none text-slate-400" />
+                        <span className="truncate font-medium">
+                          {company.location || "Lokasi belum tersedia"}
                         </span>
-                      </span>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3">
+                          <Users className="h-5 w-5 flex-none text-slate-400" />
+                          <span className="truncate font-medium">
+                            {company.companySize} karyawan
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 rounded-2xl bg-primary/5 p-3 text-primary">
+                          <Briefcase className="h-5 w-5 flex-none" />
+                          <span className="truncate font-bold">
+                            {company.activeJobs} lowongan
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  )}
 
-                  {/* Actions */}
-                  <div className="flex gap-3 mt-auto">
-                    <Link
-                      href={`/companies/${company.slug}`}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 hover:bg-blue-600 text-white text-sm font-bold rounded-xl transition-all duration-300 shadow-lg shadow-gray-900/10 hover:shadow-blue-600/20"
-                    >
-                      Lihat Profil
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
-                    <button
-                      onClick={() => toggleFollow(company.id)}
-                      className={`p-3 rounded-xl transition-all duration-300 border ${
-                        followedCompanies.includes(company.id)
-                          ? "bg-pink-50 text-pink-500 border-pink-200 hover:bg-pink-100"
-                          : "bg-white text-gray-400 border-gray-200 hover:border-pink-200 hover:text-pink-500"
-                      }`}
-                    >
-                      {followedCompanies.includes(company.id) ? (
-                        <Heart className="w-5 h-5 fill-current" />
+                    <div className="mt-6 flex items-center justify-between gap-3 border-t border-slate-100 pt-5">
+                      {company.rating > 0 ? (
+                        <div className="flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-700">
+                          <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                          {company.rating} ({company.reviews})
+                        </div>
                       ) : (
-                        <Heart className="w-5 h-5" />
+                        <span className="text-sm text-slate-400">Belum ada ulasan</span>
                       )}
-                    </button>
+
+                      <Link
+                        href={`/companies/${company.slug}`}
+                        className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary"
+                      >
+                        Lihat Profil
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                </article>
+              );
+            })}
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 };

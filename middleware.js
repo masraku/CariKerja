@@ -3,14 +3,65 @@ import { Redis } from '@upstash/redis'
 
 const redis = Redis.fromEnv()
 
+const JWT_SECRET = process.env.JWT_SECRET
+
+function base64UrlToBytes(value) {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/')
+  const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), '=')
+  const binary = atob(padded)
+  return Uint8Array.from(binary, char => char.charCodeAt(0))
+}
+
+function decodeBase64UrlJson(value) {
+  const bytes = base64UrlToBytes(value)
+  const json = new TextDecoder().decode(bytes)
+  return JSON.parse(json)
+}
+
+async function verifyJwt(token) {
+  if (!JWT_SECRET || !token) return null
+
+  try {
+    const [encodedHeader, encodedPayload, encodedSignature] = token.split('.')
+    if (!encodedHeader || !encodedPayload || !encodedSignature) return null
+
+    const header = decodeBase64UrlJson(encodedHeader)
+    if (header.alg !== 'HS256') return null
+
+    const key = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(JWT_SECRET),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['verify']
+    )
+
+    const isValid = await crypto.subtle.verify(
+      'HMAC',
+      key,
+      base64UrlToBytes(encodedSignature),
+      new TextEncoder().encode(`${encodedHeader}.${encodedPayload}`)
+    )
+
+    if (!isValid) return null
+
+    const payload = decodeBase64UrlJson(encodedPayload)
+    if (payload.exp && payload.exp < Date.now() / 1000) return null
+
+    return payload
+  } catch (error) {
+    return null
+  }
+}
+
 export async function middleware(request) {
   const token = request.cookies.get('token')?.value
   const pathname = request.nextUrl.pathname
+  const decodedToken = token ? await verifyJwt(token) : null
 
   // Public routes yang tidak perlu authentication
   const publicRoutes = [
     '/',
-    '/login',
     '/login',
     '/forgot-password',
     '/jobs',
@@ -39,14 +90,7 @@ export async function middleware(request) {
         } else {
             // Check if user is admin based on token
             let isAdmin = false
-            if (token) {
-                try {
-                    const base64Url = token.split('.')[1]
-                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-                    const decoded = JSON.parse(atob(base64))
-                    if (decoded.role === 'ADMIN') isAdmin = true
-                } catch (e) {}
-            }
+            if (decodedToken?.role === 'ADMIN') isAdmin = true
 
             // If not admin, redirect to maintenance
             if (!isAdmin) {
@@ -82,16 +126,8 @@ export async function middleware(request) {
     return NextResponse.redirect(loginUrl)
   }
 
-  // Simple token validation (just check if exists for now)
-  // Detailed validation happens in API routes
   try {
-    // Decode JWT manually (since we can't use jsonwebtoken in edge runtime)
-    const base64Url = token.split('.')[1]
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-    const decoded = JSON.parse(atob(base64))
-    
-    // Check if token is expired
-    if (decoded.exp && decoded.exp < Date.now() / 1000) {
+    if (!decodedToken) {
       const loginUrl = new URL('/login', request.url)
       loginUrl.searchParams.set('redirect', pathname)
       const response = NextResponse.redirect(loginUrl)
@@ -99,10 +135,10 @@ export async function middleware(request) {
       return response
     }
 
-    const userRole = decoded.role
+    const userRole = decodedToken.role
 
     // Role-based access control
-    if (pathname.startsWith('/dashboard/admin') && userRole !== 'ADMIN') {
+    if ((pathname.startsWith('/admin') || pathname.startsWith('/dashboard/admin')) && userRole !== 'ADMIN') {
       return NextResponse.redirect(new URL('/unauthorized', request.url))
     }
 

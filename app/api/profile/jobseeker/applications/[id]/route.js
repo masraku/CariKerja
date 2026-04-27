@@ -20,8 +20,8 @@ export async function GET(request, context) {
     const { jobseeker } = auth
 
     // Fetch application with full details
-    let application = await prisma.applications.findUnique({
-      where: { 
+    let application = await prisma.applications.findFirst({
+      where: {
         id,
         jobseekerId: jobseeker.id // Ensure user owns this application
       },
@@ -105,8 +105,8 @@ export async function GET(request, context) {
           ])
           
           // Refresh application data
-          application = await prisma.applications.findUnique({
-            where: { id },
+          application = await prisma.applications.findFirst({
+            where: { id, jobseekerId: jobseeker.id },
             include: {
               jobs: {
                 include: {

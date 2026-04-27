@@ -8,6 +8,7 @@ import TanStackProvider from '@/providers/TanStackProvider'
 const poppins = Poppins({
   subsets: ['latin'],
   weight: ['300', '400', '500', '600', '700', '800'],
+  variable: '--font-poppins',
   display: 'swap',
 })
 
@@ -94,7 +95,7 @@ export default function RootLayout({ children }) {
         <meta name="geo.region" content="ID-JB" />
         <meta name="geo.placename" content="Cirebon" />
       </head>
-      <body className={`${poppins.className} bg-slate-50 text-slate-900 antialiased selection:bg-blue-100 selection:text-blue-900`}>
+      <body className={`${poppins.variable} ${poppins.className} bg-slate-50 text-slate-900 antialiased selection:bg-primary/10 selection:text-primary`}>
         {/* Skip Link for Keyboard Navigation - WCAG AA */}
         <a href="#main-content" className="skip-link">
           Lewati ke Konten Utama
@@ -102,9 +103,7 @@ export default function RootLayout({ children }) {
         <TanStackProvider>
           <AuthProvider>
             <MainLayout>
-              <main id="main-content" tabIndex="-1">
-                {children}
-              </main>
+              {children}
             </MainLayout>
           </AuthProvider>
         </TanStackProvider>

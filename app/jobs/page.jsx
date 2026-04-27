@@ -160,7 +160,7 @@ const JobsPage = () => {
 
   const getJobTypeBadgeClass = (type) => {
     const classes = {
-      FULL_TIME: "bg-blue-50 text-blue-700 border-blue-100",
+      FULL_TIME: "bg-primary/10 text-primary border-primary/20",
       PART_TIME: "bg-purple-50 text-purple-700 border-purple-100",
     };
     return classes[type] || "bg-slate-50 text-slate-700 border-slate-100";
@@ -174,8 +174,8 @@ const JobsPage = () => {
       onClick={() => selectJob(job)}
       className={`bg-white rounded-2xl p-5 cursor-pointer transition-all duration-300 border ${
         isSelected
-          ? "border-blue-500 shadow-lg shadow-blue-500/10 ring-1 ring-blue-500"
-          : "border-slate-100 hover:border-blue-200 hover:shadow-md"
+          ? "border-primary shadow-lg shadow-primary/10 ring-1 ring-primary"
+          : "border-slate-100 hover:border-primary/20 hover:shadow-md"
       }`}
     >
       <div className="flex gap-4">
@@ -206,7 +206,7 @@ const JobsPage = () => {
           <div className="flex items-center gap-1.5 text-slate-600 text-sm mb-2">
             <span className="truncate font-medium">{job.company}</span>
             {job.companyVerified && (
-              <CheckCircle className="w-4 h-4 text-blue-500 flex-shrink-0" />
+              <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />
             )}
           </div>
           <div className="flex items-center gap-3 text-xs text-slate-500">
@@ -230,7 +230,7 @@ const JobsPage = () => {
           onClick={(e) => toggleSaveJob(job.id, e)}
           className={`p-2 rounded-xl transition-all flex-shrink-0 h-fit ${
             savedJobs.includes(job.id)
-              ? "text-blue-600 bg-blue-50"
+              ? "text-primary bg-primary/10"
               : "text-slate-300 hover:text-slate-500 hover:bg-slate-50"
           }`}
         >
@@ -277,7 +277,7 @@ const JobsPage = () => {
             <div className="flex items-center gap-2">
               <span className="text-slate-600 font-medium">{job.company}</span>
               {job.companyVerified && (
-                <CheckCircle className="w-5 h-5 text-blue-500" />
+                <CheckCircle className="w-5 h-5 text-primary" />
               )}
             </div>
           </div>
@@ -285,7 +285,7 @@ const JobsPage = () => {
             onClick={(e) => toggleSaveJob(job.id, e)}
             className={`p-3 rounded-xl transition-all hidden lg:flex ${
               savedJobs.includes(job.id)
-                ? "bg-blue-50 text-blue-600"
+                ? "bg-primary/10 text-primary"
                 : "bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
             }`}
           >
@@ -317,7 +317,7 @@ const JobsPage = () => {
             </span>
           )}
           {job.salary && (
-            <span className="px-4 py-2 text-sm bg-blue-50 text-blue-700 rounded-xl flex items-center gap-2 font-medium border border-blue-100">
+            <span className="px-4 py-2 text-sm bg-primary/10 text-primary rounded-xl flex items-center gap-2 font-medium border border-primary/20">
               <Banknote className="w-4 h-4" />
               {job.salary}
             </span>
@@ -377,7 +377,7 @@ const JobsPage = () => {
           ) : (
             <Link
               href={`/jobs/${job.slug}/apply`}
-              className="flex-1 flex items-center justify-center gap-2 px-8 py-4 bg-[#03587f] hover:bg-[#024666] text-white font-bold rounded-xl transition-all shadow-lg shadow-[#03587f]/20 hover:shadow-[#03587f]/30 hover:-translate-y-0.5"
+              className="flex-1 flex items-center justify-center gap-2 px-8 py-4 bg-primary hover:bg-primary-hover text-primary-foreground font-bold rounded-xl transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5"
             >
               Lamar Sekarang
               <ArrowRight className="w-5 h-5" />
@@ -387,7 +387,7 @@ const JobsPage = () => {
             onClick={(e) => toggleSaveJob(job.id, e)}
             className={`lg:hidden px-6 py-4 rounded-xl transition-all border ${
               savedJobs.includes(job.id)
-                ? "bg-blue-50 text-blue-600 border-blue-100"
+                ? "bg-primary/10 text-primary border-primary/20"
                 : "bg-white text-slate-600 border-slate-200"
             }`}
           >
@@ -464,7 +464,7 @@ const JobsPage = () => {
           <div className="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col md:flex-row gap-6">
             {job.workingDays && (
               <div className="flex items-start gap-3 flex-1">
-                <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
                   <CalendarDays className="w-5 h-5" />
                 </div>
                 <div>
@@ -582,21 +582,21 @@ const JobsPage = () => {
                     placeholder="Cari posisi atau perusahaan..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none bg-white shadow-sm"
+                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-white shadow-sm"
                   />
                 </div>
                 <button
                   onClick={() => setShowFilters(!showFilters)}
                   className={`px-4 py-3 rounded-xl border transition-all flex items-center gap-2 ${
                     showFilters || activeFiltersCount > 0
-                      ? "bg-blue-50 border-blue-200 text-blue-600"
+                      ? "bg-primary/10 border-primary/20 text-primary"
                       : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
                   }`}
                 >
                   <Filter className="w-5 h-5" />
                   <span className="hidden sm:inline">Filter</span>
                   {activeFiltersCount > 0 && (
-                    <span className="bg-blue-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                    <span className="bg-primary text-primary-foreground text-xs w-5 h-5 rounded-full flex items-center justify-center">
                       {activeFiltersCount}
                     </span>
                   )}
@@ -618,7 +618,7 @@ const JobsPage = () => {
                             onClick={() => handleFilterChange("jobType", type)}
                             className={`px-3 py-1.5 text-sm rounded-lg border transition-all ${
                               filters.jobType.includes(type)
-                                ? "bg-blue-50 border-blue-200 text-blue-600"
+                                ? "bg-primary/10 border-primary/20 text-primary"
                                 : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
                             }`}
                           >
@@ -640,7 +640,7 @@ const JobsPage = () => {
                             }
                             className={`px-3 py-1.5 text-sm rounded-lg border transition-all ${
                               filters.experience.includes(level)
-                                ? "bg-blue-50 border-blue-200 text-blue-600"
+                                ? "bg-primary/10 border-primary/20 text-primary"
                                 : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
                             }`}
                           >
@@ -700,7 +700,7 @@ const JobsPage = () => {
                   </p>
                   <button
                     onClick={clearFilters}
-                    className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                    className="mt-4 px-6 py-2 bg-primary text-primary-foreground rounded-xl hover:bg-primary-hover transition-colors"
                   >
                     Reset Filter
                   </button>
@@ -744,7 +744,7 @@ const JobsPage = () => {
 const JobsPageLoading = () => (
   <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">
     <div className="text-center">
-      <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+      <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
       <p className="text-gray-600">Memuat lowongan...</p>
     </div>
   </div>

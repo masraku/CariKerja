@@ -4,13 +4,17 @@ import {
   Twitter,
   Linkedin,
   Instagram,
-  Send,
-  Heart,
-  Briefcase,
 } from "lucide-react";
+import { IconBadge } from "@/components/ui/icon-badge";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const socialLinks = [
+    { icon: Facebook, label: "Facebook" },
+    { icon: Twitter, label: "Twitter" },
+    { icon: Linkedin, label: "LinkedIn" },
+    { icon: Instagram, label: "Instagram" },
+  ];
 
   return (
     <footer className="bg-white border-t border-slate-100 pt-16 pb-8">
@@ -33,30 +37,11 @@ const Footer = () => {
               passion Anda.
             </p>
             <div className="flex gap-4">
-              <a
-                href="#"
-                className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-all duration-300"
-              >
-                <Facebook className="w-5 h-5" />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-all duration-300"
-              >
-                <Twitter className="w-5 h-5" />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-all duration-300"
-              >
-                <Linkedin className="w-5 h-5" />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-all duration-300"
-              >
-                <Instagram className="w-5 h-5" />
-              </a>
+              {socialLinks.map(({ icon: Icon, label }) => (
+                <a key={label} href="#" aria-label={label}>
+                  <IconBadge icon={Icon} variant="muted" className="rounded-full hover:border-primary/20 hover:bg-primary/10 hover:text-primary" />
+                </a>
+              ))}
             </div>
           </div>
 
@@ -79,7 +64,7 @@ const Footer = () => {
               href="https://maps.app.goo.gl/ybHtX9x4Py8AhPa86"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline"
+              className="text-sm text-primary hover:text-primary-hover font-medium hover:underline"
             >
               📍 Buka di Google Maps
             </a>
@@ -98,7 +83,7 @@ const Footer = () => {
                 <p className="font-semibold text-slate-800 mb-1">Telepon:</p>
                 <a
                   href="tel:+62231321881"
-                  className="hover:text-blue-600 transition-colors"
+                  className="hover:text-primary transition-colors"
                 >
                   (0231) 321881
                 </a>
@@ -121,13 +106,13 @@ const Footer = () => {
           <div className="flex gap-6 text-sm text-slate-500">
             <Link
               href="/privacy"
-              className="hover:text-blue-600 transition-colors"
+              className="hover:text-primary transition-colors"
             >
               Kebijakan Privasi
             </Link>
             <Link
               href="/warning"
-              className="hover:text-blue-600 transition-colors"
+              className="hover:text-primary transition-colors"
             >
               Syarat & Ketentuan
             </Link>

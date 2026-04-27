@@ -1,22 +1,17 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { verifyToken } from '@/lib/auth'
+import { getCurrentUser } from '@/lib/authHelper'
 
 // GET /api/applications/batch?ids=id1,id2,id3
 // Fetch multiple applications by their IDs
 export async function GET(request) {
     try {
-        const authHeader = request.headers.get('authorization')
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const auth = await getCurrentUser(request)
+        if (auth.error) {
+            return NextResponse.json({ error: auth.error }, { status: auth.status })
         }
 
-        const token = authHeader.split(' ')[1]
-        const decoded = verifyToken(token)
-
-        if (!decoded) {
-            return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
-        }
+        const { user } = auth
 
         const { searchParams } = new URL(request.url)
         const idsParam = searchParams.get('ids')
@@ -25,37 +20,52 @@ export async function GET(request) {
             return NextResponse.json({ error: 'Missing ids parameter' }, { status: 400 })
         }
 
-        const ids = idsParam.split(',').filter(id => id.trim())
+        const ids = idsParam.split(',').map(id => id.trim()).filter(Boolean)
 
         if (ids.length === 0) {
             return NextResponse.json({ error: 'No valid IDs provided' }, { status: 400 })
         }
 
-        // Fetch the user to check role
-        const user = await prisma.users.findUnique({
-            where: { id: decoded.userId },
-            include: {
-                recruiters: true
-            }
-        })
-
-        if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        if (ids.length > 50) {
+            return NextResponse.json({ error: 'Too many IDs requested' }, { status: 400 })
         }
 
-        // Build the query - recruiters can only see applications for their jobs
         let whereClause = {
             id: { in: ids }
         }
 
-        // If recruiter, filter by their jobs
-        if (user.role === 'RECRUITER' && user.recruiters) {
+        if (user.role === 'RECRUITER') {
+            const recruiter = await prisma.recruiters.findUnique({
+                where: { userId: user.id },
+                select: { companyId: true }
+            })
+
+            if (!recruiter) {
+                return NextResponse.json({ error: 'Recruiter profile not found' }, { status: 404 })
+            }
+
             whereClause = {
                 ...whereClause,
                 jobs: {
-                    companyId: user.recruiters.companyId
+                    companyId: recruiter.companyId
                 }
             }
+        } else if (user.role === 'JOBSEEKER') {
+            const jobseeker = await prisma.jobseekers.findUnique({
+                where: { userId: user.id },
+                select: { id: true }
+            })
+
+            if (!jobseeker) {
+                return NextResponse.json({ error: 'Jobseeker profile not found' }, { status: 404 })
+            }
+
+            whereClause = {
+                ...whereClause,
+                jobseekerId: jobseeker.id
+            }
+        } else if (user.role !== 'ADMIN') {
+            return NextResponse.json({ error: 'Access denied' }, { status: 403 })
         }
 
         const applications = await prisma.applications.findMany({
@@ -76,6 +86,11 @@ export async function GET(request) {
                         work_experiences: {
                             orderBy: { endDate: 'desc' },
                             take: 1
+                        },
+                        jobseeker_skills: {
+                            include: {
+                                skills: true
+                            }
                         }
                     }
                 },
@@ -103,7 +118,7 @@ export async function GET(request) {
             status: app.status,
             appliedAt: app.appliedAt,
             coverLetter: app.coverLetter,
-            resume: app.resume,
+            resumeUrl: app.resumeUrl,
             jobseeker: {
                 id: app.jobseekers.id,
                 firstName: app.jobseekers.firstName,
@@ -112,9 +127,9 @@ export async function GET(request) {
                 phone: app.jobseekers.phone,
                 photo: app.jobseekers.photo,
                 currentTitle: app.jobseekers.currentTitle,
-                skills: app.jobseekers.skills || [],
+                skills: app.jobseekers.jobseeker_skills?.map(item => item.skills?.name).filter(Boolean) || [],
                 education: app.jobseekers.educations?.[0] || null,
-                experience: app.jobseekers.experiences?.[0] || null
+                experience: app.jobseekers.work_experiences?.[0] || null
             },
             job: {
                 id: app.jobs.id,

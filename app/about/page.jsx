@@ -1,341 +1,254 @@
-'use client'
-import { useState } from 'react'
-import Link from 'next/link'
-import { 
-    Shield, Target, Eye, Users, Briefcase, Award, CheckCircle, Heart, 
-    Globe, Zap, Building2, UserCheck, FileCheck, Star, ArrowRight, 
-    Mail, Phone, MapPin 
-} from 'lucide-react'
+import Link from "next/link";
+import {
+  ArrowRight,
+  Briefcase,
+  Building2,
+  CheckCircle,
+  FileCheck,
+  MapPin,
+  Phone,
+  Shield,
+  Users,
+} from "lucide-react";
 
-const AboutPage = () => {
-    const [activeYear, setActiveYear] = useState(2024)
+const serviceHighlights = [
+  {
+    icon: Shield,
+    title: "Lowongan lebih tertib",
+    description:
+      "Informasi lowongan disusun agar pencari kerja mudah memahami posisi, lokasi, dan kebutuhan perusahaan.",
+  },
+  {
+    icon: Building2,
+    title: "Perusahaan terdata",
+    description:
+      "Profil perusahaan dikelola supaya proses rekrutmen berjalan lebih jelas dan dapat ditelusuri.",
+  },
+  {
+    icon: FileCheck,
+    title: "Administrasi lebih ringkas",
+    description:
+      "Pencari kerja dapat menyiapkan profil, dokumen, dan riwayat lamaran dari satu tempat.",
+  },
+  {
+    icon: Users,
+    title: "Akses untuk warga Cirebon",
+    description:
+      "Platform ini membantu mempertemukan kebutuhan tenaga kerja lokal dengan peluang yang tersedia.",
+  },
+];
 
-    const stats = [
-        { icon: Users, value: '100K+', label: 'Pencari Kerja', color: 'bg-blue-500' },
-        { icon: Building2, value: '5K+', label: 'Perusahaan', color: 'bg-emerald-500' },
-        { icon: Briefcase, value: '50K+', label: 'Lowongan', color: 'bg-purple-500' },
-        { icon: UserCheck, value: '75K+', label: 'Diterima Kerja', color: 'bg-amber-500' }
-    ]
+const workFlows = [
+  "Pencari kerja melengkapi profil dan dokumen pendukung.",
+  "Perusahaan mempublikasikan lowongan dengan informasi yang jelas.",
+  "Lamaran diproses secara lebih transparan melalui platform.",
+];
 
-    const features = [
-        { icon: Shield, title: 'Platform Resmi Pemerintah', desc: 'Dikelola langsung oleh Disnaker dan Kominfo', color: 'bg-blue-500', bgColor: 'bg-blue-50' },
-        { icon: FileCheck, title: 'Verifikasi Perusahaan', desc: 'Semua perusahaan diverifikasi legalitasnya', color: 'bg-emerald-500', bgColor: 'bg-emerald-50' },
-        { icon: Globe, title: 'Akses Gratis', desc: '100% gratis untuk pencari kerja', color: 'bg-purple-500', bgColor: 'bg-purple-50' },
-        { icon: Zap, title: 'Proses Cepat', desc: 'Sistem matching otomatis yang akurat', color: 'bg-amber-500', bgColor: 'bg-amber-50' },
-        { icon: Award, title: 'Standar Profesional', desc: 'Menjunjung tinggi profesionalitas', color: 'bg-pink-500', bgColor: 'bg-pink-50' },
-        { icon: Heart, title: 'Dukungan 24/7', desc: 'Tim support siap membantu kapan saja', color: 'bg-indigo-500', bgColor: 'bg-indigo-50' }
-    ]
+const commitments = [
+  "Menjaga informasi lowongan tetap relevan dan mudah dipahami.",
+  "Mendorong perusahaan memberi proses seleksi yang jelas.",
+  "Melindungi data pengguna sesuai kebutuhan layanan ketenagakerjaan.",
+  "Menyediakan akses yang sederhana untuk pencari kerja dan pemberi kerja.",
+];
 
-    const timeline = [
-        { year: 2021, title: 'Inisiasi Program', achievements: ['Studi kelayakan platform', 'Pembentukan tim', 'Riset kebutuhan pasar'] },
-        { year: 2022, title: 'Pengembangan', achievements: ['Development sistem', 'Testing 100 perusahaan pilot', 'Peluncuran beta'] },
-        { year: 2023, title: 'Peluncuran Resmi', achievements: ['10K+ pengguna dalam 3 bulan', '500+ perusahaan terverifikasi', 'Ekspansi 20 kota'] },
-        { year: 2024, title: 'Ekspansi & Inovasi', achievements: ['100K+ pengguna aktif', 'AI-powered matching', 'Partnership 50+ universitas'] }
-    ]
-
-    const testimonials = [
-        { name: 'Rina Kusuma', role: 'Frontend Developer', company: 'Tech Startup', text: 'Platform ini sangat membantu saya menemukan pekerjaan impian.' },
-        { name: 'Ahmad Fauzi', role: 'HR Manager', company: 'Manufacturing', text: 'Sistem matching yang akurat membantu kami menemukan kandidat berkualitas.' },
-        { name: 'Siti Nurhaliza', role: 'Fresh Graduate', company: 'Marketing Agency', text: 'Sebagai fresh graduate, platform ini sangat membantu. Recommended!' }
-    ]
-
-    return (
-        <div className="min-h-screen bg-slate-50">
-            {/* Hero */}
-            <div className="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 px-4 lg:px-8 py-16 lg:py-24 relative overflow-hidden">
-                {/* Background Pattern */}
-                <div className="absolute inset-0 opacity-30">
-                    <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl"></div>
-                    <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
-                </div>
-
-                <div className="max-w-5xl mx-auto text-center relative z-10">
-                    {/* Badge */}
-                    <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-sm px-5 py-3 rounded-full mb-8 border border-white/20">
-                        <span className="text-2xl">🇮🇩</span>
-                        <div className="text-left">
-                            <div className="text-xs text-white/80">Platform Resmi Pemerintah</div>
-                            <div className="text-white font-semibold">Disnaker & Kominfo RI</div>
-                        </div>
-                    </div>
-
-                    <h1 className="text-3xl lg:text-5xl font-bold text-white mb-4 leading-tight">
-                        Membangun Masa Depan
-                        <br />
-                        <span className="text-slate-300">Ketenagakerjaan Indonesia</span>
-                    </h1>
-                    <p className="text-slate-300 max-w-2xl mx-auto mb-12 text-lg">
-                        Platform digital terpercaya yang menghubungkan talenta terbaik Indonesia dengan perusahaan berkualitas
-                    </p>
-
-                    {/* Stats */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
-                        {stats.map((stat, i) => {
-                            const Icon = stat.icon
-                            return (
-                                <div key={i} className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 text-center">
-                                    <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center mx-auto mb-3`}>
-                                        <Icon className="w-6 h-6 text-white" />
-                                    </div>
-                                    <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
-                                    <div className="text-sm text-slate-400">{stat.label}</div>
-                                </div>
-                            )
-                        })}
-                    </div>
-                </div>
+export default function AboutPage() {
+  return (
+    <div className="min-h-screen bg-slate-50 pt-20">
+      <section className="border-b border-slate-200 bg-white">
+        <div className="container mx-auto grid gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.08fr_0.92fr] lg:px-8 lg:py-20">
+          <div className="flex flex-col justify-center">
+            <div className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-4 py-2 text-sm font-semibold text-primary">
+              <Shield className="h-4 w-4" />
+              Platform Disnaker Kabupaten Cirebon
             </div>
 
-            {/* Vision & Mission */}
-            <div className="px-4 lg:px-8 py-16 lg:py-20 bg-white">
-                <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6">
-                    <div className="bg-slate-50 rounded-2xl p-8 border-t-4 border-blue-500">
-                        <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-5">
-                            <Eye className="w-7 h-7 text-blue-600" />
-                        </div>
-                        <h2 className="text-xl font-bold text-slate-800 mb-3">Visi Kami</h2>
-                        <p className="text-slate-600 leading-relaxed">
-                            Menjadi platform ketenagakerjaan digital nomor satu di Indonesia yang terpercaya, transparan, dan inklusif.
-                        </p>
-                    </div>
-                    <div className="bg-slate-50 rounded-2xl p-8 border-t-4 border-emerald-500">
-                        <div className="w-14 h-14 bg-emerald-100 rounded-xl flex items-center justify-center mb-5">
-                            <Target className="w-7 h-7 text-emerald-600" />
-                        </div>
-                        <h2 className="text-xl font-bold text-slate-800 mb-3">Misi Kami</h2>
-                        <ul className="text-slate-600 leading-relaxed space-y-2">
-                            <li className="flex items-start gap-2">
-                                <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                                Menyediakan akses kerja yang mudah dan merata
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                                Memastikan keamanan dan transparansi
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                                Meningkatkan kualitas SDM Indonesia
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+            <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+              Menghubungkan pencari kerja dan perusahaan dengan cara yang lebih
+              tertib.
+            </h1>
+            <p className="mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
+              SIMPel adalah layanan digital ketenagakerjaan untuk membantu warga
+              Kabupaten Cirebon menemukan informasi lowongan, menyiapkan profil,
+              dan mengikuti proses rekrutmen secara lebih mudah.
+            </p>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/jobs"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover"
+              >
+                Lihat Lowongan
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/companies"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-primary/25 hover:bg-primary/5 hover:text-primary"
+              >
+                Lihat Perusahaan
+              </Link>
             </div>
+          </div>
 
-            {/* Features */}
-            <div className="px-4 lg:px-8 py-16 lg:py-20 bg-slate-50">
-                <div className="max-w-5xl mx-auto">
-                    <div className="text-center mb-12">
-                        <span className="text-blue-600 font-semibold text-sm">KEUNGGULAN PLATFORM</span>
-                        <h2 className="text-2xl lg:text-3xl font-bold text-slate-800 mt-2 mb-3">Mengapa Memilih Kami?</h2>
-                        <p className="text-slate-500 max-w-xl mx-auto">
-                            Platform dengan standar pemerintah untuk keamanan dan kredibilitas maksimal
-                        </p>
-                    </div>
+          <div className="rounded-[2rem] border border-slate-200 bg-slate-50 p-5 shadow-sm lg:p-6">
+            <div className="rounded-[1.5rem] bg-white p-6 shadow-sm">
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">
+                Fokus Layanan
+              </p>
+              <h2 className="mt-4 text-2xl font-bold text-slate-950">
+                Portal kerja yang dekat dengan kebutuhan daerah.
+              </h2>
+              <p className="mt-4 leading-7 text-slate-600">
+                Layanan ini dirancang untuk memudahkan informasi ketenagakerjaan
+                tersampaikan dengan rapi, tanpa membuat pencari kerja harus
+                mencari dari banyak sumber yang tidak jelas.
+              </p>
 
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-                        {features.map((f, i) => {
-                            const Icon = f.icon
-                            return (
-                                <div key={i} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-lg transition text-center">
-                                    <div className={`w-16 h-16 ${f.bgColor} rounded-2xl flex items-center justify-center mx-auto mb-4`}>
-                                        <Icon className={`w-8 h-8 ${f.color.replace('bg-', 'text-')}`} />
-                                    </div>
-                                    <h3 className="text-lg font-semibold text-slate-800 mb-2">{f.title}</h3>
-                                    <p className="text-slate-500 text-sm">{f.desc}</p>
-                                </div>
-                            )
-                        })}
+              <div className="mt-6 space-y-4">
+                {[
+                  [Briefcase, "Informasi lowongan"],
+                  [FileCheck, "Profil dan dokumen"],
+                  [Building2, "Data perusahaan"],
+                ].map(([Icon, label]) => (
+                  <div
+                    key={label}
+                    className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4"
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <Icon className="h-5 w-5" />
                     </div>
-                </div>
+                    <span className="font-semibold text-slate-800">{label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-
-            {/* Timeline */}
-            <div className="px-4 lg:px-8 py-16 lg:py-20 bg-white">
-                <div className="max-w-4xl mx-auto">
-                    <div className="text-center mb-12">
-                        <span className="text-purple-600 font-semibold text-sm">PERJALANAN KAMI</span>
-                        <h2 className="text-2xl lg:text-3xl font-bold text-slate-800 mt-2 mb-3">Milestone & Pencapaian</h2>
-                        <p className="text-slate-500 max-w-xl mx-auto">
-                            Dari ide hingga menjadi platform ketenagakerjaan terbesar di Indonesia
-                        </p>
-                    </div>
-
-                    {/* Year Buttons */}
-                    <div className="flex flex-wrap justify-center gap-3 mb-10">
-                        {timeline.map(item => (
-                            <button
-                                key={item.year}
-                                onClick={() => setActiveYear(item.year)}
-                                className={`px-6 py-3 rounded-xl font-semibold transition ${
-                                    activeYear === item.year
-                                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
-                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                }`}
-                            >
-                                {item.year}
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Active Year Content */}
-                    {timeline.filter(t => t.year === activeYear).map(item => (
-                        <div key={item.year} className="bg-slate-50 rounded-2xl p-6 lg:p-8">
-                            <div className="flex items-center gap-4 mb-6">
-                                <div className="w-16 h-16 bg-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
-                                    {item.year}
-                                </div>
-                                <h3 className="text-2xl font-bold text-slate-800">{item.title}</h3>
-                            </div>
-                            <div className="space-y-3">
-                                {item.achievements.map((a, i) => (
-                                    <div key={i} className="flex items-center gap-3 p-4 bg-white rounded-xl">
-                                        <CheckCircle className="w-5 h-5 text-purple-600 flex-shrink-0" />
-                                        <span className="text-slate-700">{a}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* Testimonials */}
-            <div className="px-4 lg:px-8 py-16 lg:py-20 bg-slate-50">
-                <div className="max-w-5xl mx-auto">
-                    <div className="text-center mb-12">
-                        <span className="text-emerald-600 font-semibold text-sm">TESTIMONI</span>
-                        <h2 className="text-2xl lg:text-3xl font-bold text-slate-800 mt-2 mb-3">Apa Kata Mereka?</h2>
-                        <p className="text-slate-500 max-w-xl mx-auto">
-                            Kisah sukses dari pengguna platform kami
-                        </p>
-                    </div>
-
-                    <div className="grid md:grid-cols-3 gap-5">
-                        {testimonials.map((t, i) => (
-                            <div key={i} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                                <div className="flex gap-1 mb-4">
-                                    {[...Array(5)].map((_, j) => (
-                                        <Star key={j} className="w-5 h-5 text-amber-400 fill-amber-400" />
-                                    ))}
-                                </div>
-                                <p className="text-slate-600 leading-relaxed mb-5 italic">"{t.text}"</p>
-                                <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
-                                    <div className="w-11 h-11 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-full flex items-center justify-center text-white font-semibold">
-                                        {t.name.charAt(0)}
-                                    </div>
-                                    <div>
-                                        <div className="font-semibold text-slate-800">{t.name}</div>
-                                        <div className="text-sm text-slate-500">{t.role} • {t.company}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
-            {/* CTA */}
-            <div className="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 px-4 lg:px-8 py-16 lg:py-20 text-center">
-                <div className="max-w-3xl mx-auto">
-                    <h2 className="text-2xl lg:text-3xl font-bold text-white mb-4">
-                        Siap Memulai Perjalanan Karir?
-                    </h2>
-                    <p className="text-slate-300 mb-8 max-w-lg mx-auto">
-                        Bergabunglah dengan ribuan profesional yang telah menemukan pekerjaan impian mereka
-                    </p>
-                    <div className="flex flex-wrap justify-center gap-4">
-                        <Link
-                            href="/login?action=register&role=jobseeker"
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-slate-800 font-semibold rounded-xl hover:bg-slate-100 transition shadow-lg"
-                        >
-                            <Users className="w-5 h-5" />
-                            Daftar Sebagai Jobseeker
-                            <ArrowRight className="w-5 h-5" />
-                        </Link>
-                        <Link
-                            href="/login?action=register&role=recruiter"
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white font-semibold rounded-xl hover:bg-white/20 transition border border-white/20"
-                        >
-                            <Building2 className="w-5 h-5" />
-                            Daftar Sebagai Rekruter
-                            <ArrowRight className="w-5 h-5" />
-                        </Link>
-                    </div>
-                </div>
-            </div>
-
-            {/* Contact */}
-            <div className="px-4 lg:px-8 py-16 lg:py-20">
-                <div className="max-w-5xl mx-auto">
-                    <div className="grid md:grid-cols-2 rounded-2xl overflow-hidden shadow-xl">
-                        {/* Contact Info */}
-                        <div className="bg-gradient-to-br from-slate-700 to-slate-800 p-8 lg:p-10 text-white">
-                            <h3 className="text-2xl font-bold mb-3">Hubungi Kami</h3>
-                            <p className="text-slate-300 mb-8">Punya pertanyaan? Tim kami siap membantu.</p>
-
-                            <div className="space-y-6">
-                                <div className="flex items-start gap-4">
-                                    <div className="w-11 h-11 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0">
-                                        <Mail className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <div className="font-semibold mb-1">Email</div>
-                                        <div className="text-slate-300 text-sm">support@jobseeker.id</div>
-                                    </div>
-                                </div>
-                                <div className="flex items-start gap-4">
-                                    <div className="w-11 h-11 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0">
-                                        <Phone className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <div className="font-semibold mb-1">Telepon</div>
-                                        <div className="text-slate-300 text-sm">+62 21 1234 5678</div>
-                                    </div>
-                                </div>
-                                <div className="flex items-start gap-4">
-                                    <div className="w-11 h-11 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0">
-                                        <MapPin className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <div className="font-semibold mb-1">Alamat</div>
-                                        <div className="text-slate-300 text-sm">Jakarta Pusat, Indonesia</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Contact Form */}
-                        <div className="bg-white p-8 lg:p-10">
-                            <h3 className="text-xl font-bold text-slate-800 mb-6">Kirim Pesan</h3>
-                            <form className="space-y-4">
-                                <input
-                                    type="text"
-                                    placeholder="Nama Anda"
-                                    className="w-full px-4 py-3 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-400"
-                                />
-                                <input
-                                    type="email"
-                                    placeholder="Email Anda"
-                                    className="w-full px-4 py-3 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-400"
-                                />
-                                <textarea
-                                    rows="4"
-                                    placeholder="Pesan Anda..."
-                                    className="w-full px-4 py-3 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-400 resize-none"
-                                ></textarea>
-                                <button
-                                    type="submit"
-                                    className="w-full px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition"
-                                >
-                                    Kirim Pesan
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
-    )
-}
+      </section>
 
-export default AboutPage
+      <section className="px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+        <div className="container mx-auto">
+          <div className="max-w-2xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">
+              Yang Kami Kerjakan
+            </p>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950">
+              Layanan dibuat sederhana, jelas, dan tidak berlebihan.
+            </h2>
+          </div>
+
+          <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+            {serviceHighlights.map(({ icon: Icon, title, description }) => (
+              <div
+                key={title}
+                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-primary/20 hover:shadow-md"
+              >
+                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Icon className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-950">{title}</h3>
+                <p className="mt-3 text-sm leading-6 text-slate-600">
+                  {description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-slate-200 bg-white px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+        <div className="container mx-auto grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">
+              Alur Layanan
+            </p>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950">
+              Dari profil sampai proses lamaran, semuanya dibuat lebih rapi.
+            </h2>
+            <p className="mt-4 leading-7 text-slate-600">
+              Kami menata proses utama agar pencari kerja dan perusahaan memiliki
+              ekspektasi yang sama sejak awal.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {workFlows.map((item, index) => (
+              <div
+                key={item}
+                className="flex gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-5"
+              >
+                <div className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
+                  {index + 1}
+                </div>
+                <p className="pt-1 leading-7 text-slate-700">{item}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+        <div className="container mx-auto grid gap-8 lg:grid-cols-[1fr_1fr]">
+          <div className="rounded-[2rem] bg-primary p-8 text-white shadow-sm lg:p-10">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-blue-100">
+              Komitmen
+            </p>
+            <h2 className="mt-4 text-3xl font-bold tracking-tight">
+              Membangun ekosistem kerja yang lebih aman dan transparan.
+            </h2>
+            <p className="mt-5 leading-8 text-blue-100">
+              Platform ini bukan sekadar daftar lowongan. Kami ingin proses
+              rekrutmen lebih mudah dipantau, lebih jelas, dan lebih bertanggung
+              jawab bagi semua pihak.
+            </p>
+          </div>
+
+          <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm lg:p-10">
+            <div className="space-y-4">
+              {commitments.map((item) => (
+                <div key={item} className="flex gap-3">
+                  <CheckCircle className="mt-1 h-5 w-5 flex-none text-primary" />
+                  <p className="leading-7 text-slate-700">{item}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="px-4 pb-16 sm:px-6 lg:px-8 lg:pb-20">
+        <div className="container mx-auto rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
+          <div className="grid gap-6 md:grid-cols-[1.1fr_0.9fr] md:items-center">
+            <div>
+              <h2 className="text-2xl font-bold text-slate-950">
+                Butuh informasi langsung?
+              </h2>
+              <p className="mt-3 leading-7 text-slate-600">
+                Hubungi Dinas Ketenagakerjaan Kabupaten Cirebon untuk pertanyaan
+                terkait layanan ketenagakerjaan dan informasi platform.
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <a
+                href="tel:+62231321881"
+                className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700 transition hover:border-primary/25 hover:text-primary"
+              >
+                <Phone className="h-5 w-5 text-primary" />
+                (0231) 321881
+              </a>
+              <a
+                href="https://maps.app.goo.gl/ybHtX9x4Py8AhPa86"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700 transition hover:border-primary/25 hover:text-primary"
+              >
+                <MapPin className="h-5 w-5 text-primary" />
+                Lokasi Kantor
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}

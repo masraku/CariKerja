@@ -20,13 +20,13 @@ export default function MainLayout({ children }) {
   const showFooter = showLayout && !isRecruiterRoute
 
   if (!showLayout) {
-    return <>{children}</>
+    return <main id="main-content" tabIndex="-1">{children}</main>
   }
 
   return (
     <>
       <Header />
-      <main className="min-h-screen">
+      <main id="main-content" tabIndex="-1" className="min-h-screen">
         {children}
       </main>
       {showFooter && <Footer />}

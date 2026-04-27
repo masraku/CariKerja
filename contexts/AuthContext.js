@@ -1,5 +1,5 @@
 'use client'
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 
 const AuthContext = createContext()
@@ -10,51 +10,14 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
-  // Load user on mount
-  useEffect(() => {
-    loadUser()
-  }, [])
-
-  // Check token expiry every minute
-  useEffect(() => {
-    const checkTokenExpiry = () => {
-      const userData = localStorage.getItem('user')
-      if (userData) {
-        try {
-          const user = JSON.parse(userData)
-          if (user.tokenExpiresAt && Date.now() >= user.tokenExpiresAt) {
-            logout()
-          }
-        } catch (e) {
-          console.error('Error parsing user data:', e)
-        }
-      }
-    }
-
-    // Check immediately
-    checkTokenExpiry()
-
-    // Check every minute
-    const interval = setInterval(checkTokenExpiry, 60 * 1000)
-
-    return () => clearInterval(interval)
-  }, [])
-
   // Load user from token
-  const loadUser = async () => {
+  const loadUser = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       
-      if (!token) {
-        setLoading(false)
-        return
-      }
-
       // Fetch user profile
       const response = await fetch('/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       })
 
       if (response.ok) {
@@ -79,7 +42,52 @@ export function AuthProvider({ children }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  // Logout function
+  const logout = useCallback(async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+    } catch (e) {
+      console.error('Logout API failed', e)
+    }
+
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    setUser(null)
+    setIsAuthenticated(false)
+    router.push('/login')
+  }, [router])
+
+  // Load user on mount
+  useEffect(() => {
+    loadUser()
+  }, [loadUser])
+
+  // Check token expiry every minute
+  useEffect(() => {
+    const checkTokenExpiry = () => {
+      const userData = localStorage.getItem('user')
+      if (userData) {
+        try {
+          const user = JSON.parse(userData)
+          if (user.tokenExpiresAt && Date.now() >= user.tokenExpiresAt) {
+            logout()
+          }
+        } catch (e) {
+          console.error('Error parsing user data:', e)
+        }
+      }
+    }
+
+    // Check immediately
+    checkTokenExpiry()
+
+    // Check every minute
+    const interval = setInterval(checkTokenExpiry, 60 * 1000)
+
+    return () => clearInterval(interval)
+  }, [logout])
 
   // Login function
   const login = async (token, userData) => {
@@ -90,21 +98,6 @@ export function AuthProvider({ children }) {
     
     // Refresh to get complete user data
     await loadUser()
-  }
-
-  // Logout function
-  const logout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' })
-    } catch (e) {
-      console.error('Logout API failed', e)
-    }
-    
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    setUser(null)
-    setIsAuthenticated(false)
-    router.push('/login')
   }
 
   // Refresh user data

@@ -1,19 +1,14 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createErrorResponse } from '@/lib/errorHandler'
+import { authorizeCronRequest } from '@/lib/cron'
 
 // Combined daily tasks cron job
 // Runs at 1 AM daily
 export async function GET(request) {
   try {
-    // Verify cron secret (optional, for security)
-    const authHeader = request.headers.get('authorization')
-    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      // Allow in development or if no secret is set
-      if (process.env.NODE_ENV === 'production' && process.env.CRON_SECRET) {
-        return NextResponse.json({ error: 'Tidak memiliki akses' }, { status: 401 })
-      }
-    }
+    const unauthorized = authorizeCronRequest(request)
+    if (unauthorized) return unauthorized
 
     const results = {
       completedInterviews: 0,
@@ -21,11 +16,13 @@ export async function GET(request) {
       expiredJobs: 0
     }
 
-    // Task 1: Complete past interviews
+    // Task 1: Complete interviews 24 hours after schedule
     const now = new Date()
+    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+
     const completedInterviews = await prisma.interviews.updateMany({
       where: {
-        scheduledAt: { lt: now },
+        scheduledAt: { lte: twentyFourHoursAgo },
         status: { in: ['SCHEDULED', 'CONFIRMED'] }
       },
       data: {
@@ -35,19 +32,29 @@ export async function GET(request) {
     })
     results.completedInterviews = completedInterviews.count
 
-    // Also update related applications
-    const pastInterviews = await prisma.interviews.findMany({
+    // Also update related applications through interview participants
+    const overdueParticipants = await prisma.interview_participants.findMany({
       where: {
-        scheduledAt: { lt: now },
-        status: 'COMPLETED'
+        status: { in: ['PENDING', 'ACCEPTED', 'INTERVIEW_SCHEDULED'] },
+        interviews: {
+          scheduledAt: { lte: twentyFourHoursAgo }
+        },
+        applications: {
+          status: 'INTERVIEW_SCHEDULED'
+        }
       },
-      select: { applicationId: true }
+      select: { id: true, applicationId: true }
     })
 
-    if (pastInterviews.length > 0) {
+    if (overdueParticipants.length > 0) {
+      await prisma.interview_participants.updateMany({
+        where: { id: { in: overdueParticipants.map(participant => participant.id) } },
+        data: { status: 'INTERVIEW_COMPLETED', updatedAt: now }
+      })
+
       await prisma.applications.updateMany({
         where: {
-          id: { in: pastInterviews.map(i => i.applicationId) },
+          id: { in: overdueParticipants.map(participant => participant.applicationId) },
           status: 'INTERVIEW_SCHEDULED'
         },
         data: {
@@ -83,10 +90,12 @@ export async function GET(request) {
     const expiredJobs = await prisma.jobs.updateMany({
       where: {
         status: 'ACTIVE',
-        deadline: { lt: now }
+        applicationDeadline: { lt: now, not: null }
       },
       data: {
-        status: 'EXPIRED',
+        status: 'CLOSED',
+        isActive: false,
+        closedAt: now,
         updatedAt: now
       }
     })

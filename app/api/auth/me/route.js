@@ -4,17 +4,19 @@ import { verifyToken } from '@/lib/auth'
 
 export async function GET(request) {
   try {
-    // Get token from Authorization header
+    // Get token from Authorization header or httpOnly cookie
     const authHeader = request.headers.get('authorization')
+    const cookieToken = request.cookies.get('token')?.value
+    const token = authHeader?.startsWith('Bearer ')
+      ? authHeader.substring(7)
+      : cookieToken
     
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!token) {
       return NextResponse.json(
         { error: 'No token provided' },
         { status: 401 }
       )
     }
-
-    const token = authHeader.substring(7)
     
     // Verify token
     const decoded = verifyToken(token)

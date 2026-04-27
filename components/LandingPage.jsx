@@ -81,10 +81,10 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden">
+    <div className="min-h-screen bg-gray-50 selection:bg-primary/10 selection:text-primary overflow-x-hidden">
       {/* Hero Section */}
-      <section className="relative pt-24 pb-16 lg:pt-36 lg:pb-24 overflow-hidden bg-blue-600">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#03587f] to-[#81acbf] opacity-90" />
+      <section className="relative pt-24 pb-16 lg:pt-36 lg:pb-24 overflow-hidden bg-primary">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary to-primary-hover opacity-90" />
         <video
           autoPlay
           muted
@@ -201,7 +201,7 @@ export default function LandingPage() {
             </div>
             <Link
               href="/jobs"
-              className="group inline-flex items-center gap-2 px-5 py-2.5 bg-white text-gray-700 hover:text-blue-600 font-medium rounded-xl border border-gray-200 hover:border-blue-200 transition-all shadow-sm hover:shadow-md"
+              className="group inline-flex items-center gap-2 px-5 py-2.5 bg-white text-gray-700 hover:text-primary font-medium rounded-xl border border-gray-200 hover:border-primary/20 transition-all shadow-sm hover:shadow-md"
             >
               Lihat Semua
               <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
@@ -224,7 +224,7 @@ export default function LandingPage() {
                 <Link
                   key={job.id}
                   href={`/jobs/${job.slug}`}
-                  className="group bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-blue-500/5 hover:border-blue-100 transition-all duration-300 flex flex-col h-full overflow-hidden"
+                  className="group bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300 flex flex-col h-full overflow-hidden"
                 >
                   <div className="flex items-start justify-between mb-6">
                     <div className="w-14 h-14 rounded-xl bg-white border border-gray-100 flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform shadow-sm">
@@ -238,12 +238,12 @@ export default function LandingPage() {
                         <Building2 className="w-7 h-7 text-gray-300" />
                       )}
                     </div>
-                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-100">
+                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-lg border border-primary/20">
                       {formatJobType(job.jobType)}
                     </span>
                   </div>
 
-                  <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors mb-2 line-clamp-1">
+                  <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors mb-2 line-clamp-1">
                     {job.title}
                   </h3>
 
@@ -252,7 +252,7 @@ export default function LandingPage() {
                       {job.companies?.name}
                     </span>
                     {job.companies?.verified && (
-                      <CheckCircle className="w-4 h-4 text-blue-500 fill-blue-50 flex-shrink-0" />
+                        <CheckCircle className="w-4 h-4 text-primary fill-primary/10 flex-shrink-0" />
                     )}
                     <span className="w-1 h-1 bg-gray-300 rounded-full flex-shrink-0"></span>
                     <span className="truncate">{job.location || job.city}</span>
@@ -264,7 +264,7 @@ export default function LandingPage() {
                       {getTimeAgo(job.postedAt)}
                     </div>
                     {(job.salaryMin || job.salaryMax) && (
-                      <div className="font-bold text-blue-600 text-sm">
+                      <div className="font-bold text-primary text-sm">
                         Rp {formatSalary(job.salaryMin, job.salaryMax)}
                       </div>
                     )}
@@ -282,7 +282,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="border border-gray-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.06)] overflow-hidden">
             <div className="px-6 py-10 sm:px-10 lg:px-14 lg:py-14 border-b border-gray-200">
-              <p className="text-sm font-semibold uppercase tracking-[0.28em] text-blue-600 mb-5">
+              <p className="text-sm font-semibold uppercase tracking-[0.28em] text-primary mb-5">
                 Perusahaan Terverifikasi
               </p>
               <div className="max-w-4xl">
@@ -323,7 +323,7 @@ export default function LandingPage() {
                         />
                       ) : (
                         <>
-                          <div className="w-14 h-14 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center mb-3 transition-colors duration-300 group-hover:bg-blue-50 group-hover:text-blue-600">
+                          <div className="w-14 h-14 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center mb-3 transition-colors duration-300 group-hover:bg-primary/10 group-hover:text-primary">
                             <Building2 className="w-7 h-7" />
                           </div>
                           <h3 className="font-semibold text-gray-900 text-sm sm:text-base leading-tight line-clamp-2">
@@ -367,7 +367,7 @@ export default function LandingPage() {
                 icon: Users,
                 title: "Buat Profil Profesional",
                 desc: "Tunjukkan keahlian dan pengalamanmu dengan profil yang menarik.",
-                color: "bg-blue-500",
+                color: "bg-primary",
               },
               {
                 icon: Search,
@@ -388,7 +388,7 @@ export default function LandingPage() {
                   <div className="absolute inset-0 bg-white/5 rounded-3xl transform rotate-3 group-hover:rotate-6 transition-transform duration-300"></div>
                   <div className="relative bg-gray-800/50 backdrop-blur-sm border border-white/10 p-8 rounded-3xl hover:-translate-y-2 transition-transform duration-300 h-full">
                     <div
-                      className={`w-14 h-14 ${step.color} rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-${step.color}/20`}
+                      className={`w-14 h-14 ${step.color} rounded-2xl flex items-center justify-center mb-6 shadow-lg`}
                     >
                       <Icon className="w-7 h-7 text-white" />
                     </div>
@@ -405,7 +405,7 @@ export default function LandingPage() {
       {/* CTA Section */}
       <section className="px-4 lg:px-8 py-20 lg:py-28 bg-white">
         <div className="max-w-5xl mx-auto">
-          <div className="bg-gradient-to-r from-[#03587f] to-[#024666] rounded-[2.5rem] p-8 lg:p-16 text-center relative overflow-hidden shadow-2xl shadow-blue-900/20">
+          <div className="bg-gradient-to-r from-primary to-primary-hover rounded-[2.5rem] p-8 lg:p-16 text-center relative overflow-hidden shadow-2xl shadow-primary/20">
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
             <div className="relative z-10">
               <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6">
@@ -418,7 +418,7 @@ export default function LandingPage() {
               <div className="flex flex-col sm:flex-row justify-center gap-4">
                 <Link
                   href="/login?action=register&role=jobseeker"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-blue-600 hover:bg-blue-50 font-bold rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-primary hover:bg-primary/10 font-bold rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
                 >
                   Mulai Cari Kerja
                   <ArrowRight className="w-5 h-5" />

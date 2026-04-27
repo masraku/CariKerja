@@ -13,8 +13,8 @@ import {
   ArrowRight,
   Loader2,
   ArrowLeft,
-  Briefcase,
 } from "lucide-react";
+import { BRAND_COLOR } from "@/lib/ui/theme";
 
 function LoginContent() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -51,7 +51,7 @@ function LoginContent() {
         icon: "success",
         title: "Pendaftaran Berhasil",
         text: "Akun Anda telah berhasil dibuat. Silakan login.",
-        confirmButtonColor: "#03587f",
+        confirmButtonColor: BRAND_COLOR,
       });
       setIsSignUp(false);
       setRegisterRole(null);
@@ -69,7 +69,7 @@ function LoginContent() {
         icon: "info",
         title: "Login Diperlukan",
         text: "Silakan login sebagai rekruter untuk memposting pekerjaan.",
-        confirmButtonColor: "#03587f",
+        confirmButtonColor: BRAND_COLOR,
       });
     }
   }, [searchParams]);
@@ -172,7 +172,7 @@ function LoginContent() {
         icon: "success",
         title: "Registrasi Berhasil",
         text: "Akun Anda telah berhasil dibuat. Silakan login.",
-        confirmButtonColor: "#03587f",
+        confirmButtonColor: BRAND_COLOR,
       });
 
       // Switch to login view
@@ -185,7 +185,7 @@ function LoginContent() {
         icon: "error",
         title: "Registrasi Gagal",
         text: error.response?.data?.error || error.response?.data?.details || "Terjadi kesalahan saat registrasi.",
-        confirmButtonColor: "#03587f",
+        confirmButtonColor: BRAND_COLOR,
       });
     } finally {
       setIsLoading(false);
@@ -229,7 +229,7 @@ function LoginContent() {
         icon: "error",
         title: "Login Gagal",
         text: error.response?.data?.error || "Terjadi kesalahan saat login.",
-        confirmButtonColor: "#03587f",
+        confirmButtonColor: BRAND_COLOR,
       });
     } finally {
       setIsLoading(false);
@@ -262,13 +262,13 @@ function LoginContent() {
               <div className="grid grid-cols-1 gap-4 w-full">
                 <button
                   onClick={() => setRegisterRole("jobseeker")}
-                  className="group relative overflow-hidden rounded-xl border-2 border-gray-100 bg-white p-6 hover:border-blue-500 hover:shadow-xl transition-all duration-300 text-left w-full"
+                  className="group relative overflow-hidden rounded-xl border-2 border-gray-100 bg-white p-6 hover:border-primary hover:shadow-xl transition-all duration-300 text-left w-full"
                 >
                   <div className="flex items-start justify-between">
-                    <div className="p-3 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    <div className="p-3 bg-primary/10 text-primary rounded-lg group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                       <User className="w-6 h-6" />
                     </div>
-                    <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-blue-500 transition-colors" />
+                    <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-primary transition-colors" />
                   </div>
                   <h3 className="mt-4 text-lg font-bold text-gray-900">
                     Kandidat
@@ -302,7 +302,7 @@ function LoginContent() {
                   Sudah punya akun?{" "}
                   <button
                     onClick={() => setIsSignUp(false)}
-                    className="font-bold text-blue-600 hover:text-blue-700"
+                    className="font-bold text-primary hover:text-primary-hover"
                   >
                     Masuk Sekarang
                   </button>
@@ -350,7 +350,7 @@ function LoginContent() {
                         className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:outline-none transition-all ${
                           regErrors.name
                             ? "border-red-500 focus:ring-red-200"
-                            : "border-gray-300 focus:border-blue-500 focus:ring-blue-200"
+                            : "border-gray-300 focus:border-primary focus:ring-primary/20"
                         }`}
                         placeholder="Nama Lengkap"
                       />
@@ -461,7 +461,7 @@ function LoginContent() {
                       className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:outline-none transition-all ${
                         regErrors.phone
                           ? "border-red-500 focus:ring-red-200"
-                          : "border-gray-300 focus:border-blue-500 focus:ring-blue-200"
+                          : "border-gray-300 focus:border-primary focus:ring-primary/20"
                       }`}
                       placeholder="08..."
                     />
@@ -486,7 +486,7 @@ function LoginContent() {
                     className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:outline-none transition-all ${
                       regErrors.email
                         ? "border-red-500 focus:ring-red-200"
-                        : "border-gray-300 focus:border-blue-500 focus:ring-blue-200"
+                        : "border-gray-300 focus:border-primary focus:ring-primary/20"
                     }`}
                     placeholder="email@example.com"
                   />
@@ -511,7 +511,7 @@ function LoginContent() {
                       className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:outline-none transition-all ${
                         regErrors.password
                           ? "border-red-500 focus:ring-red-200"
-                          : "border-gray-300 focus:border-blue-500 focus:ring-blue-200"
+                          : "border-gray-300 focus:border-primary focus:ring-primary/20"
                       }`}
                       placeholder="******"
                     />
@@ -537,7 +537,7 @@ function LoginContent() {
                       className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:outline-none transition-all ${
                         regErrors.confirmPassword
                           ? "border-red-500 focus:ring-red-200"
-                          : "border-gray-300 focus:border-blue-500 focus:ring-blue-200"
+                          : "border-gray-300 focus:border-primary focus:ring-primary/20"
                       }`}
                       placeholder="******"
                     />
@@ -556,13 +556,13 @@ function LoginContent() {
                     onChange={(e) =>
                       setRegForm({ ...regForm, agreeTerms: e.target.checked })
                     }
-                    className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="mt-1 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
                   />
                   <span className="ml-2 text-xs text-gray-600">
                     Saya menyetujui{" "}
                     <a
                       href="/warning"
-                      className="text-blue-600 hover:underline"
+                      className="text-primary hover:underline"
                     >
                       Syarat & Ketentuan
                     </a>
@@ -575,7 +575,7 @@ function LoginContent() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-3 rounded-lg font-bold text-white transition-all transform hover:-translate-y-0.5 bg-[#03587f] hover:bg-[#024666]"
+                  className="w-full py-3 rounded-lg font-bold text-primary-foreground transition-all transform hover:-translate-y-0.5 bg-primary hover:bg-primary-hover"
                 >
                   {isLoading ? "Memproses..." : "Daftar Sekarang"}
                 </button>
@@ -618,7 +618,7 @@ function LoginContent() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-gray-50 focus:bg-white"
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-gray-50 focus:bg-white"
                     placeholder="nama@email.com"
                   />
                 </div>
@@ -637,7 +637,7 @@ function LoginContent() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-gray-50 focus:bg-white"
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-gray-50 focus:bg-white"
                     placeholder="••••••••"
                   />
                 </div>
@@ -650,7 +650,7 @@ function LoginContent() {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
                 />
                 <label
                   htmlFor="remember-me"
@@ -663,7 +663,7 @@ function LoginContent() {
               <div className="text-sm">
                 <a
                   href="#"
-                  className="font-medium text-blue-600 hover:text-blue-500"
+                  className="font-medium text-primary hover:text-primary-hover"
                 >
                   Lupa password?
                 </a>
@@ -673,7 +673,7 @@ function LoginContent() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex justify-center items-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-[#03587f] hover:bg-[#024666] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-lg hover:shadow-blue-600/20"
+              className="w-full flex justify-center items-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-lg hover:shadow-primary/20"
             >
               {isLoading ? (
                 <>
@@ -715,15 +715,15 @@ function LoginContent() {
 
       {/* OVERLAY / BLUE PANEL (Moves Left <-> Right) */}
       <div
-        className={`hidden lg:flex absolute top-0 left-0 w-1/2 h-full bg-blue-600 overflow-hidden transition-transform duration-700 ease-in-out z-40 transform ${
+        className={`hidden lg:flex absolute top-0 left-0 w-1/2 h-full bg-primary overflow-hidden transition-transform duration-700 ease-in-out z-40 transform ${
           isSignUp ? "translate-x-[100%]" : "translate-x-0"
         }`}
       >
         {/* Background Elements */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#03587f] to-[#024666] opacity-90 z-10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary to-primary-hover opacity-90 z-10" />
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1497215728101-856f4ea42174?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')] bg-cover bg-center" />
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-white/10 rounded-full blur-3xl z-10" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl z-10" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-white/10 rounded-full blur-3xl z-10" />
 
         {/* Content */}
         <div className="relative z-20 flex flex-col justify-between w-full p-12 text-white h-full">
@@ -767,7 +767,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-[#03587f] to-[#024666]">
+        <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-primary to-primary-hover">
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-white mx-auto mb-4"></div>
             <p className="text-white">Memuat halaman...</p>

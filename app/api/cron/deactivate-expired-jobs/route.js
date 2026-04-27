@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { authorizeCronRequest } from '@/lib/cron'
 
 // Auto-deactivate jobs that have passed their application deadline
 // This can be called by a cron job or triggered periodically
 
 export async function POST(request) {
     try {
+        const unauthorized = authorizeCronRequest(request)
+        if (unauthorized) return unauthorized
+
         const now = new Date()
         
         // Find and update all active jobs where deadline has passed
@@ -19,6 +23,7 @@ export async function POST(request) {
             },
             data: {
                 isActive: false,
+                status: 'CLOSED',
                 closedAt: now
             }
         })
@@ -38,7 +43,7 @@ export async function POST(request) {
     }
 }
 
-// Also support GET for easy testing/manual trigger
+// Also support GET for Vercel Cron.
 export async function GET(request) {
     return POST(request)
 }

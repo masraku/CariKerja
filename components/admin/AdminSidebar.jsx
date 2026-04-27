@@ -2,6 +2,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useQueryAdminSidebarCounts } from "@/hooks/admin/useAdmin";
+import { IconBadge } from "@/components/ui/icon-badge";
+import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   Building2,
@@ -58,15 +60,13 @@ export default function AdminSidebar() {
   };
 
   return (
-    <div className="w-64 bg-white text-[#03587f] flex flex-col h-screen">
+    <div className="w-64 bg-card text-primary flex flex-col h-screen border-r border-border">
       {/* Logo */}
       <div className="p-6">
         <Link href="/admin" className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-[#03587f] rounded-lg flex items-center justify-center text-white">
-            <CheckCircle className="w-6 h-6" />
-          </div>
+          <IconBadge icon={CheckCircle} className="bg-primary text-primary-foreground border-primary" />
           <div>
-            <div className="font-bold text-lg text-[#03587f]">Panel Admin</div>
+            <div className="font-bold text-lg text-primary">Panel Admin</div>
             <div className="text-xs text-gray-500">Disnaker Cirebon</div>
           </div>
         </Link>
@@ -88,11 +88,13 @@ export default function AdminSidebar() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                  aria-current={isActive ? "page" : undefined}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-all",
                     isActive
-                      ? "bg-[#03587f] text-white shadow-md"
-                      : "text-[#03587f] hover:bg-[#03587f]/10"
-                  }`}
+                      ? "bg-primary text-primary-foreground shadow-md"
+                      : "text-primary hover:bg-primary/10"
+                  )}
                 >
                   <Icon className="w-5 h-5" />
                   <span className="flex-1 font-medium">{item.label}</span>

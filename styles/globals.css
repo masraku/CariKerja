@@ -1,20 +1,80 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #0f172a;
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 198 95% 25%;
+  --primary-foreground: 0 0% 100%;
+  --primary-hover: 199 96% 20%;
+  --secondary: 204 45% 94%;
+  --secondary-foreground: 199 64% 18%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 198 60% 92%;
+  --accent-foreground: 199 64% 18%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --success: 160 84% 39%;
+  --success-foreground: 0 0% 100%;
+  --warning: 38 92% 50%;
+  --warning-foreground: 26 83% 14%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 198 95% 25%;
+  --radius: 0.875rem;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-hover: hsl(var(--primary-hover));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-blue-50: #eef8fb;
+  --color-blue-100: #d8eff6;
+  --color-blue-200: #b6ddec;
+  --color-blue-300: #81acbf;
+  --color-blue-400: #4385a4;
+  --color-blue-500: #0b6f9d;
+  --color-blue-600: #03587f;
+  --color-blue-700: #024666;
+  --color-blue-800: #023952;
+  --color-blue-900: #012b3d;
+  --color-blue-950: #011d29;
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -30,7 +90,7 @@ body {
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-hover;
   }
 
   .container-custom {
@@ -76,7 +136,7 @@ body {
   top: -100%;
   left: 50%;
   transform: translateX(-50%);
-  background: #1e40af;
+  background: hsl(var(--primary));
   color: white;
   padding: 0.75rem 1.5rem;
   border-radius: 0 0 0.5rem 0.5rem;
@@ -88,13 +148,13 @@ body {
 
 .skip-link:focus {
   top: 0;
-  outline: 3px solid #fbbf24;
+  outline: 3px solid hsl(var(--warning));
   outline-offset: 2px;
 }
 
 /* Focus Indicators - WCAG AA Compliant */
 *:focus-visible {
-  outline: 3px solid #2563eb;
+  outline: 3px solid hsl(var(--ring));
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -103,18 +163,18 @@ body {
 button:focus-visible,
 a:focus-visible,
 [role="button"]:focus-visible {
-  outline: 3px solid #2563eb;
+  outline: 3px solid hsl(var(--ring));
   outline-offset: 2px;
-  box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 6px hsl(var(--ring) / 0.16);
 }
 
 /* Focus for form inputs */
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 3px solid #2563eb;
+  outline: 3px solid hsl(var(--ring));
   outline-offset: 0;
-  border-color: #2563eb;
+  border-color: hsl(var(--ring));
 }
 
 /* Reduced Motion for users who prefer it */
