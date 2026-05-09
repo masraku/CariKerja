@@ -1,19 +1,16 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
-  Facebook,
-  Twitter,
-  Linkedin,
-  Instagram,
+  ExternalLink,
+  Globe2,
 } from "lucide-react";
 import { IconBadge } from "@/components/ui/icon-badge";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
-  const socialLinks = [
-    { icon: Facebook, label: "Facebook" },
-    { icon: Twitter, label: "Twitter" },
-    { icon: Linkedin, label: "LinkedIn" },
-    { icon: Instagram, label: "Instagram" },
+  const officialLinks = [
+    { href: "https://disnaker.cirebonkab.go.id", label: "Website Resmi", icon: Globe2 },
+    { href: "https://disnaker.cirebonkab.go.id/form_antrian_ak1", label: "Antrian AK1", icon: ExternalLink },
   ];
 
   return (
@@ -24,22 +21,31 @@ const Footer = () => {
           <div className="lg:col-span-4">
             <Link href="/" className="flex items-center group mb-6">
               <div className="h-16 md:h-20 w-auto bg-white rounded-xl flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform duration-300 shadow-sm border border-slate-100 p-2">
-                <img
+                <Image
                   src="/assets/logo-disnakerkabcirebon.png"
                   alt="Disnaker Kabupaten Cirebon"
+                  width={240}
+                  height={96}
                   className="h-full w-auto"
                 />
               </div>
             </Link>
             <p className="text-slate-500 mb-6 leading-relaxed">
-              Platform karir masa depan yang menghubungkan talenta terbaik
-              dengan perusahaan impian. Temukan peluang karir yang sesuai dengan
-              passion Anda.
+              Portal resmi layanan informasi lowongan kerja, profil perusahaan,
+              dan layanan ketenagakerjaan untuk masyarakat Kabupaten Cirebon.
             </p>
-            <div className="flex gap-4">
-              {socialLinks.map(({ icon: Icon, label }) => (
-                <a key={label} href="#" aria-label={label}>
+            <div className="flex flex-wrap gap-3">
+              {officialLinks.map(({ href, icon: Icon, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:border-primary/20 hover:bg-primary/10 hover:text-primary"
+                >
                   <IconBadge icon={Icon} variant="muted" className="rounded-full hover:border-primary/20 hover:bg-primary/10 hover:text-primary" />
+                  <span>{label}</span>
                 </a>
               ))}
             </div>

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createErrorResponse } from '@/lib/errorHandler'
-import { verifyToken } from '@/lib/auth'
+import { getTokenFromRequest, verifyToken } from '@/lib/auth'
 import { v4 as uuidv4 } from 'uuid'
 import { validateBody } from '@/lib/validations'
 import { z } from 'zod'
@@ -23,12 +23,11 @@ const scheduleInterviewSchema = z.object({
 
 export async function POST(request) {
     try {
-        const authHeader = request.headers.get('authorization')
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        const token = getTokenFromRequest(request)
+        if (!token) {
             return NextResponse.json({ error: 'Tidak memiliki akses' }, { status: 401 })
         }
 
-        const token = authHeader.split(' ')[1]
         const decoded = verifyToken(token)
 
         if (!decoded) {

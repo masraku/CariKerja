@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { getTokenFromRequest } from '@/lib/auth'
 import { 
   loginSchema, 
   registerJobseekerSchema, 
@@ -6,6 +7,37 @@ import {
   changePasswordSchema,
   passwordSchema 
 } from '@/lib/validations/auth'
+
+function createRequest({ authorization, cookieToken } = {}) {
+  return {
+    headers: {
+      get: (name) => name.toLowerCase() === 'authorization' ? authorization : null
+    },
+    cookies: {
+      get: (name) => name === 'token' && cookieToken ? { value: cookieToken } : undefined
+    }
+  }
+}
+
+describe('Auth Token Extraction', () => {
+  it('prefers a valid bearer token from the authorization header', () => {
+    const request = createRequest({ authorization: 'Bearer header-token', cookieToken: 'cookie-token' })
+
+    expect(getTokenFromRequest(request)).toBe('header-token')
+  })
+
+  it('falls back to the httpOnly cookie when legacy bearer token is empty', () => {
+    const request = createRequest({ authorization: 'Bearer null', cookieToken: 'cookie-token' })
+
+    expect(getTokenFromRequest(request)).toBe('cookie-token')
+  })
+
+  it('returns null when no token is available', () => {
+    const request = createRequest()
+
+    expect(getTokenFromRequest(request)).toBeNull()
+  })
+})
 
 describe('Password Schema', () => {
   describe('Strong Password Requirements', () => {

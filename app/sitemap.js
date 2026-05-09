@@ -24,10 +24,28 @@ export default async function sitemap() {
             priority: 0.8,
         },
         {
-            url: `${siteUrl}/login`,
+            url: `${siteUrl}/news`,
+            lastModified: new Date(),
+            changeFrequency: 'daily',
+            priority: 0.8,
+        },
+        {
+            url: `${siteUrl}/about`,
             lastModified: new Date(),
             changeFrequency: 'monthly',
-            priority: 0.5,
+            priority: 0.6,
+        },
+        {
+            url: `${siteUrl}/privacy`,
+            lastModified: new Date(),
+            changeFrequency: 'yearly',
+            priority: 0.4,
+        },
+        {
+            url: `${siteUrl}/warning`,
+            lastModified: new Date(),
+            changeFrequency: 'yearly',
+            priority: 0.4,
         },
     ]
 
@@ -82,5 +100,31 @@ export default async function sitemap() {
         console.error('Failed to fetch companies for sitemap:', error)
     }
 
-    return [...staticPages, ...jobPages, ...companyPages]
+    // Dynamic news pages
+    let newsPages = []
+    try {
+        const news = await prisma.news.findMany({
+            where: {
+                status: 'PUBLISHED',
+                publishedAt: { not: null }
+            },
+            select: {
+                slug: true,
+                updatedAt: true
+            },
+            orderBy: { publishedAt: 'desc' },
+            take: 1000,
+        })
+
+        newsPages = news.map((item) => ({
+            url: `${siteUrl}/news/${item.slug}`,
+            lastModified: item.updatedAt,
+            changeFrequency: 'weekly',
+            priority: 0.6,
+        }))
+    } catch (error) {
+        console.error('Failed to fetch news for sitemap:', error)
+    }
+
+    return [...staticPages, ...jobPages, ...companyPages, ...newsPages]
 }

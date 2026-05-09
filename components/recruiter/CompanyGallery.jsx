@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
-import axios from "axios";
+import api from "@/lib/api";
 
 export default function CompanyGallery({
   gallery = [],
@@ -30,16 +30,13 @@ export default function CompanyGallery({
 
     setUploading(true);
     try {
-      const token = localStorage.getItem("token");
       const formData = new FormData();
       formData.append("file", file);
       formData.append("type", "company-gallery");
       formData.append("companyId", companyId);
 
-      const { data } = await axios.post("/api/upload", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const { data } = await api.post("/api/upload", formData, {
+        withCredentials: true,
       });
 
       if (data.success) {
@@ -66,11 +63,8 @@ export default function CompanyGallery({
 
     setDeleting(photoUrl);
     try {
-      const token = localStorage.getItem("token");
-      const { data } = await axios.delete("/api/upload", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const { data } = await api.delete("/api/upload", {
+        withCredentials: true,
         data: { photoUrl, companyId },
       });
 

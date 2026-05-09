@@ -2,9 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api"; // CSRF-protected axios instance
 
 // Helper to get auth header
-const getAuthHeader = () => ({
-    Authorization: `Bearer ${localStorage.getItem("token")}`,
-});
+const getAuthHeader = () => ({});
 
 // ============ RECRUITER DASHBOARD ============
 const queryKeyRecruiterDashboard = ["recruiterDashboard"];
@@ -388,4 +386,3 @@ export function useMutationDeleteJob() {
         },
     });
 }
-

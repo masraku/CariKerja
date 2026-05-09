@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createErrorResponse } from '@/lib/errorHandler'
-import { verifyToken } from '@/lib/auth'
+import { getTokenFromRequest, verifyToken } from '@/lib/auth'
 import { validateBody } from '@/lib/validations'
 import { z } from 'zod'
 
@@ -16,7 +16,7 @@ const submitResignationSchema = z.object({
 // Jobseeker submits a resignation request
 export async function POST(request) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    const token = getTokenFromRequest(request)
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

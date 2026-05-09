@@ -31,6 +31,7 @@ import {
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryJobs } from "@/hooks/jobs/useJobs";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 const JobsPage = () => {
   const searchParams = useSearchParams();
@@ -94,6 +95,17 @@ const JobsPage = () => {
   useEffect(() => {
     localStorage.setItem("savedJobs", JSON.stringify(savedJobs));
   }, [savedJobs]);
+
+  useEffect(() => {
+    if (!selectedImage) return;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setSelectedImage(null);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedImage]);
 
   const handleFilterChange = (type, value) => {
     setFilters((prev) => {
@@ -228,6 +240,7 @@ const JobsPage = () => {
         </div>
         <button
           onClick={(e) => toggleSaveJob(job.id, e)}
+          aria-label={savedJobs.includes(job.id) ? "Hapus lowongan tersimpan" : "Simpan lowongan"}
           className={`p-2 rounded-xl transition-all flex-shrink-0 h-fit ${
             savedJobs.includes(job.id)
               ? "text-primary bg-primary/10"
@@ -283,6 +296,7 @@ const JobsPage = () => {
           </div>
           <button
             onClick={(e) => toggleSaveJob(job.id, e)}
+            aria-label={savedJobs.includes(job.id) ? "Hapus lowongan tersimpan" : "Simpan lowongan"}
             className={`p-3 rounded-xl transition-all hidden lg:flex ${
               savedJobs.includes(job.id)
                 ? "bg-primary/10 text-primary"
@@ -428,17 +442,19 @@ const JobsPage = () => {
               {job.gallery && job.gallery.length > 0 && (
                 <div className="grid grid-cols-4 gap-3">
                   {job.gallery.map((img, idx) => (
-                    <div
+                    <button
+                      type="button"
                       key={idx}
                       className="aspect-square rounded-xl overflow-hidden bg-slate-50 border border-slate-100 hover:shadow-md transition-shadow cursor-pointer hover:opacity-95"
                       onClick={() => setSelectedImage(img)}
+                      aria-label={`Lihat gambar galeri lowongan ${idx + 1}`}
                     >
                       <img
                         src={img}
                         alt={`Gallery ${idx}`}
                         className="w-full h-full object-cover"
                       />
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}
@@ -454,7 +470,7 @@ const JobsPage = () => {
             </h3>
             <div
               className="prose prose-slate max-w-none text-slate-600 leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: job.description }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(job.description) }}
             />
           </section>
         )}
@@ -514,7 +530,7 @@ const JobsPage = () => {
             </h3>
             <div
               className="prose prose-slate max-w-none text-slate-600 leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: job.requirements }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(job.requirements) }}
             />
           </section>
         )}
@@ -541,12 +557,16 @@ const JobsPage = () => {
       {/* Image Modal */}
       {selectedImage && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Pratinjau gambar lowongan"
           className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-200"
           onClick={() => setSelectedImage(null)}
         >
           <div className="relative max-w-5xl w-full max-h-[90vh] flex items-center justify-center">
             <button
               onClick={() => setSelectedImage(null)}
+              aria-label="Tutup pratinjau gambar"
               className="absolute -top-12 right-0 text-white/80 hover:text-white transition"
             >
               <XCircle className="w-8 h-8" />
@@ -579,6 +599,7 @@ const JobsPage = () => {
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <input
                     type="text"
+                    aria-label="Cari posisi atau perusahaan"
                     placeholder="Cari posisi atau perusahaan..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -587,6 +608,7 @@ const JobsPage = () => {
                 </div>
                 <button
                   onClick={() => setShowFilters(!showFilters)}
+                  aria-label="Tampilkan filter lowongan"
                   className={`px-4 py-3 rounded-xl border transition-all flex items-center gap-2 ${
                     showFilters || activeFiltersCount > 0
                       ? "bg-primary/10 border-primary/20 text-primary"

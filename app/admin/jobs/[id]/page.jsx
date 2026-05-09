@@ -38,9 +38,7 @@ export default function AdminJobDetailPage() {
 
   const fetchJobDetail = async () => {
     try {
-      const token = localStorage.getItem("token");
       const { data } = await api.get(`/api/admin/jobs/${params.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
         withCredentials: true,
       });
 
@@ -96,7 +94,6 @@ export default function AdminJobDetailPage() {
         rejectionReason = result.value;
       }
 
-      const token = localStorage.getItem("token");
       await api.patch(
         "/api/admin/jobs",
         {
@@ -105,9 +102,6 @@ export default function AdminJobDetailPage() {
           rejectionReason,
         },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         },
       );

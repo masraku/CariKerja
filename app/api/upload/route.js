@@ -7,6 +7,8 @@ import { prisma } from '@/lib/prisma'
 
 import sharp from 'sharp'
 import { validateFile, sanitizeFilename, generateSafeFilename } from '@/lib/fileValidation'
+import { createErrorResponse } from '@/lib/errorHandler'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
 
 
 /**
@@ -93,6 +95,10 @@ function getBucketName(type, bucket) {
 
 export async function POST(request) {
     try {
+        if (!validateCSRFToken(request)) {
+            return csrfErrorResponse()
+        }
+
         // Authenticate
         const auth = await getCurrentUser(request)
         
@@ -508,6 +514,10 @@ export async function POST(request) {
 // DELETE - Remove photo from gallery
 export async function DELETE(request) {
     try {
+        if (!validateCSRFToken(request)) {
+            return csrfErrorResponse()
+        }
+
         const auth = await getCurrentUser(request)
         
         if (auth.error) {

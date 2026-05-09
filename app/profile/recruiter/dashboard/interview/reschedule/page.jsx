@@ -59,14 +59,10 @@ function RescheduleContent() {
   const loadData = async (interviewId, participantId) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
 
       const { data } = await api.get(
         `/api/profile/recruiter/interviews/${interviewId}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         },
       );
@@ -150,7 +146,6 @@ function RescheduleContent() {
 
     try {
       setSaving(true);
-      const token = localStorage.getItem("token");
 
       // Combine date and time
       const scheduledAt = new Date(`${formData.date}T${formData.time}`);
@@ -165,9 +160,6 @@ function RescheduleContent() {
           participantId: participant ? participant.id : null,
         },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         },
       );

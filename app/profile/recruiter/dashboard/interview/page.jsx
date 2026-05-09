@@ -60,15 +60,11 @@ function ScheduleInterviewContent() {
   const loadData = async (jobId, applicantIds) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
 
       // Load applicants first - this includes job data
       const { data: applicantData } = await api.get(
         `/api/applications/batch?ids=${applicantIds}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         },
       );
@@ -165,7 +161,6 @@ function ScheduleInterviewContent() {
     try {
       setSaving(true);
 
-      const token = localStorage.getItem("token");
       const { data } = await api.post(
         "/api/interviews/schedule",
         {
@@ -174,9 +169,6 @@ function ScheduleInterviewContent() {
           applicationIds: applicants.map((app) => app.id),
         },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         },
       );

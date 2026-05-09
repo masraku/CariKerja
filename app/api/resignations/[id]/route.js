@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createErrorResponse } from '@/lib/errorHandler'
-import { verifyToken } from '@/lib/auth'
+import { getTokenFromRequest, verifyToken } from '@/lib/auth'
 import { validateBody } from '@/lib/validations'
 import { z } from 'zod'
 
@@ -17,7 +17,7 @@ const processResignationSchema = z.object({
 // Recruiter approves or rejects a resignation
 export async function PATCH(request, { params }) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    const token = getTokenFromRequest(request)
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -125,7 +125,7 @@ export async function PATCH(request, { params }) {
 // Get single resignation detail
 export async function GET(request, { params }) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    const token = getTokenFromRequest(request)
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

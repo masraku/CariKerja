@@ -1,18 +1,17 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createErrorResponse } from '@/lib/errorHandler'
-import { verifyToken } from '@/lib/auth'
+import { getTokenFromRequest, verifyToken } from '@/lib/auth'
 
 export async function GET(request, { params }) {
     try {
         const { id: applicationId } = await params
         
-        const authHeader = request.headers.get('authorization')
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        const token = getTokenFromRequest(request)
+        if (!token) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const token = authHeader.substring(7)
         const decoded = await verifyToken(token)
         
         if (!decoded || decoded.role !== 'JOBSEEKER') {

@@ -162,22 +162,10 @@ export default function JobDetailPage() {
   const loadApplications = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-
-      // Redirect to login if no token
-      if (!token) {
-        router.push(
-          `/login?redirect=${encodeURIComponent(window.location.pathname)}`,
-        );
-        return;
-      }
 
       const { data } = await api.get(
         `/api/profile/recruiter/jobs/${params.slug}/applications`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         },
       );
@@ -415,17 +403,12 @@ export default function JobDetailPage() {
     if (!result.isConfirmed) return;
 
     try {
-      const token = localStorage.getItem("token");
-
       await Promise.all(
         validApps.map((app) =>
           api.patch(
             `/api/profile/recruiter/applications/${app.id}`,
             { status: "REVIEWING" },
             {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
               withCredentials: true,
             },
           ),
@@ -496,8 +479,6 @@ export default function JobDetailPage() {
     if (!result.isConfirmed) return;
 
     try {
-      const token = localStorage.getItem("token");
-
       await Promise.all(
         validApps.map((app) =>
           api.patch(
@@ -507,9 +488,6 @@ export default function JobDetailPage() {
               recruiterNotes: result.value || "",
             },
             {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
               withCredentials: true,
             },
           ),
@@ -577,17 +555,12 @@ export default function JobDetailPage() {
     if (!result.isConfirmed) return;
 
     try {
-      const token = localStorage.getItem("token");
-
       await Promise.all(
         validApps.map((app) =>
           api.patch(
             `/api/profile/recruiter/applications/${app.id}`,
             { status: "SHORTLISTED" },
             {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
               withCredentials: true,
             },
           ),
@@ -643,8 +616,6 @@ export default function JobDetailPage() {
     if (!result.isConfirmed) return;
 
     try {
-      const token = localStorage.getItem("token");
-
       await Promise.all(
         selectedApplications.map((appId) =>
           api.patch(
@@ -654,9 +625,6 @@ export default function JobDetailPage() {
               recruiterNotes: result.value || "",
             },
             {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
               withCredentials: true,
             },
           ),
@@ -728,14 +696,10 @@ export default function JobDetailPage() {
   const updateStatusToReviewing = async (application) => {
     if (application.status === "PENDING") {
       try {
-        const token = localStorage.getItem("token");
         await api.patch(
           `/api/profile/recruiter/applications/${application.id}`,
           { status: "REVIEWING" },
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
             withCredentials: true,
           },
         );
@@ -794,14 +758,10 @@ export default function JobDetailPage() {
     if (!result.isConfirmed) return;
 
     try {
-      const token = localStorage.getItem("token");
       await api.patch(
         `/api/profile/recruiter/applications/${application.id}`,
         { status: "SHORTLISTED" },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         },
       );
@@ -876,7 +836,6 @@ export default function JobDetailPage() {
     if (!result.isConfirmed) return;
 
     try {
-      const token = localStorage.getItem("token");
       await api.patch(
         `/api/profile/recruiter/applications/${application.id}`,
         {
@@ -884,9 +843,6 @@ export default function JobDetailPage() {
           recruiterNotes: result.value || "",
         },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         },
       );
@@ -998,7 +954,6 @@ export default function JobDetailPage() {
     if (!result.isConfirmed) return;
 
     try {
-      const token = localStorage.getItem("token");
       await api.patch(
         `/api/profile/recruiter/applications/${applicationId}`,
         {
@@ -1006,9 +961,6 @@ export default function JobDetailPage() {
           recruiterNotes: result.value || "",
         },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         },
       );
@@ -1058,7 +1010,6 @@ export default function JobDetailPage() {
           },
         });
 
-        const token = localStorage.getItem("token");
         const promises = selectedApplications.map(async (appId) => {
           const app = applications.find((a) => a.id === appId);
           // Need interview ID and participant ID
@@ -1076,9 +1027,6 @@ export default function JobDetailPage() {
             `/api/profile/recruiter/interviews/${interviewId}/complete`,
             { participantId },
             {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
               withCredentials: true,
             },
           );

@@ -13,6 +13,8 @@ import {
   ArrowRight,
   Loader2,
   ArrowLeft,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { BRAND_COLOR } from "@/lib/ui/theme";
 
@@ -20,6 +22,9 @@ function LoginContent() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // Registration State
@@ -199,7 +204,7 @@ function LoginContent() {
     try {
       const { data } = await axios.post("/api/auth/login", { email, password });
 
-      await login(data.token, data.user);
+      await login(data.user);
       await refreshUser();
 
       Swal.fire({
@@ -502,19 +507,33 @@ function LoginContent() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Password
                     </label>
-                    <input
-                      type="password"
-                      value={regForm.password}
-                      onChange={(e) =>
-                        setRegForm({ ...regForm, password: e.target.value })
-                      }
-                      className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:outline-none transition-all ${
-                        regErrors.password
-                          ? "border-red-500 focus:ring-red-200"
-                          : "border-gray-300 focus:border-primary focus:ring-primary/20"
-                      }`}
-                      placeholder="******"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showRegisterPassword ? "text" : "password"}
+                        value={regForm.password}
+                        onChange={(e) =>
+                          setRegForm({ ...regForm, password: e.target.value })
+                        }
+                        className={`w-full rounded-lg border px-4 py-2 pr-10 transition-all focus:outline-none focus:ring-2 ${
+                          regErrors.password
+                            ? "border-red-500 focus:ring-red-200"
+                            : "border-gray-300 focus:border-primary focus:ring-primary/20"
+                        }`}
+                        placeholder="******"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowRegisterPassword((value) => !value)}
+                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 transition hover:text-gray-700"
+                        aria-label={showRegisterPassword ? "Sembunyikan password" : "Tampilkan password"}
+                      >
+                        {showRegisterPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
                     {regErrors.password && (
                       <p className="text-red-500 text-xs mt-1">
                         {regErrors.password}
@@ -525,22 +544,36 @@ function LoginContent() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Konf. Password
                     </label>
-                    <input
-                      type="password"
-                      value={regForm.confirmPassword}
-                      onChange={(e) =>
-                        setRegForm({
-                          ...regForm,
-                          confirmPassword: e.target.value,
-                        })
-                      }
-                      className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:outline-none transition-all ${
-                        regErrors.confirmPassword
-                          ? "border-red-500 focus:ring-red-200"
-                          : "border-gray-300 focus:border-primary focus:ring-primary/20"
-                      }`}
-                      placeholder="******"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={regForm.confirmPassword}
+                        onChange={(e) =>
+                          setRegForm({
+                            ...regForm,
+                            confirmPassword: e.target.value,
+                          })
+                        }
+                        className={`w-full rounded-lg border px-4 py-2 pr-10 transition-all focus:outline-none focus:ring-2 ${
+                          regErrors.confirmPassword
+                            ? "border-red-500 focus:ring-red-200"
+                            : "border-gray-300 focus:border-primary focus:ring-primary/20"
+                        }`}
+                        placeholder="******"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword((value) => !value)}
+                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 transition hover:text-gray-700"
+                        aria-label={showConfirmPassword ? "Sembunyikan konfirmasi password" : "Tampilkan konfirmasi password"}
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
                 {regErrors.confirmPassword && (
@@ -633,13 +666,25 @@ function LoginContent() {
                     <Lock className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
-                    type="password"
+                    type={showLoginPassword ? "text" : "password"}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-gray-50 focus:bg-white"
+                    className="block w-full pl-10 pr-12 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-gray-50 focus:bg-white"
                     placeholder="••••••••"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword((value) => !value)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 transition hover:text-gray-700"
+                    aria-label={showLoginPassword ? "Sembunyikan password" : "Tampilkan password"}
+                  >
+                    {showLoginPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
@@ -662,7 +707,7 @@ function LoginContent() {
 
               <div className="text-sm">
                 <a
-                  href="#"
+                  href="/forgot-password"
                   className="font-medium text-primary hover:text-primary-hover"
                 >
                   Lupa password?

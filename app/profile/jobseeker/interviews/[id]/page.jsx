@@ -46,13 +46,9 @@ export default function JobseekerInterviewDetailPage() {
 
   const loadInterviewDetails = async () => {
     try {
-      const token = localStorage.getItem("token");
       const { data } = await api.get(
         `/api/profile/jobseeker/interviews/${params.id}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         },
       );
@@ -82,14 +78,10 @@ export default function JobseekerInterviewDetailPage() {
     setResponding(true);
 
     try {
-      const token = localStorage.getItem("token");
       const { data } = await api.patch(
         `/api/profile/jobseeker/interviews/${params.id}/respond`,
         { response },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         },
       );

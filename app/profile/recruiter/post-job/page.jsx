@@ -44,15 +44,7 @@ export default function PostJobPage() {
 
   const checkCompanyVerification = async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setBlockReason("no_token");
-        setIsCheckingVerification(false);
-        return;
-      }
-
       const { data } = await api.get("/api/profile/recruiter", {
-        headers: { Authorization: `Bearer ${token}` },
         withCredentials: true,
       });
 
@@ -254,19 +246,6 @@ export default function PostJobPage() {
     try {
       setIsSaving(true);
 
-      const token = localStorage.getItem("token");
-      if (!token) {
-        Swal.fire({
-          icon: "error",
-          title: "Session Expired",
-          text: "Please login again",
-          confirmButtonColor: "#2563EB",
-        }).then(() => {
-          router.push("/login?role=recruiter");
-        });
-        return;
-      }
-
       // Validate required fields
       const missingFields = [];
 
@@ -326,9 +305,6 @@ export default function PostJobPage() {
         "/api/profile/recruiter/jobs/create",
         submitData,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         },
       );
@@ -980,11 +956,6 @@ export default function PostJobPage() {
                               "/api/upload",
                               formDataUpload,
                               {
-                                headers: {
-                                  Authorization: `Bearer ${localStorage.getItem(
-                                    "token",
-                                  )}`,
-                                },
                                 withCredentials: true,
                               },
                             );

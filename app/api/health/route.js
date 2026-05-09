@@ -14,13 +14,9 @@ export async function GET() {
   const uptime = Math.floor((Date.now() - startTime) / 1000)
   
   let databaseStatus = 'unknown'
-  let databaseLatency = null
-  
   try {
     // Test database connection
-    const dbStart = Date.now()
     await prisma.$queryRaw`SELECT 1`
-    databaseLatency = Date.now() - dbStart
     databaseStatus = 'connected'
   } catch (error) {
     databaseStatus = 'disconnected'
@@ -33,12 +29,9 @@ export async function GET() {
     status: isHealthy ? 'healthy' : 'unhealthy',
     timestamp,
     uptime,
-    version: process.env.npm_package_version || '1.0.0',
-    environment: process.env.NODE_ENV || 'development',
     checks: {
       database: {
-        status: databaseStatus,
-        latency: databaseLatency ? `${databaseLatency}ms` : null
+        status: databaseStatus
       }
     }
   }

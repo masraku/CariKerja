@@ -4,6 +4,72 @@ import { Redis } from '@upstash/redis'
 const redis = Redis.fromEnv()
 
 const JWT_SECRET = process.env.JWT_SECRET
+const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
+const API_RATE_LIMITS = {
+  auth: { limit: 20, windowSeconds: 15 * 60 },
+  admin: { limit: 180, windowSeconds: 60 },
+  mutation: { limit: 60, windowSeconds: 60 },
+  read: { limit: 120, windowSeconds: 60 },
+}
+
+function getClientIP(request) {
+  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip') ||
+    'anonymous'
+}
+
+function getRateLimitScope(pathname, method) {
+  if (pathname.startsWith('/api/auth/')) return 'auth'
+  if (pathname.startsWith('/api/admin/')) return 'admin'
+  if (MUTATING_METHODS.has(method)) return 'mutation'
+  return 'read'
+}
+
+async function enforceApiRateLimit(request, pathname, decodedToken) {
+  if (pathname.startsWith('/api/cron/')) return null
+
+  const scope = getRateLimitScope(pathname, request.method)
+  const { limit, windowSeconds } = API_RATE_LIMITS[scope]
+  const identity = decodedToken?.userId || getClientIP(request)
+  const windowId = Math.floor(Date.now() / (windowSeconds * 1000))
+  const key = `ratelimit:${scope}:${identity}:${windowId}`
+
+  try {
+    const count = await redis.incr(key)
+    if (count === 1) {
+      await redis.expire(key, windowSeconds + 5)
+    }
+
+    if (count > limit) {
+      return NextResponse.json(
+        { error: 'Terlalu banyak permintaan. Silakan coba lagi nanti.' },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(windowSeconds) },
+        }
+      )
+    }
+  } catch (error) {
+    // Fail open so Redis issues do not take the entire application down.
+    return null
+  }
+
+  return null
+}
+
+function isCsrfExempt(pathname) {
+  return pathname === '/api/auth/login' ||
+    pathname.startsWith('/api/auth/register/') ||
+    pathname.startsWith('/api/cron/') ||
+    pathname === '/api/health'
+}
+
+function hasValidCsrfToken(request) {
+  const cookieToken = request.cookies.get('csrf_token')?.value
+  const headerToken = request.headers.get('x-csrf-token')
+
+  return Boolean(cookieToken && headerToken && cookieToken === headerToken)
+}
 
 function base64UrlToBytes(value) {
   const normalized = value.replace(/-/g, '+').replace(/_/g, '/')
@@ -111,6 +177,21 @@ export async function middleware(request) {
 
   // API routes are always accessible (they handle their own auth)
   if (pathname.startsWith('/api')) {
+    const rateLimitedResponse = await enforceApiRateLimit(request, pathname, decodedToken)
+    if (rateLimitedResponse) return rateLimitedResponse
+
+    if (
+      MUTATING_METHODS.has(request.method) &&
+      token &&
+      !isCsrfExempt(pathname) &&
+      !hasValidCsrfToken(request)
+    ) {
+      return NextResponse.json(
+        { error: 'Invalid CSRF token. Please refresh the page and try again.' },
+        { status: 403 }
+      )
+    }
+
     return NextResponse.next()
   }
 

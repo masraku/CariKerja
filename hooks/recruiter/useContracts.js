@@ -1,9 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 
-const getAuthHeader = () => ({
-    Authorization: `Bearer ${localStorage.getItem("token")}`,
-});
+const getAuthHeader = () => ({});
 
 // ============ ACCEPTED APPLICANTS ============
 const queryKeyAcceptedApplicants = ["recruiterAcceptedApplicants"];

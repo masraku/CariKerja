@@ -2,10 +2,16 @@ import { NextResponse } from 'next/server'
 import { requireRecruiter } from '@/lib/authHelper'
 import { uploadCompanyGalleryPhoto, deleteCompanyGalleryPhoto } from '@/lib/supabaseStorage'
 import { prisma } from '@/lib/prisma'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
+import { validateFile } from '@/lib/fileValidation'
 
 // Upload gallery photo
 export async function POST(request) {
     try {
+        if (!validateCSRFToken(request)) {
+            return csrfErrorResponse()
+        }
+
         const auth = await requireRecruiter(request)
         
         if (auth.error) {
@@ -49,17 +55,15 @@ export async function POST(request) {
             )
         }
 
-        // Validate file
-        if (!file.type.startsWith('image/')) {
-            return NextResponse.json(
-                { error: 'File must be an image' },
-                { status: 400 }
-            )
-        }
+        const fileBuffer = Buffer.from(await file.arrayBuffer())
+        const validation = await validateFile(file, fileBuffer, {
+            allowDocuments: false,
+            maxSize: 5 * 1024 * 1024
+        })
 
-        if (file.size > 5 * 1024 * 1024) {
+        if (!validation.valid) {
             return NextResponse.json(
-                { error: 'File size must be less than 5MB' },
+                { error: validation.error },
                 { status: 400 }
             )
         }
@@ -95,6 +99,10 @@ export async function POST(request) {
 // Delete gallery photo
 export async function DELETE(request) {
     try {
+        if (!validateCSRFToken(request)) {
+            return csrfErrorResponse()
+        }
+
         const auth = await requireRecruiter(request)
         
         if (auth.error) {

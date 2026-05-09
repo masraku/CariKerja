@@ -48,12 +48,8 @@ export default function AdminJobseekerDetail() {
 
   const loadProfile = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const headers = { Authorization: `Bearer ${token}` };
-
       try {
         const { data } = await api.get(`/api/admin/jobseekers/${params.id}`, {
-          headers,
           withCredentials: true,
         });
         if (data.success) {
@@ -63,7 +59,6 @@ export default function AdminJobseekerDetail() {
       } catch (err) {
         // If specific endpoint fails, try list endpoint
         const { data: listData } = await api.get("/api/admin/jobseekers", {
-          headers,
           withCredentials: true,
         });
         if (listData.success) {

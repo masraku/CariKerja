@@ -1,16 +1,15 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { verifyToken } from '@/lib/auth'
+import { getTokenFromRequest, verifyToken } from '@/lib/auth'
 
 export async function GET(request) {
     try {
         // Verify admin
-        const authHeader = request.headers.get('authorization')
-        if (!authHeader) {
+        const token = getTokenFromRequest(request)
+        if (!token) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const token = authHeader.replace('Bearer ', '')
         const decoded = verifyToken(token)
         
         if (!decoded || decoded.role !== 'ADMIN') {

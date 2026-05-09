@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { getCSRFToken } from "@/lib/api";
 import { useQueryAdminSidebarCounts } from "@/hooks/admin/useAdmin";
 import { IconBadge } from "@/components/ui/icon-badge";
 import { cn } from "@/lib/utils";
@@ -50,7 +51,12 @@ export default function AdminSidebar() {
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      const csrfToken = getCSRFToken();
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+        headers: csrfToken ? { "X-CSRF-Token": csrfToken } : {},
+      });
     } catch (e) {
       console.error("Logout failed", e);
     }

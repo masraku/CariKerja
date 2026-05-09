@@ -16,6 +16,7 @@ import {
     ExternalLink
 } from 'lucide-react'
 import { useQueryInterviewRoom } from '@/hooks/jobseeker/useJobseeker'
+import api from '@/lib/api'
 
 export default function InterviewRoomPage() {
     const params = useParams()
@@ -99,16 +100,11 @@ export default function InterviewRoomPage() {
 
     const markAsCompleted = async () => {
         try {
-            const token = localStorage.getItem('token')
-
-            await fetch(`/api/interviews/${params.id}/room`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ action: 'mark_completed' })
-            })
+            await api.patch(
+                `/api/interviews/${params.id}/room`,
+                { action: 'mark_completed' },
+                { withCredentials: true }
+            )
 
             Swal.fire({
                 icon: 'success',

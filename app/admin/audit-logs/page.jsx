@@ -41,7 +41,7 @@ export default function AuditLogsPage() {
       if (filters.search) params.append("search", filters.search);
 
       const res = await fetch(`/api/admin/audit-logs?${params}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        credentials: "include",
       });
       const data = await res.json();
 

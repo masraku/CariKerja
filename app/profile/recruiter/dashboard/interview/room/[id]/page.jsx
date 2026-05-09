@@ -35,14 +35,10 @@ function InterviewRoomContent() {
   const loadData = async (interviewId) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
 
       const { data } = await api.get(
         `/api/profile/recruiter/interviews/${interviewId}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         },
       );
@@ -83,15 +79,11 @@ function InterviewRoomContent() {
     if (result.isConfirmed) {
       try {
         setCompleting(true);
-        const token = localStorage.getItem("token");
 
         const { data } = await api.patch(
           `/api/profile/recruiter/interviews/${id}/complete`,
           { participantId: participantId || null },
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
             withCredentials: true,
           },
         );

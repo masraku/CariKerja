@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { verifyToken } from '@/lib/auth'
+import { getTokenFromRequest, verifyToken } from '@/lib/auth'
 import { validateBody } from '@/lib/validations'
 import { updateNewsSchema } from '@/lib/validations/admin'
 
@@ -17,12 +17,11 @@ function generateSlug(title) {
 // GET - Get single news by ID
 export async function GET(request, { params }) {
     try {
-        const authHeader = request.headers.get('authorization')
-        if (!authHeader) {
+        const token = getTokenFromRequest(request)
+        if (!token) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const token = authHeader.replace('Bearer ', '')
         const decoded = verifyToken(token)
         
         if (!decoded || decoded.role !== 'ADMIN') {
@@ -53,12 +52,11 @@ export async function GET(request, { params }) {
 // PUT - Update news
 export async function PUT(request, { params }) {
     try {
-        const authHeader = request.headers.get('authorization')
-        if (!authHeader) {
+        const token = getTokenFromRequest(request)
+        if (!token) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const token = authHeader.replace('Bearer ', '')
         const decoded = verifyToken(token)
         
         if (!decoded || decoded.role !== 'ADMIN') {
@@ -133,12 +131,11 @@ export async function PUT(request, { params }) {
 // DELETE - Delete news
 export async function DELETE(request, { params }) {
     try {
-        const authHeader = request.headers.get('authorization')
-        if (!authHeader) {
+        const token = getTokenFromRequest(request)
+        if (!token) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const token = authHeader.replace('Bearer ', '')
         const decoded = verifyToken(token)
         
         if (!decoded || decoded.role !== 'ADMIN') {

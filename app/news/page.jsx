@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { Calendar, User, ArrowRight, Search, Newspaper, Eye, ChevronLeft, ChevronRight, TrendingUp, BookOpen } from 'lucide-react'
 import { useQueryNews } from '@/hooks/news/useNews'
@@ -65,6 +66,7 @@ export default function NewsPage() {
                             <Search className="absolute left-4 w-5 h-5 text-gray-400" />
                             <input
                                 type="text"
+                                aria-label="Cari berita, artikel, atau topik"
                                 placeholder="Cari berita, artikel, atau topik..."
                                 className="w-full pl-12 pr-4 py-4 bg-transparent border-0 focus:ring-0 text-gray-900 placeholder-gray-400 text-base"
                                 value={searchQuery}
@@ -181,9 +183,11 @@ export default function NewsPage() {
                                             </span>
                                         </div>
                                         {item.image ? (
-                                            <img 
-                                                src={item.image} 
+                                            <Image
+                                                src={item.image}
                                                 alt={item.title}
+                                                fill
+                                                sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
                                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                             />
                                         ) : (
@@ -242,6 +246,7 @@ export default function NewsPage() {
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                     disabled={currentPage === 1}
+                                    aria-label="Halaman berita sebelumnya"
                                     className="p-3 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
                                 >
                                     <ChevronLeft className="w-5 h-5" />
@@ -264,6 +269,7 @@ export default function NewsPage() {
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
                                     disabled={currentPage === pagination.totalPages}
+                                    aria-label="Halaman berita berikutnya"
                                     className="p-3 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
                                 >
                                     <ChevronRight className="w-5 h-5" />

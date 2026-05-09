@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { getCSRFToken } from "@/lib/api";
 import {
   LayoutDashboard,
   PlusCircle,
@@ -50,7 +51,12 @@ export default function RecruiterSidebar() {
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      const csrfToken = getCSRFToken();
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+        headers: csrfToken ? { "X-CSRF-Token": csrfToken } : {},
+      });
     } catch (e) {
       console.error("Logout failed", e);
     }

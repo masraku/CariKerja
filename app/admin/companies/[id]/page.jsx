@@ -34,9 +34,7 @@ export default function CompanyDetailPage() {
 
   const loadCompanyDetail = async () => {
     try {
-      const token = localStorage.getItem("token");
       const { data } = await api.get(`/api/admin/companies?status=all`, {
-        headers: { Authorization: `Bearer ${token}` },
         withCredentials: true,
       });
 
@@ -73,14 +71,10 @@ export default function CompanyDetailPage() {
 
     if (result.isConfirmed) {
       try {
-        const token = localStorage.getItem("token");
         const { data } = await api.patch(
           `/api/admin/companies/${company.id}/verify`,
           { notes: result.value || "" },
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
             withCredentials: true,
           },
         );
@@ -135,14 +129,10 @@ export default function CompanyDetailPage() {
 
     if (result.isConfirmed) {
       try {
-        const token = localStorage.getItem("token");
         const { data } = await api.patch(
           `/api/admin/companies/${company.id}/reject`,
           { reason: result.value },
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
             withCredentials: true,
           },
         );

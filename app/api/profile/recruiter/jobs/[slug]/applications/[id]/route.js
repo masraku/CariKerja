@@ -2,13 +2,13 @@
 
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { verifyToken } from '@/lib/auth'
+import { getTokenFromRequest, verifyToken } from '@/lib/auth'
 import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
 
 // GET - Fetch single application detail (FOR RECRUITER)
 export async function GET(request, { params }) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    const token = getTokenFromRequest(request)
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -118,7 +118,7 @@ export async function PATCH(request, { params }) {
       return csrfErrorResponse()
     }
 
-    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    const token = getTokenFromRequest(request)
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

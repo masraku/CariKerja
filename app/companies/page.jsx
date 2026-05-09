@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -112,6 +113,7 @@ const CompaniesPage = () => {
                 <Search className="absolute left-4 h-5 w-5 text-slate-400" />
                 <input
                   type="text"
+                  aria-label="Cari perusahaan, industri, atau kata kunci"
                   placeholder="Cari perusahaan, industri, atau kata kunci..."
                   className="h-14 w-full rounded-xl border-0 bg-transparent pl-12 pr-12 text-base text-slate-900 placeholder:text-slate-400 focus:ring-0"
                   value={searchQuery}
@@ -314,9 +316,11 @@ const CompaniesPage = () => {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex h-24 w-24 items-center justify-center rounded-2xl border border-slate-100 bg-white p-3 shadow-lg shadow-slate-200/70">
                         {company.logo ? (
-                          <img
+                          <Image
                             src={company.logo}
                             alt={company.name}
+                            width={96}
+                            height={96}
                             className="h-full w-full object-contain"
                           />
                         ) : (

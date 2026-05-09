@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -174,11 +175,13 @@ export default function NewsDetailPage() {
       {/* Featured Image */}
       {news.image && (
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
-          <div className="rounded-2xl overflow-hidden shadow-2xl shadow-slate-200/50">
-            <img
+          <div className="relative min-h-[260px] rounded-2xl overflow-hidden shadow-2xl shadow-slate-200/50 md:min-h-[420px]">
+            <Image
               src={news.image}
               alt={news.title}
-              className="w-full h-auto max-h-[500px] object-cover"
+              fill
+              sizes="(min-width: 1024px) 960px, 100vw"
+              className="object-cover"
             />
           </div>
         </div>
@@ -219,13 +222,15 @@ export default function NewsDetailPage() {
                   className="bg-white rounded-xl border border-slate-100 overflow-hidden hover:shadow-lg hover:border-blue-100 transition-all duration-300 group"
                 >
                   {item.image ? (
-                    <div className="h-40 overflow-hidden">
-                      <img
-                        src={item.image}
-                        alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    </div>
+                      <div className="relative h-40 overflow-hidden">
+                        <Image
+                          src={item.image}
+                          alt={item.title}
+                          fill
+                          sizes="(min-width: 768px) 33vw, 100vw"
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
                   ) : (
                     <div className="h-40 bg-slate-100 flex items-center justify-center">
                       <Newspaper className="w-10 h-10 text-slate-300" />

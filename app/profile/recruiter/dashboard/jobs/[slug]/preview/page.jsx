@@ -33,11 +33,9 @@ export default function JobPreviewPage() {
 
   const fetchJobDetail = async () => {
     try {
-      const token = localStorage.getItem("token");
       const { data } = await api.get(
         `/api/profile/recruiter/jobs/${params.slug}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
           withCredentials: true,
         },
       );

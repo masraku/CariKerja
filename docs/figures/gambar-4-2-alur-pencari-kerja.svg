@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="860" viewBox="0 0 1280 860" role="img" aria-labelledby="title desc">
+  <title id="title">Gambar 4.2 Alur Proses Pencari Kerja</title>
+  <desc id="desc">Diagram alur pencari kerja pada prototype sistem rekrutmen digital, mulai dari registrasi sampai monitoring status lamaran.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f7fbff"/>
+      <stop offset="100%" stop-color="#eef6fb"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#03587f"/>
+      <stop offset="100%" stop-color="#0487bd"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#0f2940" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M 0 0 L 12 6 L 0 12 z" fill="#03587f"/>
+    </marker>
+  </defs>
+
+  <rect width="1280" height="860" fill="url(#bg)"/>
+  <text x="640" y="46" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" fill="#0f2940">Alur Proses Pencari Kerja</text>
+  <text x="640" y="76" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="15" fill="#52677a">Alur penggunaan prototype dari pembuatan akun, pengiriman lamaran, sampai pemantauan status seleksi.</text>
+
+  <rect x="70" y="120" width="1140" height="275" rx="24" fill="#ffffff" stroke="#c8d7e3" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="70" y="120" width="1140" height="48" rx="24" fill="#e8f7ff"/>
+  <text x="105" y="151" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#03587f">Aksi Pencari Kerja</text>
+
+  <rect x="110" y="215" width="160" height="82" rx="16" fill="#f2f8fc" stroke="#b9d5e7"/>
+  <text x="190" y="247" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f2940">Registrasi / Login</text>
+  <text x="190" y="271" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#52677a">Role JOBSEEKER</text>
+
+  <rect x="330" y="215" width="160" height="82" rx="16" fill="#f2f8fc" stroke="#b9d5e7"/>
+  <text x="410" y="240" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f2940">Lengkapi Profil</text>
+  <text x="410" y="263" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#52677a">Data diri, alamat,</text>
+  <text x="410" y="281" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#52677a">CV, KTP, AK1</text>
+
+  <rect x="550" y="215" width="160" height="82" rx="16" fill="#f2f8fc" stroke="#b9d5e7"/>
+  <text x="630" y="247" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f2940">Cari Lowongan</text>
+  <text x="630" y="271" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#52677a">Daftar dan detail</text>
+
+  <rect x="770" y="215" width="160" height="82" rx="16" fill="#f2f8fc" stroke="#b9d5e7"/>
+  <text x="850" y="247" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f2940">Kirim Lamaran</text>
+  <text x="850" y="271" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#52677a">Apply pada lowongan</text>
+
+  <rect x="990" y="215" width="160" height="82" rx="16" fill="#f2f8fc" stroke="#b9d5e7"/>
+  <text x="1070" y="247" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f2940">Pantau Status</text>
+  <text x="1070" y="271" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#52677a">Dashboard lamaran</text>
+
+  <line x1="270" y1="256" x2="330" y2="256" stroke="#03587f" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="490" y1="256" x2="550" y2="256" stroke="#03587f" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="710" y1="256" x2="770" y2="256" stroke="#03587f" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="930" y1="256" x2="990" y2="256" stroke="#03587f" stroke-width="4" marker-end="url(#arrow)"/>
+
+  <rect x="70" y="445" width="1140" height="305" rx="24" fill="#ffffff" stroke="#c8d7e3" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="70" y="445" width="1140" height="48" rx="24" fill="#fff8e8"/>
+  <text x="105" y="476" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#8a5a00">Validasi dan Proses Sistem</text>
+
+  <rect x="120" y="535" width="205" height="92" rx="18" fill="#fffdf7" stroke="#e7c76f"/>
+  <text x="222" y="565" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f2940">Validasi Lamaran</text>
+  <text x="222" y="589" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#52677a">Login, role, profil,</text>
+  <text x="222" y="607" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#52677a">status lowongan, duplikasi</text>
+
+  <path d="M 465 530 L 570 581 L 465 632 L 360 581 Z" fill="#e9fbf1" stroke="#91d9b2" stroke-width="2"/>
+  <text x="465" y="574" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f2940">Valid?</text>
+  <text x="465" y="596" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#52677a">Sesuai aturan</text>
+
+  <rect x="625" y="535" width="180" height="92" rx="18" fill="#e9fbf1" stroke="#91d9b2"/>
+  <text x="715" y="565" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f2940">Lamaran Tersimpan</text>
+  <text x="715" y="589" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#52677a">Status awal</text>
+  <text x="715" y="607" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#52677a">PENDING</text>
+
+  <rect x="870" y="535" width="220" height="92" rx="18" fill="#e8f7ff" stroke="#8bcce9"/>
+  <text x="980" y="565" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#0f2940">Update Status Seleksi</text>
+  <text x="980" y="589" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#52677a">Review, shortlist, interview,</text>
+  <text x="980" y="607" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#52677a">accepted, rejected, withdrawn</text>
+
+  <rect x="360" y="665" width="245" height="54" rx="14" fill="#fff0f0" stroke="#f0aaaa"/>
+  <text x="482" y="687" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#7b1d1d">Jika tidak valid</text>
+  <text x="482" y="706" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#7b1d1d">Sistem menampilkan pesan error</text>
+
+  <line x1="850" y1="297" x2="850" y2="415" stroke="#03587f" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M 850 415 C 850 470 222 470 222 535" fill="none" stroke="#03587f" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="325" y1="581" x2="360" y2="581" stroke="#03587f" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="570" y1="581" x2="625" y2="581" stroke="#03587f" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="805" y1="581" x2="870" y2="581" stroke="#03587f" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M 980 535 C 1030 475 1070 410 1070 297" fill="none" stroke="#03587f" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M 465 632 L 465 665" fill="none" stroke="#9b2c2c" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="600" y="565" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#03587f">Ya</text>
+  <text x="488" y="653" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#9b2c2c">Tidak</text>
+
+  <text x="640" y="820" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#6b7f90">Alur ini menjelaskan proses pada prototype dan dapat disesuaikan dengan prosedur resmi jika sistem dikembangkan lebih lanjut.</text>
+</svg>

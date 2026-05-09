@@ -2,10 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import api from "@/lib/api"; // CSRF-protected axios instance
 
-// Helper to get auth header
-const getAuthHeader = () => ({
-    Authorization: `Bearer ${localStorage.getItem("token")}`,
-});
+const getAuthHeader = () => ({});
 
 // ============ ADMIN DASHBOARD STATS ============
 const queryKeyAdminStats = ["adminStats"];
@@ -385,4 +382,3 @@ export function useQueryAdminSidebarCounts(enabled = true) {
         refetchInterval: 30000, // Refresh every 30 seconds
     });
 }
-

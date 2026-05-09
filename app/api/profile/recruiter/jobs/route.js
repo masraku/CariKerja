@@ -1,16 +1,19 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createErrorResponse } from '@/lib/errorHandler'
-import { verifyToken } from '@/lib/auth'
+import { getTokenFromRequest, verifyToken } from '@/lib/auth'
 
 export async function GET(request) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    const token = getTokenFromRequest(request)
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const decoded = verifyToken(token)
+    if (!decoded) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+    }
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status') || 'all'
     const search = searchParams.get('search') || ''

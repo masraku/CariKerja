@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
 import { Upload, User, Loader2, X } from "lucide-react";
-import axios from "axios";
+import api from "@/lib/api";
 
 export default function RecruiterPhotoUpload({
   currentPhoto,
@@ -44,15 +44,12 @@ export default function RecruiterPhotoUpload({
   const uploadPhoto = async (file) => {
     setUploading(true);
     try {
-      const token = localStorage.getItem("token");
       const formData = new FormData();
       formData.append("file", file);
       formData.append("type", "recruiter-photo");
 
-      const { data } = await axios.post("/api/upload", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const { data } = await api.post("/api/upload", formData, {
+        withCredentials: true,
       });
 
       if (data.success) {

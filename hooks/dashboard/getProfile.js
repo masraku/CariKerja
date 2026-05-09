@@ -2,10 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import api from "@/lib/api"; // CSRF-protected axios instance
 
-// Helper to get auth header
-const getAuthHeader = () => ({
-    Authorization: `Bearer ${localStorage.getItem("token")}`,
-});
+const getAuthHeader = () => ({});
 
 // ============ PROFILE ============
 const queryKeyGetProfile = ["getProfile"];
@@ -32,9 +29,6 @@ export function useQueryDashboardStats(enabled = true) {
     return useQuery({
         queryKey: queryKeyDashboardStats,
         queryFn: async () => {
-            const token = localStorage.getItem("token");
-            if (!token) throw new Error("No token");
-
             const { data } = await api.get("/api/profile/jobseeker/my-applications", {
                 headers: getAuthHeader(),
                 withCredentials: true,
@@ -61,9 +55,6 @@ export function useQueryEmploymentStatus(enabled = true) {
     return useQuery({
         queryKey: queryKeyEmploymentStatus,
         queryFn: async () => {
-            const token = localStorage.getItem("token");
-            if (!token) throw new Error("No token");
-
             const { data } = await api.get("/api/profile/jobseeker/status", {
                 headers: getAuthHeader(),
                 withCredentials: true,

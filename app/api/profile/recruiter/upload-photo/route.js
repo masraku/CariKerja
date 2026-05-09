@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server'
-import { getCurrentUser, requireRecruiter } from '@/lib/authHelper'
+import { requireRecruiter } from '@/lib/authHelper'
 import { uploadRecruiterPhoto } from '@/lib/supabaseStorage'
 import { prisma } from '@/lib/prisma'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
+import { validateFile } from '@/lib/fileValidation'
 
 export async function POST(request) {
     try {
+        if (!validateCSRFToken(request)) {
+            return csrfErrorResponse()
+        }
+
         // Authenticate
         const auth = await requireRecruiter(request)
         
@@ -28,18 +34,15 @@ export async function POST(request) {
             )
         }
 
-        // Validate file type
-        if (!file.type.startsWith('image/')) {
-            return NextResponse.json(
-                { error: 'File must be an image' },
-                { status: 400 }
-            )
-        }
+        const fileBuffer = Buffer.from(await file.arrayBuffer())
+        const validation = await validateFile(file, fileBuffer, {
+            allowDocuments: false,
+            maxSize: 5 * 1024 * 1024
+        })
 
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
+        if (!validation.valid) {
             return NextResponse.json(
-                { error: 'File size must be less than 5MB' },
+                { error: validation.error },
                 { status: 400 }
             )
         }

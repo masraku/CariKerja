@@ -127,7 +127,6 @@ export default function AdminContractsPage() {
 
     try {
       setUploading(true);
-      const token = localStorage.getItem("token");
       let adminResponseDocUrl = null;
 
       // Upload file jika ada
@@ -139,9 +138,6 @@ export default function AdminContractsPage() {
         formData.append("folder", "admin-approvals");
 
         const uploadRes = await api.post("/api/upload", formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         });
 

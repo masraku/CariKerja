@@ -86,9 +86,7 @@ export default function EditJobPage() {
 
   const loadCompanyProfile = async () => {
     try {
-      const token = localStorage.getItem("token");
       const { data } = await api.get("/api/profile/recruiter", {
-        headers: { Authorization: `Bearer ${token}` },
         withCredentials: true,
       });
 
@@ -129,13 +127,9 @@ export default function EditJobPage() {
   const loadJob = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
       const { data } = await api.get(
         `/api/profile/recruiter/jobs/${params.slug}/edit`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         },
       );
@@ -292,9 +286,6 @@ export default function EditJobPage() {
       formDataUpload.append("folder", "jobs");
 
       const { data } = await api.post("/api/upload", formDataUpload, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
         withCredentials: true,
       });
 
@@ -365,7 +356,6 @@ export default function EditJobPage() {
     setSubmitting(true);
 
     try {
-      const token = localStorage.getItem("token");
       const submitData = {
         ...formData,
         photo: formData.jobPhoto,
@@ -381,9 +371,6 @@ export default function EditJobPage() {
         `/api/profile/recruiter/jobs/${params.slug}/update`,
         submitData,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         },
       );

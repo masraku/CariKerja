@@ -1,6 +1,7 @@
 'use client'
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { getCSRFToken } from '@/lib/api'
 
 const AuthContext = createContext()
 
@@ -13,11 +14,12 @@ export function AuthProvider({ children }) {
   // Load user from token
   const loadUser = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token')
+      // Legacy cleanup: JWT should live in the httpOnly cookie, not localStorage.
+      localStorage.removeItem('token')
       
       // Fetch user profile
       const response = await fetch('/api/auth/me', {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        credentials: 'include'
       })
 
       if (response.ok) {
@@ -27,7 +29,7 @@ export function AuthProvider({ children }) {
         // Store user data with expiry time
         localStorage.setItem('user', JSON.stringify(data.user))
       } else {
-        // Token invalid or expired, clear it
+        // Session invalid or expired, clear cached user state
         localStorage.removeItem('token')
         localStorage.removeItem('user')
         setUser(null)
@@ -47,7 +49,12 @@ export function AuthProvider({ children }) {
   // Logout function
   const logout = useCallback(async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' })
+      const csrfToken = getCSRFToken()
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {}
+      })
     } catch (e) {
       console.error('Logout API failed', e)
     }
@@ -64,34 +71,9 @@ export function AuthProvider({ children }) {
     loadUser()
   }, [loadUser])
 
-  // Check token expiry every minute
-  useEffect(() => {
-    const checkTokenExpiry = () => {
-      const userData = localStorage.getItem('user')
-      if (userData) {
-        try {
-          const user = JSON.parse(userData)
-          if (user.tokenExpiresAt && Date.now() >= user.tokenExpiresAt) {
-            logout()
-          }
-        } catch (e) {
-          console.error('Error parsing user data:', e)
-        }
-      }
-    }
-
-    // Check immediately
-    checkTokenExpiry()
-
-    // Check every minute
-    const interval = setInterval(checkTokenExpiry, 60 * 1000)
-
-    return () => clearInterval(interval)
-  }, [logout])
-
   // Login function
-  const login = async (token, userData) => {
-    localStorage.setItem('token', token)
+  const login = async (userData) => {
+    localStorage.removeItem('token')
     localStorage.setItem('user', JSON.stringify(userData))
     setUser(userData)
     setIsAuthenticated(true)

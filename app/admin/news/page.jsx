@@ -182,7 +182,6 @@ export default function AdminNewsPage() {
 
     setUploading(true);
     try {
-      const token = localStorage.getItem("token");
       const uploadFormData = new FormData();
       uploadFormData.append("file", file);
       uploadFormData.append("type", "admin-doc");
@@ -190,9 +189,6 @@ export default function AdminNewsPage() {
       uploadFormData.append("folder", "news");
 
       const { data } = await api.post("/api/upload", uploadFormData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         withCredentials: true,
       });
 
@@ -303,14 +299,10 @@ export default function AdminNewsPage() {
 
   const handleUpdateStatus = async (id, newStatus) => {
     try {
-      const token = localStorage.getItem("token");
       const { data } = await api.put(
         `/api/admin/news/${id}`,
         { status: newStatus },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         },
       );

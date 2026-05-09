@@ -69,6 +69,17 @@ export default function JobDetailPage() {
     }
   }, [isError, router]);
 
+  useEffect(() => {
+    if (!selectedImage) return;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setSelectedImage(null);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedImage]);
+
   const toggleSave = () => {
     if (!isAuthenticated) {
       Swal.fire({
@@ -283,6 +294,7 @@ export default function JobDetailPage() {
                   <div className="flex gap-3">
                     <button
                       onClick={toggleSave}
+                      aria-label={saved ? "Hapus lowongan tersimpan" : "Simpan lowongan"}
                       className={`p-3 rounded-xl transition-all border ${
                         saved
                           ? "bg-blue-50 text-blue-600 border-blue-100"
@@ -297,6 +309,7 @@ export default function JobDetailPage() {
                     </button>
                     <button
                       onClick={handleShare}
+                      aria-label="Bagikan lowongan"
                       className="p-3 rounded-xl bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all"
                     >
                       <Share2 className="w-6 h-6" />
@@ -389,32 +402,36 @@ export default function JobDetailPage() {
                 </div>
                 <div className="p-6">
                   {job.photo && (
-                    <div
+                    <button
+                      type="button"
                       className="aspect-video rounded-2xl overflow-hidden bg-slate-50 mb-4 border border-slate-100 cursor-pointer hover:opacity-95 transition"
                       onClick={() => setSelectedImage(job.photo)}
+                      aria-label="Lihat foto utama lowongan"
                     >
                       <img
                         src={job.photo}
                         alt="Main Job Photo"
                         className="w-full h-full object-cover"
                       />
-                    </div>
+                    </button>
                   )}
 
                   {job.gallery && job.gallery.length > 0 && (
                     <div className="grid grid-cols-4 gap-3">
                       {job.gallery.map((img, idx) => (
-                        <div
+                        <button
+                          type="button"
                           key={idx}
                           className="aspect-square rounded-xl overflow-hidden bg-slate-50 border border-slate-100 hover:shadow-md transition-shadow cursor-pointer hover:opacity-95"
                           onClick={() => setSelectedImage(img)}
+                          aria-label={`Lihat gambar galeri lowongan ${idx + 1}`}
                         >
                           <img
                             src={img}
                             alt={`Gallery ${idx}`}
                             className="w-full h-full object-cover"
                           />
-                        </div>
+                        </button>
                       ))}
                     </div>
                   )}
@@ -675,12 +692,16 @@ export default function JobDetailPage() {
       {/* Image Modal */}
       {selectedImage && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Pratinjau gambar lowongan"
           className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-200"
           onClick={() => setSelectedImage(null)}
         >
           <div className="relative max-w-5xl w-full max-h-[90vh] flex items-center justify-center">
             <button
               onClick={() => setSelectedImage(null)}
+              aria-label="Tutup pratinjau gambar"
               className="absolute -top-12 right-0 text-white/80 hover:text-white transition"
             >
               <XCircle className="w-8 h-8" />

@@ -1,15 +1,11 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { verifyToken } from '@/lib/auth'
+import { getTokenFromRequest, verifyToken } from '@/lib/auth'
 
 export async function GET(request) {
   try {
-    // Get token from Authorization header or httpOnly cookie
-    const authHeader = request.headers.get('authorization')
-    const cookieToken = request.cookies.get('token')?.value
-    const token = authHeader?.startsWith('Bearer ')
-      ? authHeader.substring(7)
-      : cookieToken
+    // Get token from httpOnly cookie, with Authorization header kept only for legacy clients.
+    const token = getTokenFromRequest(request)
     
     if (!token) {
       return NextResponse.json(

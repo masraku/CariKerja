@@ -3,16 +3,19 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createErrorResponse } from '@/lib/errorHandler'
-import { verifyToken } from '@/lib/auth'
+import { getTokenFromRequest, verifyToken } from '@/lib/auth'
 
 export async function POST(request, { params }) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    const token = getTokenFromRequest(request)
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const decoded = verifyToken(token)
+    if (!decoded) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+    }
     const { slug } = await params
     const body = await request.json()
     const { applicationIds, interviewDate, interviewTime, duration, notes, meetingLink, title } = body
@@ -109,12 +112,15 @@ export async function POST(request, { params }) {
 // GET - Fetch applications for scheduling
 export async function GET(request, { params }) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    const token = getTokenFromRequest(request)
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const decoded = verifyToken(token)
+    if (!decoded) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+    }
     const { slug } = await params
     const { searchParams } = new URL(request.url)
     const applicationIds = searchParams.get('applications')?.split(',') || []

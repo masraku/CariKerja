@@ -85,18 +85,9 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="relative pt-24 pb-16 lg:pt-36 lg:pb-24 overflow-hidden bg-primary">
         <div className="absolute inset-0 bg-gradient-to-br from-primary to-primary-hover opacity-90" />
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-20"
-        >
-          <source
-            src="https://static.vecteezy.com/system/resources/previews/025/315/414/mp4/yogyakarta-indonesia-may-5th-2023-aerial-view-of-tugu-jogja-or-yogyakarta-monument-indonesia-free-video.mp4"
-            type="video/mp4"
-          />
-        </video>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.22),transparent_28%),radial-gradient(circle_at_78%_18%,rgba(255,215,0,0.18),transparent_24%),linear-gradient(135deg,rgba(3,88,127,0.95),rgba(2,57,82,0.92))]" />
+        <div className="absolute -left-24 bottom-0 h-72 w-72 rounded-full bg-cyan-200/10 blur-3xl" />
+        <div className="absolute -right-20 top-24 h-80 w-80 rounded-full bg-yellow-300/10 blur-3xl" />
 
         <div className="max-w-5xl mx-auto px-4 lg:px-8 relative z-10 text-center">
           {/* Badge */}
@@ -131,6 +122,7 @@ export default function LandingPage() {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
+                  aria-label="Cari posisi, perusahaan, atau keahlian"
                   placeholder="Cari posisi, perusahaan, atau keahlian..."
                   value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
@@ -372,7 +364,7 @@ export default function LandingPage() {
               {
                 icon: Search,
                 title: "Temukan Peluang",
-                desc: "Filter ribuan lowongan yang sesuai dengan kriteria impianmu.",
+                desc: "Filter lowongan aktif yang sesuai dengan kriteria dan lokasi pilihanmu.",
                 color: "bg-indigo-500",
               },
               {

@@ -130,7 +130,6 @@ export async function POST(request) {
       name: user.role === 'JOBSEEKER' 
         ? `${jobseeker?.firstName || ''} ${jobseeker?.lastName || ''}`.trim()
         : `${recruiter?.firstName || ''} ${recruiter?.lastName || ''}`.trim(),
-      tokenExpiresAt: Date.now() + (60 * 60 * 1000) // 1 hour from now
     }
 
     // Add role-specific data
@@ -160,7 +159,6 @@ export async function POST(request) {
       {
         message: 'Login berhasil',
         user: userData,
-        token,
         csrfToken // Also send in response body for client storage
       },
       { status: 200 }

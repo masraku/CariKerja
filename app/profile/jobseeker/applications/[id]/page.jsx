@@ -57,14 +57,10 @@ export default function ApplicationDetailPage() {
   const loadApplicationDetail = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
 
       const { data } = await api.get(
         `/api/profile/jobseeker/applications/${params.id}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         },
       );
@@ -95,13 +91,9 @@ export default function ApplicationDetailPage() {
 
   const loadInterviewDetail = async (applicationId) => {
     try {
-      const token = localStorage.getItem("token");
       const { data } = await api.get(
         `/api/profile/jobseeker/applications/${applicationId}/interview`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         },
       );
@@ -146,14 +138,10 @@ export default function ApplicationDetailPage() {
         didOpen: () => Swal.showLoading(),
       });
 
-      const token = localStorage.getItem("token");
       const { data } = await api.post(
         `/api/profile/jobseeker/applications/${params.id}/reschedule`,
         { reason },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         },
       );
@@ -194,11 +182,7 @@ export default function ApplicationDetailPage() {
       formData.append("file", file);
       formData.append("bucket", "resignation"); // Specify bucket to allow PDF upload
 
-      const token = localStorage.getItem("token");
       const { data } = await api.post("/api/upload", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         withCredentials: true,
       });
 
@@ -247,7 +231,6 @@ export default function ApplicationDetailPage() {
 
     try {
       setSubmittingResign(true);
-      const token = localStorage.getItem("token");
       const { data } = await api.post(
         "/api/resignations/submit",
         {
@@ -256,9 +239,6 @@ export default function ApplicationDetailPage() {
           letterUrl: resignLetterUrl,
         },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         },
       );

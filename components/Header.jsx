@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -86,10 +87,13 @@ const Header = () => {
           {/* Logo */}
           <Link href="/" className="flex items-center group">
             <div className="h-12 md:h-16 bg-white rounded-xl flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform duration-300 shadow-md py-1 px-2">
-              <img
+              <Image
                 src="/assets/logo-disnakerkabcirebon.png"
                 alt="Disnaker Kabupaten Cirebon"
+                width={240}
+                height={96}
                 className="h-full w-auto"
+                priority={isHomePage}
               />
             </div>
           </Link>

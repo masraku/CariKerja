@@ -17,10 +17,10 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://kerjasimpel.vercel.a
 export const metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'Disnaker Cirebon - Portal Lowongan Kerja Resmi',
-    template: '%s | Disnaker Cirebon'
+    default: 'Disnaker Kabupaten Cirebon - Portal Lowongan Kerja Resmi',
+    template: '%s | Disnaker Kabupaten Cirebon'
   },
-  description: 'Portal lowongan kerja resmi Dinas Tenaga Kerja Kota Cirebon. Temukan ribuan lowongan pekerjaan terpercaya dari perusahaan terverifikasi di wilayah Cirebon dan sekitarnya.',
+  description: 'Portal lowongan kerja resmi Dinas Ketenagakerjaan Kabupaten Cirebon. Temukan lowongan pekerjaan terpercaya dari perusahaan terverifikasi di wilayah Cirebon dan sekitarnya.',
   keywords: [
     'lowongan kerja cirebon',
     'loker cirebon',
@@ -34,9 +34,9 @@ export const metadata = {
     'disnaker',
     'dinas tenaga kerja'
   ],
-  authors: [{ name: 'Disnaker Kota Cirebon' }],
-  creator: 'Disnaker Kota Cirebon',
-  publisher: 'Disnaker Kota Cirebon',
+  authors: [{ name: 'Disnaker Kabupaten Cirebon' }],
+  creator: 'Disnaker Kabupaten Cirebon',
+  publisher: 'Disnaker Kabupaten Cirebon',
   formatDetection: {
     email: false,
     address: false,
@@ -46,9 +46,9 @@ export const metadata = {
     type: 'website',
     locale: 'id_ID',
     url: siteUrl,
-    siteName: 'Disnaker Cirebon',
-    title: 'Disnaker Cirebon - Portal Lowongan Kerja Resmi',
-    description: 'Portal lowongan kerja resmi Dinas Tenaga Kerja Kota Cirebon. Temukan ribuan lowongan pekerjaan terpercaya.',
+    siteName: 'Disnaker Kabupaten Cirebon',
+    title: 'Disnaker Kabupaten Cirebon - Portal Lowongan Kerja Resmi',
+    description: 'Portal lowongan kerja resmi Dinas Ketenagakerjaan Kabupaten Cirebon. Temukan lowongan pekerjaan terpercaya.',
     images: [
       {
         url: '/assets/logo-disnakerkabcirebon.png',
@@ -60,8 +60,8 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Disnaker Cirebon - Portal Lowongan Kerja Resmi',
-    description: 'Portal lowongan kerja resmi Dinas Tenaga Kerja Kota Cirebon.',
+    title: 'Disnaker Kabupaten Cirebon - Portal Lowongan Kerja Resmi',
+    description: 'Portal lowongan kerja resmi Dinas Ketenagakerjaan Kabupaten Cirebon.',
     images: ['/assets/logo-disnakerkabcirebon.png'],
   },
   robots: {
