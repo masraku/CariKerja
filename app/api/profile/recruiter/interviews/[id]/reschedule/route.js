@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
+import { randomUUID } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { createErrorResponse } from '@/lib/errorHandler'
 import { requireRecruiter } from '@/lib/authHelper'
 import { sendRescheduleNotification } from '@/lib/email/sendRescheduleNotification'
-import { v4 as uuidv4 } from 'uuid'
 import { validateBody } from '@/lib/validations'
 import { recruiterRescheduleSchema } from '@/lib/validations/profile'
 
@@ -30,7 +30,38 @@ export async function PATCH(request, context) {
     if (!validation.success) {
       return validation.response
     }
-    const { scheduledAt, duration, meetingUrl, description, participantId } = validation.data
+    const { scheduledAt, duration, meetingType, meetingUrl, location, description, participantId } = validation.data
+    const parsedScheduledAt = new Date(scheduledAt)
+    const normalizedMeetingType = meetingType || 'ONLINE'
+    const parsedDuration = parseInt(duration) || 60
+
+    if (Number.isNaN(parsedScheduledAt.getTime())) {
+      return NextResponse.json(
+        { error: 'Jadwal interview tidak valid' },
+        { status: 400 }
+      )
+    }
+
+    if (parsedScheduledAt < new Date()) {
+      return NextResponse.json(
+        { error: 'Jadwal interview tidak boleh berada di masa lalu' },
+        { status: 400 }
+      )
+    }
+
+    if (normalizedMeetingType === 'ONLINE' && !meetingUrl) {
+      return NextResponse.json(
+        { error: 'Link meeting wajib diisi untuk interview online' },
+        { status: 400 }
+      )
+    }
+
+    if (normalizedMeetingType === 'IN_PERSON' && !location) {
+      return NextResponse.json(
+        { error: 'Lokasi wajib diisi untuk interview tatap muka' },
+        { status: 400 }
+      )
+    }
 
     // Check if interview exists and belongs to recruiter
     const interview = await prisma.interviews.findUnique({
@@ -115,15 +146,15 @@ export async function PATCH(request, context) {
       // 2. Create NEW interview for this participant
       const newInterview = await prisma.interviews.create({
         data: {
-          id: uuidv4(),
+          id: randomUUID(),
           recruiterId: interview.recruiterId,
           jobId: interview.jobId,
           title: `${interview.title} (Reschedule)`,
-          scheduledAt: new Date(scheduledAt),
-          duration: duration || interview.duration,
-          meetingType: interview.meetingType, // Inherit type
-          meetingUrl: meetingUrl || interview.meetingUrl,
-          location: interview.location,
+          scheduledAt: parsedScheduledAt,
+          duration: parsedDuration,
+          meetingType: normalizedMeetingType,
+          meetingUrl: normalizedMeetingType === 'ONLINE' ? meetingUrl : null,
+          location: normalizedMeetingType === 'IN_PERSON' ? location : null,
           description: description || interview.description,
           status: 'SCHEDULED',
           updatedAt: new Date()
@@ -137,7 +168,17 @@ export async function PATCH(request, context) {
           interviewId: newInterview.id,
           status: 'PENDING',
           responseMessage: null,
-          respondedAt: null
+          respondedAt: null,
+          updatedAt: new Date()
+        }
+      })
+
+      await prisma.applications.update({
+        where: { id: participant.applicationId },
+        data: {
+          status: 'INTERVIEW_SCHEDULED',
+          interviewDate: parsedScheduledAt,
+          updatedAt: new Date()
         }
       })
 
@@ -149,9 +190,11 @@ export async function PATCH(request, context) {
           jobTitle: interview.jobs.title,
           companyName: interview.jobs.companies.name,
           oldScheduledAt: oldScheduledAt,
-          newScheduledAt: new Date(scheduledAt),
-          duration: duration || interview.duration,
-          meetingUrl: meetingUrl || interview.meetingUrl,
+          newScheduledAt: parsedScheduledAt,
+          duration: parsedDuration,
+          meetingType: normalizedMeetingType,
+          meetingUrl: normalizedMeetingType === 'ONLINE' ? meetingUrl : null,
+          location: normalizedMeetingType === 'IN_PERSON' ? location : null,
           description: description || interview.description,
           interviewId: newInterview.id
         })
@@ -172,11 +215,14 @@ export async function PATCH(request, context) {
     const updatedInterview = await prisma.interviews.update({
       where: { id },
       data: {
-        scheduledAt: new Date(scheduledAt),
-        duration: duration || interview.duration,
-        meetingUrl: meetingUrl || interview.meetingUrl,
+        scheduledAt: parsedScheduledAt,
+        duration: parsedDuration,
+        meetingType: normalizedMeetingType,
+        meetingUrl: normalizedMeetingType === 'ONLINE' ? meetingUrl : null,
+        location: normalizedMeetingType === 'IN_PERSON' ? location : null,
         description: description || interview.description,
-        status: 'RESCHEDULED'
+        status: 'SCHEDULED',
+        updatedAt: new Date()
       },
       include: {
         interview_participants: true
@@ -191,7 +237,19 @@ export async function PATCH(request, context) {
       data: {
         status: 'PENDING',
         responseMessage: null,
-        respondedAt: null
+        respondedAt: null,
+        updatedAt: new Date()
+      }
+    })
+
+    await prisma.applications.updateMany({
+      where: {
+        id: { in: interview.interview_participants.map(participant => participant.applicationId) }
+      },
+      data: {
+        status: 'INTERVIEW_SCHEDULED',
+        interviewDate: parsedScheduledAt,
+        updatedAt: new Date()
       }
     })
 
@@ -204,9 +262,11 @@ export async function PATCH(request, context) {
           jobTitle: interview.jobs.title,
           companyName: interview.jobs.companies.name,
           oldScheduledAt: oldScheduledAt,
-          newScheduledAt: new Date(scheduledAt),
-          duration: duration || interview.duration,
-          meetingUrl: meetingUrl || interview.meetingUrl,
+          newScheduledAt: parsedScheduledAt,
+          duration: parsedDuration,
+          meetingType: normalizedMeetingType,
+          meetingUrl: normalizedMeetingType === 'ONLINE' ? meetingUrl : null,
+          location: normalizedMeetingType === 'IN_PERSON' ? location : null,
           description: description || interview.description,
           interviewId: id
         })
@@ -226,7 +286,9 @@ export async function PATCH(request, context) {
           title: updatedInterview.title,
           scheduledAt: updatedInterview.scheduledAt,
           duration: updatedInterview.duration,
+          meetingType: updatedInterview.meetingType,
           meetingUrl: updatedInterview.meetingUrl,
+          location: updatedInterview.location,
           description: updatedInterview.description,
           status: updatedInterview.status,
           participantCount: updatedInterview.interview_participants.length

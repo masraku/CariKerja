@@ -65,7 +65,9 @@ export async function GET(request) {
             title: participant.interviews.title,
             scheduledAt: participant.interviews.scheduledAt,
             duration: participant.interviews.duration,
+            meetingType: participant.interviews.meetingType,
             meetingUrl: participant.interviews.meetingUrl,
+            location: participant.interviews.location,
             description: participant.interviews.description,
             status: participant.status, // PENDING, ACCEPTED, DECLINED, RESCHEDULE_REQUESTED
             responseMessage: participant.responseMessage,

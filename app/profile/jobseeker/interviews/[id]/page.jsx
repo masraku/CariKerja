@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
 import api from "@/lib/api";
 import {
   Calendar,
@@ -15,7 +16,6 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  ExternalLink,
 } from "lucide-react";
 
 export default function JobseekerInterviewDetailPage() {
@@ -66,10 +66,10 @@ export default function JobseekerInterviewDetailPage() {
     }
   };
 
-  const handleResponse = async (response) => {
+  const handleResponse = async (status) => {
     if (
       !confirm(
-        `Are you sure you want to ${response.toLowerCase()} this interview invitation?`,
+        `Apakah Anda yakin ingin ${status === "ACCEPTED" ? "menerima" : "menolak"} undangan interview ini?`,
       )
     ) {
       return;
@@ -79,15 +79,15 @@ export default function JobseekerInterviewDetailPage() {
 
     try {
       const { data } = await api.patch(
-        `/api/profile/jobseeker/interviews/${params.id}/respond`,
-        { response },
+        `/api/profile/jobseeker/interviews/${interview.myParticipation.id}/respond`,
+        { status },
         {
           withCredentials: true,
         },
       );
 
       if (data.success) {
-        alert(`You have ${response.toLowerCase()}ed the interview invitation!`);
+        alert("Respon interview berhasil disimpan");
         loadInterviewDetails();
       } else {
         alert(data.error || "Failed to respond to interview");
@@ -143,7 +143,8 @@ export default function JobseekerInterviewDetailPage() {
     return null;
   }
 
-  const canJoin = interview.timing.canJoin;
+  const canJoin =
+    interview.timing.canJoin && interview.myParticipation.status === "ACCEPTED";
   const isPast = interview.timing.isPast;
 
   return (
@@ -185,16 +186,13 @@ export default function JobseekerInterviewDetailPage() {
                 </p>
               </div>
               {canJoin && (
-                <a
-                  href={interview.interview.meetingUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  href={`/interviews/${interview.interview.id}/room`}
                   className="flex items-center gap-2 px-6 py-3 bg-white text-green-600 rounded-lg font-bold hover:bg-gray-100 transition"
                 >
                   <Video className="w-5 h-5" />
-                  Join Now
-                  <ExternalLink className="w-4 h-4" />
-                </a>
+                  Masuk Room
+                </Link>
               )}
             </div>
           </div>
@@ -215,7 +213,7 @@ export default function JobseekerInterviewDetailPage() {
                 </p>
                 <div className="flex gap-3">
                   <button
-                    onClick={() => handleResponse("ACCEPT")}
+                    onClick={() => handleResponse("ACCEPTED")}
                     disabled={responding}
                     className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
                   >
@@ -223,7 +221,7 @@ export default function JobseekerInterviewDetailPage() {
                     Accept Invitation
                   </button>
                   <button
-                    onClick={() => handleResponse("DECLINE")}
+                    onClick={() => handleResponse("DECLINED")}
                     disabled={responding}
                     className="flex items-center gap-2 px-6 py-2 border border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition disabled:opacity-50"
                   >
@@ -321,21 +319,30 @@ export default function JobseekerInterviewDetailPage() {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
-                <Video className="w-5 h-5 text-gray-400 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm text-gray-600">Meeting Link</p>
-                  <a
-                    href={interview.interview.meetingUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-medium text-blue-600 hover:text-blue-700 break-all inline-flex items-center gap-1"
-                  >
-                    {interview.interview.meetingUrl}
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
+              {interview.interview.meetingType === "IN_PERSON" ? (
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600">Lokasi</p>
+                    <p className="font-medium text-gray-900 whitespace-pre-wrap">
+                      {interview.interview.location}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="flex items-start gap-3">
+                  <Video className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600">Ruang Interview</p>
+                    <Link
+                      href={`/interviews/${interview.interview.id}/room`}
+                      className="font-medium text-blue-600 hover:text-blue-700"
+                    >
+                      Buka room internal untuk join meeting
+                    </Link>
+                  </div>
+                </div>
+              )}
 
               {interview.interview.description && (
                 <div>

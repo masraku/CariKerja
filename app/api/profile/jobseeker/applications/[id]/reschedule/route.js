@@ -115,7 +115,8 @@ export async function POST(request, { params }) {
                 data: {
                     status: 'RESCHEDULE_REQUESTED',
                     responseMessage: reason,
-                    respondedAt: new Date()
+                    respondedAt: new Date(),
+                    updatedAt: new Date()
                 }
             })
         }

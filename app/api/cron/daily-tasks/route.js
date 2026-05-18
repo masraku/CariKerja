@@ -12,57 +12,21 @@ export async function GET(request) {
 
     const results = {
       completedInterviews: 0,
+      overdueInterviews: 0,
       completedContracts: 0,
       expiredJobs: 0
     }
 
-    // Task 1: Complete interviews 24 hours after schedule
+    // Task 1: Report overdue interviews. Recruiters complete interviews manually.
     const now = new Date()
     const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
 
-    const completedInterviews = await prisma.interviews.updateMany({
+    results.overdueInterviews = await prisma.interviews.count({
       where: {
         scheduledAt: { lte: twentyFourHoursAgo },
-        status: { in: ['SCHEDULED', 'CONFIRMED'] }
-      },
-      data: {
-        status: 'COMPLETED',
-        updatedAt: now
+        status: 'SCHEDULED'
       }
     })
-    results.completedInterviews = completedInterviews.count
-
-    // Also update related applications through interview participants
-    const overdueParticipants = await prisma.interview_participants.findMany({
-      where: {
-        status: { in: ['PENDING', 'ACCEPTED', 'INTERVIEW_SCHEDULED'] },
-        interviews: {
-          scheduledAt: { lte: twentyFourHoursAgo }
-        },
-        applications: {
-          status: 'INTERVIEW_SCHEDULED'
-        }
-      },
-      select: { id: true, applicationId: true }
-    })
-
-    if (overdueParticipants.length > 0) {
-      await prisma.interview_participants.updateMany({
-        where: { id: { in: overdueParticipants.map(participant => participant.id) } },
-        data: { status: 'INTERVIEW_COMPLETED', updatedAt: now }
-      })
-
-      await prisma.applications.updateMany({
-        where: {
-          id: { in: overdueParticipants.map(participant => participant.applicationId) },
-          status: 'INTERVIEW_SCHEDULED'
-        },
-        data: {
-          status: 'INTERVIEW_COMPLETED',
-          updatedAt: now
-        }
-      })
-    }
 
     // Task 2: Complete expired contracts
     const expiredContracts = await prisma.contract_workers.findMany({

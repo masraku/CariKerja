@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
 import api from "@/lib/api";
 import {
   Calendar,
@@ -18,10 +17,29 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 
+const getJakartaInputDateTime = (value) => {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    hour12: false,
+  }).formatToParts(new Date(value));
+
+  const get = (type) => parts.find((part) => part.type === type)?.value;
+
+  return {
+    date: `${get("year")}-${get("month")}-${get("day")}`,
+    time: `${get("hour")}:${get("minute")}`,
+  };
+};
+
 function RescheduleContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -85,9 +103,9 @@ function RescheduleContent() {
       }
 
       // Parse scheduledAt to date and time
-      const scheduledDate = new Date(interviewData.scheduledAt);
-      const dateStr = scheduledDate.toISOString().split("T")[0];
-      const timeStr = scheduledDate.toTimeString().slice(0, 5);
+      const { date: dateStr, time: timeStr } = getJakartaInputDateTime(
+        interviewData.scheduledAt,
+      );
 
       setFormData({
         date: dateStr,
@@ -144,18 +162,27 @@ function RescheduleContent() {
       return;
     }
 
+    if (formData.meetingType === "IN_PERSON" && !formData.location) {
+      Swal.fire({
+        icon: "warning",
+        title: "Lokasi Belum Diisi",
+        text: "Silakan masukkan lokasi interview",
+        confirmButtonColor: "#2563EB",
+      });
+      return;
+    }
+
     try {
       setSaving(true);
 
-      // Combine date and time
-      const scheduledAt = new Date(`${formData.date}T${formData.time}`);
-
-      const { data } = await api.patch(
+      await api.patch(
         `/api/profile/recruiter/interviews/${interview.id}/reschedule`,
         {
-          scheduledAt: scheduledAt.toISOString(),
+          scheduledAt: `${formData.date}T${formData.time}:00+07:00`,
           duration: parseInt(formData.duration),
+          meetingType: formData.meetingType,
           meetingUrl: formData.meetingUrl,
+          location: formData.location,
           description: formData.description,
           participantId: participant ? participant.id : null,
         },

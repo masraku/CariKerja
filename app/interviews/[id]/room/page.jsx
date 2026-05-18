@@ -16,7 +16,6 @@ import {
     ExternalLink
 } from 'lucide-react'
 import { useQueryInterviewRoom } from '@/hooks/jobseeker/useJobseeker'
-import api from '@/lib/api'
 
 export default function InterviewRoomPage() {
     const params = useParams()
@@ -79,43 +78,16 @@ export default function InterviewRoomPage() {
             return
         }
 
-        // Open Google Meet in new tab
-        window.open(interview.meetingUrl, '_blank')
-
-        // Optional: Mark as completed after joining
-        Swal.fire({
-            title: 'Selamat Interview!',
-            text: 'Apakah interview sudah selesai?',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, Selesai',
-            cancelButtonText: 'Belum',
-            showDenyButton: false
-        }).then((result) => {
-            if (result.isConfirmed) {
-                markAsCompleted()
-            }
-        })
-    }
-
-    const markAsCompleted = async () => {
-        try {
-            await api.patch(
-                `/api/interviews/${params.id}/room`,
-                { action: 'mark_completed' },
-                { withCredentials: true }
-            )
-
+        if (!interview.meetingUrl) {
             Swal.fire({
-                icon: 'success',
-                title: 'Terima Kasih!',
-                text: 'Interview telah ditandai selesai. Semoga berhasil!',
-                timer: 2000
-            }).then(() => {
-                router.push('/profile/jobseeker/interviews')
+                icon: 'info',
+                title: 'Interview Tatap Muka',
+                text: 'Silakan hadir sesuai lokasi yang tercantum.'
             })
-        } catch (error) {
+            return
         }
+
+        window.open(interview.meetingUrl, '_blank')
     }
 
     const formatDate = (date) => {
@@ -245,14 +217,21 @@ export default function InterviewRoomPage() {
                                     </p>
                                 </div>
 
-                                <button
-                                    onClick={handleJoinMeeting}
-                                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-6 rounded-2xl hover:from-green-700 hover:to-emerald-700 transition font-bold text-xl shadow-2xl flex items-center justify-center gap-3 animate-pulse"
-                                >
-                                    <Video className="w-8 h-8" />
-                                    Join Google Meet Sekarang
-                                    <ExternalLink className="w-6 h-6" />
-                                </button>
+                                {interview.meetingType === 'IN_PERSON' ? (
+                                    <div className="w-full bg-white border-2 border-green-400 text-green-900 py-6 px-4 rounded-2xl font-bold text-lg shadow-lg flex items-center justify-center gap-3 text-center">
+                                        <Building2 className="w-7 h-7" />
+                                        Hadir di lokasi interview sesuai jadwal
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={handleJoinMeeting}
+                                        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-6 rounded-2xl hover:from-green-700 hover:to-emerald-700 transition font-bold text-xl shadow-2xl flex items-center justify-center gap-3 animate-pulse"
+                                    >
+                                        <Video className="w-8 h-8" />
+                                        Join Meeting Sekarang
+                                        <ExternalLink className="w-6 h-6" />
+                                    </button>
+                                )}
 
                                 <div className="mt-6 bg-blue-50 rounded-xl p-4">
                                     <p className="text-sm text-blue-900 font-semibold mb-2">💡 Tips Interview:</p>
@@ -284,32 +263,42 @@ export default function InterviewRoomPage() {
                             </div>
                         )}
 
-                        {/* Meeting Link (always visible for reference) */}
                         <div className="mt-6 border-t pt-6">
-                            <p className="text-sm text-gray-600 mb-2">Link Google Meet:</p>
-                            <div className="flex items-center gap-2">
-                                <input
-                                    type="text"
-                                    value={interview.meetingUrl}
-                                    readOnly
-                                    className="flex-1 px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm"
-                                />
-                                <button
-                                    onClick={() => {
-                                        navigator.clipboard.writeText(interview.meetingUrl)
-                                        Swal.fire({
-                                            icon: 'success',
-                                            title: 'Tersalin!',
-                                            text: 'Link berhasil disalin',
-                                            timer: 1500,
-                                            showConfirmButton: false
-                                        })
-                                    }}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
-                                >
-                                    Copy
-                                </button>
-                            </div>
+                            {interview.meetingType === 'IN_PERSON' ? (
+                                <div>
+                                    <p className="text-sm text-gray-600 mb-2">Lokasi Interview:</p>
+                                    <p className="px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-900 whitespace-pre-wrap">
+                                        {interview.location}
+                                    </p>
+                                </div>
+                            ) : (
+                                <div>
+                                    <p className="text-sm text-gray-600 mb-2">Link Meeting:</p>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="text"
+                                            value={interview.meetingUrl || ''}
+                                            readOnly
+                                            className="flex-1 px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm"
+                                        />
+                                        <button
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(interview.meetingUrl || '')
+                                                Swal.fire({
+                                                    icon: 'success',
+                                                    title: 'Tersalin!',
+                                                    text: 'Link berhasil disalin',
+                                                    timer: 1500,
+                                                    showConfirmButton: false
+                                                })
+                                            }}
+                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+                                        >
+                                            Copy
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

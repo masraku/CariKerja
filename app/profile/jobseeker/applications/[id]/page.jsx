@@ -98,7 +98,11 @@ export default function ApplicationDetailPage() {
         },
       );
 
-      setInterview(data.interview);
+      setInterview(
+        data.interview
+          ? { ...data.interview, participantStatus: data.participantStatus }
+          : null,
+      );
     } catch (error) {}
   };
 
@@ -708,23 +712,31 @@ export default function ApplicationDetailPage() {
                 )}
 
                 {/* Join Meeting Button */}
-                {application.status === "INTERVIEW_SCHEDULED" &&
-                  interview.meetingUrl && (
+                {application.status === "INTERVIEW_SCHEDULED" && interview && (
                     <div className="mt-6 space-y-3">
-                      <a
-                        href={interview.meetingUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block"
-                      >
-                        <button className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 rounded-2xl font-bold text-lg hover:from-green-700 hover:to-emerald-700 transition shadow-lg flex items-center justify-center gap-3">
-                          <Video className="w-6 h-6" />
-                          Masuk Room Interview
-                          <ExternalLink className="w-5 h-5" />
-                        </button>
-                      </a>
+                      {interview.participantStatus === "ACCEPTED" ? (
+                        <Link
+                          href={`/interviews/${interview.id}/room`}
+                          className="block"
+                        >
+                          <button className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 rounded-2xl font-bold text-lg hover:from-green-700 hover:to-emerald-700 transition shadow-lg flex items-center justify-center gap-3">
+                            <Video className="w-6 h-6" />
+                            Masuk Room Interview
+                          </button>
+                        </Link>
+                      ) : (
+                        <Link
+                          href={`/profile/jobseeker/interviews/${interview.id}`}
+                          className="block"
+                        >
+                          <button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-bold text-lg hover:from-blue-700 hover:to-indigo-700 transition shadow-lg flex items-center justify-center gap-3">
+                            <Calendar className="w-6 h-6" />
+                            Konfirmasi Undangan Interview
+                          </button>
+                        </Link>
+                      )}
                       <p className="text-center text-gray-500 text-sm">
-                        Klik untuk bergabung ke Google Meet
+                        Klik untuk membuka room internal saat jadwal interview tiba
                       </p>
 
                       {/* Request Reschedule Button */}

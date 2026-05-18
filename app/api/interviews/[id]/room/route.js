@@ -91,7 +91,9 @@ export async function GET(request, context) {
                     title: interview.title,
                     scheduledAt: interview.scheduledAt,
                     duration: interview.duration,
+                    meetingType: interview.meetingType,
                     meetingUrl: interview.meetingUrl,
+                    location: interview.location,
                     description: interview.description,
                     status: interview.status
                 },
@@ -124,61 +126,15 @@ export async function GET(request, context) {
     }
 }
 
-// PATCH - Mark interview as completed (can be called by jobseeker after interview)
-export async function PATCH(request, context) {
-    try {
-        const auth = await requireJobseeker(request)
-        if (auth.error) {
-            return NextResponse.json({ error: auth.error }, { status: auth.status })
-        }
-
-        const { jobseeker } = auth
-        const params = await context.params
-        const { id: interviewId } = params
-        const body = await request.json()
-        const { action } = body // action: "mark_completed"
-
-        if (action !== 'mark_completed') {
-            return NextResponse.json(
-                { error: 'Aksi tidak valid' },
-                { status: 400 }
-            )
-        }
-
-        // Verify participant
-        const participant = await prisma.interview_participants.findFirst({
-            where: {
-                interviewId: interviewId,
-                applications: {
-                    jobseekerId: jobseeker.id
-                }
-            }
-        })
-
-        if (!participant) {
-            return NextResponse.json(
-                { error: 'Tidak memiliki akses' },
-                { status: 403 }
-            )
-        }
-
-        // Update participant status to COMPLETED
-        await prisma.interview_participants.update({
-            where: { id: participant.id },
-            data: {
-                status: 'COMPLETED'
-            }
-        })
-
-        return NextResponse.json({
-            success: true,
-            message: 'Interview ditandai selesai'
-        })
-
-    } catch (error) {
-        return NextResponse.json(
-            createErrorResponse('Gagal menandai interview selesai', error),
-            { status: 500 }
-        )
+// PATCH - Jobseeker cannot complete interviews; recruiter controls interview outcomes.
+export async function PATCH(request) {
+    const auth = await requireJobseeker(request)
+    if (auth.error) {
+        return NextResponse.json({ error: auth.error }, { status: auth.status })
     }
+
+    return NextResponse.json(
+        { error: 'Interview hanya dapat ditandai selesai oleh recruiter' },
+        { status: 403 }
+    )
 }

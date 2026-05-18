@@ -170,7 +170,7 @@ export function useMutationScheduleInterview() {
         mutationFn: async (interviewData) => {
             // Use api for POST (CSRF protected)
             const { data } = await api.post(
-                "/api/interviews",
+                "/api/profile/recruiter/interviews",
                 interviewData,
                 { headers: getAuthHeader(), withCredentials: true }
             );

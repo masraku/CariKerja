@@ -57,35 +57,29 @@ export async function PATCH(request, context) {
             )
         }
 
-        // If rejecting reschedule, also reject the application
+        // Rejecting a reschedule request keeps the original interview active.
         if (rejectReschedule) {
-            // Update participant status
-            await prisma.interview_participants.update({
+            const updatedParticipant = await prisma.interview_participants.update({
                 where: { id: participantId },
                 data: {
-                    status: 'DECLINED'
-                }
-            })
-
-            // Update application status to REJECTED
-            await prisma.applications.update({
-                where: { id: participant.applicationId },
-                data: {
-                    status: 'REJECTED',
-                    recruiterNotes: 'Permintaan reschedule ditolak'
+                    status: 'PENDING',
+                    responseMessage: null,
+                    respondedAt: null,
+                    updatedAt: new Date()
                 }
             })
 
             return NextResponse.json({
                 success: true,
-                message: 'Reschedule rejected and application rejected'
+                message: 'Permintaan reschedule ditolak. Kandidat tetap berada pada jadwal interview semula.',
+                data: updatedParticipant
             })
         }
 
         // Normal status update
         const updatedParticipant = await prisma.interview_participants.update({
             where: { id: participantId },
-            data: { status }
+            data: { status, updatedAt: new Date() }
         })
 
         return NextResponse.json({

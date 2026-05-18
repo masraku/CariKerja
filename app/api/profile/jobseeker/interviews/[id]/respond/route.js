@@ -16,7 +16,7 @@ export async function PATCH(request, context) {
 
         const { jobseeker } = auth
         const params = await context.params
-        const { id: participantId } = params
+        const { id } = params
         
         const validation = await validateBody(request, interviewRespondSchema)
         if (!validation.success) {
@@ -24,9 +24,17 @@ export async function PATCH(request, context) {
         }
         const { status, message } = validation.data
 
-        // Get participant with interview details
-        const participant = await prisma.interview_participants.findUnique({
-            where: { id: participantId },
+        // Accept both participant id and interview id to keep jobseeker pages consistent.
+        const participant = await prisma.interview_participants.findFirst({
+            where: {
+                OR: [
+                    { id },
+                    { interviewId: id }
+                ],
+                applications: {
+                    jobseekerId: jobseeker.id
+                }
+            },
             include: {
                 interviews: {
                     include: {
@@ -57,14 +65,6 @@ export async function PATCH(request, context) {
             )
         }
 
-        // Verify ownership
-        if (participant.applications.jobseekerId !== jobseeker.id) {
-            return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 403 }
-            )
-        }
-
         // Check if already responded
         if (participant.status !== 'PENDING') {
             return NextResponse.json(
@@ -75,11 +75,12 @@ export async function PATCH(request, context) {
 
         // Update participant status
         const updated = await prisma.interview_participants.update({
-            where: { id: participantId },
+            where: { id: participant.id },
             data: {
                 status: status,
                 responseMessage: message || null,
-                respondedAt: new Date()
+                respondedAt: new Date(),
+                updatedAt: new Date()
             }
         })
 

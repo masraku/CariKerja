@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
 import api from "@/lib/api";
 import {
   Calendar,
@@ -20,7 +19,6 @@ import Swal from "sweetalert2";
 function ScheduleInterviewContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -161,8 +159,8 @@ function ScheduleInterviewContent() {
     try {
       setSaving(true);
 
-      const { data } = await api.post(
-        "/api/interviews/schedule",
+      await api.post(
+        "/api/profile/recruiter/interviews",
         {
           ...formData,
           jobId: job.id,
@@ -261,12 +259,6 @@ Terima kasih dan sampai jumpa!`,
         icon: "error",
         title: "Gagal",
         text: error.response?.data?.error || "Gagal menjadwalkan interview",
-        confirmButtonColor: "#2563EB",
-      });
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Failed to schedule interview",
         confirmButtonColor: "#2563EB",
       });
     } finally {

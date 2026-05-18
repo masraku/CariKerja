@@ -1,6 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Link from "next/link";
 import Swal from "sweetalert2";
 import {
@@ -20,13 +19,12 @@ import {
   ArrowLeft,
   Bell,
   RefreshCw,
-  ExternalLink,
 } from "lucide-react";
 
 export default function JobseekerInterviewsPage() {
-  const router = useRouter();
   // Hooks
-  const { data: queryData, isLoading: loading } = useQueryJobseekerInterviews();
+  const { data: queryData, isLoading: loading, refetch } =
+    useQueryJobseekerInterviews();
   const respondMutation = useMutationRespondInterview();
 
   const interviews = queryData?.interviews || [];
@@ -112,7 +110,7 @@ export default function JobseekerInterviewsPage() {
         timer: 2000,
         showConfirmButton: false,
       });
-      loadInterviews();
+      refetch();
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -666,17 +664,13 @@ export default function JobseekerInterviewsPage() {
                         </div>
 
                         {canJoinNow(interview.scheduledAt) ? (
-                          <a
-                            href={interview.meetingUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <Link
+                            href={`/interviews/${interview.id}/room`}
+                            className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-lg hover:from-green-700 hover:to-emerald-700 transition font-semibold shadow-lg flex items-center justify-center gap-2"
                           >
-                            <button className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-lg hover:from-green-700 hover:to-emerald-700 transition font-semibold shadow-lg flex items-center justify-center gap-2">
-                              <Video className="w-5 h-5" />
-                              Masuk Room Interview
-                              <ExternalLink className="w-4 h-4" />
-                            </button>
-                          </a>
+                            <Video className="w-5 h-5" />
+                            Masuk Room Interview
+                          </Link>
                         ) : (
                           <button
                             disabled

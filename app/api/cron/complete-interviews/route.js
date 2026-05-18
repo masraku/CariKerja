@@ -1,6 +1,6 @@
 // app/api/cron/complete-interviews/route.js
-// This API can be called by Vercel Cron or manually to auto-complete interviews
-// after 24 hours have passed since the scheduled time
+// This API can be called by Vercel Cron or manually to report overdue interviews.
+// Interview completion is intentionally controlled by recruiters.
 
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
@@ -15,13 +15,13 @@ export async function GET(request) {
     const now = new Date()
     const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
 
-    // Find all interviews that:
-    // 1. Were scheduled more than 24 hours ago
-    // 2. Have participant status as INTERVIEW_SCHEDULED
-    const overdueParticipants = await prisma.interview_participants.findMany({
+    // Interview completion is controlled by recruiters from the interview room.
+    // This cron only reports overdue interviews so it does not move candidates forward automatically.
+    const overdueParticipants = await prisma.interview_participants.count({
       where: {
-        status: { in: ['PENDING', 'ACCEPTED', 'INTERVIEW_SCHEDULED'] },
+        status: { in: ['PENDING', 'ACCEPTED', 'RESCHEDULE_REQUESTED'] },
         interviews: {
+          status: 'SCHEDULED',
           scheduledAt: {
             lte: twentyFourHoursAgo
           }
@@ -30,55 +30,13 @@ export async function GET(request) {
           status: 'INTERVIEW_SCHEDULED'
         }
       },
-      include: {
-        interviews: true,
-        applications: true
-      }
     })
-
-    let updatedCount = 0
-
-    // Update each participant to INTERVIEW_COMPLETED
-    for (const participant of overdueParticipants) {
-      await prisma.$transaction([
-        // Update participant status
-        prisma.interview_participants.update({
-          where: { id: participant.id },
-          data: { status: 'INTERVIEW_COMPLETED' }
-        }),
-        // Update application status
-        prisma.applications.update({
-          where: { id: participant.applicationId },
-          data: { status: 'INTERVIEW_COMPLETED' }
-        })
-      ])
-      updatedCount++
-    }
-
-    // Also update the interview status if all participants are done
-    const interviewIds = [...new Set(overdueParticipants.map(p => p.interviewId))]
-    
-    for (const interviewId of interviewIds) {
-      const remainingScheduled = await prisma.interview_participants.count({
-        where: {
-          interviewId,
-          status: { in: ['PENDING', 'ACCEPTED', 'INTERVIEW_SCHEDULED'] }
-        }
-      })
-
-      if (remainingScheduled === 0) {
-        await prisma.interviews.update({
-          where: { id: interviewId },
-          data: { status: 'COMPLETED' }
-        })
-      }
-    }
 
     return NextResponse.json({
       success: true,
-      message: `Menyelesaikan ${updatedCount} peserta interview secara otomatis`,
-      updatedCount,
-      processedInterviews: interviewIds.length,
+      message: 'Auto-complete interview dinonaktifkan. Recruiter menyelesaikan interview secara manual.',
+      updatedCount: 0,
+      overdueParticipants,
       timestamp: now.toISOString()
     })
 

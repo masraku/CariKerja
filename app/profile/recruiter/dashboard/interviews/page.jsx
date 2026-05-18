@@ -132,7 +132,7 @@ export default function RecruiterInterviewsPage() {
       html: `
                 <p class="mb-4">Kandidat <strong>${participant.jobseeker?.firstName} ${participant.jobseeker?.lastName}</strong> meminta reschedule dengan alasan:</p>
                 <p class="italic text-gray-600 mb-4">"${participant.responseMessage}"</p>
-                <p class="text-red-600">Menolak reschedule akan membatalkan interview kandidat ini.</p>
+                <p class="text-orange-600">Jika ditolak, kandidat tetap berada pada jadwal interview semula dan dapat merespons ulang.</p>
             `,
       icon: "warning",
       showCancelButton: true,
@@ -150,7 +150,7 @@ export default function RecruiterInterviewsPage() {
         interviewId: interview.id,
         participantId: participant.id,
         data: {
-          status: "DECLINED",
+          status: "PENDING",
           rejectReschedule: true,
         },
       });
@@ -359,7 +359,7 @@ export default function RecruiterInterviewsPage() {
                           <Users className="w-4 h-4" />{" "}
                           {interview.participants?.length || 0} kandidat
                         </span>
-                        {interview.meetingType === "In Person" ? (
+                        {interview.meetingType === "IN_PERSON" ? (
                           <span className="flex items-center gap-1">
                             <MapPin className="w-4 h-4" /> Tatap Muka
                           </span>

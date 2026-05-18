@@ -58,6 +58,9 @@ export async function GET(request, { params }) {
                         status: true
                     }
                 }
+            },
+            orderBy: {
+                invitedAt: 'desc'
             }
         })
 
