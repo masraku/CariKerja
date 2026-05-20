@@ -7,7 +7,7 @@ Website ini bertujuan untuk mendukung **digitalisasi proses rekrutmen tenaga ker
 
 ---
 
-## 🎯 Latar Belakang
+## Latar Belakang
 
 Proses rekrutmen tenaga kerja di Disnaker Kabupaten Cirebon sebelumnya masih menghadapi beberapa kendala, seperti:
 - Duplikasi data lamaran
@@ -19,7 +19,7 @@ Oleh karena itu, proyek ini dikembangkan untuk merancang dan membangun **website
 
 ---
 
-## 🧑‍💼 Ruang Lingkup Sistem
+## Ruang Lingkup Sistem
 
 Sistem ini memiliki tiga peran utama:
 
@@ -34,7 +34,7 @@ Sistem ini memiliki tiga peran utama:
 
 ---
 
-## 🛠️ Teknologi yang Digunakan
+## Teknologi yang Digunakan
 
 Proyek ini dikembangkan menggunakan arsitektur **full-stack JavaScript**, dengan teknologi sebagai berikut:
 
@@ -47,7 +47,7 @@ Proyek ini dikembangkan menggunakan arsitektur **full-stack JavaScript**, dengan
 
 ---
 
-## 🚀 Getting Started (Development)
+## Getting Started (Development)
 
 Jalankan server pengembangan secara lokal:
 
