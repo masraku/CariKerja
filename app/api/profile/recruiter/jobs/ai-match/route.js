@@ -316,10 +316,6 @@ async function handleSkillMatching(request, user) {
                     let matchScore = data.persentase !== undefined ? parseInt(data.persentase) : 0
                     const highlights = data.skill || []
                     const pythonStatus = data.status || (matchScore > 60 ? 'POTENTIAL' : 'NOT_RECOMMENDED')
-                    if (pythonStatus === 'RECOMMENDED') {
-                        matchScore = Math.max(matchScore, 85) 
-                    }
-                    
                     const noJobSkillsWarning = jobSkills.length === 0
                     
                     return NextResponse.json({
