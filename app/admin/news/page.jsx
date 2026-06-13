@@ -57,7 +57,6 @@ export default function AdminNewsPage() {
   const {
     data,
     isPending: loading,
-    refetch,
   } = useQueryAdminNews({
     search,
     status: statusFilter,
@@ -299,30 +298,23 @@ export default function AdminNewsPage() {
 
   const handleUpdateStatus = async (id, newStatus) => {
     try {
-      const { data } = await api.put(
-        `/api/admin/news/${id}`,
-        { status: newStatus },
-        {
-          withCredentials: true,
-        },
-      );
+      await updateNewsMutation.mutateAsync({
+        newsId: id,
+        newsData: { status: newStatus },
+      });
 
-      if (data.success) {
-        Swal.fire({
-          icon: "success",
-          title: "Berhasil",
-          text: `Status berita berhasil diubah`,
-        });
-        refetch();
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: data.error || "Gagal mengubah status",
-        });
-      }
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil",
+        text: `Status berita berhasil diubah`,
+      });
     } catch (error) {
       console.error("Error updating status:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.message || "Gagal mengubah status",
+      });
     }
   };
 
@@ -456,9 +448,9 @@ export default function AdminNewsPage() {
               className="px-4 py-2.5 bg-gray-50 border-0 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 focus:ring-2 focus:ring-[#03587f] outline-none cursor-pointer"
             >
               <option value="all">Semua Status</option>
-              <option value="published">Dipublikasi</option>
-              <option value="draft">Draft</option>
-              <option value="archived">Diarsipkan</option>
+              <option value="PUBLISHED">Dipublikasi</option>
+              <option value="DRAFT">Draft</option>
+              <option value="ARCHIVED">Diarsipkan</option>
             </select>
 
             <select
@@ -608,10 +600,11 @@ export default function AdminNewsPage() {
                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           {item.status === "DRAFT" && (
                             <button
+                              disabled={updateNewsMutation.isPending}
                               onClick={() =>
                                 handleUpdateStatus(item.id, "PUBLISHED")
                               }
-                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors tooltip"
+                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors tooltip disabled:opacity-60 disabled:cursor-not-allowed"
                               title="Publikasikan"
                             >
                               <Globe className="w-4 h-4" />

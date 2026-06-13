@@ -65,9 +65,11 @@ export async function GET(request, context) {
         }
 
         const participant = interview.interview_participants[0]
+        const isApprovedReschedule =
+            participant.status === 'PENDING' && interview.title.includes('(Reschedule)')
 
         // Check if participant accepted
-        if (participant.status !== 'ACCEPTED') {
+        if (participant.status !== 'ACCEPTED' && !isApprovedReschedule) {
             return NextResponse.json(
                 { error: 'Anda belum menerima undangan interview ini' },
                 { status: 403 }
@@ -105,7 +107,7 @@ export async function GET(request, context) {
                 recruiter: interview.recruiters,
                 participant: {
                     id: participant.id,
-                    status: participant.status,
+                    status: isApprovedReschedule ? 'ACCEPTED' : participant.status,
                     invitedAt: participant.invitedAt,
                     respondedAt: participant.respondedAt
                 },

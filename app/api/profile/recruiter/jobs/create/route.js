@@ -175,6 +175,8 @@ export async function POST(request) {
         
         photo: photo || (gallery && gallery.length > 0 ? gallery[0] : null),
         gallery: gallery || [],
+        workingDays: workingDays || null,
+        holidays: holidays || null,
         isShift: isShift || false,
         shiftCount: shiftCount ? parseInt(shiftCount) : null,
         isDisabilityFriendly: isDisabilityFriendly || false,
@@ -182,6 +184,7 @@ export async function POST(request) {
         jobScope: jobScope || 'DOMESTIC',
         
         // Auto-approve logic
+        status: autoApprove ? 'ACTIVE' : 'PENDING',
         isActive: autoApprove,
         publishedAt: autoApprove ? new Date() : null
       }

@@ -17,7 +17,10 @@ export async function GET(request) {
         // Get all interviews for this recruiter
         const interviews = await prisma.interviews.findMany({
             where: {
-                recruiterId: recruiter.id
+                recruiterId: recruiter.id,
+                interview_participants: {
+                    some: {}
+                }
             },
             include: {
                 jobs: {
@@ -70,18 +73,23 @@ export async function GET(request) {
             description: interview.description,
             status: interview.status,
             job: interview.jobs,
-            participants: interview.interview_participants.map(p => ({
-                id: p.id,
-                status: p.status,
-                responseMessage: p.responseMessage,
-                invitedAt: p.invitedAt,
-                respondedAt: p.respondedAt,
-                jobseeker: p.applications.jobseekers,
-                applicationId: p.applicationId,
-                applications: {
-                    status: p.applications.status
+            participants: interview.interview_participants.map(p => {
+                const isApprovedReschedule =
+                    p.status === 'PENDING' && interview.title.includes('(Reschedule)')
+
+                return {
+                    id: p.id,
+                    status: isApprovedReschedule ? 'ACCEPTED' : p.status,
+                    responseMessage: p.responseMessage,
+                    invitedAt: p.invitedAt,
+                    respondedAt: p.respondedAt,
+                    jobseeker: p.applications.jobseekers,
+                    applicationId: p.applicationId,
+                    applications: {
+                        status: p.applications.status
+                    }
                 }
-            }))
+            })
         }))
 
         // Calculate stats

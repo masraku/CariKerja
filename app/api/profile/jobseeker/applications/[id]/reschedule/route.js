@@ -82,6 +82,37 @@ export async function POST(request, { params }) {
             )
         }
 
+        // Find and update interview participant status to RESCHEDULE_REQUESTED
+        const participant = await prisma.interview_participants.findFirst({
+            where: {
+                applicationId: application.id
+            }
+        })
+
+        if (!participant) {
+            return NextResponse.json(
+                { error: 'Data peserta interview tidak ditemukan' },
+                { status: 404 }
+            )
+        }
+
+        if (participant.status === 'RESCHEDULE_REQUESTED') {
+            return NextResponse.json({
+                success: true,
+                message: 'Request reschedule sudah dikirim',
+                data: {
+                    participant
+                }
+            })
+        }
+
+        if (!['PENDING', 'ACCEPTED'].includes(participant.status)) {
+            return NextResponse.json(
+                { error: 'Request reschedule tidak tersedia untuk status interview saat ini' },
+                { status: 400 }
+            )
+        }
+
         // Create notification for recruiter
         await prisma.notifications.create({
             data: {
@@ -102,24 +133,15 @@ export async function POST(request, { params }) {
             }
         })
 
-        // Find and update interview participant status to RESCHEDULE_REQUESTED
-        const participant = await prisma.interview_participants.findFirst({
-            where: {
-                applicationId: application.id
+        const updatedParticipant = await prisma.interview_participants.update({
+            where: { id: participant.id },
+            data: {
+                status: 'RESCHEDULE_REQUESTED',
+                responseMessage: reason,
+                respondedAt: new Date(),
+                updatedAt: new Date()
             }
         })
-
-        if (participant) {
-            await prisma.interview_participants.update({
-                where: { id: participant.id },
-                data: {
-                    status: 'RESCHEDULE_REQUESTED',
-                    responseMessage: reason,
-                    respondedAt: new Date(),
-                    updatedAt: new Date()
-                }
-            })
-        }
 
         // Update application with reschedule request note
         await prisma.applications.update({
@@ -133,7 +155,10 @@ export async function POST(request, { params }) {
 
         return NextResponse.json({
             success: true,
-            message: 'Request reschedule berhasil dikirim'
+            message: 'Request reschedule berhasil dikirim',
+            data: {
+                participant: updatedParticipant
+            }
         })
 
     } catch (error) {

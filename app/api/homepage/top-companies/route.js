@@ -23,6 +23,11 @@ export async function GET(request) {
             take: limit,
             include: {
                 jobs: {
+                    where: {
+                        status: 'ACTIVE',
+                        isActive: true,
+                        publishedAt: { not: null }
+                    },
                     take: 3,
                     orderBy: {
                         createdAt: 'desc'
@@ -35,11 +40,6 @@ export async function GET(request) {
                         jobType: true
                     }
                 },
-                _count: {
-                    select: {
-                        jobs: true
-                    }
-                }
             },
             orderBy: {
                 jobs: {
@@ -58,7 +58,7 @@ export async function GET(request) {
             city: company.city,
             province: company.province,
             industry: company.industry,
-            totalJobsCount: company._count.jobs,
+            totalJobsCount: company.jobs.length,
             latestJobs: company.jobs
         }))
 

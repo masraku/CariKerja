@@ -6,11 +6,16 @@ export async function GET(request, { params }) {
     const { slug } = await params
 
     // Get company with all related data
-    const company = await prisma.companies.findUnique({
-      where: { slug },
+    const company = await prisma.companies.findFirst({
+      where: {
+        slug,
+        verified: true,
+        status: 'VERIFIED'
+      },
       include: {
         jobs: {
           where: {
+            status: 'ACTIVE',
             isActive: true,
             publishedAt: {
               not: null

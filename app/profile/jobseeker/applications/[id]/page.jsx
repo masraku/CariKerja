@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 import Swal from "sweetalert2";
 import {
@@ -38,6 +39,7 @@ import {
 export default function ApplicationDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(true);
   const [application, setApplication] = useState(null);
   const [interview, setInterview] = useState(null);
@@ -71,12 +73,14 @@ export default function ApplicationDetailPage() {
 
       // If has interview from the response
       if (appData.interview) {
-        loadInterviewDetail(appData.id);
+        await loadInterviewDetail(appData.id);
       } else if (
         appData.status === "INTERVIEW_SCHEDULED" ||
         appData.status === "INTERVIEW_COMPLETED"
       ) {
-        loadInterviewDetail(appData.id);
+        await loadInterviewDetail(appData.id);
+      } else {
+        setInterview(null);
       }
     } catch (error) {
       Swal.fire({
@@ -100,13 +104,42 @@ export default function ApplicationDetailPage() {
 
       setInterview(
         data.interview
-          ? { ...data.interview, participantStatus: data.participantStatus }
+          ? {
+              ...data.interview,
+              participantStatus: data.participantStatus,
+              responseMessage: data.responseMessage,
+              respondedAt: data.respondedAt,
+            }
           : null,
       );
     } catch (error) {}
   };
 
+  useEffect(() => {
+    const refreshApplication = () => {
+      if (params.id) loadApplicationDetail();
+    };
+
+    window.addEventListener("pageshow", refreshApplication);
+    window.addEventListener("focus", refreshApplication);
+
+    return () => {
+      window.removeEventListener("pageshow", refreshApplication);
+      window.removeEventListener("focus", refreshApplication);
+    };
+  }, [params.id]);
+
   const handleRequestReschedule = async () => {
+    if (interview?.participantStatus === "RESCHEDULE_REQUESTED") {
+      Swal.fire({
+        icon: "info",
+        title: "Request Sudah Dikirim",
+        text: "Permintaan reschedule Anda sedang menunggu konfirmasi recruiter.",
+        confirmButtonColor: "#3b82f6",
+      });
+      return;
+    }
+
     const { value: reason } = await Swal.fire({
       title: "Request Reschedule",
       html: `
@@ -142,7 +175,7 @@ export default function ApplicationDetailPage() {
         didOpen: () => Swal.showLoading(),
       });
 
-      const { data } = await api.post(
+      await api.post(
         `/api/profile/jobseeker/applications/${params.id}/reschedule`,
         { reason },
         {
@@ -150,13 +183,30 @@ export default function ApplicationDetailPage() {
         },
       );
 
+      setInterview((current) =>
+        current
+          ? {
+              ...current,
+              participantStatus: "RESCHEDULE_REQUESTED",
+              responseMessage: reason,
+              respondedAt: new Date().toISOString(),
+            }
+          : current,
+      );
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["jobseekerApplications"] }),
+        queryClient.invalidateQueries({ queryKey: ["jobseekerInterviews"] }),
+      ]);
+
+      await loadApplicationDetail();
+
       await Swal.fire({
         icon: "success",
         title: "Request Terkirim!",
         text: "Permintaan reschedule Anda telah dikirim ke recruiter. Mohon tunggu konfirmasi.",
         confirmButtonColor: "#3b82f6",
       });
-      loadApplicationDetail();
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -467,6 +517,20 @@ export default function ApplicationDetailPage() {
   const statusConfig = getStatusConfig(application.status);
   const StatusIcon = statusConfig.icon;
   const timelineSteps = getTimelineSteps();
+  const participantStatus = interview?.participantStatus;
+  const isApprovedReschedule =
+    interview?.title?.includes("(Reschedule)") &&
+    participantStatus !== "RESCHEDULE_REQUESTED" &&
+    participantStatus !== "DECLINED";
+  const effectiveParticipantStatus = isApprovedReschedule
+    ? "ACCEPTED"
+    : participantStatus;
+  const hasRequestedReschedule =
+    participantStatus === "RESCHEDULE_REQUESTED";
+  const canRequestReschedule =
+    application.status === "INTERVIEW_SCHEDULED" &&
+    !isApprovedReschedule &&
+    ["PENDING", "ACCEPTED"].includes(effectiveParticipantStatus || "PENDING");
 
   return (
     <div
@@ -711,10 +775,48 @@ export default function ApplicationDetailPage() {
                   </div>
                 )}
 
+                {hasRequestedReschedule && (
+                  <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-xl">
+                    <div className="flex items-start gap-3 text-orange-800">
+                      <RefreshCw className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="font-semibold">
+                          Permintaan reschedule sudah dikirim
+                        </p>
+                        <p className="text-sm text-orange-700 mt-1">
+                          Status Anda sedang menunggu konfirmasi recruiter.
+                        </p>
+                        {interview.responseMessage && (
+                          <p className="text-sm text-orange-700 mt-2">
+                            <span className="font-semibold">Alasan Anda:</span>{" "}
+                            {interview.responseMessage}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {isApprovedReschedule && (
+                  <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">
+                    <div className="flex items-start gap-3 text-green-800">
+                      <CheckCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="font-semibold">
+                          Jadwal reschedule sudah disetujui
+                        </p>
+                        <p className="text-sm text-green-700 mt-1">
+                          Gunakan jadwal baru ini untuk mengikuti interview.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Join Meeting Button */}
                 {application.status === "INTERVIEW_SCHEDULED" && interview && (
                     <div className="mt-6 space-y-3">
-                      {interview.participantStatus === "ACCEPTED" ? (
+                      {effectiveParticipantStatus === "ACCEPTED" ? (
                         <Link
                           href={`/interviews/${interview.id}/room`}
                           className="block"
@@ -724,6 +826,16 @@ export default function ApplicationDetailPage() {
                             Masuk Room Interview
                           </button>
                         </Link>
+                      ) : hasRequestedReschedule ? (
+                        <div className="w-full bg-orange-50 border border-orange-200 text-orange-800 py-4 px-4 rounded-2xl font-semibold flex items-center justify-center gap-3 text-center">
+                          <RefreshCw className="w-5 h-5 flex-shrink-0" />
+                          Menunggu konfirmasi reschedule dari recruiter
+                        </div>
+                      ) : effectiveParticipantStatus === "DECLINED" ? (
+                        <div className="w-full bg-red-50 border border-red-200 text-red-700 py-4 px-4 rounded-2xl font-semibold flex items-center justify-center gap-3 text-center">
+                          <XCircle className="w-5 h-5 flex-shrink-0" />
+                          Anda sudah menolak undangan interview ini
+                        </div>
                       ) : (
                         <Link
                           href={`/profile/jobseeker/interviews/${interview.id}`}
@@ -735,21 +847,29 @@ export default function ApplicationDetailPage() {
                           </button>
                         </Link>
                       )}
-                      <p className="text-center text-gray-500 text-sm">
-                        Klik untuk membuka room internal saat jadwal interview tiba
-                      </p>
+                      {!hasRequestedReschedule &&
+                        effectiveParticipantStatus !== "DECLINED" && (
+                          <p className="text-center text-gray-500 text-sm">
+                            Klik untuk membuka room internal saat jadwal interview
+                            tiba
+                          </p>
+                        )}
 
                       {/* Request Reschedule Button */}
-                      <button
-                        onClick={handleRequestReschedule}
-                        className="w-full bg-white border-2 border-orange-300 text-orange-600 py-3 rounded-2xl font-semibold hover:bg-orange-50 transition flex items-center justify-center gap-2"
-                      >
-                        <RefreshCw className="w-5 h-5" />
-                        Minta Reschedule Interview
-                      </button>
-                      <p className="text-center text-gray-400 text-xs">
-                        Jika ada kendala, Anda dapat meminta jadwal ulang
-                      </p>
+                      {canRequestReschedule && (
+                        <>
+                          <button
+                            onClick={handleRequestReschedule}
+                            className="w-full bg-white border-2 border-orange-300 text-orange-600 py-3 rounded-2xl font-semibold hover:bg-orange-50 transition flex items-center justify-center gap-2"
+                          >
+                            <RefreshCw className="w-5 h-5" />
+                            Minta Reschedule Interview
+                          </button>
+                          <p className="text-center text-gray-400 text-xs">
+                            Jika ada kendala, Anda dapat meminta jadwal ulang
+                          </p>
+                        </>
+                      )}
                     </div>
                   )}
               </div>

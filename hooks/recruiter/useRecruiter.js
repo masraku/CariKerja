@@ -70,10 +70,12 @@ export function useQueryRecruiterJobs({
 
             if (!data.success) throw new Error("Gagal memuat daftar lowongan");
 
+            const payload = data.data || data;
+
             return {
-                jobs: data.data.jobs || [],
-                pagination: data.data.pagination,
-                stats: data.data.stats,
+                jobs: payload.jobs || [],
+                pagination: payload.pagination,
+                stats: payload.stats,
             };
         },
         enabled,
@@ -282,7 +284,7 @@ export function useMutationSubmitForVerification() {
         mutationFn: async () => {
             // Use api for POST (CSRF protected)
             const { data } = await api.post(
-                "/api/profile/recruiter/submit-verification",
+                "/api/profile/recruiter/submit-validation",
                 {},
                 { headers: getAuthHeader(), withCredentials: true }
             );
@@ -305,7 +307,7 @@ export function useMutationPostJob() {
         mutationFn: async (jobData) => {
             // Use api for POST (CSRF protected)
             const { data } = await api.post(
-                "/api/jobs",
+                "/api/profile/recruiter/jobs/create",
                 jobData,
                 { headers: getAuthHeader(), withCredentials: true }
             );
@@ -326,10 +328,10 @@ export function useMutationUpdateJob() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async ({ jobId, jobData }) => {
+        mutationFn: async ({ slug, jobId, jobData }) => {
             // Use api for PUT (CSRF protected)
             const { data } = await api.put(
-                `/api/jobs/${jobId}`,
+                `/api/profile/recruiter/jobs/${slug || jobId}/update`,
                 jobData,
                 { headers: getAuthHeader(), withCredentials: true }
             );
@@ -349,10 +351,10 @@ export function useMutationToggleJobStatus() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async (slug) => {
+        mutationFn: async ({ slug, applicationDeadline }) => {
             const { data } = await api.post(
                 `/api/profile/recruiter/jobs/${slug}/toggle-status`,
-                {},
+                { applicationDeadline },
                 { headers: getAuthHeader(), withCredentials: true }
             );
 

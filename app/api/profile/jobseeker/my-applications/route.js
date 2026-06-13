@@ -50,6 +50,25 @@ export async function GET(request) {
         rejectionReason: true,
         matchStatus: true,
         matchPercentage: true,
+        interview_participants: {
+          select: {
+            id: true,
+            status: true,
+            responseMessage: true,
+            respondedAt: true,
+            interviews: {
+              select: {
+                id: true,
+                scheduledAt: true,
+                status: true
+              }
+            }
+          },
+          orderBy: {
+            invitedAt: 'desc'
+          },
+          take: 1
+        },
         jobs: {
           select: {
             id: true,
@@ -92,7 +111,8 @@ export async function GET(request) {
       INTERVIEW_COMPLETED: 0,
       ACCEPTED: 0,
       REJECTED: 0,
-      WITHDRAWN: 0
+      WITHDRAWN: 0,
+      RESIGNED: 0
     }
 
     stats.forEach(stat => {

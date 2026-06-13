@@ -32,7 +32,11 @@ import {
 export default function RecruiterInterviewsPage() {
   const router = useRouter();
   // Hooks
-  const { data: queryData, isLoading: loading } = useQueryRecruiterInterviews();
+  const {
+    data: queryData,
+    isLoading: loading,
+    refetch,
+  } = useQueryRecruiterInterviews();
   const updateStatusMutation = useMutationUpdateApplicationStatus();
   const updateParticipantMutation = useMutationUpdateInterviewParticipant();
   const deleteInterviewMutation = useMutationDeleteInterview();
@@ -50,6 +54,19 @@ export default function RecruiterInterviewsPage() {
     const timer = setInterval(() => setCurrentTime(new Date()), 10000); // Check every 10s
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const refreshInterviews = () => refetch();
+
+    refreshInterviews();
+    window.addEventListener("pageshow", refreshInterviews);
+    window.addEventListener("focus", refreshInterviews);
+
+    return () => {
+      window.removeEventListener("pageshow", refreshInterviews);
+      window.removeEventListener("focus", refreshInterviews);
+    };
+  }, [refetch]);
 
   // Helper to check if interview has started
   const isInterviewStarted = (scheduledAt) => {
@@ -319,6 +336,7 @@ export default function RecruiterInterviewsPage() {
           {filteredInterviews.map((interview) => {
             const isStarted = isInterviewStarted(interview.scheduledAt);
             const isCompleted = interview.status === "COMPLETED";
+            const roomHref = `/profile/recruiter/dashboard/interview/room/${interview.id}`;
             const rescheduleParticipants =
               interview.participants?.filter(
                 (p) => p.status === "RESCHEDULE_REQUESTED",
@@ -603,54 +621,73 @@ export default function RecruiterInterviewsPage() {
                   </div>
                 </div>
 
-                {/* Footer Actions - ALWAYS AT BOTTOM */}
-                {interview.status === "SCHEDULED" && (
-                  <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 flex flex-wrap justify-end gap-3 items-center">
-                    {isStarted ? (
-                      <>
-                        {interview.meetingUrl && (
-                          <Link
-                            href={`/profile/recruiter/dashboard/interview/room/${interview.id}`}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-white border border-blue-600 text-blue-600 font-bold rounded-xl hover:bg-blue-50 transition shadow-sm"
-                          >
-                            <Video className="w-4 h-4" /> Masuk Room
-                          </Link>
-                        )}
-                        <Link
-                          href={`/profile/recruiter/dashboard/interview/room/${interview.id}`}
-                          className="flex items-center gap-2 px-5 py-2.5 bg-[#00A753] text-white font-bold rounded-xl hover:bg-[#00964b] transition shadow-md"
-                        >
-                          <CheckCircle className="w-4 h-4" /> Selesaikan
-                          Interview
-                        </Link>
-                      </>
-                    ) : (
-                      /* Not Started Actions */
-                      <div className="flex items-center justify-between w-full">
-                        <span
-                          className="text-sm text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg flex items-center gap-2"
-                          title={`Akan mulai pada ${formatTime(
-                            interview.scheduledAt,
-                          )}`}
-                        >
+                {/* Footer Actions */}
+                <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                  <div>
+                    {interview.status === "SCHEDULED" && (
+                      <span
+                        className="text-sm text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg inline-flex items-center gap-2"
+                        title={`Akan mulai pada ${formatTime(
+                          interview.scheduledAt,
+                        )}`}
+                      >
+                        {isStarted ? (
+                          <PlayCircle className="w-4 h-4 text-green-500" />
+                        ) : (
                           <Clock className="w-4 h-4 text-orange-500" />
-                          <span className="font-medium text-gray-600">
-                            Mulai {formatTime(interview.scheduledAt)}
-                          </span>
+                        )}
+                        <span className="font-medium text-gray-600">
+                          {isStarted
+                            ? "Sesi sudah bisa dimulai"
+                            : `Mulai ${formatTime(interview.scheduledAt)}`}
                         </span>
+                      </span>
+                    )}
 
-                        <div className="flex gap-2">
-                          <Link
-                            href={`/profile/recruiter/dashboard/interview/reschedule?interviewId=${interview.id}`}
-                            className="text-sm font-medium text-blue-600 hover:text-blue-800 px-3 py-2 bg-blue-50 rounded-lg"
-                          >
-                            Edit Jadwal
-                          </Link>
-                        </div>
-                      </div>
+                    {isCompleted && (
+                      <span className="text-sm text-green-700 bg-green-50 px-3 py-1.5 rounded-lg inline-flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4" />
+                        Interview selesai
+                      </span>
+                    )}
+
+                    {interview.status === "CANCELLED" && (
+                      <span className="text-sm text-red-700 bg-red-50 px-3 py-1.5 rounded-lg inline-flex items-center gap-2">
+                        <XCircle className="w-4 h-4" />
+                        Interview dibatalkan
+                      </span>
                     )}
                   </div>
-                )}
+
+                  <div className="flex flex-wrap justify-end gap-2">
+                    <Link
+                      href={roomHref}
+                      className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Lihat Detail
+                    </Link>
+
+                    {interview.status === "SCHEDULED" && (
+                      <Link
+                        href={roomHref}
+                        className="flex items-center gap-2 px-4 py-2 bg-[#03587f] text-white font-bold rounded-lg hover:bg-[#024666] transition shadow-sm"
+                      >
+                        <PlayCircle className="w-4 h-4" />
+                        Masuk Sesi
+                      </Link>
+                    )}
+
+                    {interview.status === "SCHEDULED" && !isStarted && (
+                      <Link
+                        href={`/profile/recruiter/dashboard/interview/reschedule?interviewId=${interview.id}`}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-800 px-4 py-2 bg-blue-50 rounded-lg"
+                      >
+                        Edit Jadwal
+                      </Link>
+                    )}
+                  </div>
+                </div>
               </div>
             );
           })}

@@ -44,7 +44,7 @@ export function useQueryApplicationDetail(id, enabled = true) {
         queryFn: async () => {
             if (!id) throw new Error("Tidak ada ID lamaran");
 
-            const { data } = await api.get(`/api/applications/${id}`, {
+            const { data } = await api.get(`/api/profile/jobseeker/applications/${id}`, {
                 headers: getAuthHeader(),
                 withCredentials: true,
             });
@@ -114,7 +114,7 @@ export function useQueryInterviewDetail(id, enabled = true) {
         queryFn: async () => {
             if (!id) throw new Error("Tidak ada ID interview");
 
-            const { data } = await api.get(`/api/interviews/${id}`, {
+            const { data } = await api.get(`/api/profile/jobseeker/interviews/${id}`, {
                 headers: getAuthHeader(),
                 withCredentials: true,
             });

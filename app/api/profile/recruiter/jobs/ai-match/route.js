@@ -3,6 +3,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@supabase/supabase-js'
+import { getCurrentUser } from '@/lib/authHelper'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
 
 // Supabase client untuk storage
 const supabase = createClient(
@@ -12,11 +14,20 @@ const supabase = createClient(
 
 export async function POST(request) {
     try {
+        if (!validateCSRFToken(request)) {
+            return csrfErrorResponse()
+        }
+
+        const auth = await getCurrentUser(request)
+        if (auth.error) {
+            return NextResponse.json({ success: false, error: auth.error }, { status: auth.status })
+        }
+
         const contentType = request.headers.get('content-type')
         if (contentType?.includes('multipart/form-data')) {
-            return await handleCVUpload(request)
+            return await handleCVUpload(request, auth.user)
         }
-        return await handleSkillMatching(request)
+        return await handleSkillMatching(request, auth.user)
         
     } catch (error) {
         return NextResponse.json(
@@ -31,8 +42,12 @@ export async function POST(request) {
     }
 }
 
-async function handleCVUpload(request) {
+async function handleCVUpload(request, user) {
     try {
+        if (user.role !== 'JOBSEEKER') {
+            return NextResponse.json({ success: false, error: 'Jobseeker role required' }, { status: 403 })
+        }
+
         // 1. Parse form data
         const formData = await request.formData()
         const cvFile = formData.get('cv')
@@ -64,6 +79,18 @@ async function handleCVUpload(request) {
             }, { status: 400 })
         }
 
+        const jobseeker = await prisma.jobseekers.findUnique({
+            where: { userId: user.id },
+            select: { id: true }
+        })
+
+        if (!jobseeker || jobseeker.id !== jobseekerId) {
+            return NextResponse.json({
+                success: false,
+                error: 'Unauthorized jobseeker'
+            }, { status: 403 })
+        }
+
         // 2. Get job details with skills
         const job = await prisma.jobs.findUnique({
             where: { id: jobId },
@@ -89,6 +116,13 @@ async function handleCVUpload(request) {
                 success: false,
                 error: 'Job not found'
             }, { status: 404 })
+        }
+
+        if (job.status !== 'ACTIVE' || !job.isActive || !job.publishedAt) {
+            return NextResponse.json({
+                success: false,
+                error: 'Job is not open for applications'
+            }, { status: 400 })
         }
 
         // Extract required skills
@@ -245,14 +279,16 @@ async function handleCVUpload(request) {
             success: false,
             error: error.message || 'Failed to process CV upload'
         }, { status: 500 })
-    } finally {
-        await prisma.$disconnect()
     }
 }
 
 
-async function handleSkillMatching(request) {
+async function handleSkillMatching(request, user) {
     try {
+        if (user.role !== 'RECRUITER') {
+            return NextResponse.json({ error: 'Recruiter role required', match_score: 0, highlights: [] }, { status: 403 })
+        }
+
         const body = await request.json()
         
         const jobTitle = body.job_requirements?.title || ''

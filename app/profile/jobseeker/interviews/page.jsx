@@ -169,6 +169,11 @@ export default function JobseekerInterviewsPage() {
         pending: [],
         responded: responded.filter((i) => i.status === "ACCEPTED"),
       };
+    if (activeFilter === "completed")
+      return {
+        pending: [],
+        responded: responded.filter((i) => i.status === "COMPLETED"),
+      };
     if (activeFilter === "declined")
       return {
         pending: [],
@@ -196,10 +201,10 @@ export default function JobseekerInterviewsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 pt-28 pb-8 lg:pt-32">
       <div className="container mx-auto px-4 max-w-6xl">
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-8">
           <Link href="/profile/jobseeker/dashboard">
             <button className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition mb-4">
               <ArrowLeft className="w-5 h-5" />
@@ -217,7 +222,7 @@ export default function JobseekerInterviewsPage() {
 
         {/* Stats - Clickable Cards */}
         {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
             {/* Total */}
             <button
               onClick={() => setActiveFilter("all")}
@@ -361,6 +366,46 @@ export default function JobseekerInterviewsPage() {
                     activeFilter === "reschedule"
                       ? "text-orange-200"
                       : "text-orange-600"
+                  }`}
+                />
+              </div>
+            </button>
+
+            {/* Completed */}
+            <button
+              onClick={() => setActiveFilter("completed")}
+              className={`rounded-xl shadow-sm p-4 transition-all ${
+                activeFilter === "completed"
+                  ? "bg-cyan-600 text-white ring-2 ring-cyan-600 ring-offset-2"
+                  : "bg-gradient-to-br from-cyan-50 to-sky-50 border border-cyan-200 hover:border-cyan-400"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="text-left">
+                  <p
+                    className={`text-xs font-medium ${
+                      activeFilter === "completed"
+                        ? "text-cyan-100"
+                        : "text-cyan-700"
+                    }`}
+                  >
+                    Selesai
+                  </p>
+                  <p
+                    className={`text-2xl font-bold ${
+                      activeFilter === "completed"
+                        ? "text-white"
+                        : "text-cyan-900"
+                    }`}
+                  >
+                    {stats.completed || 0}
+                  </p>
+                </div>
+                <CheckCircle
+                  className={`w-8 h-8 ${
+                    activeFilter === "completed"
+                      ? "text-cyan-200"
+                      : "text-cyan-600"
                   }`}
                 />
               </div>
@@ -679,6 +724,96 @@ export default function JobseekerInterviewsPage() {
                             <Video className="w-5 h-5" />
                             Belum Waktunya (15 menit sebelum)
                           </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+
+        {/* Completed Interviews */}
+        {filteredData.responded.filter((i) => i.status === "COMPLETED").length >
+          0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <CheckCircle className="w-6 h-6 text-cyan-600" />
+              Interview Selesai (
+              {
+                filteredData.responded.filter((i) => i.status === "COMPLETED")
+                  .length
+              }
+              )
+            </h2>
+            <div className="space-y-4">
+              {filteredData.responded
+                .filter((i) => i.status === "COMPLETED")
+                .map((interview) => (
+                  <div
+                    key={interview.participantId}
+                    className="bg-white rounded-2xl shadow-lg p-6 border-2 border-cyan-200"
+                  >
+                    <div className="flex flex-col md:flex-row gap-6">
+                      <div className="flex-shrink-0">
+                        <div className="w-16 h-16 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-xl flex items-center justify-center text-3xl overflow-hidden">
+                          {interview.jobs?.company?.logo ? (
+                            <img
+                              src={interview.jobs.company.logo}
+                              alt={interview.jobs.company.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            "🏢"
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex-1">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
+                          <div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-1">
+                              {interview.jobs?.title || interview.title}
+                            </h3>
+                            <div className="flex items-center gap-2 text-gray-700">
+                              <Building2 className="w-4 h-4" />
+                              <span className="font-semibold">
+                                {interview.jobs?.company?.name || "Perusahaan"}
+                              </span>
+                            </div>
+                          </div>
+                          <span className="px-4 py-2 bg-cyan-100 text-cyan-700 rounded-full text-sm font-bold flex items-center gap-1 self-start">
+                            <CheckCircle className="w-4 h-4" />
+                            Selesai
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                          <div className="flex items-center gap-2 text-gray-700">
+                            <Calendar className="w-5 h-5 text-gray-500" />
+                            <span>{formatDate(interview.scheduledAt)}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-gray-700">
+                            <Clock className="w-5 h-5 text-gray-500" />
+                            <span>{formatTime(interview.scheduledAt)} WIB</span>
+                          </div>
+                        </div>
+
+                        <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-4 mb-4">
+                          <p className="text-sm text-cyan-900 font-semibold">
+                            Interview telah selesai. Tunggu keputusan dari
+                            recruiter.
+                          </p>
+                        </div>
+
+                        {interview.applicationId && (
+                          <Link
+                            href={`/profile/jobseeker/applications/${interview.applicationId}`}
+                            className="w-full bg-cyan-600 text-white px-6 py-3 rounded-lg hover:bg-cyan-700 transition font-semibold shadow-lg flex items-center justify-center gap-2"
+                          >
+                            <CheckCircle className="w-5 h-5" />
+                            Lihat Detail Lamaran
+                          </Link>
                         )}
                       </div>
                     </div>

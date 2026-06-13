@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Swal from "sweetalert2";
+import api from "@/lib/api";
 import {
   ArrowLeft,
   FileText,
@@ -35,6 +36,9 @@ export default function ApplyJobPage() {
     url: "",
     title: "",
   });
+
+  const getDocumentViewerUrl = (type) =>
+    `/api/profile/jobseeker/document?type=${type}`;
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -135,21 +139,9 @@ export default function ApplyJobPage() {
     try {
       setSubmitting(true);
 
-      const response = await fetch(`/api/jobs/${slug}/apply`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          resumeUrl: profile.cvUrl,
-        }),
+      await api.post(`/api/jobs/${slug}/apply`, {
+        resumeUrl: profile.cvUrl,
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to submit application");
-      }
 
       // Success
       Swal.fire({
@@ -161,9 +153,14 @@ export default function ApplyJobPage() {
         router.push("/profile/jobseeker/applications");
       });
     } catch (error) {
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        error.message;
+
       if (
-        error.message.includes("sudah melamar") ||
-        error.message.includes("already applied")
+        errorMessage.includes("sudah melamar") ||
+        errorMessage.includes("already applied")
       ) {
         Swal.fire({
           icon: "info",
@@ -187,7 +184,7 @@ export default function ApplyJobPage() {
         Swal.fire({
           icon: "error",
           title: "Gagal Mengirim Lamaran",
-          text: error.message,
+          text: errorMessage,
           confirmButtonColor: "#03587f",
         });
       }
@@ -362,36 +359,42 @@ export default function ApplyJobPage() {
                   {[
                     {
                       key: "cvUrl",
+                      type: "cv",
                       label: "CV / Resume",
                       required: true,
                       url: profile.cvUrl,
                     },
                     {
                       key: "ktpUrl",
+                      type: "ktp",
                       label: "KTP",
                       required: true,
                       url: profile.ktpUrl,
                     },
                     {
                       key: "ak1Url",
+                      type: "ak1",
                       label: "Kartu AK-1",
                       required: true,
                       url: profile.ak1Url,
                     },
                     {
                       key: "ijazahUrl",
+                      type: "ijazah",
                       label: "Ijazah Pendidikan Terakhir",
                       required: true,
                       url: profile.ijazahUrl,
                     },
                     {
                       key: "sertifikatUrl",
+                      type: "sertifikat",
                       label: "Sertifikat Pelatihan",
                       required: false,
                       url: profile.sertifikatUrl,
                     },
                     {
                       key: "suratPengalamanUrl",
+                      type: "suratPengalaman",
                       label: "Surat Pengalaman Kerja",
                       required: false,
                       url: profile.suratPengalamanUrl,
@@ -445,7 +448,7 @@ export default function ApplyJobPage() {
                           onClick={() =>
                             setDocumentModal({
                               isOpen: true,
-                              url: doc.url,
+                              url: getDocumentViewerUrl(doc.type),
                               title: doc.label,
                             })
                           }

@@ -101,7 +101,7 @@ export default function AdminDashboard() {
 
           {/* Lowongan Pending (Clickable) */}
           <Link
-            href="/admin/jobs?status=PENDING"
+            href="/admin/jobs?status=pending"
             className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-lg hover:border-orange-200 transition group cursor-pointer block"
           >
             <div className="flex items-start justify-between mb-4">

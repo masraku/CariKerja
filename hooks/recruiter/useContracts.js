@@ -40,10 +40,13 @@ export function useQueryContracts({ enabled = true } = {}) {
 
             if (!data.success) throw new Error("Gagal memuat data kontrak");
 
+            const contracts = data.contracts || [];
+
             return {
-                pendingContracts: data.pendingContracts || [],
-                rejectedContracts: data.rejectedContracts || [],
-                approvedContracts: data.approvedContracts || [],
+                pendingContracts: data.pendingContracts || contracts.filter((contract) => contract.status === "PENDING"),
+                rejectedContracts: data.rejectedContracts || contracts.filter((contract) => contract.status === "REJECTED"),
+                approvedContracts: data.approvedContracts || contracts.filter((contract) => contract.status === "APPROVED"),
+                stats: data.stats || {},
             };
         },
         enabled,

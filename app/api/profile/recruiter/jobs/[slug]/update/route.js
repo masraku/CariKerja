@@ -4,9 +4,14 @@ import { createErrorResponse } from '@/lib/errorHandler'
 import { getTokenFromRequest, verifyToken } from '@/lib/auth'
 import { validateBody } from '@/lib/validations'
 import { updateJobSchema } from '@/lib/validations/profile'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
 
 export async function PUT(request, { params }) {
   try {
+    if (!validateCSRFToken(request)) {
+      return csrfErrorResponse()
+    }
+
     const token = getTokenFromRequest(request)
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -57,8 +62,8 @@ export async function PUT(request, { params }) {
       educationLevel,
       numberOfPositions,
       applicationDeadline,
-      skills,
       isActive,
+      skills,
       photo,
       workingDays,
       holidays,
@@ -87,6 +92,30 @@ export async function PUT(request, { params }) {
       })
 
       newSlug = slugExists ? `${baseSlug}-${Date.now()}` : baseSlug
+    }
+
+    const isReactivationRequest = isActive === true && !existingJob.isActive
+
+    if (isReactivationRequest) {
+      if (!applicationDeadline) {
+        return NextResponse.json(
+          { error: 'Tanggal batas akhir lamaran wajib diisi' },
+          { status: 400 }
+        )
+      }
+
+      const deadline = new Date(applicationDeadline)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const deadlineDate = new Date(deadline)
+      deadlineDate.setHours(0, 0, 0, 0)
+
+      if (Number.isNaN(deadline.getTime()) || deadlineDate < today) {
+        return NextResponse.json(
+          { error: 'Tanggal batas akhir lamaran harus hari ini atau setelahnya' },
+          { status: 400 }
+        )
+      }
     }
 
     // Update job and reset status to PENDING for admin re-validation

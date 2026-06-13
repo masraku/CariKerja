@@ -250,8 +250,12 @@ export default function PostJobPage() {
       const missingFields = [];
 
       // Basic Info
-      if (!formData.title) missingFields.push("Nama Posisi");
-      if (!formData.description) missingFields.push("Deskripsi Pekerjaan");
+      if (!formData.title || formData.title.trim().length < 5) {
+        missingFields.push("Nama Posisi (minimal 5 karakter)");
+      }
+      if (!formData.description || formData.description.trim().length < 20) {
+        missingFields.push("Deskripsi Pekerjaan (minimal 20 karakter)");
+      }
       if (!formData.educationLevel) missingFields.push("Level Pendidikan");
 
       // Skills
@@ -296,6 +300,12 @@ export default function PostJobPage() {
       const submitData = {
         ...formData,
         photo: formData.jobPhoto || null,
+        workingDays: Array.isArray(formData.workingDays)
+          ? formData.workingDays.join(", ")
+          : formData.workingDays,
+        holidays: Array.isArray(formData.holidays)
+          ? formData.holidays.join(", ")
+          : formData.holidays,
         numberOfPositions:
           parseInt(formData.malePositions || 0) +
             parseInt(formData.femalePositions || 0) || 1,
@@ -317,10 +327,23 @@ export default function PostJobPage() {
       });
       router.push("/profile/recruiter/dashboard");
     } catch (error) {
+      const responseData = error.response?.data;
+      const validationDetails = responseData?.details
+        ?.map((detail) => `<li><strong>${detail.field}</strong>: ${detail.message}</li>`)
+        .join("");
+
       Swal.fire({
         icon: "error",
         title: "Error!",
-        text: "Terjadi kesalahan saat mempublikasikan: " + error.message,
+        ...(validationDetails
+          ? {
+              html: `<p>Validasi gagal:</p><ul style="text-align:left;margin-top:10px;">${validationDetails}</ul>`,
+            }
+          : {
+              text:
+                "Terjadi kesalahan saat mempublikasikan: " +
+                (responseData?.error || error.message),
+            }),
         confirmButtonColor: "#2563EB",
       });
     } finally {

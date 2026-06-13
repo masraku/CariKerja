@@ -161,14 +161,15 @@ export async function PATCH(request, context) {
         }
       })
 
-      // 3. Move participant to new interview & Reset status
+      // 3. Move participant to new interview. A candidate-initiated
+      // reschedule request counts as confirmation for the approved slot.
       await prisma.interview_participants.update({
         where: { id: participantId },
         data: {
           interviewId: newInterview.id,
-          status: 'PENDING',
+          status: 'ACCEPTED',
           responseMessage: null,
-          respondedAt: null,
+          respondedAt: new Date(),
           updatedAt: new Date()
         }
       })
@@ -178,6 +179,8 @@ export async function PATCH(request, context) {
         data: {
           status: 'INTERVIEW_SCHEDULED',
           interviewDate: parsedScheduledAt,
+          confirmedByJobseeker: true,
+          respondedAt: new Date(),
           updatedAt: new Date()
         }
       })

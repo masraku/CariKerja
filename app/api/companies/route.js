@@ -21,7 +21,8 @@ export async function GET(request) {
       AND: [
         // Only show verified companies
         {
-          verified: true
+          verified: true,
+          status: 'VERIFIED'
         },
         // Only show companies with at least one recruiter
         {
@@ -63,6 +64,7 @@ export async function GET(request) {
       include: {
         jobs: {
           where: {
+            status: 'ACTIVE',
             isActive: true,
             publishedAt: { not: null }
           },

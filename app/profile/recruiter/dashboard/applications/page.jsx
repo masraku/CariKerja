@@ -20,7 +20,6 @@ export default function AllApplicationsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [jobFilter, setJobFilter] = useState("all");
-  const [filteredApplications, setFilteredApplications] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -28,44 +27,37 @@ export default function AllApplicationsPage() {
   const { data: queryData, isLoading: loading } =
     useQueryRecruiterApplications();
 
-  const applications = (queryData?.applications || []).sort(
+  const applications = [...(queryData?.applications || [])].sort(
     (a, b) => new Date(b.appliedAt) - new Date(a.appliedAt),
   );
   const jobs = queryData?.jobs || [];
   const stats = queryData?.stats || null;
 
-  useEffect(() => {
-    filterApplications();
-  }, [applications, searchQuery, statusFilter, jobFilter]);
-
-  const filterApplications = () => {
-    let filtered = applications;
-
-    if (jobFilter !== "all") {
-      filtered = filtered.filter((app) => app.jobs.id === jobFilter);
+  const query = searchQuery.toLowerCase();
+  const filteredApplications = applications.filter((app) => {
+    if (jobFilter !== "all" && app.jobs.id !== jobFilter) {
+      return false;
     }
 
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((app) => app.status === statusFilter);
+    if (statusFilter !== "all" && app.status !== statusFilter) {
+      return false;
     }
 
-    if (searchQuery) {
-      filtered = filtered.filter((app) => {
-        const fullName =
-          `${app.jobseekers.firstName} ${app.jobseekers.lastName}`.toLowerCase();
-        const email = app.jobseekers.email?.toLowerCase() || "";
-        const jobTitle = app.jobs.title?.toLowerCase() || "";
-        const query = searchQuery.toLowerCase();
-        return (
-          fullName.includes(query) ||
-          email.includes(query) ||
-          jobTitle.includes(query)
-        );
-      });
+    if (!query) {
+      return true;
     }
 
-    setFilteredApplications(filtered);
-  };
+    const fullName =
+      `${app.jobseekers.firstName} ${app.jobseekers.lastName}`.toLowerCase();
+    const email = app.jobseekers.email?.toLowerCase() || "";
+    const jobTitle = app.jobs.title?.toLowerCase() || "";
+
+    return (
+      fullName.includes(query) ||
+      email.includes(query) ||
+      jobTitle.includes(query)
+    );
+  });
 
   const getStatusBadge = (status) => {
     const statusConfig = {

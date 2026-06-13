@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Briefcase,
   Search,
@@ -26,8 +27,14 @@ import {
 } from "@/hooks/admin/useAdmin";
 
 export default function AdminJobsPage() {
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState(() => {
+    const status = searchParams.get("status")?.toLowerCase();
+    return ["pending", "active", "rejected", "closed"].includes(status)
+      ? status
+      : "all";
+  });
   const [jobTypeFilter, setJobTypeFilter] = useState("all");
   const [kecamatanFilter, setKecamatanFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("newest");
@@ -433,7 +440,11 @@ export default function AdminJobsPage() {
                           )}
                           <div className="flex items-center gap-2 text-slate-500">
                             <Calendar className="w-4 h-4 flex-shrink-0" />
-                            <span>Diposting {formatDate(job.createdAt)}</span>
+                            <span>
+                              {job.status === "PENDING"
+                                ? `Diajukan review ${formatDate(job.updatedAt || job.createdAt)}`
+                                : `Diposting ${formatDate(job.createdAt)}`}
+                            </span>
                           </div>
                         </div>
                       </div>

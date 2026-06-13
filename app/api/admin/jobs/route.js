@@ -82,7 +82,7 @@ export async function GET(request) {
                 break
             case 'newest':
             default:
-                orderBy = { createdAt: 'desc' }
+                orderBy = [{ updatedAt: 'desc' }, { createdAt: 'desc' }]
         }
 
         // Get jobs with related data
@@ -157,6 +157,7 @@ export async function GET(request) {
             numberOfPositions: job.numberOfPositions,
             applicationDeadline: job.applicationDeadline,
             createdAt: job.createdAt,
+            updatedAt: job.updatedAt,
             publishedAt: job.publishedAt
         }))
 
@@ -203,10 +204,15 @@ export async function PATCH(request) {
         }
 
         const body = await request.json()
-        const { jobId, status, rejectionReason } = body
+        const { jobId, rejectionReason } = body
+        const status = typeof body.status === 'string' ? body.status.toUpperCase() : body.status
 
         if (!jobId || !status) {
             return NextResponse.json({ error: 'Job ID and status are required' }, { status: 400 })
+        }
+
+        if (!['PENDING', 'ACTIVE', 'REJECTED', 'CLOSED'].includes(status)) {
+            return NextResponse.json({ error: 'Status lowongan tidak valid' }, { status: 400 })
         }
 
         const updateData = {

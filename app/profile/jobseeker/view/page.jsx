@@ -29,8 +29,11 @@ const ViewProfilePage = () => {
   const [previewModal, setPreviewModal] = useState({
     isOpen: false,
     url: "",
+    downloadUrl: "",
     fileName: "",
     fileType: "",
+    isLoading: false,
+    error: "",
   });
 
   // Use React Query hooks
@@ -98,16 +101,78 @@ const ViewProfilePage = () => {
     return age;
   };
 
-  const openPreview = (url, fileName) => {
-    const extension = (fileName || url).split(".").pop().toLowerCase();
+  useEffect(() => {
+    return () => {
+      if (previewModal.url.startsWith("blob:")) {
+        URL.revokeObjectURL(previewModal.url);
+      }
+    };
+  }, [previewModal.url]);
+
+  const getDocumentViewerUrl = (type) =>
+    `/api/profile/jobseeker/document?type=${type}`;
+
+  const openPreview = async (doc) => {
+    const source = doc.fileName || doc.url || "";
+    const extension = source.split("?")[0].split(".").pop().toLowerCase();
     const fileType = ["jpg", "jpeg", "png", "gif", "webp"].includes(extension)
       ? "image"
       : "pdf";
-    setPreviewModal({ isOpen: true, url, fileName, fileType });
+    const downloadUrl = getDocumentViewerUrl(doc.key);
+
+    if (previewModal.url.startsWith("blob:")) {
+      URL.revokeObjectURL(previewModal.url);
+    }
+
+    setPreviewModal({
+      isOpen: true,
+      url: "",
+      downloadUrl,
+      fileName: doc.fileName || doc.label || "Preview",
+      fileType,
+      isLoading: true,
+      error: "",
+    });
+
+    try {
+      const response = await fetch(downloadUrl, { credentials: "include" });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Dokumen tidak dapat dibuka");
+      }
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+
+      setPreviewModal((prev) => ({
+        ...prev,
+        url: objectUrl,
+        isLoading: false,
+      }));
+    } catch (error) {
+      setPreviewModal((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: error.message || "Gagal membuka dokumen",
+      }));
+    }
   };
 
   const closePreview = () => {
-    setPreviewModal({ isOpen: false, url: "", fileName: "", fileType: "" });
+    if (previewModal.url.startsWith("blob:")) {
+      URL.revokeObjectURL(previewModal.url);
+    }
+
+    setPreviewModal({
+      isOpen: false,
+      url: "",
+      downloadUrl: "",
+      fileName: "",
+      fileType: "",
+      isLoading: false,
+      error: "",
+    });
   };
 
   // Document list for display
@@ -420,13 +485,13 @@ const ViewProfilePage = () => {
                     {doc.url && (
                       <div className="flex gap-1">
                         <button
-                          onClick={() => openPreview(doc.url, doc.fileName)}
+                          onClick={() => openPreview(doc)}
                           className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
                         >
                           <Eye size={16} />
                         </button>
                         <a
-                          href={doc.url}
+                          href={getDocumentViewerUrl(doc.key)}
                           download
                           className="p-1.5 text-green-600 hover:bg-green-100 rounded-lg transition"
                         >
@@ -458,7 +523,25 @@ const ViewProfilePage = () => {
               </button>
             </div>
             <div className="p-4 overflow-auto max-h-[calc(90vh-80px)] flex items-center justify-center bg-gray-100">
-              {previewModal.fileType === "image" ? (
+              {previewModal.isLoading ? (
+                <div className="flex h-[70vh] w-full items-center justify-center text-sm text-gray-500">
+                  Memuat dokumen...
+                </div>
+              ) : previewModal.error ? (
+                <div className="flex h-[70vh] w-full flex-col items-center justify-center gap-3 text-center text-sm text-gray-500">
+                  <p>{previewModal.error}</p>
+                  {previewModal.downloadUrl && (
+                    <a
+                      href={previewModal.downloadUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#03587f] font-semibold hover:underline"
+                    >
+                      Buka di tab baru
+                    </a>
+                  )}
+                </div>
+              ) : previewModal.fileType === "image" ? (
                 <img
                   src={previewModal.url}
                   alt={previewModal.fileName}

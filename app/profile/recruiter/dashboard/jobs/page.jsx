@@ -29,7 +29,6 @@ import {
   ArrowLeft,
   AlertCircle,
   MoreHorizontal,
-  FileText,
 } from "lucide-react";
 
 export default function RecruiterJobsPage() {
@@ -56,64 +55,133 @@ export default function RecruiterJobsPage() {
   const jobs = queryData?.jobs || [];
   const stats = queryData?.stats || null;
 
-  const handleToggleStatus = async (slug, isActive) => {
-    // If currently active (deactivating), just toggle immediately
-    if (isActive) {
+  const getTodayInputDate = () => new Date().toISOString().split("T")[0];
+
+  const getApiErrorMessage = (error, fallback) => {
+    return (
+      error?.response?.data?.error ||
+      error?.response?.data?.message ||
+      error?.message ||
+      fallback
+    );
+  };
+
+  const handleToggleStatus = async (job) => {
+    const { slug, isActive } = job;
+
+    if (job.status === "PENDING") {
+      Swal.fire({
+        icon: "info",
+        title: "Menunggu Validasi Admin",
+        text: "Lowongan ini sudah diajukan dan akan aktif setelah disetujui admin.",
+        confirmButtonColor: "#3b82f6",
+      });
+      return;
+    }
+
+    if (job.status === "REJECTED") {
+      router.push(`/profile/recruiter/dashboard/jobs/${slug}/edit`);
+      return;
+    }
+
+    if (!isActive) {
+      const today = getTodayInputDate();
+
       const result = await Swal.fire({
-        title: "Nonaktifkan Lowongan?",
-        text: "Lowongan akan disembunyikan dari pencarian",
+        title: "Ajukan Aktif Ulang?",
+        html: `
+          <div class="text-left space-y-3">
+            <p class="text-sm text-gray-600">
+              Lowongan akan dikirim ulang ke admin untuk validasi. Lowongan baru aktif setelah disetujui admin.
+            </p>
+            <label for="reactivate-deadline" class="block text-sm font-semibold text-gray-700">
+              Batas akhir lamaran baru <span class="text-red-500">*</span>
+            </label>
+            <input
+              id="reactivate-deadline"
+              type="date"
+              min="${today}"
+              class="swal2-input"
+              style="width: 100%; margin: 0;"
+            />
+          </div>
+        `,
         icon: "question",
         showCancelButton: true,
-        confirmButtonColor: "#ef4444",
+        confirmButtonColor: "#3b82f6",
         cancelButtonColor: "#6b7280",
-        confirmButtonText: "Ya, Nonaktifkan",
+        confirmButtonText: "Ajukan Validasi Ulang",
         cancelButtonText: "Batal",
+        preConfirm: () => {
+          const deadline = document.getElementById("reactivate-deadline")?.value;
+          if (!deadline) {
+            Swal.showValidationMessage("Tanggal batas akhir lamaran wajib diisi");
+            return false;
+          }
+          if (deadline < today) {
+            Swal.showValidationMessage(
+              "Tanggal batas akhir lamaran harus hari ini atau setelahnya",
+            );
+            return false;
+          }
+          return deadline;
+        },
       });
 
       if (!result.isConfirmed) return;
 
       try {
-        await toggleStatusMutation.mutateAsync(slug);
+        await toggleStatusMutation.mutateAsync({
+          slug,
+          applicationDeadline: result.value,
+        });
 
         Swal.fire({
           icon: "success",
-          title: "Berhasil!",
-          text: "Lowongan berhasil dinonaktifkan",
-          timer: 2000,
+          title: "Diajukan Validasi Ulang!",
+          text: "Lowongan akan aktif kembali setelah disetujui admin.",
+          timer: 2200,
           showConfirmButton: false,
         });
       } catch (error) {
         Swal.fire({
           icon: "error",
           title: "Gagal",
-          text: "Gagal mengubah status lowongan",
+          text: getApiErrorMessage(error, "Gagal mengajukan validasi ulang"),
         });
       }
-    } else {
-      // If currently inactive (activating), redirect to edit page to update deadline
-      const result = await Swal.fire({
-        title: "Aktifkan Lowongan?",
-        html: `
-          <p>Untuk mengaktifkan kembali lowongan, Anda perlu:</p>
-          <ul class="text-left mt-3 space-y-1 text-sm text-gray-600">
-            <li>✓ Memperbarui <strong>tanggal deadline</strong> penutupan</li>
-            <li>✓ Mereview informasi lowongan</li>
-          </ul>
-          <p class="mt-3 text-sm">Anda akan diarahkan ke halaman edit.</p>
-        `,
-        icon: "info",
-        showCancelButton: true,
-        confirmButtonColor: "#3b82f6",
-        cancelButtonColor: "#6b7280",
-        confirmButtonText: "Ya, Edit & Aktifkan",
-        cancelButtonText: "Batal",
-      });
+      return;
+    }
 
-      if (result.isConfirmed) {
-        router.push(
-          `/profile/recruiter/dashboard/jobs/${slug}/edit?activate=true`,
-        );
-      }
+    const result = await Swal.fire({
+      title: "Nonaktifkan Lowongan?",
+      text: "Lowongan akan disembunyikan dari pencarian",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Ya, Nonaktifkan",
+      cancelButtonText: "Batal",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await toggleStatusMutation.mutateAsync({ slug });
+
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil!",
+        text: "Lowongan berhasil dinonaktifkan",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: getApiErrorMessage(error, "Gagal mengubah status lowongan"),
+      });
     }
   };
 
@@ -162,44 +230,78 @@ export default function RecruiterJobsPage() {
     });
   };
 
-  const getStatusBadge = (status, isActive) => {
+  const handleStatusToggleClick = (event, job) => {
+    event.stopPropagation();
+    handleToggleStatus(job);
+  };
+
+  const getStatusBadge = (job) => {
+    const { status, isActive } = job;
+
+    if (status === "PENDING") {
+      return (
+        <button
+          type="button"
+          onClick={(event) => handleStatusToggleClick(event, job)}
+          className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-50 text-orange-700 rounded-full text-xs font-medium border border-orange-200 hover:bg-orange-100 transition"
+          title="Menunggu validasi admin"
+        >
+          <Clock className="w-3.5 h-3.5" />
+          Menunggu Review
+        </button>
+      );
+    }
+
     if (!isActive && status !== "REJECTED") {
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-medium border border-slate-200">
+        <button
+          type="button"
+          onClick={(event) => handleStatusToggleClick(event, job)}
+          className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-medium border border-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition"
+          title="Ajukan validasi ulang"
+        >
           <ToggleLeft className="w-3.5 h-3.5" />
           Nonaktif
-        </span>
+        </button>
       );
     }
 
     switch (status) {
-      case "PENDING":
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-50 text-orange-700 rounded-full text-xs font-medium border border-orange-200">
-            <Clock className="w-3.5 h-3.5" />
-            Menunggu Review
-          </span>
-        );
       case "ACTIVE":
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-medium border border-emerald-200">
-            <CheckCircle className="w-3.5 h-3.5" />
+          <button
+            type="button"
+            onClick={(event) => handleStatusToggleClick(event, job)}
+            className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-medium border border-emerald-200 hover:bg-emerald-100 transition"
+            title="Nonaktifkan lowongan"
+          >
+            <ToggleRight className="w-3.5 h-3.5" />
             Aktif
-          </span>
+          </button>
         );
       case "REJECTED":
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-700 rounded-full text-xs font-medium border border-red-200">
+          <button
+            type="button"
+            onClick={(event) => handleStatusToggleClick(event, job)}
+            className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-700 rounded-full text-xs font-medium border border-red-200 hover:bg-red-100 transition"
+            title="Perbaiki lowongan"
+          >
             <XCircle className="w-3.5 h-3.5" />
             Ditolak
-          </span>
+          </button>
         );
       case "CLOSED":
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-medium border border-slate-200">
-            <XCircle className="w-3.5 h-3.5" />
+          <button
+            type="button"
+            onClick={(event) => handleStatusToggleClick(event, job)}
+            className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-medium border border-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition"
+            title="Ajukan validasi ulang"
+          >
+            <ToggleLeft className="w-3.5 h-3.5" />
             Ditutup
-          </span>
+          </button>
         );
       default:
         return null;
@@ -371,7 +473,7 @@ export default function RecruiterJobsPage() {
                         <h3 className="text-xl font-bold text-slate-900">
                           {job.title}
                         </h3>
-                        {getStatusBadge(job.status, job.isActive)}
+                        {getStatusBadge(job)}
                       </div>
 
                       <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600 mb-4">
@@ -495,21 +597,41 @@ export default function RecruiterJobsPage() {
                   )}
 
                   <div className="ml-auto flex items-center gap-2">
-                    <button
-                      onClick={() => handleToggleStatus(job.slug, job.isActive)}
-                      className={`p-2 rounded-lg transition ${
-                        job.isActive
-                          ? "text-emerald-600 hover:bg-emerald-50"
-                          : "text-slate-400 hover:bg-slate-100"
-                      }`}
-                      title={job.isActive ? "Nonaktifkan" : "Aktifkan"}
-                    >
-                      {job.isActive ? (
-                        <ToggleRight className="w-6 h-6" />
-                      ) : (
-                        <ToggleLeft className="w-6 h-6" />
-                      )}
-                    </button>
+                    {job.status !== "REJECTED" && (
+                      <button
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleToggleStatus(job);
+                        }}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition text-sm font-medium ${
+                          job.isActive
+                            ? "text-emerald-700 hover:bg-emerald-50"
+                            : job.status === "PENDING"
+                              ? "text-orange-600 bg-orange-50"
+                              : "text-blue-700 hover:bg-blue-50"
+                        }`}
+                        title={
+                          job.isActive
+                            ? "Nonaktifkan"
+                            : job.status === "PENDING"
+                              ? "Menunggu validasi admin"
+                              : "Ajukan validasi ulang"
+                        }
+                      >
+                        {job.isActive ? (
+                          <ToggleRight className="w-5 h-5" />
+                        ) : (
+                          <ToggleLeft className="w-5 h-5" />
+                        )}
+                        <span>
+                          {job.isActive
+                            ? "Nonaktifkan"
+                            : job.status === "PENDING"
+                              ? "Menunggu Validasi"
+                              : "Ajukan Validasi Ulang"}
+                        </span>
+                      </button>
+                    )}
 
                     <button
                       onClick={() => handleDeleteJob(job.slug, job.title)}

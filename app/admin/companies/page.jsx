@@ -1,6 +1,6 @@
 'use client'
 import { useState, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { 
     Building2, CheckCircle, XCircle, Clock, Search, 
@@ -10,7 +10,13 @@ import { useQueryAdminCompanies } from '@/hooks/admin/useAdmin'
 
 export default function AdminCompaniesPage() {
     const router = useRouter()
-    const [filter, setFilter] = useState('pending')
+    const searchParams = useSearchParams()
+    const [filter, setFilter] = useState(() => {
+        const status = searchParams.get('status')?.toLowerCase()
+        return ['pending', 'resubmission', 'verified', 'rejected'].includes(status)
+            ? status
+            : 'pending'
+    })
     const [searchQuery, setSearchQuery] = useState('')
 
     // Menggunakan Custom Hook untuk mengambil data perusahaan berdasarkan filter status

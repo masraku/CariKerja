@@ -85,6 +85,8 @@ export async function GET(request, { params }) {
     }
 
     const myParticipation = interview.interview_participants[0]
+    const isApprovedReschedule =
+      myParticipation.status === 'PENDING' && interview.title.includes('(Reschedule)')
 
     // Calculate time until interview
     const now = new Date()
@@ -107,15 +109,15 @@ export async function GET(request, { params }) {
           status: interview.status,
           createdAt: interview.createdAt
         },
-        job: {
+        job: interview.jobs ? {
           id: interview.jobs.id,
           title: interview.jobs.title,
           slug: interview.jobs.slug,
           type: interview.jobs.jobType,
           level: interview.jobs.level,
           location: interview.jobs.location
-        },
-        company: interview.jobs.companies,
+        } : null,
+        company: interview.jobs?.companies || null,
         recruiter: {
           name: `${interview.recruiters.firstName} ${interview.recruiters.lastName}`,
           position: interview.recruiters.position,
@@ -123,7 +125,7 @@ export async function GET(request, { params }) {
         },
         myParticipation: {
           id: myParticipation.id,
-          status: myParticipation.status,
+          status: isApprovedReschedule ? 'ACCEPTED' : myParticipation.status,
           invitedAt: myParticipation.invitedAt,
           respondedAt: myParticipation.respondedAt,
           applicationId: myParticipation.applications.id,

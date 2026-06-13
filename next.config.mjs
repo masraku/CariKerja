@@ -25,7 +25,7 @@ const nextConfig = {
           },
           {
             key: 'X-Frame-Options',
-            value: 'DENY',
+            value: 'SAMEORIGIN',
           },
           {
             key: 'X-XSS-Protection',
@@ -52,9 +52,9 @@ const nextConfig = {
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: blob: https: http:",
               "media-src 'self' data: blob: https: http:",
-              "frame-src 'self' https://www.google.com https://maps.google.com https://*.google.com",
+              "frame-src 'self' blob: https://www.google.com https://maps.google.com https://*.google.com",
               "connect-src 'self' https://*.supabase.co https://*.upstash.io wss://*.supabase.co https://maps.googleapis.com",
-              "frame-ancestors 'none'",
+              "frame-ancestors 'self'",
               "base-uri 'self'",
               "form-action 'self'",
             ].join('; '),

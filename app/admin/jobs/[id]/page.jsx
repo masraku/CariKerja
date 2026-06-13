@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/api";
+import { useMutationUpdateJobStatus } from "@/hooks/admin/useAdmin";
 import {
   ArrowLeft,
   Building2,
@@ -29,6 +30,7 @@ export default function AdminJobDetailPage() {
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
+  const updateStatusMutation = useMutationUpdateJobStatus();
 
   useEffect(() => {
     if (params.id) {
@@ -94,17 +96,11 @@ export default function AdminJobDetailPage() {
         rejectionReason = result.value;
       }
 
-      await api.patch(
-        "/api/admin/jobs",
-        {
-          jobId: job.id,
-          status: newStatus,
-          rejectionReason,
-        },
-        {
-          withCredentials: true,
-        },
-      );
+      await updateStatusMutation.mutateAsync({
+        jobId: job.id,
+        status: newStatus,
+        rejectionReason,
+      });
 
       await Swal.fire({
         icon: "success",
@@ -212,25 +208,28 @@ export default function AdminJobDetailPage() {
             {job.status === "PENDING" && (
               <>
                 <button
+                  disabled={updateStatusMutation.isPending}
                   onClick={() => handleUpdateStatus("REJECTED")}
-                  className="px-4 py-2 text-red-600 font-medium hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
+                  className="px-4 py-2 text-red-600 font-medium hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   Tolak
                 </button>
                 <button
+                  disabled={updateStatusMutation.isPending}
                   onClick={() => handleUpdateStatus("ACTIVE")}
-                  className="px-4 py-2 bg-slate-900 text-white font-medium rounded-lg hover:bg-slate-800 transition-colors shadow-sm"
+                  className="px-4 py-2 bg-slate-900 text-white font-medium rounded-lg hover:bg-slate-800 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  Setujui Lowongan
+                  {updateStatusMutation.isPending ? "Memproses..." : "Setujui Lowongan"}
                 </button>
               </>
             )}
             {job.status === "ACTIVE" && (
               <button
+                disabled={updateStatusMutation.isPending}
                 onClick={() => handleUpdateStatus("CLOSED")}
-                className="px-4 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Tutup Lowongan
+                {updateStatusMutation.isPending ? "Memproses..." : "Tutup Lowongan"}
               </button>
             )}
           </div>

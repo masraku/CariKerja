@@ -66,6 +66,15 @@ export default function JobDetailPage() {
   });
   const itemsPerPage = 10;
 
+  const getApiErrorMessage = (error, fallback) => {
+    return (
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      error?.message ||
+      fallback
+    );
+  };
+
   useEffect(() => {
     loadApplications();
   }, []);
@@ -77,6 +86,10 @@ export default function JobDetailPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [filteredApplications.length]);
+
+  useEffect(() => {
+    setSelectedApplications([]);
+  }, [statusFilter, activeCategory, searchQuery]);
 
   // Recalculate stats when applications change
   useEffect(() => {
@@ -516,7 +529,7 @@ export default function JobDetailPage() {
       Swal.fire({
         icon: "error",
         title: "Gagal",
-        text: "Gagal menerima kandidat",
+        text: getApiErrorMessage(error, "Gagal menerima kandidat"),
       });
     }
   };
@@ -733,12 +746,15 @@ export default function JobDetailPage() {
     });
   };
 
+  const getDocumentViewerUrl = (application, type) =>
+    `/api/profile/recruiter/applications/${application.id}/document?type=${type}`;
+
   // Handle view document - update status to REVIEWING and open document
-  const handleViewDocument = async (application, url, title) => {
+  const handleViewDocument = async (application, type, title) => {
     await updateStatusToReviewing(application);
     setDocumentModal({
       isOpen: true,
-      url: url,
+      url: getDocumentViewerUrl(application, type),
       title: title,
     });
   };
@@ -859,7 +875,7 @@ export default function JobDetailPage() {
       Swal.fire({
         icon: "error",
         title: "Gagal",
-        text: "Gagal menerima kandidat",
+        text: getApiErrorMessage(error, "Gagal menerima kandidat"),
       });
     }
   };
@@ -1206,7 +1222,7 @@ export default function JobDetailPage() {
                     e.stopPropagation();
                     handleViewDocument(
                       application,
-                      application.jobseekers.cvUrl,
+                      "cv",
                       "CV",
                     );
                   }}
@@ -1223,7 +1239,7 @@ export default function JobDetailPage() {
                     e.stopPropagation();
                     handleViewDocument(
                       application,
-                      application.jobseekers.ktpUrl,
+                      "ktp",
                       "KTP",
                     );
                   }}
@@ -1240,7 +1256,7 @@ export default function JobDetailPage() {
                     e.stopPropagation();
                     handleViewDocument(
                       application,
-                      application.jobseekers.ak1Url,
+                      "ak1",
                       "Kartu AK-1",
                     );
                   }}
@@ -1257,7 +1273,7 @@ export default function JobDetailPage() {
                     e.stopPropagation();
                     handleViewDocument(
                       application,
-                      application.jobseekers.ijazahUrl,
+                      "ijazah",
                       "Ijazah",
                     );
                   }}
@@ -1274,7 +1290,7 @@ export default function JobDetailPage() {
                     e.stopPropagation();
                     handleViewDocument(
                       application,
-                      application.jobseekers.sertifikatUrl,
+                      "sertifikat",
                       "Sertifikat",
                     );
                   }}
@@ -1291,7 +1307,7 @@ export default function JobDetailPage() {
                     e.stopPropagation();
                     handleViewDocument(
                       application,
-                      application.jobseekers.suratPengalamanUrl,
+                      "suratPengalaman",
                       "Surat Pengalaman",
                     );
                   }}
@@ -2451,7 +2467,10 @@ export default function JobDetailPage() {
                         setApplicantModal({ isOpen: false, application: null });
                         setDocumentModal({
                           isOpen: true,
-                          url: applicantModal.application.jobseekers.cvUrl,
+                          url: getDocumentViewerUrl(
+                            applicantModal.application,
+                            "cv",
+                          ),
                           title: "CV",
                         });
                       }}
@@ -2470,7 +2489,10 @@ export default function JobDetailPage() {
                         setApplicantModal({ isOpen: false, application: null });
                         setDocumentModal({
                           isOpen: true,
-                          url: applicantModal.application.jobseekers.ktpUrl,
+                          url: getDocumentViewerUrl(
+                            applicantModal.application,
+                            "ktp",
+                          ),
                           title: "KTP",
                         });
                       }}
@@ -2489,7 +2511,10 @@ export default function JobDetailPage() {
                         setApplicantModal({ isOpen: false, application: null });
                         setDocumentModal({
                           isOpen: true,
-                          url: applicantModal.application.jobseekers.ak1Url,
+                          url: getDocumentViewerUrl(
+                            applicantModal.application,
+                            "ak1",
+                          ),
                           title: "Kartu AK-1",
                         });
                       }}
@@ -2508,7 +2533,10 @@ export default function JobDetailPage() {
                         setApplicantModal({ isOpen: false, application: null });
                         setDocumentModal({
                           isOpen: true,
-                          url: applicantModal.application.jobseekers.ijazahUrl,
+                          url: getDocumentViewerUrl(
+                            applicantModal.application,
+                            "ijazah",
+                          ),
                           title: "Ijazah",
                         });
                       }}
@@ -2527,8 +2555,10 @@ export default function JobDetailPage() {
                         setApplicantModal({ isOpen: false, application: null });
                         setDocumentModal({
                           isOpen: true,
-                          url: applicantModal.application.jobseekers
-                            .sertifikatUrl,
+                          url: getDocumentViewerUrl(
+                            applicantModal.application,
+                            "sertifikat",
+                          ),
                           title: "Sertifikat",
                         });
                       }}
@@ -2548,8 +2578,10 @@ export default function JobDetailPage() {
                         setApplicantModal({ isOpen: false, application: null });
                         setDocumentModal({
                           isOpen: true,
-                          url: applicantModal.application.jobseekers
-                            .suratPengalamanUrl,
+                          url: getDocumentViewerUrl(
+                            applicantModal.application,
+                            "suratPengalaman",
+                          ),
                           title: "Surat Pengalaman",
                         });
                       }}

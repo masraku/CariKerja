@@ -60,7 +60,15 @@ export async function POST(request, context) {
 
     // Get job
     const job = await prisma.jobs.findFirst({
-      where: { slug }
+      where: {
+        slug,
+        companies: {
+          is: {
+            verified: true,
+            status: 'VERIFIED'
+          }
+        }
+      }
     })
 
     if (!job) {
@@ -70,8 +78,8 @@ export async function POST(request, context) {
       )
     }
 
-    // Check if job is still active
-    if (!job.isActive) {
+    // Check if job is published and still active
+    if (job.status !== 'ACTIVE' || !job.isActive || !job.publishedAt) {
       return NextResponse.json(
         { error: 'Lowongan sudah ditutup' },
         { status: 400 }

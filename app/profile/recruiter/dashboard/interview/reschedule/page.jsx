@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 import {
   Calendar,
@@ -40,6 +41,7 @@ const getJakartaInputDateTime = (value) => {
 function RescheduleContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -190,6 +192,8 @@ function RescheduleContent() {
           withCredentials: true,
         },
       );
+
+      await queryClient.invalidateQueries({ queryKey: ["recruiterInterviews"] });
 
       await Swal.fire({
         icon: "success",

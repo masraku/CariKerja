@@ -3,6 +3,10 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/api";
 import {
+  useMutationRejectCompany,
+  useMutationVerifyCompany,
+} from "@/hooks/admin/useAdmin";
+import {
   Building2,
   CheckCircle,
   XCircle,
@@ -25,6 +29,10 @@ export default function CompanyDetailPage() {
   const router = useRouter();
   const [company, setCompany] = useState(null);
   const [loading, setLoading] = useState(true);
+  const verifyCompanyMutation = useMutationVerifyCompany();
+  const rejectCompanyMutation = useMutationRejectCompany();
+  const companyActionPending =
+    verifyCompanyMutation.isPending || rejectCompanyMutation.isPending;
 
   useEffect(() => {
     if (params.id) {
@@ -34,15 +42,12 @@ export default function CompanyDetailPage() {
 
   const loadCompanyDetail = async () => {
     try {
-      const { data } = await api.get(`/api/admin/companies?status=all`, {
+      const { data } = await api.get(`/api/admin/companies/${params.id}`, {
         withCredentials: true,
       });
 
       if (data.success) {
-        const foundCompany = data.data.companies.find(
-          (c) => c.id === params.id,
-        );
-        setCompany(foundCompany);
+        setCompany(data.data.company);
       }
     } catch (error) {
     } finally {
@@ -71,25 +76,18 @@ export default function CompanyDetailPage() {
 
     if (result.isConfirmed) {
       try {
-        const { data } = await api.patch(
-          `/api/admin/companies/${company.id}/verify`,
-          { notes: result.value || "" },
-          {
-            withCredentials: true,
-          },
-        );
+        await verifyCompanyMutation.mutateAsync({
+          companyId: company.id,
+          notes: result.value || "",
+        });
 
-        if (data.success) {
-          await Swal.fire({
-            icon: "success",
-            title: "Berhasil!",
-            text: "Perusahaan telah diverifikasi",
-            timer: 2000,
-          });
-          router.push("/admin/companies");
-        } else {
-          throw new Error(data.error);
-        }
+        await Swal.fire({
+          icon: "success",
+          title: "Berhasil!",
+          text: "Perusahaan telah diverifikasi",
+          timer: 2000,
+        });
+        router.push("/admin/companies");
       } catch (error) {
         Swal.fire({
           icon: "error",
@@ -129,25 +127,18 @@ export default function CompanyDetailPage() {
 
     if (result.isConfirmed) {
       try {
-        const { data } = await api.patch(
-          `/api/admin/companies/${company.id}/reject`,
-          { reason: result.value },
-          {
-            withCredentials: true,
-          },
-        );
+        await rejectCompanyMutation.mutateAsync({
+          companyId: company.id,
+          reason: result.value,
+        });
 
-        if (data.success) {
-          await Swal.fire({
-            icon: "success",
-            title: "Ditolak",
-            text: "Perusahaan telah ditolak",
-            timer: 2000,
-          });
-          router.push("/admin/companies");
-        } else {
-          throw new Error(data.error);
-        }
+        await Swal.fire({
+          icon: "success",
+          title: "Ditolak",
+          text: "Perusahaan telah ditolak",
+          timer: 2000,
+        });
+        router.push("/admin/companies");
       } catch (error) {
         Swal.fire({
           icon: "error",
@@ -253,18 +244,20 @@ export default function CompanyDetailPage() {
                 company.status === "PENDING_RESUBMISSION") && (
                 <div className="flex gap-3">
                   <button
+                    disabled={companyActionPending}
                     onClick={handleVerify}
-                    className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium transition shadow-lg shadow-emerald-500/20 flex items-center gap-2"
+                    className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium transition shadow-lg shadow-emerald-500/20 flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <CheckCircle className="w-4 h-4" />
-                    Verifikasi
+                    {verifyCompanyMutation.isPending ? "Memproses..." : "Verifikasi"}
                   </button>
                   <button
+                    disabled={companyActionPending}
                     onClick={handleReject}
-                    className="px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition shadow-lg shadow-red-500/20 flex items-center gap-2"
+                    className="px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition shadow-lg shadow-red-500/20 flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <XCircle className="w-4 h-4" />
-                    Tolak
+                    {rejectCompanyMutation.isPending ? "Memproses..." : "Tolak"}
                   </button>
                 </div>
               )}

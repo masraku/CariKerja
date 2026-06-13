@@ -89,11 +89,11 @@ export function useMutationVerifyCompany() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async ({ companyId, verified }) => {
+        mutationFn: async ({ companyId, notes = "" }) => {
             // Use api for PATCH (CSRF protected)
             const { data } = await api.patch(
-                `/api/admin/companies/${companyId}`,
-                { verified },
+                `/api/admin/companies/${companyId}/verify`,
+                { notes },
                 { headers: getAuthHeader(), withCredentials: true }
             );
 
@@ -105,6 +105,34 @@ export function useMutationVerifyCompany() {
             await Promise.all([
                 queryClient.invalidateQueries({ queryKey: queryKeyAdminCompanies }),
                 queryClient.invalidateQueries({ queryKey: queryKeyAdminStats }),
+                queryClient.invalidateQueries({ queryKey: queryKeyAdminChartStats }),
+                queryClient.invalidateQueries({ queryKey: queryKeyAdminSidebarCounts }),
+            ]);
+        },
+    });
+}
+
+export function useMutationRejectCompany() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ companyId, reason }) => {
+            // Use api for PATCH (CSRF protected)
+            const { data } = await api.patch(
+                `/api/admin/companies/${companyId}/reject`,
+                { reason },
+                { headers: getAuthHeader(), withCredentials: true }
+            );
+
+            if (!data.success) throw new Error(data.error || "Gagal menolak perusahaan");
+
+            return data;
+        },
+        onSuccess: async () => {
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: queryKeyAdminCompanies }),
+                queryClient.invalidateQueries({ queryKey: queryKeyAdminStats }),
+                queryClient.invalidateQueries({ queryKey: queryKeyAdminChartStats }),
                 queryClient.invalidateQueries({ queryKey: queryKeyAdminSidebarCounts }),
             ]);
         },

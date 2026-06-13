@@ -601,6 +601,10 @@ export async function GET(request) {
 
 export async function PATCH(request) {
   try {
+    if (!validateCSRFToken(request)) {
+      return csrfErrorResponse()
+    }
+
     // Verify authentication
     const cookieStore = await cookies()
     const token = cookieStore.get('token')
@@ -619,15 +623,43 @@ export async function PATCH(request) {
         { status: 401 }
       )
     }
+
+    if (decoded.role !== 'JOBSEEKER') {
+      return NextResponse.json(
+        { error: 'User is not a jobseeker' },
+        { status: 403 }
+      )
+    }
+
     const userId = decoded.userId
 
     // Get only the fields to update
     const body = await request.json()
+    const allowedFields = [
+      'photo', 'firstName', 'lastName', 'dateOfBirth', 'gender', 'religion',
+      'maritalStatus', 'nationality', 'idNumber', 'phone', 'email', 'address',
+      'city', 'province', 'postalCode', 'kecamatan', 'kelurahan', 'currentTitle',
+      'summary', 'linkedinUrl', 'githubUrl', 'portfolioUrl', 'websiteUrl', 'cvUrl',
+      'ktpUrl', 'ak1Url', 'ijazahUrl', 'sertifikatUrl', 'suratPengalamanUrl',
+      'lastEducationLevel', 'lastEducationInstitution', 'lastEducationMajor',
+      'graduationYear', 'desiredJobTitle', 'desiredSalaryMin', 'desiredSalaryMax',
+      'preferredLocation', 'preferredJobType', 'willingToRelocate', 'availableFrom'
+    ]
+    const updateData = Object.fromEntries(
+      Object.entries(body).filter(([key]) => allowedFields.includes(key))
+    )
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json(
+        { error: 'Tidak ada field profil yang valid untuk diperbarui' },
+        { status: 400 }
+      )
+    }
     
     // Update only provided fields
     const jobseeker = await prisma.jobseekers.update({
       where: { userId: userId },
-      data: body
+      data: updateData
     })
 
     return NextResponse.json({
@@ -648,6 +680,10 @@ export async function PATCH(request) {
 
 export async function DELETE(request) {
   try {
+    if (!validateCSRFToken(request)) {
+      return csrfErrorResponse()
+    }
+
     // Verify authentication
     const cookieStore = await cookies()
     const token = cookieStore.get('token')
@@ -666,6 +702,14 @@ export async function DELETE(request) {
         { status: 401 }
       )
     }
+
+    if (decoded.role !== 'JOBSEEKER') {
+      return NextResponse.json(
+        { error: 'User is not a jobseeker' },
+        { status: 403 }
+      )
+    }
+
     const userId = decoded.userId
 
     // Get jobseeker

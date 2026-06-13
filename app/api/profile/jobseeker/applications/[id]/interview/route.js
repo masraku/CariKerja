@@ -70,7 +70,9 @@ export async function GET(request, { params }) {
 
         return NextResponse.json({ 
             interview: participant.interviews,
-            participantStatus: participant.status
+            participantStatus: participant.status,
+            responseMessage: participant.responseMessage,
+            respondedAt: participant.respondedAt
         })
     } catch (error) {
         return NextResponse.json(

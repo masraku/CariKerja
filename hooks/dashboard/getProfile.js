@@ -83,6 +83,8 @@ export function useMutationEmploymentStatus() {
                 headers: getAuthHeader(),
                 withCredentials: true,
             });
+
+            if (!data.success) throw new Error(data.error || "Failed to update status");
             
             return {
                 isEmployed: data.data.isEmployed || false,

@@ -34,26 +34,26 @@ export async function GET(request, context) {
       // Not authenticated, continue without user info
     }
 
-    // Check if slug is actually an ID (numeric)
-    const isNumericId = /^\d+$/.test(slug)
-    
     // For authenticated recruiters, allow viewing any job (even inactive)
     // For public access, only show active published jobs
     const isRecruiter = userRole === 'RECRUITER'
     
     // Fetch job by slug or ID with all related data
     const job = await prisma.jobs.findFirst({
-      where: isNumericId 
-        ? { 
-            id: parseInt(slug)
-          }
-        : isRecruiter
-          ? { slug } // Recruiter can see any job by slug
-          : { 
-              slug,
-              isActive: true,
-              publishedAt: { not: null }
-            },
+      where: isRecruiter
+        ? { OR: [{ slug }, { id: slug }] } // Recruiter can see any job by slug/id
+        : {
+            OR: [{ slug }, { id: slug }],
+            status: 'ACTIVE',
+            isActive: true,
+            publishedAt: { not: null },
+            companies: {
+              is: {
+                verified: true,
+                status: 'VERIFIED'
+              }
+            }
+          },
       include: {
         companies: {
           select: {

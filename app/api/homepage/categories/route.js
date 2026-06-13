@@ -38,7 +38,15 @@ export async function GET(request) {
         // Get all active jobs grouped by category
         const jobs = await prisma.jobs.findMany({
             where: {
-                isActive: true
+                status: 'ACTIVE',
+                isActive: true,
+                publishedAt: { not: null },
+                companies: {
+                    is: {
+                        verified: true,
+                        status: 'VERIFIED'
+                    }
+                }
             },
             select: {
                 category: true

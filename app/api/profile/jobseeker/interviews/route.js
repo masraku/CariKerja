@@ -59,31 +59,36 @@ export async function GET(request) {
         })
 
         // Transform data
-        const interviews = participants.map(participant => ({
-            id: participant.interviews.id,
-            participantId: participant.id,
-            title: participant.interviews.title,
-            scheduledAt: participant.interviews.scheduledAt,
-            duration: participant.interviews.duration,
-            meetingType: participant.interviews.meetingType,
-            meetingUrl: participant.interviews.meetingUrl,
-            location: participant.interviews.location,
-            description: participant.interviews.description,
-            status: participant.status, // PENDING, ACCEPTED, DECLINED, RESCHEDULE_REQUESTED
-            responseMessage: participant.responseMessage,
-            interviewStatus: participant.interviews.status,
-            invitedAt: participant.invitedAt,
-            respondedAt: participant.respondedAt,
-            jobs: {
-                id: participant.applications.jobs.id,
-                title: participant.applications.jobs.title,
-                slug: participant.applications.jobs.slug,
-                company: participant.applications.jobs.companies
-            },
-            recruiter: participant.interviews.recruiters,
-            applicationId: participant.applications.id,
-            applicationStatus: participant.applications.status
-        }))
+        const interviews = participants.map(participant => {
+            const isApprovedReschedule =
+                participant.status === 'PENDING' && participant.interviews.title.includes('(Reschedule)')
+
+            return {
+                id: participant.interviews.id,
+                participantId: participant.id,
+                title: participant.interviews.title,
+                scheduledAt: participant.interviews.scheduledAt,
+                duration: participant.interviews.duration,
+                meetingType: participant.interviews.meetingType,
+                meetingUrl: participant.interviews.meetingUrl,
+                location: participant.interviews.location,
+                description: participant.interviews.description,
+                status: isApprovedReschedule ? 'ACCEPTED' : participant.status, // PENDING, ACCEPTED, DECLINED, RESCHEDULE_REQUESTED
+                responseMessage: participant.responseMessage,
+                interviewStatus: participant.interviews.status,
+                invitedAt: participant.invitedAt,
+                respondedAt: participant.respondedAt,
+                jobs: {
+                    id: participant.applications.jobs.id,
+                    title: participant.applications.jobs.title,
+                    slug: participant.applications.jobs.slug,
+                    company: participant.applications.jobs.companies
+                },
+                recruiter: participant.interviews.recruiters,
+                applicationId: participant.applications.id,
+                applicationStatus: participant.applications.status
+            }
+        })
 
         // Separate into pending and responded
         const pending = interviews.filter(i => i.status === 'PENDING')
@@ -99,6 +104,7 @@ export async function GET(request) {
                     total: interviews.length,
                     pending: pending.length,
                     accepted: interviews.filter(i => i.status === 'ACCEPTED').length,
+                    completed: interviews.filter(i => i.status === 'COMPLETED').length,
                     declined: interviews.filter(i => i.status === 'DECLINED').length,
                     reschedule: interviews.filter(i => i.status === 'RESCHEDULE_REQUESTED').length
                 }

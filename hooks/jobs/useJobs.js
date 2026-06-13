@@ -75,11 +75,13 @@ export function useMutationApplyJob() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async ({ jobId, coverLetter }) => {
+        mutationFn: async ({ slug, coverLetter, expectedSalary, availableDate, notes }) => {
+            if (!slug) throw new Error("Slug lowongan wajib diisi");
+
             // Use api for POST (CSRF protected)
             const { data } = await api.post(
-                "/api/applications",
-                { jobId, coverLetter },
+                `/api/jobs/${slug}/apply`,
+                { coverLetter, expectedSalary, availableDate, notes },
                 { headers: getAuthHeader(), withCredentials: true }
             );
 

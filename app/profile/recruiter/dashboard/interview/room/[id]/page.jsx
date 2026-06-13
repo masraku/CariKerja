@@ -130,6 +130,8 @@ function InterviewRoomContent() {
   if (!interview) return null;
 
   const isCompleted = interview.status === "COMPLETED";
+  const isCancelled = interview.status === "CANCELLED";
+  const canManageInterview = interview.status === "SCHEDULED";
   const scheduledDate = new Date(interview.scheduledAt);
 
   // Format date/time
@@ -163,6 +165,8 @@ function InterviewRoomContent() {
             className={`p-6 ${
               isCompleted
                 ? "bg-green-50 border-b border-green-100"
+                : isCancelled
+                  ? "bg-red-50 border-b border-red-100"
                 : "bg-[#03587f] text-white"
             }`}
           >
@@ -170,18 +174,28 @@ function InterviewRoomContent() {
               <div>
                 <h1
                   className={`text-2xl font-bold ${
-                    isCompleted ? "text-green-800" : "text-white"
+                    isCompleted
+                      ? "text-green-800"
+                      : isCancelled
+                        ? "text-red-800"
+                        : "text-white"
                   }`}
                 >
                   {interview.title}
                 </h1>
                 <p
                   className={`mt-1 ${
-                    isCompleted ? "text-green-600" : "text-blue-100"
+                    isCompleted
+                      ? "text-green-600"
+                      : isCancelled
+                        ? "text-red-600"
+                        : "text-blue-100"
                   }`}
                 >
                   {isCompleted
                     ? "Interview telah selesai"
+                    : isCancelled
+                      ? "Interview dibatalkan"
                     : "Ruang Tunggu Interview"}
                 </p>
               </div>
@@ -189,6 +203,8 @@ function InterviewRoomContent() {
                 className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
                   isCompleted
                     ? "bg-green-200 text-green-800"
+                    : isCancelled
+                      ? "bg-red-200 text-red-800"
                     : "bg-blue-800/50 text-blue-100"
                 }`}
               >
@@ -297,7 +313,7 @@ function InterviewRoomContent() {
                       >
                         {p.status}
                       </span>
-                      {!isCompleted &&
+                      {canManageInterview &&
                         (p.status === "ACCEPTED" || p.status === "PENDING") && (
                           <button
                             onClick={() => handleCompleteInterview(p.id)}
@@ -316,7 +332,7 @@ function InterviewRoomContent() {
 
             {/* Right Column: Actions */}
             <div className="space-y-4">
-              {!isCompleted && (
+              {canManageInterview && (
                 <>
                   {/* Join Button */}
                   {interview.meetingUrl && (
@@ -362,6 +378,17 @@ function InterviewRoomContent() {
                   </p>
                   <p className="font-mono text-green-800 mt-1">
                     {new Date(interview.updatedAt).toLocaleDateString()}
+                  </p>
+                </div>
+              )}
+
+              {isCancelled && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-center">
+                  <XCircle className="w-12 h-12 text-red-600 mx-auto mb-2" />
+                  <h3 className="font-bold text-red-900">Dibatalkan</h3>
+                  <p className="text-sm text-red-700">
+                    Interview ini sudah dibatalkan dan hanya bisa dilihat sebagai
+                    detail.
                   </p>
                 </div>
               )}

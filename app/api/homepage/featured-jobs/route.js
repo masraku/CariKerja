@@ -17,7 +17,15 @@ export async function GET(request) {
         // OPTIMIZED: use select instead of include
         const jobs = await prisma.jobs.findMany({
             where: {
-                isActive: true
+                status: 'ACTIVE',
+                isActive: true,
+                publishedAt: { not: null },
+                companies: {
+                    is: {
+                        verified: true,
+                        status: 'VERIFIED'
+                    }
+                }
             },
             take: limit,
             orderBy: {

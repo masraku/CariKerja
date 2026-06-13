@@ -85,7 +85,16 @@ export async function GET(request) {
     const where = {
       AND: [
         { status: 'ACTIVE' },
+        { isActive: true },
         { publishedAt: { not: null } },
+        {
+          companies: {
+            is: {
+              verified: true,
+              status: 'VERIFIED'
+            }
+          }
+        },
         // Only show jobs that haven't passed their deadline
         // Either no deadline set (null) OR deadline is in the future
         {

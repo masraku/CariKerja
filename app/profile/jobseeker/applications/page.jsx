@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Briefcase,
   Building2,
@@ -17,6 +17,7 @@ import {
   ExternalLink,
   ChevronRight,
   MoreVertical,
+  RefreshCw,
 } from "lucide-react";
 import Swal from "sweetalert2";
 import Link from "next/link";
@@ -42,6 +43,18 @@ export default function JobseekerApplicationsPage() {
 
   const applications = applicationsData?.applications || [];
   const stats = applicationsData?.stats || {};
+
+  useEffect(() => {
+    const refreshApplications = () => refetch();
+
+    window.addEventListener("pageshow", refreshApplications);
+    window.addEventListener("focus", refreshApplications);
+
+    return () => {
+      window.removeEventListener("pageshow", refreshApplications);
+      window.removeEventListener("focus", refreshApplications);
+    };
+  }, [refetch]);
 
   // Withdraw application with SweetAlert
   const handleWithdraw = async (applicationId) => {
@@ -131,6 +144,12 @@ export default function JobseekerApplicationsPage() {
       color: "bg-cyan-100 text-cyan-800",
       icon: CheckCircle,
       description: "Menunggu keputusan",
+    },
+    RESCHEDULE_REQUESTED: {
+      label: "Menunggu Reschedule",
+      color: "bg-orange-100 text-orange-800",
+      icon: RefreshCw,
+      description: "Menunggu konfirmasi jadwal baru",
     },
     ACCEPTED: {
       label: "Diterima",
@@ -345,7 +364,17 @@ export default function JobseekerApplicationsPage() {
         ) : (
           <div className="space-y-4">
             {filteredApplications.map((application) => {
-              const StatusIcon = statusConfig[application.status].icon;
+              const interviewParticipant =
+                application.interview_participants?.[0] || null;
+              const displayStatusKey =
+                interviewParticipant?.status === "RESCHEDULE_REQUESTED"
+                  ? "RESCHEDULE_REQUESTED"
+                  : application.status;
+              const displayStatusConfig =
+                statusConfig[displayStatusKey] ||
+                statusConfig[application.status] ||
+                statusConfig.PENDING;
+              const StatusIcon = displayStatusConfig.icon;
 
               return (
                 <div
@@ -395,11 +424,11 @@ export default function JobseekerApplicationsPage() {
                         <div className="flex flex-wrap items-center gap-2">
                           <span
                             className={`inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${
-                              statusConfig[application.status].color
+                              displayStatusConfig.color
                             }`}
                           >
                             <StatusIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-                            {statusConfig[application.status].label}
+                            {displayStatusConfig.label}
                           </span>
                           <span className="text-xs sm:text-sm text-gray-500">
                             • {timeAgo(application.appliedAt)}
@@ -440,6 +469,16 @@ export default function JobseekerApplicationsPage() {
                         <span className="font-medium">Interview:</span>
                         <span>{formatDate(application.interviewDate)}</span>
                       </div>
+                      {interviewParticipant?.status ===
+                        "RESCHEDULE_REQUESTED" && (
+                        <div className="mt-2 flex items-start gap-2 text-sm text-orange-700">
+                          <RefreshCw className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                          <span>
+                            Permintaan reschedule sudah dikirim. Tunggu
+                            konfirmasi recruiter.
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
 

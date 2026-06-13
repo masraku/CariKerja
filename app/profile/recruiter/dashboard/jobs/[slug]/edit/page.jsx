@@ -79,6 +79,15 @@ export default function EditJobPage() {
     "Sulawesi Selatan",
   ];
 
+  const getApiErrorMessage = (error, fallback) => {
+    return (
+      error?.response?.data?.error ||
+      error?.response?.data?.message ||
+      error?.message ||
+      fallback
+    );
+  };
+
   useEffect(() => {
     loadJob();
     loadCompanyProfile();
@@ -141,6 +150,8 @@ export default function EditJobPage() {
         const d = new Date(date);
         return d.toISOString().split("T")[0];
       };
+      const formattedDeadline = formatDate(job.applicationDeadline);
+      const today = new Date().toISOString().split("T")[0];
 
       setFormData({
         title: job.title || "",
@@ -153,7 +164,10 @@ export default function EditJobPage() {
         jobType: job.jobType || "",
         educationLevel: job.educationLevel || "",
         numberOfPositions: job.numberOfPositions?.toString() || "1",
-        applicationDeadline: formatDate(job.applicationDeadline) || "",
+        applicationDeadline:
+          isActivateMode && formattedDeadline < today
+            ? ""
+            : formattedDeadline || "",
         skills: job.skills || [],
         isActive: job.isActive !== undefined ? job.isActive : true,
         jobPhoto: job.photo || "",
@@ -338,16 +352,35 @@ export default function EditJobPage() {
       return;
     }
 
+    const today = new Date().toISOString().split("T")[0];
+    if (isActivateMode && !formData.applicationDeadline) {
+      Swal.fire({
+        icon: "warning",
+        title: "Deadline Wajib Diisi",
+        text: "Batas akhir lamaran baru wajib diisi.",
+      });
+      return;
+    }
+
+    if (isActivateMode && formData.applicationDeadline < today) {
+      Swal.fire({
+        icon: "warning",
+        title: "Tanggal Tidak Valid",
+        text: "Batas akhir lamaran harus hari ini atau setelahnya.",
+      });
+      return;
+    }
+
     const result = await Swal.fire({
-      title: isActivateMode ? "Aktifkan Lowongan?" : "Update Lowongan?",
+      title: isActivateMode ? "Ajukan Aktif Ulang?" : "Update Lowongan?",
       text: isActivateMode
-        ? "Lowongan akan diaktifkan dan dikirim untuk validasi admin"
+        ? "Lowongan akan dikirim untuk validasi admin dan aktif setelah disetujui"
         : "Pastikan semua informasi sudah benar",
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#3b82f6",
       cancelButtonColor: "#6b7280",
-      confirmButtonText: isActivateMode ? "Ya, Aktifkan" : "Ya, Update",
+      confirmButtonText: isActivateMode ? "Ya, Ajukan" : "Ya, Update",
       cancelButtonText: "Batal",
     });
 
@@ -377,9 +410,11 @@ export default function EditJobPage() {
 
       await Swal.fire({
         icon: "success",
-        title: isActivateMode ? "Lowongan Diaktifkan!" : "Berhasil Diupdate!",
+        title: isActivateMode
+          ? "Diajukan Validasi Ulang!"
+          : "Berhasil Diupdate!",
         text: isActivateMode
-          ? "Lowongan berhasil diaktifkan dan dikirim untuk validasi admin."
+          ? "Lowongan akan aktif kembali setelah disetujui admin."
           : "Lowongan berhasil diupdate dan dikirim untuk validasi ulang oleh admin.",
         confirmButtonColor: "#3b82f6",
       });
@@ -388,7 +423,7 @@ export default function EditJobPage() {
       Swal.fire({
         icon: "error",
         title: "Gagal Update",
-        text: error.message,
+        text: getApiErrorMessage(error, "Gagal memperbarui lowongan"),
       });
     } finally {
       setSubmitting(false);
@@ -419,7 +454,7 @@ export default function EditJobPage() {
             <span>Kembali</span>
           </button>
           <h1 className="text-lg font-bold text-gray-900">
-            {isActivateMode ? "Aktifkan Lowongan" : "Edit Lowongan"}
+            {isActivateMode ? "Ajukan Aktif Ulang" : "Edit Lowongan"}
           </h1>
           <div className="w-20"></div> {/* Spacer for center alignment */}
         </div>
@@ -432,12 +467,13 @@ export default function EditJobPage() {
             <AlertCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
             <div>
               <h3 className="font-semibold text-blue-900">
-                Aktifkan Kembali Lowongan
+                Ajukan Aktif Ulang Lowongan
               </h3>
               <p className="text-sm text-blue-700 mt-1">
                 Silakan perbarui <strong>tanggal deadline penutupan</strong>{" "}
                 lowongan dan review informasi lainnya. Setelah disimpan,
-                lowongan akan aktif kembali dan menunggu validasi admin.
+                lowongan akan menunggu validasi admin dan aktif kembali setelah
+                disetujui.
               </p>
             </div>
           </div>
@@ -1099,18 +1135,20 @@ export default function EditJobPage() {
           <div className="fixed bottom-0 left-0 lg:left-64 right-0 bg-white border-t border-gray-100 p-4 shadow-lg z-20">
             <div className="container mx-auto max-w-5xl flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <label className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-                  <input
-                    type="checkbox"
-                    name="isActive"
-                    checked={formData.isActive}
-                    onChange={handleInputChange}
-                    className="text-blue-600 focus:ring-blue-500 rounded"
-                  />
-                  <span className="text-sm font-medium text-gray-700">
-                    Tampilkan Lowongan
-                  </span>
-                </label>
+                {!isActivateMode && (
+                  <label className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                    <input
+                      type="checkbox"
+                      name="isActive"
+                      checked={formData.isActive}
+                      onChange={handleInputChange}
+                      className="text-blue-600 focus:ring-blue-500 rounded"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Tampilkan Lowongan
+                    </span>
+                  </label>
+                )}
               </div>
 
               <div className="flex items-center gap-3">
@@ -1133,12 +1171,16 @@ export default function EditJobPage() {
                   {submitting ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      <span>Menyimpan...</span>
+                      <span>{isActivateMode ? "Mengajukan..." : "Menyimpan..."}</span>
                     </>
                   ) : (
                     <>
                       <Save className="w-4 h-4" />
-                      <span>Simpan Perubahan</span>
+                      <span>
+                        {isActivateMode
+                          ? "Ajukan Validasi Ulang"
+                          : "Simpan Perubahan"}
+                      </span>
                     </>
                   )}
                 </button>
