@@ -189,7 +189,7 @@ function LoginContent() {
       Swal.fire({
         icon: "error",
         title: "Registrasi Gagal",
-        text: error.response?.data?.error || error.response?.data?.details || "Terjadi kesalahan saat registrasi.",
+        text: "Terjadi kesalahan saat registrasi.",
         confirmButtonColor: BRAND_COLOR,
       });
     } finally {
@@ -233,7 +233,7 @@ function LoginContent() {
       Swal.fire({
         icon: "error",
         title: "Login Gagal",
-        text: error.response?.data?.error || "Terjadi kesalahan saat login.",
+        text: "Email atau password salah.",
         confirmButtonColor: BRAND_COLOR,
       });
     } finally {

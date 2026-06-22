@@ -166,8 +166,7 @@ export default function RecruiterProfilePage() {
             Swal.fire({
               icon: "error",
               title: "Error!",
-              text:
-                error.message || "Terjadi kesalahan saat mengajukan validasi",
+              text: "Terjadi kesalahan saat mengajukan validasi",
               confirmButtonColor: "#2563EB",
             });
           },
@@ -177,7 +176,7 @@ export default function RecruiterProfilePage() {
         Swal.fire({
           icon: "error",
           title: "Error!",
-          text: error.message || "Terjadi kesalahan saat menyimpan",
+          text: "Terjadi kesalahan saat menyimpan",
           confirmButtonColor: "#2563EB",
         });
       },

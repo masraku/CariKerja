@@ -162,8 +162,9 @@ export async function POST(request, { params }) {
         })
 
     } catch (error) {
+        console.error('Jobseeker reschedule error:', error)
         return NextResponse.json(
-            { error: error.message || 'Gagal mengirim request reschedule' },
+            { error: 'Gagal mengirim request reschedule' },
             { status: 500 }
         )
     }

@@ -79,14 +79,7 @@ export default function EditJobPage() {
     "Sulawesi Selatan",
   ];
 
-  const getApiErrorMessage = (error, fallback) => {
-    return (
-      error?.response?.data?.error ||
-      error?.response?.data?.message ||
-      error?.message ||
-      fallback
-    );
-  };
+
 
   useEffect(() => {
     loadJob();
@@ -323,7 +316,7 @@ export default function EditJobPage() {
       Swal.fire({
         icon: "error",
         title: "Upload Gagal",
-        text: error.message,
+        text: "Gagal mengupload foto",
       });
     }
   };
@@ -423,7 +416,7 @@ export default function EditJobPage() {
       Swal.fire({
         icon: "error",
         title: "Gagal Update",
-        text: getApiErrorMessage(error, "Gagal memperbarui lowongan"),
+        text: "Gagal memperbarui lowongan",
       });
     } finally {
       setSubmitting(false);

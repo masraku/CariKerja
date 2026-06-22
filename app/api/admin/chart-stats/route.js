@@ -97,9 +97,10 @@ export async function GET(request) {
         })
 
     } catch (error) {
+        console.error('Chart stats error:', error)
         return NextResponse.json({
             success: false,
-            error: error.message
+            error: 'Gagal mengambil data statistik'
         }, { status: 500 })
     }
 }

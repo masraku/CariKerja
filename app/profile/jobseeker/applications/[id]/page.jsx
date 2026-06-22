@@ -211,7 +211,7 @@ export default function ApplicationDetailPage() {
       Swal.fire({
         icon: "error",
         title: "Gagal",
-        text: error.message || "Gagal mengirim request reschedule",
+        text: "Gagal mengirim request reschedule",
       });
     }
   };
@@ -315,7 +315,7 @@ export default function ApplicationDetailPage() {
       Swal.fire({
         icon: "error",
         title: "Gagal",
-        text: error.message || "Gagal mengajukan pengunduran diri",
+        text: "Gagal mengajukan pengunduran diri",
       });
     } finally {
       setSubmittingResign(false);

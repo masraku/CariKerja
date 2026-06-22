@@ -258,7 +258,7 @@ Terima kasih dan sampai jumpa!`,
       Swal.fire({
         icon: "error",
         title: "Gagal",
-        text: error.response?.data?.error || "Gagal menjadwalkan interview",
+        text: "Gagal menjadwalkan interview",
         confirmButtonColor: "#2563EB",
       });
     } finally {

@@ -52,7 +52,7 @@ export async function POST(request) {
     // Cek role
     if (role && user.role !== role.toUpperCase()) {
       return NextResponse.json(
-        { error: `Akun ini terdaftar sebagai ${user.role.toLowerCase()}, bukan ${role}` },
+        { error: 'Email atau password salah' },
         { status: 401 }
       )
     }

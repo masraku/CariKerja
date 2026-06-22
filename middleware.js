@@ -68,7 +68,22 @@ function hasValidCsrfToken(request) {
   const cookieToken = request.cookies.get('csrf_token')?.value
   const headerToken = request.headers.get('x-csrf-token')
 
-  return Boolean(cookieToken && headerToken && cookieToken === headerToken)
+  if (!cookieToken || !headerToken || cookieToken.length !== headerToken.length) {
+    return false
+  }
+
+  // Timing-safe comparison to prevent timing attacks
+  const encoder = new TextEncoder()
+  const a = encoder.encode(cookieToken)
+  const b = encoder.encode(headerToken)
+
+  if (a.byteLength !== b.byteLength) return false
+
+  let result = 0
+  for (let i = 0; i < a.byteLength; i++) {
+    result |= a[i] ^ b[i]
+  }
+  return result === 0
 }
 
 function base64UrlToBytes(value) {

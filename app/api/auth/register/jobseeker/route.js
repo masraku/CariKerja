@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { createErrorResponse } from '@/lib/errorHandler'
 import { validateBody } from '@/lib/validations'
 import { registerJobseekerSchema } from '@/lib/validations/auth'
 import { prisma } from '@/lib/prisma'
@@ -83,8 +84,17 @@ export async function POST(request) {
     if (error instanceof NextResponse) {
       return error
     }
+
+    // Handle specific Prisma errors
+    if (error.code === 'P2002') {
+      return NextResponse.json(
+        { error: 'Email sudah terdaftar' },
+        { status: 400 }
+      )
+    }
+
     return NextResponse.json(
-      { error: error.message || 'Terjadi kesalahan saat registrasi' },
+      createErrorResponse('Terjadi kesalahan saat registrasi', error),
       { status: 500 }
     )
   }

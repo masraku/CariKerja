@@ -107,7 +107,7 @@ function InterviewRoomContent() {
         Swal.fire({
           icon: "error",
           title: "Gagal",
-          text: error.message,
+          text: "Terjadi kesalahan saat menyelesaikan interview",
           confirmButtonColor: "#2563EB",
         });
       } finally {

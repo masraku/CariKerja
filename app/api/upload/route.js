@@ -93,6 +93,26 @@ function getBucketName(type, bucket) {
     return 'Profile'
 }
 
+function getMaxUploadSize(type, bucket, folder, mimeType) {
+    const twoMB = 2 * 1024 * 1024
+    const fiveMB = 5 * 1024 * 1024
+    const isImage = mimeType?.startsWith('image/')
+
+    if (
+        type === 'recruiter-photo' ||
+        type === 'company-gallery' ||
+        type === 'job-photo' ||
+        folder === 'job-photos' ||
+        folder === 'jobs' ||
+        bucket?.includes('resignation') ||
+        (type === 'admin-doc' && isImage && folder === 'news')
+    ) {
+        return fiveMB
+    }
+
+    return twoMB
+}
+
 export async function POST(request) {
     try {
         if (!validateCSRFToken(request)) {
@@ -139,11 +159,12 @@ export async function POST(request) {
 
         // Read file buffer for validation
         const fileBuffer = Buffer.from(await file.arrayBuffer())
+        const maxUploadSize = getMaxUploadSize(type, bucket, folder, file.type)
 
         // Comprehensive file validation (magic numbers, filename, size, etc.)
         const validation = await validateFile(file, fileBuffer, {
             allowDocuments: isDocument,
-            maxSize: 2 * 1024 * 1024 // 2MB
+            maxSize: maxUploadSize
         })
 
         if (!validation.valid) {
@@ -260,7 +281,7 @@ export async function POST(request) {
             if (error) {
                 console.error('Upload error:', error)
                 return NextResponse.json(
-                    { error: `Gagal mengunggah: ${error.message}` },
+                    { error: 'Gagal mengunggah file' },
                     { status: 500 }
                 )
             }
@@ -310,7 +331,7 @@ export async function POST(request) {
             if (error) {
                 console.error('Upload error:', error)
                 return NextResponse.json(
-                    { error: `Gagal mengunggah: ${error.message}` },
+                    { error: 'Gagal mengunggah file' },
                     { status: 500 }
                 )
             }
@@ -389,7 +410,7 @@ export async function POST(request) {
             if (error) {
                 console.error('Upload error:', error)
                 return NextResponse.json(
-                    { error: `Gagal mengunggah: ${error.message}` },
+                    { error: 'Gagal mengunggah file' },
                     { status: 500 }
                 )
             }
@@ -423,7 +444,7 @@ export async function POST(request) {
                 if (error) {
                     console.error('Upload error:', error)
                     return NextResponse.json(
-                        { error: `Gagal mengunggah: ${error.message}` },
+                        { error: 'Gagal mengunggah file' },
                         { status: 500 }
                     )
                 }
@@ -482,7 +503,7 @@ export async function POST(request) {
                 if (error) {
                     console.error('Upload error:', error)
                     return NextResponse.json(
-                        { error: `Gagal mengunggah: ${error.message}` },
+                        { error: 'Gagal mengunggah file' },
                         { status: 500 }
                     )
                 }

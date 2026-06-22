@@ -36,9 +36,10 @@ export async function POST(request) {
         })
 
     } catch (error) {
+        console.error('Deactivate expired jobs error:', error)
         return NextResponse.json({
             success: false,
-            error: error.message
+            error: 'Gagal menonaktifkan lowongan kadaluarsa'
         }, { status: 500 })
     }
 }

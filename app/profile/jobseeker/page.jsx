@@ -742,7 +742,7 @@ function JobseekerProfileContent() {
         router.push("/profile/jobseeker/view");
       },
       onError: (error) => {
-        Swal.fire({ icon: "error", title: "Gagal", text: error.message });
+        Swal.fire({ icon: "error", title: "Gagal", text: "Gagal menyimpan profil" });
       },
     });
   };

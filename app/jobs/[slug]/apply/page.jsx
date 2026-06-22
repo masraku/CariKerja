@@ -153,14 +153,14 @@ export default function ApplyJobPage() {
         router.push("/profile/jobseeker/applications");
       });
     } catch (error) {
-      const errorMessage =
+      const serverMsg =
         error.response?.data?.error ||
         error.response?.data?.message ||
-        error.message;
+        "";
 
       if (
-        errorMessage.includes("sudah melamar") ||
-        errorMessage.includes("already applied")
+        serverMsg.includes("sudah melamar") ||
+        serverMsg.includes("already applied")
       ) {
         Swal.fire({
           icon: "info",
@@ -184,7 +184,7 @@ export default function ApplyJobPage() {
         Swal.fire({
           icon: "error",
           title: "Gagal Mengirim Lamaran",
-          text: errorMessage,
+          text: "Terjadi kesalahan saat mengirim lamaran. Silakan coba lagi.",
           confirmButtonColor: "#03587f",
         });
       }

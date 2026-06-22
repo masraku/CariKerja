@@ -107,7 +107,7 @@ export default function AdminContractsPage() {
         Swal.fire({
           icon: "error",
           title: "Gagal",
-          text: error.message || `Gagal menolak pendaftaran kontrak`,
+          text: "Gagal menolak pendaftaran kontrak",
         });
       } finally {
         setProcessingId(null);
@@ -167,10 +167,7 @@ export default function AdminContractsPage() {
       setApprovalFile(null);
       setApprovalNotes("");
     } catch (error) {
-      const errorMessage =
-        error.response?.data?.error ||
-        error.message ||
-        "Gagal menyetujui pendaftaran";
+      const errorMessage = "Gagal menyetujui pendaftaran kontrak";
       Swal.fire({
         icon: "error",
         title: "Gagal",

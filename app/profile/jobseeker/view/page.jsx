@@ -154,7 +154,7 @@ const ViewProfilePage = () => {
       setPreviewModal((prev) => ({
         ...prev,
         isLoading: false,
-        error: error.message || "Gagal membuka dokumen",
+        error: "Gagal membuka dokumen",
       }));
     }
   };

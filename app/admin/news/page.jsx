@@ -290,7 +290,7 @@ export default function AdminNewsPage() {
         Swal.fire({
           icon: "error",
           title: "Error",
-          text: error.message || "Terjadi kesalahan saat menghapus berita",
+          text: "Terjadi kesalahan saat menghapus berita",
         });
       }
     }
@@ -313,7 +313,7 @@ export default function AdminNewsPage() {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: error.message || "Gagal mengubah status",
+        text: "Gagal mengubah status berita",
       });
     }
   };

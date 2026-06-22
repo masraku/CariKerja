@@ -1,10 +1,19 @@
 const { PrismaClient } = require('@prisma/client')
 const argon2 = require('argon2')
+const crypto = require('crypto')
 
 const prisma = new PrismaClient()
 
 function out(line = '') {
   process.stdout.write(String(line) + '\n')
+}
+
+/**
+ * Generate a secure random password
+ * @returns {string} A 24-character random password
+ */
+function generateSecurePassword() {
+  return crypto.randomBytes(18).toString('base64url')
 }
 
 async function createAdmin() {
@@ -19,12 +28,13 @@ async function createAdmin() {
       return
     }
 
-    // Create admin user
-    const hashedPassword = await argon2.hash('admin123')
+    // Use env var or generate a secure random password
+    const password = process.env.ADMIN_PASSWORD || generateSecurePassword()
+    const hashedPassword = await argon2.hash(password)
     
     const admin = await prisma.users.create({
       data: {
-        id: require('crypto').randomUUID(),
+        id: crypto.randomUUID(),
         email: 'admin@jobseeker.com',
         password: hashedPassword,
         role: 'ADMIN',
@@ -35,9 +45,10 @@ async function createAdmin() {
 
     out('✅ Admin user created successfully!')
     out(`📧 Email: ${admin.email}`)
-    out('🔑 Password: admin123')
+    out(`🔑 Password: ${password}`)
     out('')
-    out('⚠️  IMPORTANT: Change this password after first login!')
+    out('⚠️  IMPORTANT: Change this password immediately after first login!')
+    out('⚠️  Store it securely — it will NOT be shown again.')
     
   } catch (error) {
     console.error('❌ Error:', error)

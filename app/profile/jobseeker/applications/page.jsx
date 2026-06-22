@@ -90,7 +90,7 @@ export default function JobseekerApplicationsPage() {
       onError: (error) => {
         Swal.fire({
           title: "Gagal!",
-          text: error.message || "Gagal menarik lamaran",
+          text: "Gagal menarik lamaran",
           icon: "error",
           confirmButtonColor: "#3b82f6",
         });

@@ -115,7 +115,7 @@ export default function JobseekerInterviewsPage() {
       Swal.fire({
         icon: "error",
         title: "Gagal",
-        text: error.message || "Gagal merespon interview",
+        text: "Gagal merespon interview",
       });
     }
   };

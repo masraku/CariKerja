@@ -66,14 +66,7 @@ export default function JobDetailPage() {
   });
   const itemsPerPage = 10;
 
-  const getApiErrorMessage = (error, fallback) => {
-    return (
-      error?.response?.data?.message ||
-      error?.response?.data?.error ||
-      error?.message ||
-      fallback
-    );
-  };
+
 
   useEffect(() => {
     loadApplications();
@@ -190,7 +183,7 @@ export default function JobDetailPage() {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: error.message || "Failed to load applications",
+        text: "Gagal memuat data lamaran. Silakan coba lagi.",
       });
     } finally {
       setLoading(false);
@@ -529,7 +522,7 @@ export default function JobDetailPage() {
       Swal.fire({
         icon: "error",
         title: "Gagal",
-        text: getApiErrorMessage(error, "Gagal menerima kandidat"),
+        text: "Gagal menerima kandidat",
       });
     }
   };

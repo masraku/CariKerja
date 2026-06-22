@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { Calendar, User, ArrowRight, Search, Newspaper, Eye, ChevronLeft, ChevronRight, TrendingUp, BookOpen } from 'lucide-react'
 import { useQueryNews } from '@/hooks/news/useNews'
+import NewsCoverImage from '@/components/NewsCoverImage'
 
 export default function NewsPage() {
     const [searchQuery, setSearchQuery] = useState('')
@@ -182,19 +182,12 @@ export default function NewsPage() {
                                                 {item.category}
                                             </span>
                                         </div>
-                                        {item.image ? (
-                                            <Image
-                                                src={item.image}
-                                                alt={item.title}
-                                                fill
-                                                sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
-                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                                                <Newspaper className="w-16 h-16 text-gray-300" />
-                                            </div>
-                                        )}
+                                        <NewsCoverImage
+                                            src={item.image}
+                                            alt={item.title}
+                                            sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                                            className="object-cover transition-transform duration-500 group-hover:scale-110"
+                                        />
                                         {/* Overlay on hover */}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                     </div>

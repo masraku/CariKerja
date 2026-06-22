@@ -125,7 +125,7 @@ export default function AdminSettingsPage() {
 
       showSuccess(response.data.message || "Profil berhasil diperbarui");
     } catch (error) {
-      showError(error.response?.data?.error || "Gagal memperbarui profil");
+      showError("Gagal memperbarui profil");
     } finally {
       setSaving(false);
     }
@@ -154,7 +154,7 @@ export default function AdminSettingsPage() {
       });
       showSuccess(response.data.message || "Password berhasil diubah");
     } catch (error) {
-      showError(error.response?.data?.error || "Gagal mengubah password");
+      showError("Gagal mengubah password");
     } finally {
       setSaving(false);
     }
@@ -171,7 +171,7 @@ export default function AdminSettingsPage() {
         response.data.message || "Pengaturan notifikasi berhasil disimpan",
       );
     } catch (error) {
-      showError(error.response?.data?.error || "Gagal menyimpan pengaturan");
+      showError("Gagal menyimpan pengaturan");
     } finally {
       setSaving(false);
     }
@@ -188,7 +188,7 @@ export default function AdminSettingsPage() {
         response.data.message || "Pengaturan sistem berhasil disimpan",
       );
     } catch (error) {
-      showError(error.response?.data?.error || "Gagal menyimpan pengaturan");
+      showError("Gagal menyimpan pengaturan");
     } finally {
       setSaving(false);
     }

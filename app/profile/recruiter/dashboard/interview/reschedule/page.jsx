@@ -206,7 +206,7 @@ function RescheduleContent() {
       Swal.fire({
         icon: "error",
         title: "Gagal",
-        text: error.message,
+        text: "Gagal memperbarui jadwal interview",
         confirmButtonColor: "#2563EB",
       });
     } finally {

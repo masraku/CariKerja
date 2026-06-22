@@ -92,7 +92,7 @@ export default function CompanyDetailPage() {
         Swal.fire({
           icon: "error",
           title: "Gagal",
-          text: error.response?.data?.error || error.message,
+          text: "Gagal memverifikasi perusahaan",
         });
       }
     }
@@ -143,7 +143,7 @@ export default function CompanyDetailPage() {
         Swal.fire({
           icon: "error",
           title: "Gagal",
-          text: error.response?.data?.error || error.message,
+          text: "Gagal menolak perusahaan",
         });
       }
     }

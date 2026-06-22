@@ -127,7 +127,7 @@ export default function RecruiterInterviewsPage() {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: error.message,
+        text: "Gagal memproses permintaan",
       });
     } finally {
       setProcessingId(null);
@@ -179,7 +179,7 @@ export default function RecruiterInterviewsPage() {
         showConfirmButton: false,
       });
     } catch (error) {
-      Swal.fire({ icon: "error", title: "Gagal", text: error.message });
+      Swal.fire({ icon: "error", title: "Gagal", text: "Gagal menolak permintaan reschedule" });
     } finally {
       setProcessingId(null);
     }

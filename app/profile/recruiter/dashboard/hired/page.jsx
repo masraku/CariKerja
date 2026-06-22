@@ -138,7 +138,7 @@ export default function ContractRegistrationPage() {
         Swal.fire({
           icon: "error",
           title: "Gagal",
-          text: error.message || "Gagal mengakhiri kontrak",
+          text: "Gagal mengakhiri kontrak",
         });
       } finally {
         setTerminatingId(null);
@@ -177,7 +177,7 @@ export default function ContractRegistrationPage() {
         Swal.fire({
           icon: "error",
           title: "Gagal",
-          text: error.message || "Gagal melakukan resubmit",
+          text: "Gagal melakukan pendaftaran ulang",
         });
       } finally {
         setResubmittingId(null);
@@ -295,7 +295,7 @@ export default function ContractRegistrationPage() {
       Swal.fire({
         icon: "error",
         title: "Gagal",
-        text: error.message || "Gagal mendaftarkan kontrak",
+        text: "Gagal mendaftarkan kontrak",
       });
     } finally {
       setSubmitting(false);

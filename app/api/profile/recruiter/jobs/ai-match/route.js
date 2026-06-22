@@ -30,10 +30,11 @@ export async function POST(request) {
         return await handleSkillMatching(request, auth.user)
         
     } catch (error) {
+        console.error('AI match error:', error)
         return NextResponse.json(
             { 
                 success: false,
-                error: error.message || 'Failed to process',
+                error: 'Failed to process',
                 match_score: 0, 
                 highlights: [] 
             },
@@ -275,9 +276,10 @@ async function handleCVUpload(request, user) {
         })
 
     } catch (error) {
+        console.error('CV upload error:', error)
         return NextResponse.json({
             success: false,
-            error: error.message || 'Failed to process CV upload'
+            error: 'Failed to process CV upload'
         }, { status: 500 })
     }
 }

@@ -340,9 +340,7 @@ export default function PostJobPage() {
               html: `<p>Validasi gagal:</p><ul style="text-align:left;margin-top:10px;">${validationDetails}</ul>`,
             }
           : {
-              text:
-                "Terjadi kesalahan saat mempublikasikan: " +
-                (responseData?.error || error.message),
+              text: "Terjadi kesalahan saat mempublikasikan lowongan",
             }),
         confirmButtonColor: "#2563EB",
       });
@@ -1004,7 +1002,7 @@ export default function PostJobPage() {
                             Swal.fire({
                               icon: "error",
                               title: "Upload Gagal",
-                              text: error.message,
+                              text: "Gagal mengupload foto",
                             });
                           }
                         }}
