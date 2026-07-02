@@ -1,0 +1,216 @@
+{
+  "info": {
+    "_postman_id": "c7d69dfb-5f98-45f1-95fe-ai-matcher",
+    "name": "Disnaker - AI Matcher Tests",
+    "description": "Postman collection untuk mengetes endpoint AI matcher. Jalankan Login Recruiter dulu agar cookie token dan X-CSRF-Token tersedia untuk request AI Matcher.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth - Login Recruiter",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login status is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const json = pm.response.json();",
+              "",
+              "pm.test('Login returns CSRF token', function () {",
+              "  pm.expect(json.csrfToken, 'csrfToken').to.be.a('string').and.not.empty;",
+              "});",
+              "",
+              "pm.test('Logged in user is recruiter', function () {",
+              "  pm.expect(json.user, 'user').to.be.an('object');",
+              "  pm.expect(json.user.role, 'role').to.eql('RECRUITER');",
+              "});",
+              "",
+              "if (json.csrfToken) {",
+              "  pm.collectionVariables.set('csrfToken', json.csrfToken);",
+              "  pm.environment.set('csrfToken', json.csrfToken);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{recruiterEmail}}\",\n  \"password\": \"{{recruiterPassword}}\",\n  \"role\": \"RECRUITER\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "description": "Login sebagai recruiter. Response menyimpan `csrfToken` ke collection/environment variable. Cookie `token` dan `csrf_token` disimpan otomatis oleh Postman cookie jar."
+      },
+      "response": []
+    },
+    {
+      "name": "AI Matcher - Operator Sablon via Next Backend",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('AI matcher status is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const json = pm.response.json();",
+              "",
+              "pm.test('Response has matcher fields', function () {",
+              "  pm.expect(json).to.have.property('match_score');",
+              "  pm.expect(json.match_score, 'match_score').to.be.a('number');",
+              "  pm.expect(json.match_score, 'match_score').to.be.within(0, 100);",
+              "  pm.expect(json.highlights, 'highlights').to.be.an('array');",
+              "  pm.expect(json.status, 'status').to.be.a('string').and.not.empty;",
+              "  pm.expect(json.source, 'source').to.be.a('string').and.not.empty;",
+              "});",
+              "",
+              "pm.test('Python matcher service is used', function () {",
+              "  pm.expect(json.source, 'NEXT_PUBLIC_PYTHON_API_URL must be set and reachable').to.eql('python_api');",
+              "});",
+              "",
+              "pm.test('Parsed CV debug payload exists', function () {",
+              "  pm.expect(json.cv_parsed, 'cv_parsed').to.be.an('object');",
+              "  pm.expect(json.debug, 'debug').to.be.an('object');",
+              "  pm.expect(json.debug.pythonFullResponse, 'pythonFullResponse').to.be.an('object');",
+              "});",
+              "",
+              "pm.collectionVariables.set('lastAiMatchScore', String(json.match_score));",
+              "pm.environment.set('lastAiMatchScore', String(json.match_score));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cv_url\": \"https://uliyvcwhxzdowjbvmgdl.supabase.co/storage/v1/object/public/Resume/jobseeker/0cd7f5f5-7cc6-442a-b116-2b29b75b8573/cv/cv-1768236043976.pdf\",\n  \"job_requirements\": {\n    \"title\": \"Operator Sablon\",\n    \"description\": \"Dibutuhkan operator sablon untuk memproduksi kaos dan merchandise. Harus teliti dan bisa bekerja dalam tim.\",\n    \"requirements\": \"Pengalaman sablon minimal 1 tahun. Bisa mengoperasikan mesin sablon manual dan digital.\",\n    \"skills\": [\n      \"Sablon\",\n      \"Jahit\",\n      \"Gunting\"\n    ]\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/profile/recruiter/jobs/ai-match",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "profile",
+            "recruiter",
+            "jobs",
+            "ai-match"
+          ]
+        },
+        "description": "Tes endpoint Next.js backend yang dipakai dashboard recruiter. Request ini membutuhkan cookie login recruiter dan header `X-CSRF-Token`."
+      },
+      "response": []
+    },
+    {
+      "name": "AI Matcher - Operator Sablon direct Python API",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Python API status is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const json = pm.response.json();",
+              "",
+              "pm.test('Python API returns match result fields', function () {",
+              "  pm.expect(json).to.be.an('object');",
+              "  pm.expect(json).to.have.property('persentase');",
+              "  pm.expect(json.skill, 'skill').to.be.an('array');",
+              "  pm.expect(json.status, 'status').to.be.a('string').and.not.empty;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"uri_cv\": \"https://uliyvcwhxzdowjbvmgdl.supabase.co/storage/v1/object/public/Resume/jobseeker/0cd7f5f5-7cc6-442a-b116-2b29b75b8573/cv/cv-1768236043976.pdf\",\n  \"job_title\": \"Operator Sablon\",\n  \"required_skill\": [\n    \"Sablon\",\n    \"Jahit\",\n    \"Gunting\"\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{pythonBaseUrl}}/api/match",
+          "host": [
+            "{{pythonBaseUrl}}"
+          ],
+          "path": [
+            "api",
+            "match"
+          ]
+        },
+        "description": "Tes langsung ke service Python matcher. Pakai ini untuk memastikan service AI aktif sebelum dites lewat endpoint Next.js."
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "pythonBaseUrl",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "recruiterEmail",
+      "value": ""
+    },
+    {
+      "key": "recruiterPassword",
+      "value": ""
+    },
+    {
+      "key": "csrfToken",
+      "value": ""
+    },
+    {
+      "key": "lastAiMatchScore",
+      "value": ""
+    }
+  ]
+}

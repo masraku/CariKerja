@@ -66,6 +66,7 @@ const Header = () => {
   const navLinks = [
     { name: "Beranda", href: "/" },
     { name: "Lowongan", href: "/jobs" },
+    { name: "Buat CV ATS", href: "/cv-builder" },
     { name: "Perusahaan", href: "/companies" },
     { name: "Berita", href: "/news" },
     { name: "Tentang", href: "/about" },
