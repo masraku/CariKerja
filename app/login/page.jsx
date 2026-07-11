@@ -19,6 +19,25 @@ import {
 import { BRAND_COLOR } from "@/lib/ui/theme";
 import { getSafeErrorMessage } from "@/lib/swalError";
 
+const getRoleRedirectPath = (role) => {
+  if (role === "ADMIN") return "/admin";
+  if (role === "RECRUITER") return "/profile/recruiter/dashboard";
+  if (role === "JOBSEEKER") return "/profile/jobseeker/dashboard";
+  return "/";
+};
+
+const getSafeRedirectPath = (redirect) => {
+  if (!redirect || !redirect.startsWith("/") || redirect.startsWith("//")) {
+    return null;
+  }
+
+  if (redirect.startsWith("/login")) {
+    return null;
+  }
+
+  return redirect;
+};
+
 function LoginContent() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
@@ -44,7 +63,7 @@ function LoginContent() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, refreshUser, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user, loading: authLoading } = useAuth();
 
   // Handle query alerts & Auto-open Register
   useEffect(() => {
@@ -90,18 +109,18 @@ function LoginContent() {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
-      const userFromContext = JSON.parse(localStorage.getItem("user") || "{}");
-      const userRole = userFromContext?.role;
+    if (authLoading || isLoading || !isAuthenticated) return;
 
-      if (userRole === "ADMIN") router.push("/admin");
-      else if (userRole === "RECRUITER")
-        router.push("/profile/recruiter/dashboard");
-      else if (userRole === "JOBSEEKER")
-        router.push("/profile/jobseeker/dashboard");
-      else router.push("/");
+    let storedUser = {};
+    try {
+      storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    } catch (error) {
+      storedUser = {};
     }
-  }, [isAuthenticated, router]);
+
+    const userRole = user?.role || storedUser?.role;
+    router.replace(getRoleRedirectPath(userRole));
+  }, [authLoading, isAuthenticated, isLoading, router, user?.role]);
 
   const validateRegister = () => {
     const errors = {};
@@ -203,13 +222,15 @@ function LoginContent() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    if (isLoading) return;
+
     setIsLoading(true);
+    let loginCompleted = false;
 
     try {
       const { data } = await axios.post("/api/auth/login", { email, password });
 
       await login(data.user);
-      await refreshUser();
 
       Swal.fire({
         icon: "success",
@@ -221,18 +242,15 @@ function LoginContent() {
 
       const action = searchParams.get("action");
       if (action === "post-job" && data.user.role === "RECRUITER") {
-        router.push("/profile/recruiter/post-job");
+        loginCompleted = true;
+        router.replace("/profile/recruiter/post-job");
         return;
       }
 
-      if (data.user.role === "JOBSEEKER")
-        router.push("/profile/jobseeker/dashboard");
-      else if (data.user.role === "RECRUITER")
-        router.push("/profile/recruiter/dashboard");
-      else if (data.user.role === "ADMIN") router.push("/admin");
-      else router.push("/");
-
-      router.refresh();
+      const redirectPath = getSafeRedirectPath(searchParams.get("redirect"));
+      const targetPath = redirectPath || getRoleRedirectPath(data.user.role);
+      loginCompleted = true;
+      router.replace(targetPath);
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -244,7 +262,9 @@ function LoginContent() {
         confirmButtonColor: BRAND_COLOR,
       });
     } finally {
-      setIsLoading(false);
+      if (!loginCompleted) {
+        setIsLoading(false);
+      }
     }
   };
 
