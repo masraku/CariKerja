@@ -104,7 +104,14 @@ function getMaxUploadSize(type, bucket, folder, mimeType) {
         type === 'job-photo' ||
         folder === 'job-photos' ||
         folder === 'jobs' ||
+        bucket?.includes('cv') ||
+        bucket?.includes('ktp') ||
+        bucket?.includes('ak1') ||
+        bucket?.includes('ijazah') ||
+        bucket?.includes('sertifikat') ||
+        bucket?.includes('resume') ||
         bucket?.includes('resignation') ||
+        (type === 'admin-doc' && folder === 'admin-approvals') ||
         (type === 'admin-doc' && isImage && folder === 'news')
     ) {
         return fiveMB

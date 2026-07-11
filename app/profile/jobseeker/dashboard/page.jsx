@@ -100,9 +100,59 @@ const JobseekerDashboard = () => {
         });
       },
       onError: () => {
-        Swal.fire({ icon: "error", text: "Gagal memperbarui status" });
+        Swal.fire({
+          icon: "error",
+          title: "Gagal Memperbarui Status",
+          text: "Status kerja belum bisa diperbarui. Periksa koneksi Anda, lalu coba lagi.",
+        });
       },
     });
+  };
+
+  const getApplicationStatusMeta = (status) => {
+    const config = {
+      PENDING: {
+        label: "Lamaran Masuk",
+        color: "bg-yellow-50 text-yellow-700 border-yellow-100",
+      },
+      REVIEWING: {
+        label: "Sedang Ditinjau",
+        color: "bg-blue-50 text-blue-600 border-blue-100",
+      },
+      SHORTLISTED: {
+        label: "Lolos Seleksi",
+        color: "bg-purple-50 text-purple-600 border-purple-100",
+      },
+      INTERVIEW_SCHEDULED: {
+        label: "Interview",
+        color: "bg-purple-50 text-purple-600 border-purple-100",
+      },
+      INTERVIEW_COMPLETED: {
+        label: "Interview Selesai",
+        color: "bg-cyan-50 text-cyan-600 border-cyan-100",
+      },
+      ACCEPTED: {
+        label: "Diterima",
+        color: "bg-green-50 text-green-600 border-green-100",
+      },
+      REJECTED: {
+        label: "Ditolak",
+        color: "bg-red-50 text-red-600 border-red-100",
+      },
+      WITHDRAWN: {
+        label: "Ditarik",
+        color: "bg-gray-50 text-gray-600 border-gray-100",
+      },
+      RESIGNED: {
+        label: "Mengundurkan Diri",
+        color: "bg-gray-50 text-gray-600 border-gray-100",
+      },
+    };
+
+    return config[status] || {
+      label: status || "Tidak diketahui",
+      color: "bg-yellow-50 text-yellow-700 border-yellow-100",
+    };
   };
 
   // Loading state
@@ -313,16 +363,9 @@ const JobseekerDashboard = () => {
                             </div>
                           </div>
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-bold border ${app.status === "ACCEPTED"
-                              ? "bg-green-50 text-green-600 border-green-100"
-                              : app.status === "REJECTED"
-                                ? "bg-red-50 text-red-600 border-red-100"
-                                : app.status === "INTERVIEW_SCHEDULED"
-                                  ? "bg-purple-50 text-purple-600 border-purple-100"
-                                  : "bg-yellow-50 text-yellow-700 border-yellow-100"
-                              }`}
+                            className={`px-3 py-1 rounded-full text-xs font-bold border ${getApplicationStatusMeta(app.status).color}`}
                           >
-                            {app.status.replace("_", " ")}
+                            {getApplicationStatusMeta(app.status).label}
                           </span>
                         </div>
                         <div className="mt-4 flex items-center justify-between text-xs text-gray-400">

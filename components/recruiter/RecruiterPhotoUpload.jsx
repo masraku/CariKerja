@@ -2,6 +2,8 @@
 import { useState, useRef } from "react";
 import { Upload, User, Loader2, X } from "lucide-react";
 import api from "@/lib/api";
+import Swal from "sweetalert2";
+import { getUploadErrorMessage } from "@/lib/swalError";
 
 export default function RecruiterPhotoUpload({
   currentPhoto,
@@ -20,13 +22,21 @@ export default function RecruiterPhotoUpload({
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      alert("Silakan pilih file gambar");
+      Swal.fire({
+        icon: "error",
+        title: "Format Foto Tidak Sesuai",
+        text: "Foto profil harus berupa gambar dengan format JPG, PNG, GIF, atau WebP.",
+      });
       return;
     }
 
     // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert("Ukuran file maksimal 5MB");
+      Swal.fire({
+        icon: "error",
+        title: "Ukuran Foto Terlalu Besar",
+        text: "Ukuran foto melebihi batas. Maksimal ukuran file adalah 5MB.",
+      });
       return;
     }
 
@@ -61,9 +71,15 @@ export default function RecruiterPhotoUpload({
         throw new Error(data.error || "Gagal mengunggah");
       }
     } catch (error) {
-      alert(
-        error.response?.data?.error || error.message || "Gagal mengunggah foto"
-      );
+      Swal.fire({
+        icon: "error",
+        title: "Upload Foto Gagal",
+        text: getUploadErrorMessage(error, {
+          kind: "foto profil",
+          maxSize: "5MB",
+          formats: "JPG, PNG, GIF, atau WebP",
+        }),
+      });
       setPreview(currentPhoto); // Revert preview
     } finally {
       setUploading(false);

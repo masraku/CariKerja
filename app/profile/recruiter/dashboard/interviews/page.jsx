@@ -28,6 +28,7 @@ import {
   PlayCircle,
   AlertTriangle,
 } from "lucide-react";
+import { getSafeErrorMessage } from "@/lib/swalError";
 
 export default function RecruiterInterviewsPage() {
   const router = useRouter();
@@ -126,8 +127,11 @@ export default function RecruiterInterviewsPage() {
     } catch (error) {
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: "Gagal memproses permintaan",
+        title: "Gagal Memproses Kandidat",
+        text: getSafeErrorMessage(
+          error,
+          "Perubahan status kandidat belum bisa diproses. Muat ulang halaman, lalu coba lagi.",
+        ),
       });
     } finally {
       setProcessingId(null);
@@ -179,7 +183,14 @@ export default function RecruiterInterviewsPage() {
         showConfirmButton: false,
       });
     } catch (error) {
-      Swal.fire({ icon: "error", title: "Gagal", text: "Gagal menolak permintaan reschedule" });
+      Swal.fire({
+        icon: "error",
+        title: "Gagal Menolak Reschedule",
+        text: getSafeErrorMessage(
+          error,
+          "Permintaan reschedule belum bisa ditolak. Muat ulang halaman, lalu coba lagi.",
+        ),
+      });
     } finally {
       setProcessingId(null);
     }
@@ -204,8 +215,11 @@ export default function RecruiterInterviewsPage() {
     } catch (error) {
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: "Gagal menghapus interview",
+        title: "Gagal Menghapus Interview",
+        text: getSafeErrorMessage(
+          error,
+          "Interview belum bisa dihapus. Pastikan interview masih dapat dikelola, lalu coba lagi.",
+        ),
       });
     }
   };

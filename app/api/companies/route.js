@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { publicLimiter, getIP, rateLimitResponse } from '@/lib/rateLimit'
+import { openApplicationDeadlineWhere } from '@/lib/jobs/publicFilters'
 
 export async function GET(request) {
   try {
@@ -58,6 +59,8 @@ export async function GET(request) {
       })
     }
 
+    const openDeadlineWhere = openApplicationDeadlineWhere(new Date())
+
     // Fetch companies
     const companies = await prisma.companies.findMany({
       where,
@@ -66,7 +69,8 @@ export async function GET(request) {
           where: {
             status: 'ACTIVE',
             isActive: true,
-            publishedAt: { not: null }
+            publishedAt: { not: null },
+            ...openDeadlineWhere
           },
           select: { id: true }
         },

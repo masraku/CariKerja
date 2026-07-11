@@ -29,6 +29,7 @@ import {
   useMutationSaveRecruiterProfile,
   useMutationSubmitForVerification,
 } from "@/hooks/recruiter/useRecruiter";
+import { getSafeErrorMessage } from "@/lib/swalError";
 
 export default function RecruiterProfilePage() {
   const router = useRouter();
@@ -165,8 +166,11 @@ export default function RecruiterProfilePage() {
           onError: (error) => {
             Swal.fire({
               icon: "error",
-              title: "Error!",
-              text: "Terjadi kesalahan saat mengajukan validasi",
+              title: "Gagal Mengajukan Validasi",
+              text: getSafeErrorMessage(
+                error,
+                "Profil tersimpan, tetapi belum bisa diajukan untuk validasi. Periksa kelengkapan data perusahaan, lalu coba lagi.",
+              ),
               confirmButtonColor: "#2563EB",
             });
           },
@@ -175,8 +179,11 @@ export default function RecruiterProfilePage() {
       onError: (error) => {
         Swal.fire({
           icon: "error",
-          title: "Error!",
-          text: "Terjadi kesalahan saat menyimpan",
+          title: "Gagal Menyimpan Profil",
+          text: getSafeErrorMessage(
+            error,
+            "Profil belum bisa disimpan. Pastikan data wajib sudah lengkap dan formatnya sesuai.",
+          ),
           confirmButtonColor: "#2563EB",
         });
       },

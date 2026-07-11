@@ -39,7 +39,7 @@ export default function DokumenStep({
       fileName: formData.cvFileName,
       onUpload: handleCVUpload,
       description: "Upload CV dalam format PDF (maks. 5MB)",
-      accept: ".pdf,.doc,.docx",
+      accept: ".pdf,application/pdf",
     },
     {
       key: "ktp",

@@ -153,6 +153,15 @@ const JobsPage = () => {
     return `${days} hari lalu`;
   };
 
+  const formatDeadline = (date) => {
+    if (!date) return "Tanpa deadline";
+    return new Date(date).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
   const formatJobType = (type) => {
     const map = { FULL_TIME: "Full Time", PART_TIME: "Part Time" };
     return map[type] || type;
@@ -221,7 +230,7 @@ const JobsPage = () => {
               <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />
             )}
           </div>
-          <div className="flex items-center gap-3 text-xs text-slate-500">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
             <span className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-md">
               <MapPin className="w-3 h-3" />
               {job.location}
@@ -229,6 +238,14 @@ const JobsPage = () => {
             <span className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
               {getTimeSince(job.postedDate)}
+            </span>
+            <span className="flex items-center gap-1">
+              <CalendarDays className="w-3 h-3" />
+              Tutup {formatDeadline(job.applicationDeadline)}
+            </span>
+            <span className="flex items-center gap-1">
+              <Users className="w-3 h-3" />
+              {job.applicants || 0} pelamar
             </span>
             {job.hasApplied && (
               <span className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-0.5 rounded-md font-medium border border-green-100">
@@ -369,6 +386,10 @@ const JobsPage = () => {
           <span className="flex items-center gap-2">
             <Users className="w-4 h-4" />
             {job.applicants || 0} pelamar
+          </span>
+          <span className="flex items-center gap-2">
+            <CalendarDays className="w-4 h-4" />
+            Ditutup {formatDeadline(job.applicationDeadline)}
           </span>
           {job.experience && (
             <span className="flex items-center gap-2">

@@ -2,10 +2,15 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createErrorResponse } from '@/lib/errorHandler'
 import { requireRecruiter } from '@/lib/authHelper'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
 
 // PATCH - Update participant status (for reject reschedule)
 export async function PATCH(request, context) {
     try {
+        if (!validateCSRFToken(request)) {
+            return csrfErrorResponse()
+        }
+
         const params = await context.params
         const { id: interviewId, participantId } = params
         

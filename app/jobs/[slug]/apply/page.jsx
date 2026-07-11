@@ -20,6 +20,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { getSafeErrorMessage } from "@/lib/swalError";
 
 export default function ApplyJobPage() {
   const params = useParams();
@@ -111,8 +112,11 @@ export default function ApplyJobPage() {
     } catch (error) {
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: "Failed to load job details",
+        title: "Gagal Memuat Lowongan",
+        text: getSafeErrorMessage(
+          error,
+          "Detail lowongan belum bisa dimuat. Lowongan mungkin sudah tidak tersedia atau koneksi sedang bermasalah.",
+        ),
         confirmButtonColor: "#03587f",
       }).then(() => {
         router.push("/jobs");
@@ -184,7 +188,10 @@ export default function ApplyJobPage() {
         Swal.fire({
           icon: "error",
           title: "Gagal Mengirim Lamaran",
-          text: "Terjadi kesalahan saat mengirim lamaran. Silakan coba lagi.",
+          text: getSafeErrorMessage(
+            error,
+            "Lamaran belum bisa dikirim. Pastikan profil dan CV sudah lengkap, lalu coba lagi.",
+          ),
           confirmButtonColor: "#03587f",
         });
       }

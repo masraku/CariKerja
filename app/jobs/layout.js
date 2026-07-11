@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { sanitizeText } from "@/lib/sanitize";
+import { publicActiveJobWhere } from "@/lib/jobs/publicFilters";
 
 export const metadata = {
   title: "Lowongan Kerja Cirebon",
@@ -15,14 +16,7 @@ export const metadata = {
 async function getLatestJobsSnapshot() {
   try {
     const jobs = await prisma.jobs.findMany({
-      where: {
-        status: "ACTIVE",
-        publishedAt: { not: null },
-        OR: [
-          { applicationDeadline: null },
-          { applicationDeadline: { gte: new Date() } },
-        ],
-      },
+      where: publicActiveJobWhere(new Date()),
       select: {
         title: true,
         slug: true,

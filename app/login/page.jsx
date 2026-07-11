@@ -17,6 +17,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { BRAND_COLOR } from "@/lib/ui/theme";
+import { getSafeErrorMessage } from "@/lib/swalError";
 
 function LoginContent() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -189,7 +190,10 @@ function LoginContent() {
       Swal.fire({
         icon: "error",
         title: "Registrasi Gagal",
-        text: "Terjadi kesalahan saat registrasi.",
+        text: getSafeErrorMessage(
+          error,
+          "Registrasi belum bisa diproses. Pastikan data lengkap, email belum terdaftar, dan password minimal 8 karakter.",
+        ),
         confirmButtonColor: BRAND_COLOR,
       });
     } finally {
@@ -233,7 +237,10 @@ function LoginContent() {
       Swal.fire({
         icon: "error",
         title: "Login Gagal",
-        text: "Email atau password salah.",
+        text: getSafeErrorMessage(
+          error,
+          "Email atau password salah. Periksa kembali data login Anda.",
+        ),
         confirmButtonColor: BRAND_COLOR,
       });
     } finally {

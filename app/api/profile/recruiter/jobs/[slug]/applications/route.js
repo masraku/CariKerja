@@ -165,7 +165,6 @@ export async function GET(request, { params }) {
         title: job.title,
         location: job.location,
         jobType: job.jobType,
-        level: job.level,
         description: job.description,
         requirements: job.requirements,
         skills: jobSkills,

@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma'
 import { createErrorResponse } from '@/lib/errorHandler'
 import { requireRecruiter } from '@/lib/authHelper'
 import { sendInterviewInvitation } from '@/lib/email/sendInterviewInvitation'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
+import { INTERVIEW_ELIGIBLE_APPLICATION_STATUSES } from '@/lib/applications/statusTransitions'
 
 function parseScheduledAt({ scheduledAt, date, time }) {
     if (scheduledAt) return new Date(scheduledAt)
@@ -14,6 +16,10 @@ function parseScheduledAt({ scheduledAt, date, time }) {
 // POST - Create interview schedule (supports multiple candidates)
 export async function POST(request) {
     try {
+        if (!validateCSRFToken(request)) {
+            return csrfErrorResponse()
+        }
+
         // Authenticate
         const auth = await requireRecruiter(request)
         if (auth.error) {
@@ -122,6 +128,17 @@ export async function POST(request) {
         if (applications.length !== appIds.length) {
             return NextResponse.json(
                 { error: 'Beberapa lamaran tidak ditemukan atau bukan milik lowongan ini' },
+                { status: 400 }
+            )
+        }
+
+        const invalidApplications = applications.filter(
+            application => !INTERVIEW_ELIGIBLE_APPLICATION_STATUSES.includes(application.status)
+        )
+
+        if (invalidApplications.length > 0) {
+            return NextResponse.json(
+                { error: 'Interview hanya bisa dijadwalkan untuk lamaran yang sedang direview atau sudah masuk shortlist' },
                 { status: 400 }
             )
         }

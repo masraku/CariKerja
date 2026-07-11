@@ -5,6 +5,7 @@ import { jobSearchSchema } from '@/lib/validations/jobs'
 import { prisma } from '@/lib/prisma'
 import { getAuthFromCookies } from '@/lib/auth'
 import { publicLimiter, getIP, rateLimitResponse } from '@/lib/rateLimit'
+import { publicActiveJobWhere } from '@/lib/jobs/publicFilters'
 
 // Auto-deactivate expired jobs (runs in background, non-blocking)
 async function autoDeactivateExpiredJobs() {
@@ -20,6 +21,7 @@ async function autoDeactivateExpiredJobs() {
             },
             data: {
                 isActive: false,
+                status: 'CLOSED',
                 closedAt: now
             }
         })
@@ -83,27 +85,7 @@ export async function GET(request) {
 
     // Build where clause with AND for proper filtering
     const where = {
-      AND: [
-        { status: 'ACTIVE' },
-        { isActive: true },
-        { publishedAt: { not: null } },
-        {
-          companies: {
-            is: {
-              verified: true,
-              status: 'VERIFIED'
-            }
-          }
-        },
-        // Only show jobs that haven't passed their deadline
-        // Either no deadline set (null) OR deadline is in the future
-        {
-          OR: [
-            { applicationDeadline: null },
-            { applicationDeadline: { gte: new Date() } }
-          ]
-        }
-      ]
+      AND: [publicActiveJobWhere(new Date())]
     }
 
     // Search filter (search in title, description, or company name)
@@ -239,9 +221,9 @@ export async function GET(request) {
         salary: job.showSalary && job.salaryMin && job.salaryMax
           ? `Rp ${job.salaryMin.toLocaleString('id-ID')} - ${job.salaryMax.toLocaleString('id-ID')}`
           : 'Negotiable',
-        experience: job.minExperience 
+        experience: job.minExperience !== null && job.minExperience !== undefined
           ? `${job.minExperience}${job.maxExperience ? `-${job.maxExperience}` : '+'} tahun`
-          : 'Any level',
+          : null,
         category: job.category,
         postedDate: job.publishedAt,
         applicants: job._count.applications,

@@ -30,6 +30,7 @@ import {
   useQueryAdminContracts,
   useMutationProcessContract,
 } from "@/hooks/admin/useAdmin";
+import { getSafeErrorMessage, getUploadErrorMessage } from "@/lib/swalError";
 
 export default function AdminContractsPage() {
   const router = useRouter();
@@ -106,8 +107,11 @@ export default function AdminContractsPage() {
       } catch (error) {
         Swal.fire({
           icon: "error",
-          title: "Gagal",
-          text: "Gagal menolak pendaftaran kontrak",
+          title: "Gagal Menolak Kontrak",
+          text: getSafeErrorMessage(
+            error,
+            "Pendaftaran kontrak belum bisa ditolak. Muat ulang halaman, lalu coba lagi.",
+          ),
         });
       } finally {
         setProcessingId(null);
@@ -131,6 +135,15 @@ export default function AdminContractsPage() {
 
       // Upload file jika ada
       if (approvalFile) {
+        const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/gif", "image/webp"];
+        if (!allowedTypes.includes(approvalFile.type)) {
+          throw new Error("Dokumen persetujuan harus berupa PDF atau gambar JPG, PNG, GIF, atau WebP.");
+        }
+
+        if (approvalFile.size > 5 * 1024 * 1024) {
+          throw new Error("Ukuran file melebihi batas. Maksimal ukuran file adalah 5MB.");
+        }
+
         const formData = new FormData();
         formData.append("file", approvalFile);
         formData.append("type", "admin-doc");
@@ -167,11 +180,14 @@ export default function AdminContractsPage() {
       setApprovalFile(null);
       setApprovalNotes("");
     } catch (error) {
-      const errorMessage = "Gagal menyetujui pendaftaran kontrak";
       Swal.fire({
         icon: "error",
-        title: "Gagal",
-        text: errorMessage,
+        title: "Gagal Menyetujui Kontrak",
+        text: getUploadErrorMessage(error, {
+          kind: "dokumen persetujuan kontrak",
+          maxSize: "5MB",
+          formats: "PDF, JPG, PNG, GIF, atau WebP",
+        }),
       });
       //  Tutup modal dan refresh data jika kontrak sudah diproses atau terjadi error lain
       if (error.response?.status === 400) {

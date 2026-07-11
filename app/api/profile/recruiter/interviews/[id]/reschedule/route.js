@@ -6,10 +6,15 @@ import { requireRecruiter } from '@/lib/authHelper'
 import { sendRescheduleNotification } from '@/lib/email/sendRescheduleNotification'
 import { validateBody } from '@/lib/validations'
 import { recruiterRescheduleSchema } from '@/lib/validations/profile'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
 
 // PATCH - Reschedule interview
 export async function PATCH(request, context) {
   try {
+    if (!validateCSRFToken(request)) {
+      return csrfErrorResponse()
+    }
+
     const params = await context.params
     const { id } = params
     

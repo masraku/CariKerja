@@ -3,6 +3,12 @@ import { prisma } from '@/lib/prisma'
 import { createErrorResponse } from '@/lib/errorHandler'
 import { requireRecruiter } from '@/lib/authHelper'
 import { sendApplicationDecision } from '@/lib/email/sendApplicationDecision'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
+import {
+  RECRUITER_APPLICATION_STATUSES,
+  canRecruiterSetApplicationStatus,
+  getInvalidRecruiterStatusMessage
+} from '@/lib/applications/statusTransitions'
 
 export async function GET(request, context) {
   try {
@@ -139,6 +145,10 @@ export async function GET(request, context) {
 // Update application status
 export async function PATCH(request, context) {
   try {
+    if (!validateCSRFToken(request)) {
+      return csrfErrorResponse()
+    }
+
     const params = await context.params
     const { id } = params
 
@@ -173,6 +183,20 @@ export async function PATCH(request, context) {
 
     const body = await request.json()
     const { status, recruiterNotes } = body
+
+    if (status && !RECRUITER_APPLICATION_STATUSES.includes(status)) {
+      return NextResponse.json(
+        { error: 'Status lamaran tidak valid untuk recruiter' },
+        { status: 400 }
+      )
+    }
+
+    if (status && !canRecruiterSetApplicationStatus(application.status, status)) {
+      return NextResponse.json(
+        { error: getInvalidRecruiterStatusMessage(application.status, status) },
+        { status: 400 }
+      )
+    }
 
     // Validate interview completion before accepting (REJECTED can be done from any status)
     if (status === 'ACCEPTED') {
@@ -325,6 +349,10 @@ export async function PATCH(request, context) {
 // Delete application
 export async function DELETE(request, context) {
   try {
+    if (!validateCSRFToken(request)) {
+      return csrfErrorResponse()
+    }
+
     const params = await context.params
     const { id } = params
 

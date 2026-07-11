@@ -80,7 +80,11 @@ const ViewProfilePage = () => {
         showConfirmButton: false,
       });
     } catch (error) {
-      Swal.fire({ icon: "error", text: "Gagal mengupdate status" });
+      Swal.fire({
+        icon: "error",
+        title: "Gagal Memperbarui Status",
+        text: "Status pencarian kerja belum bisa diperbarui. Periksa koneksi Anda, lalu coba lagi.",
+      });
     } finally {
       setIsUpdatingStatus(false);
     }

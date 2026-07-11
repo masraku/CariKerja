@@ -23,7 +23,6 @@ import {
   Phone,
   Share2,
   Star,
-  TrendingUp,
   Twitter,
   Users,
 } from "lucide-react";
@@ -64,19 +63,6 @@ export default function CompanyProfilePage() {
     return labels[type] || type;
   };
 
-  const getLevelLabel = (level) => {
-    const labels = {
-      ENTRY_LEVEL: "Entry Level",
-      JUNIOR: "Junior",
-      MID_LEVEL: "Mid Level",
-      SENIOR: "Senior",
-      LEAD: "Lead",
-      MANAGER: "Manager",
-      DIRECTOR: "Director",
-    };
-    return labels[level] || level;
-  };
-
   const formatSalary = (min, max, type) => {
     const formatNumber = (num) => new Intl.NumberFormat("id-ID").format(num);
     if (!min || !max) return "Gaji kompetitif";
@@ -105,6 +91,15 @@ export default function CompanyProfilePage() {
     interval = seconds / 60;
     if (interval > 1) return `${Math.floor(interval)} menit lalu`;
     return "Baru saja";
+  };
+
+  const formatDeadline = (date) => {
+    if (!date) return "Tanpa deadline";
+    return new Date(date).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
   };
 
   if (loading) {
@@ -427,8 +422,12 @@ export default function CompanyProfilePage() {
                                       {getJobTypeLabel(job.jobType)}
                                     </span>
                                     <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1.5">
-                                      <TrendingUp className="h-3.5 w-3.5" />
-                                      {getLevelLabel(job.level)}
+                                      <Calendar className="h-3.5 w-3.5" />
+                                      Tutup {formatDeadline(job.applicationDeadline)}
+                                    </span>
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1.5">
+                                      <Users className="h-3.5 w-3.5" />
+                                      {job._count?.applications || 0} pelamar
                                     </span>
                                   </div>
                                 </div>

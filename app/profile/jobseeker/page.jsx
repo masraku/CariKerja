@@ -39,6 +39,32 @@ import {
   useMutationSaveJobseekerProfile,
   useMutationUploadFile,
 } from "@/hooks/jobseeker/useJobseeker";
+import { getUploadErrorMessage, getSafeErrorMessage } from "@/lib/swalError";
+
+const MAX_UPLOAD_SIZE = 5 * 1024 * 1024;
+const IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+const PDF_TYPE = "application/pdf";
+
+const uploadRules = {
+  photo: {
+    kind: "foto profil",
+    formats: "JPG, PNG, GIF, atau WebP",
+    isValidType: (file) => IMAGE_TYPES.includes(file.type),
+    invalidTypeMessage: "Foto profil harus berupa gambar dengan format JPG, PNG, GIF, atau WebP.",
+  },
+  cv: {
+    kind: "CV",
+    formats: "PDF",
+    isValidType: (file) => file.type === PDF_TYPE,
+    invalidTypeMessage: "CV harus berformat PDF agar mudah dibaca sistem ATS dan recruiter.",
+  },
+  document: {
+    kind: "dokumen",
+    formats: "PDF, JPG, PNG, GIF, atau WebP",
+    isValidType: (file) => file.type === PDF_TYPE || IMAGE_TYPES.includes(file.type),
+    invalidTypeMessage: "Dokumen harus berformat PDF atau gambar JPG, PNG, GIF, atau WebP.",
+  },
+};
 
 function JobseekerProfileContent() {
   const router = useRouter();
@@ -400,11 +426,34 @@ function JobseekerProfileContent() {
     return result;
   };
 
+  const validateUploadFile = (file, rule) => {
+    if (!rule.isValidType(file)) {
+      throw new Error(rule.invalidTypeMessage);
+    }
+
+    if (file.size > MAX_UPLOAD_SIZE) {
+      throw new Error("Ukuran file melebihi batas. Maksimal ukuran file adalah 5MB.");
+    }
+  };
+
+  const showUploadError = (error, rule) => {
+    Swal.fire({
+      icon: "error",
+      title: "Upload Gagal",
+      text: getUploadErrorMessage(error, {
+        kind: rule.kind,
+        maxSize: "5MB",
+        formats: rule.formats,
+      }),
+    });
+  };
+
   // Upload Handlers
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     try {
+      validateUploadFile(file, uploadRules.photo);
       setIsUploading(true);
       setUploadProgress({ photo: 20 });
       const reader = new FileReader();
@@ -423,7 +472,7 @@ function JobseekerProfileContent() {
       });
       setTimeout(() => setUploadProgress({}), 1000);
     } catch (err) {
-      Swal.fire({ icon: "error", text: err.message });
+      showUploadError(err, uploadRules.photo);
     } finally {
       setIsUploading(false);
       setUploadProgress({});
@@ -434,6 +483,7 @@ function JobseekerProfileContent() {
     const file = e.target.files[0];
     if (!file) return;
     try {
+      validateUploadFile(file, uploadRules.cv);
       setIsUploading(true);
       setUploadProgress({ cv: 50 });
       const result = await uploadFile(file, "cv");
@@ -450,7 +500,7 @@ function JobseekerProfileContent() {
         showConfirmButton: false,
       });
     } catch (e) {
-      Swal.fire({ icon: "error", text: e.message });
+      showUploadError(e, uploadRules.cv);
     } finally {
       setIsUploading(false);
       setUploadProgress({});
@@ -461,6 +511,7 @@ function JobseekerProfileContent() {
     const file = e.target.files[0];
     if (!file) return;
     try {
+      validateUploadFile(file, uploadRules.document);
       setIsUploading(true);
       setUploadProgress({ ktp: 50 });
       const result = await uploadFile(file, "ktp");
@@ -477,7 +528,7 @@ function JobseekerProfileContent() {
         showConfirmButton: false,
       });
     } catch (e) {
-      Swal.fire({ icon: "error", text: e.message });
+      showUploadError(e, uploadRules.document);
     } finally {
       setIsUploading(false);
       setUploadProgress({});
@@ -488,6 +539,7 @@ function JobseekerProfileContent() {
     const file = e.target.files[0];
     if (!file) return;
     try {
+      validateUploadFile(file, uploadRules.document);
       setIsUploading(true);
       setUploadProgress({ ak1: 50 });
       const result = await uploadFile(file, "ak1");
@@ -504,7 +556,7 @@ function JobseekerProfileContent() {
         showConfirmButton: false,
       });
     } catch (e) {
-      Swal.fire({ icon: "error", text: e.message });
+      showUploadError(e, uploadRules.document);
     } finally {
       setIsUploading(false);
       setUploadProgress({});
@@ -515,6 +567,7 @@ function JobseekerProfileContent() {
     const file = e.target.files[0];
     if (!file) return;
     try {
+      validateUploadFile(file, uploadRules.document);
       setIsUploading(true);
       setUploadProgress({ sertifikat: 50 });
       const result = await uploadFile(file, "sertifikat");
@@ -531,7 +584,7 @@ function JobseekerProfileContent() {
         showConfirmButton: false,
       });
     } catch (e) {
-      Swal.fire({ icon: "error", text: e.message });
+      showUploadError(e, uploadRules.document);
     } finally {
       setIsUploading(false);
       setUploadProgress({});
@@ -542,6 +595,7 @@ function JobseekerProfileContent() {
     const file = e.target.files[0];
     if (!file) return;
     try {
+      validateUploadFile(file, uploadRules.document);
       setIsUploading(true);
       setUploadProgress({ ijazah: 50 });
       const result = await uploadFile(file, "ijazah");
@@ -558,7 +612,7 @@ function JobseekerProfileContent() {
         showConfirmButton: false,
       });
     } catch (e) {
-      Swal.fire({ icon: "error", text: e.message });
+      showUploadError(e, uploadRules.document);
     } finally {
       setIsUploading(false);
       setUploadProgress({});
@@ -569,6 +623,7 @@ function JobseekerProfileContent() {
     const file = e.target.files[0];
     if (!file) return;
     try {
+      validateUploadFile(file, uploadRules.document);
       setIsUploading(true);
       setUploadProgress({ suratPengalaman: 50 });
       const result = await uploadFile(file, "resume");
@@ -585,7 +640,7 @@ function JobseekerProfileContent() {
         showConfirmButton: false,
       });
     } catch (e) {
-      Swal.fire({ icon: "error", text: e.message });
+      showUploadError(e, uploadRules.document);
     } finally {
       setIsUploading(false);
       setUploadProgress({});
@@ -596,6 +651,7 @@ function JobseekerProfileContent() {
     const file = e.target.files[0];
     if (!file) return;
     try {
+      validateUploadFile(file, uploadRules.document);
       setIsUploading(true);
       setUploadProgress({ [`diploma-${index}`]: 50 });
       const result = await uploadFile(file, "ijazah");
@@ -609,7 +665,7 @@ function JobseekerProfileContent() {
         showConfirmButton: false,
       });
     } catch (e) {
-      Swal.fire({ icon: "error", text: e.message });
+      showUploadError(e, uploadRules.document);
     } finally {
       setIsUploading(false);
     }
@@ -619,6 +675,7 @@ function JobseekerProfileContent() {
     const file = e.target.files[0];
     if (!file) return;
     try {
+      validateUploadFile(file, uploadRules.document);
       setIsUploading(true);
       setUploadProgress({ [`cert-${index}`]: 50 });
       const result = await uploadFile(file, "sertifikat");
@@ -637,7 +694,7 @@ function JobseekerProfileContent() {
         showConfirmButton: false,
       });
     } catch (e) {
-      Swal.fire({ icon: "error", text: e.message });
+      showUploadError(e, uploadRules.document);
     } finally {
       setIsUploading(false);
     }
@@ -742,7 +799,14 @@ function JobseekerProfileContent() {
         router.push("/profile/jobseeker/view");
       },
       onError: (error) => {
-        Swal.fire({ icon: "error", title: "Gagal", text: "Gagal menyimpan profil" });
+        Swal.fire({
+          icon: "error",
+          title: "Gagal Menyimpan Profil",
+          text: getSafeErrorMessage(
+            error,
+            "Profil belum bisa disimpan. Periksa kembali data wajib, lalu coba lagi.",
+          ),
+        });
       },
     });
   };

@@ -22,7 +22,6 @@ import {
   Briefcase,
   GraduationCap,
   Star,
-  TrendingUp,
   MessageSquare,
   Send,
   User,
@@ -35,6 +34,7 @@ import {
   Loader2,
   X,
 } from "lucide-react";
+import { getSafeErrorMessage, getUploadErrorMessage } from "@/lib/swalError";
 
 export default function ApplicationDetailPage() {
   const router = useRouter();
@@ -85,8 +85,11 @@ export default function ApplicationDetailPage() {
     } catch (error) {
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: "Gagal memuat detail lamaran",
+        title: "Gagal Memuat Lamaran",
+        text: getSafeErrorMessage(
+          error,
+          "Detail lamaran belum bisa dimuat. Muat ulang halaman atau coba lagi beberapa saat.",
+        ),
       });
     } finally {
       setLoading(false);
@@ -210,8 +213,11 @@ export default function ApplicationDetailPage() {
     } catch (error) {
       Swal.fire({
         icon: "error",
-        title: "Gagal",
-        text: "Gagal mengirim request reschedule",
+        title: "Gagal Mengirim Reschedule",
+        text: getSafeErrorMessage(
+          error,
+          "Permintaan reschedule belum bisa dikirim. Pastikan alasan sudah diisi dan koneksi stabil.",
+        ),
       });
     }
   };
@@ -225,7 +231,16 @@ export default function ApplicationDetailPage() {
       Swal.fire({
         icon: "error",
         title: "Format Salah",
-        text: "File harus dalam format PDF",
+        text: "Surat pengunduran diri harus berformat PDF. Silakan pilih file PDF yang valid.",
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      Swal.fire({
+        icon: "error",
+        title: "Ukuran File Terlalu Besar",
+        text: "Ukuran surat pengunduran diri melebihi batas. Maksimal ukuran file adalah 5MB.",
       });
       return;
     }
@@ -250,13 +265,17 @@ export default function ApplicationDetailPage() {
           showConfirmButton: false,
         });
       } else {
-        throw new Error("Upload failed");
+        throw new Error(data.error || "Upload gagal");
       }
     } catch (error) {
       Swal.fire({
         icon: "error",
         title: "Upload Gagal",
-        text: "Gagal mengupload surat pengunduran diri",
+        text: getUploadErrorMessage(error, {
+          kind: "surat pengunduran diri",
+          maxSize: "5MB",
+          formats: "PDF",
+        }),
       });
     } finally {
       setUploadingLetter(false);
@@ -314,8 +333,11 @@ export default function ApplicationDetailPage() {
     } catch (error) {
       Swal.fire({
         icon: "error",
-        title: "Gagal",
-        text: "Gagal mengajukan pengunduran diri",
+        title: "Gagal Mengajukan Pengunduran Diri",
+        text: getSafeErrorMessage(
+          error,
+          "Pengajuan belum bisa dikirim. Pastikan alasan dan surat pengunduran diri sudah lengkap.",
+        ),
       });
     } finally {
       setSubmittingResign(false);
@@ -1006,15 +1028,6 @@ export default function ApplicationDetailPage() {
                   <p className="text-xs text-gray-500">Tipe Pekerjaan</p>
                   <p className="font-semibold text-gray-900">
                     {application.jobs?.jobType}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                <TrendingUp className="w-5 h-5 text-gray-500" />
-                <div>
-                  <p className="text-xs text-gray-500">Level</p>
-                  <p className="font-semibold text-gray-900">
-                    {application.jobs?.level}
                   </p>
                 </div>
               </div>

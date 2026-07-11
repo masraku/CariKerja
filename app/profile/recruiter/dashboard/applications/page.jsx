@@ -89,6 +89,14 @@ export default function AllApplicationsPage() {
         label: "Ditolak",
         color: "bg-red-100 text-red-700 border-red-300",
       },
+      WITHDRAWN: {
+        label: "Ditarik",
+        color: "bg-gray-100 text-gray-700 border-gray-300",
+      },
+      RESIGNED: {
+        label: "Mengundurkan Diri",
+        color: "bg-gray-100 text-gray-700 border-gray-300",
+      },
     };
     const config = statusConfig[status] || statusConfig.PENDING;
     return (

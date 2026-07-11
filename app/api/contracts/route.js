@@ -138,6 +138,7 @@ export async function POST(request) {
       return validation.response
     }
     const { workers, recruiterDocUrl } = validation.data
+    const validatedWorkers = []
 
     // Validate each worker
     for (const worker of workers) {
@@ -147,7 +148,8 @@ export async function POST(request) {
         include: {
           jobs: {
             select: {
-              companyId: true
+              companyId: true,
+              title: true
             }
           }
         }
@@ -188,6 +190,17 @@ export async function POST(request) {
           error: 'Worker already has a pending or approved contract registration' 
         }, { status: 400 })
       }
+
+      validatedWorkers.push({
+        applicationId: application.id,
+        jobseekerId: application.jobseekerId,
+        jobTitle: application.jobs.title,
+        startDate: worker.startDate,
+        endDate: worker.endDate,
+        salary: worker.salary,
+        attachmentUrl: worker.attachmentUrl || null,
+        notes: worker.notes || null
+      })
     }
 
     // Create contract registration with workers
@@ -197,7 +210,7 @@ export async function POST(request) {
         companyId: recruiter.companyId,
         recruiterDocUrl: recruiterDocUrl || null,
         workers: {
-          create: workers.map(w => ({
+          create: validatedWorkers.map(w => ({
             applicationId: w.applicationId,
             jobseekerId: w.jobseekerId,
             jobTitle: w.jobTitle,

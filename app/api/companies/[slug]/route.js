@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { openApplicationDeadlineWhere } from '@/lib/jobs/publicFilters'
 
 export async function GET(request, { params }) {
   try {
     const { slug } = await params
+    const openDeadlineWhere = openApplicationDeadlineWhere(new Date())
 
     // Get company with all related data
     const company = await prisma.companies.findFirst({
@@ -19,7 +21,8 @@ export async function GET(request, { params }) {
             isActive: true,
             publishedAt: {
               not: null
-            }
+            },
+            ...openDeadlineWhere
           },
           orderBy: {
             createdAt: 'desc'
@@ -32,7 +35,6 @@ export async function GET(request, { params }) {
             city: true,
             province: true,
             jobType: true,
-            level: true,
             salaryMin: true,
             salaryMax: true,
             salaryType: true,

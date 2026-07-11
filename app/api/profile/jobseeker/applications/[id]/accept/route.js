@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getTokenFromRequest, verifyToken } from '@/lib/auth'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
 
 export async function POST(request, { params }) {
     try {
+        if (!validateCSRFToken(request)) {
+            return csrfErrorResponse()
+        }
+
         const { id } = await params
 
         // Verify token

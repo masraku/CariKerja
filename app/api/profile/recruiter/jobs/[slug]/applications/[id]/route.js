@@ -4,6 +4,11 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getTokenFromRequest, verifyToken } from '@/lib/auth'
 import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
+import {
+  RECRUITER_APPLICATION_STATUSES,
+  canRecruiterSetApplicationStatus,
+  getInvalidRecruiterStatusMessage
+} from '@/lib/applications/statusTransitions'
 
 // GET - Fetch single application detail (FOR RECRUITER)
 export async function GET(request, { params }) {
@@ -132,21 +137,9 @@ export async function PATCH(request, { params }) {
     const body = await request.json()
     const { status, recruiterNotes } = body
 
-    // Valid statuses
-    const validStatuses = [
-      'PENDING',
-      'REVIEWING',
-      'SHORTLISTED',
-      'INTERVIEW_SCHEDULED',
-      'INTERVIEW_COMPLETED',
-      'ACCEPTED',
-      'REJECTED',
-      'WITHDRAWN'
-    ]
-
-    if (status && !validStatuses.includes(status)) {
+    if (status && !RECRUITER_APPLICATION_STATUSES.includes(status)) {
       return NextResponse.json(
-        { error: 'Invalid status' },
+        { error: 'Status lamaran tidak valid untuk recruiter' },
         { status: 400 }
       )
     }
@@ -173,6 +166,13 @@ export async function PATCH(request, { params }) {
       return NextResponse.json(
         { error: 'Application not found or unauthorized' },
         { status: 404 }
+      )
+    }
+
+    if (status && !canRecruiterSetApplicationStatus(application.status, status)) {
+      return NextResponse.json(
+        { error: getInvalidRecruiterStatusMessage(application.status, status) },
+        { status: 400 }
       )
     }
 

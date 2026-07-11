@@ -15,6 +15,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import Swal from "sweetalert2";
+import { getSafeErrorMessage } from "@/lib/swalError";
 
 function InterviewRoomContent() {
   const router = useRouter();
@@ -48,8 +49,11 @@ function InterviewRoomContent() {
     } catch (error) {
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: "Gagal memuat data interview",
+        title: "Gagal Memuat Interview",
+        text: getSafeErrorMessage(
+          error,
+          "Data interview belum bisa dimuat. Muat ulang halaman atau buka kembali dari daftar interview.",
+        ),
         confirmButtonColor: "#2563EB",
       }).then(() => {
         router.push("/profile/recruiter/dashboard/interviews");
@@ -106,8 +110,11 @@ function InterviewRoomContent() {
       } catch (error) {
         Swal.fire({
           icon: "error",
-          title: "Gagal",
-          text: "Terjadi kesalahan saat menyelesaikan interview",
+          title: "Gagal Menyelesaikan Interview",
+          text: getSafeErrorMessage(
+            error,
+            "Interview belum bisa ditandai selesai. Pastikan status kandidat masih dapat diperbarui, lalu coba lagi.",
+          ),
           confirmButtonColor: "#2563EB",
         });
       } finally {

@@ -62,7 +62,6 @@ export async function GET(request) {
             slug: true,
             location: true,
             jobType: true,
-            level: true,
             companies: {
               select: {
                 name: true,

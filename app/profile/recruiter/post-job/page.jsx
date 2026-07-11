@@ -25,6 +25,7 @@ import {
   getKelurahanByKecamatan,
   getAllKecamatan,
 } from "@/lib/cirebonData";
+import { getSafeErrorMessage, getUploadErrorMessage } from "@/lib/swalError";
 
 export default function PostJobPage() {
   const router = useRouter();
@@ -129,7 +130,6 @@ export default function PostJobPage() {
 
     // Hidden/Removed fields (kept for API compatibility)
     jobType: "FULL_TIME",
-    level: "MID_LEVEL",
     category: "Other",
     requirements: "",
     minExperience: "",
@@ -329,18 +329,21 @@ export default function PostJobPage() {
     } catch (error) {
       const responseData = error.response?.data;
       const validationDetails = responseData?.details
-        ?.map((detail) => `<li><strong>${detail.field}</strong>: ${detail.message}</li>`)
+        ?.map((detail) => `<li>${detail.message || "Ada data yang belum sesuai."}</li>`)
         .join("");
 
       Swal.fire({
         icon: "error",
-        title: "Error!",
+        title: "Gagal Mengajukan Lowongan",
         ...(validationDetails
           ? {
-              html: `<p>Validasi gagal:</p><ul style="text-align:left;margin-top:10px;">${validationDetails}</ul>`,
+              html: `<p>Beberapa data lowongan belum sesuai:</p><ul style="text-align:left;margin-top:10px;">${validationDetails}</ul>`,
             }
           : {
-              text: "Terjadi kesalahan saat mempublikasikan lowongan",
+              text: getSafeErrorMessage(
+                error,
+                "Lowongan belum bisa diajukan. Periksa kembali data yang wajib diisi, lalu coba lagi.",
+              ),
             }),
         confirmButtonColor: "#2563EB",
       });
@@ -960,6 +963,24 @@ export default function PostJobPage() {
                           const file = e.target.files?.[0];
                           if (!file) return;
 
+                          if (!file.type.startsWith("image/")) {
+                            Swal.fire({
+                              icon: "error",
+                              title: "Format Foto Tidak Sesuai",
+                              text: "Foto lowongan harus berupa gambar dengan format JPG, PNG, GIF, atau WebP.",
+                            });
+                            return;
+                          }
+
+                          if (file.size > 5 * 1024 * 1024) {
+                            Swal.fire({
+                              icon: "error",
+                              title: "Ukuran Foto Terlalu Besar",
+                              text: "Ukuran foto melebihi batas. Maksimal ukuran file adalah 5MB.",
+                            });
+                            return;
+                          }
+
                           // Show loading
                           Swal.fire({
                             title: "Mengunggah...",
@@ -1002,7 +1023,11 @@ export default function PostJobPage() {
                             Swal.fire({
                               icon: "error",
                               title: "Upload Gagal",
-                              text: "Gagal mengupload foto",
+                              text: getUploadErrorMessage(error, {
+                                kind: "foto lowongan",
+                                maxSize: "5MB",
+                                formats: "JPG, PNG, GIF, atau WebP",
+                              }),
                             });
                           }
                         }}

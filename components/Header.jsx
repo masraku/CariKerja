@@ -13,7 +13,6 @@ import {
   User,
   LogOut,
   LayoutDashboard,
-  ChevronDown,
   Settings,
 } from "lucide-react";
 
@@ -62,6 +61,19 @@ const Header = () => {
   const getInitials = (name) => {
     return name ? name.charAt(0).toUpperCase() : "U";
   };
+
+  const getProfileImage = (userData) => {
+    if (!userData) return null;
+    if (userData.role === "JOBSEEKER") return userData.jobseeker?.photo;
+    if (userData.role === "RECRUITER") {
+      return userData.company?.logo || userData.recruiter?.photo || userData.recruiter?.photoUrl;
+    }
+    return null;
+  };
+
+  const profileImage = getProfileImage(user);
+  const profileName =
+    user?.role === "RECRUITER" ? user.company?.name || user.name : user?.name;
 
   const navLinks = [
     { name: "Beranda", href: "/" },
@@ -128,44 +140,21 @@ const Header = () => {
               <div className="relative" ref={profileRef}>
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="flex items-center gap-3 pl-2 pr-1 py-1 rounded-full bg-white border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all duration-300 group"
+                  className="w-11 h-11 rounded-full bg-white border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all duration-300 p-1"
+                  aria-label="Buka menu profil"
+                  aria-expanded={isProfileOpen}
                 >
-                  <div className="flex flex-col items-end mr-1">
-                    <span className="text-xs font-semibold text-slate-700 group-hover:text-blue-700">
-                      {user.role === "RECRUITER"
-                        ? user.company?.name || user.name
-                        : user.name || "User"}
-                    </span>
-                    <span className="text-[10px] text-slate-500 capitalize">
-                      {user.role === "RECRUITER"
-                        ? "Rekruter"
-                        : user.role === "JOBSEEKER"
-                          ? "Pencaker"
-                          : user.role}
-                    </span>
-                  </div>
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-primary-hover flex items-center justify-center text-primary-foreground font-bold shadow-sm overflow-hidden">
-                    {(user.role === "JOBSEEKER" && user.jobseeker?.photo) ||
-                    (user.role === "RECRUITER" &&
-                      (user.company?.logo || user.recruiter?.photo)) ? (
+                  <div className="w-full h-full rounded-full bg-gradient-to-br from-primary to-primary-hover flex items-center justify-center text-primary-foreground font-bold shadow-sm overflow-hidden">
+                    {profileImage ? (
                       <img
-                        src={
-                          user.role === "JOBSEEKER"
-                            ? user.jobseeker.photo
-                            : user.company?.logo || user.recruiter?.photo
-                        }
-                        alt={user.name}
+                        src={profileImage}
+                        alt={profileName || "Profil pengguna"}
                         className="w-full h-full object-cover"
                       />
                     ) : (
                       getInitials(user.name)
                     )}
                   </div>
-                  <ChevronDown
-                    className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${
-                      isProfileOpen ? "rotate-180" : ""
-                    }`}
-                  />
                 </button>
 
                 {/* Dropdown Menu */}
@@ -173,9 +162,7 @@ const Header = () => {
                   <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden transform origin-top-right transition-all duration-200 animate-in fade-in slide-in-from-top-2">
                     <div className="p-4 border-b border-slate-50 bg-slate-50/50">
                       <p className="text-sm font-semibold text-slate-900 truncate">
-                        {user.role === "RECRUITER"
-                          ? user.company?.name || user.name
-                          : user.name}
+                        {profileName}
                       </p>
                       <p className="text-xs text-slate-500 truncate">
                         {user.email}
@@ -321,16 +308,10 @@ const Header = () => {
               <>
                 <div className="px-4 py-2 flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden">
-                    {(user.role === "JOBSEEKER" && user.jobseeker?.photo) ||
-                    (user.role === "RECRUITER" &&
-                      (user.company?.logo || user.recruiter?.photo)) ? (
+                    {profileImage ? (
                       <img
-                        src={
-                          user.role === "JOBSEEKER"
-                            ? user.jobseeker.photo
-                            : user.company?.logo || user.recruiter?.photo
-                        }
-                        alt={user.name}
+                        src={profileImage}
+                        alt={profileName || "Profil pengguna"}
                         className="w-full h-full object-cover"
                       />
                     ) : (

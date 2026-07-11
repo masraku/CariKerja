@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { publicLimiter, getIP, rateLimitResponse } from '@/lib/rateLimit'
+import { publicActiveJobWhere } from '@/lib/jobs/publicFilters'
 
 // Category icons mapping
 const categoryIcons = {
@@ -35,19 +36,9 @@ export async function GET(request) {
             return rateLimitResponse(reset)
         }
 
-        // Get all active jobs grouped by category
+        // Get all currently open public jobs grouped by category
         const jobs = await prisma.jobs.findMany({
-            where: {
-                status: 'ACTIVE',
-                isActive: true,
-                publishedAt: { not: null },
-                companies: {
-                    is: {
-                        verified: true,
-                        status: 'VERIFIED'
-                    }
-                }
-            },
+            where: publicActiveJobWhere(new Date()),
             select: {
                 category: true
             }

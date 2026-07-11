@@ -3,9 +3,19 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/authHelper'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
+import {
+  RECRUITER_APPLICATION_STATUSES,
+  canRecruiterSetApplicationStatus,
+  getInvalidRecruiterStatusMessage
+} from '@/lib/applications/statusTransitions'
 
 export async function PATCH(request, { params }) {
   try {
+    if (!validateCSRFToken(request)) {
+      return csrfErrorResponse()
+    }
+
     const { id } = await params
     
     const auth = await getCurrentUser(request)
@@ -29,21 +39,9 @@ export async function PATCH(request, { params }) {
     const body = await request.json()
     const { status, notes } = body
 
-    // Valid statuses
-    const validStatuses = [
-      'PENDING',
-      'REVIEWING',
-      'SHORTLISTED',
-      'INTERVIEW_SCHEDULED',
-      'INTERVIEW_COMPLETED',
-      'ACCEPTED',
-      'REJECTED',
-      'WITHDRAWN'
-    ]
-
-    if (!validStatuses.includes(status)) {
+    if (!RECRUITER_APPLICATION_STATUSES.includes(status)) {
       return NextResponse.json(
-        { error: 'Invalid status' },
+        { error: 'Status lamaran tidak valid untuk recruiter' },
         { status: 400 }
       )
     }
@@ -79,7 +77,13 @@ export async function PATCH(request, { params }) {
       )
     }
 
-    // ✅ FIXED: Use recruiterNotes instead of reviewNotes
+    if (!canRecruiterSetApplicationStatus(application.status, status)) {
+      return NextResponse.json(
+        { error: getInvalidRecruiterStatusMessage(application.status, status) },
+        { status: 400 }
+      )
+    }
+
     const updatedApplication = await prisma.applications.update({
       where: { id },
       data: {

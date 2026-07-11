@@ -262,7 +262,6 @@ model jobs {
   disabilityDescription String?
   isShift               Boolean         @default(false)
   shiftCount            Int?
-  level                 String?
   gallery               String[]
   holidays              String?
   workingDays           String?
@@ -279,7 +278,6 @@ model jobs {
   @@index([companyId])
   @@index([isActive])
   @@index([jobType])
-  @@index([level])
   @@index([publishedAt])
   @@index([recruiterId])
   @@index([slug])

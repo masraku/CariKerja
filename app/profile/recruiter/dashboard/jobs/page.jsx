@@ -30,6 +30,7 @@ import {
   AlertCircle,
   MoreHorizontal,
 } from "lucide-react";
+import { getSafeErrorMessage } from "@/lib/swalError";
 
 export default function RecruiterJobsPage() {
   const router = useRouter();
@@ -58,12 +59,7 @@ export default function RecruiterJobsPage() {
   const getTodayInputDate = () => new Date().toISOString().split("T")[0];
 
   const getApiErrorMessage = (error, fallback) => {
-    return (
-      error?.response?.data?.error ||
-      error?.response?.data?.message ||
-      error?.message ||
-      fallback
-    );
+    return getSafeErrorMessage(error, fallback);
   };
 
   const handleToggleStatus = async (job) => {

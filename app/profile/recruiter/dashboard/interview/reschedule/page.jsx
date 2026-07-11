@@ -17,6 +17,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import Swal from "sweetalert2";
+import { getSafeErrorMessage } from "@/lib/swalError";
 
 const getJakartaInputDateTime = (value) => {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -67,8 +68,8 @@ function RescheduleContent() {
     } else {
       Swal.fire({
         icon: "error",
-        title: "Invalid Request",
-        text: "Missing interview ID",
+        title: "Data Interview Tidak Lengkap",
+        text: "Halaman ini membutuhkan ID interview. Silakan buka kembali dari daftar interview.",
         confirmButtonColor: "#2563EB",
       }).then(() => {
         router.push("/profile/recruiter/dashboard/interviews");
@@ -121,8 +122,11 @@ function RescheduleContent() {
     } catch (error) {
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: "Gagal memuat data interview",
+        title: "Gagal Memuat Interview",
+        text: getSafeErrorMessage(
+          error,
+          "Data interview belum bisa dimuat. Muat ulang halaman atau buka kembali dari daftar interview.",
+        ),
         confirmButtonColor: "#2563EB",
       }).then(() => {
         router.push("/profile/recruiter/dashboard/interviews");
@@ -205,8 +209,11 @@ function RescheduleContent() {
     } catch (error) {
       Swal.fire({
         icon: "error",
-        title: "Gagal",
-        text: "Gagal memperbarui jadwal interview",
+        title: "Gagal Memperbarui Jadwal",
+        text: getSafeErrorMessage(
+          error,
+          "Jadwal interview belum bisa diperbarui. Pastikan tanggal, waktu, dan link/lokasi interview sudah lengkap.",
+        ),
         confirmButtonColor: "#2563EB",
       });
     } finally {

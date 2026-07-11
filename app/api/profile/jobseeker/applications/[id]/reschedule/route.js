@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getTokenFromRequest, verifyToken } from '@/lib/auth'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
 
 export async function POST(request, { params }) {
     try {
+        if (!validateCSRFToken(request)) {
+            return csrfErrorResponse()
+        }
+
         const token = getTokenFromRequest(request)
         if (!token) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

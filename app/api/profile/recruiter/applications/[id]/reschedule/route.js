@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireRecruiter } from '@/lib/authHelper'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
 
 export async function POST(request, context) {
     try {
+        if (!validateCSRFToken(request)) {
+            return csrfErrorResponse()
+        }
+
         const params = await context.params
         const { id } = params
 
@@ -148,6 +153,10 @@ export async function POST(request, context) {
 // DELETE - Reject reschedule request
 export async function DELETE(request, context) {
     try {
+        if (!validateCSRFToken(request)) {
+            return csrfErrorResponse()
+        }
+
         const params = await context.params
         const { id } = params
 

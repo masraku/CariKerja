@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import api from "@/lib/api";
+import Swal from "sweetalert2";
+import { getSafeErrorMessage } from "@/lib/swalError";
 import {
   Calendar,
   Clock,
@@ -56,22 +58,42 @@ export default function JobseekerInterviewDetailPage() {
       if (data.success) {
         setInterview(data.data);
       } else {
-        alert(data.error || "Failed to load interview");
+        Swal.fire({
+          icon: "error",
+          title: "Gagal Memuat Interview",
+          text: getSafeErrorMessage(
+            data.error,
+            "Detail interview belum bisa dimuat. Silakan buka kembali dari daftar interview.",
+          ),
+        });
         router.push("/profile/jobseeker/interviews");
       }
     } catch (error) {
-      alert("Failed to load interview details");
+      Swal.fire({
+        icon: "error",
+        title: "Gagal Memuat Interview",
+        text: getSafeErrorMessage(
+          error,
+          "Detail interview belum bisa dimuat. Periksa koneksi Anda, lalu coba lagi.",
+        ),
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const handleResponse = async (status) => {
-    if (
-      !confirm(
-        `Apakah Anda yakin ingin ${status === "ACCEPTED" ? "menerima" : "menolak"} undangan interview ini?`,
-      )
-    ) {
+    const result = await Swal.fire({
+      icon: status === "ACCEPTED" ? "question" : "warning",
+      title: status === "ACCEPTED" ? "Terima Interview?" : "Tolak Interview?",
+      text: `Apakah Anda yakin ingin ${status === "ACCEPTED" ? "menerima" : "menolak"} undangan interview ini?`,
+      showCancelButton: true,
+      confirmButtonText: status === "ACCEPTED" ? "Ya, Terima" : "Ya, Tolak",
+      cancelButtonText: "Batal",
+      confirmButtonColor: status === "ACCEPTED" ? "#2563EB" : "#ef4444",
+    });
+
+    if (!result.isConfirmed) {
       return;
     }
 
@@ -87,13 +109,33 @@ export default function JobseekerInterviewDetailPage() {
       );
 
       if (data.success) {
-        alert("Respon interview berhasil disimpan");
+        Swal.fire({
+          icon: "success",
+          title: "Respon Tersimpan",
+          text: "Respon interview berhasil disimpan.",
+          timer: 1500,
+          showConfirmButton: false,
+        });
         loadInterviewDetails();
       } else {
-        alert(data.error || "Failed to respond to interview");
+        Swal.fire({
+          icon: "error",
+          title: "Gagal Mengirim Respon",
+          text: getSafeErrorMessage(
+            data.error,
+            "Respon interview belum bisa dikirim. Silakan coba lagi.",
+          ),
+        });
       }
     } catch (error) {
-      alert("Failed to respond to interview");
+      Swal.fire({
+        icon: "error",
+        title: "Gagal Mengirim Respon",
+        text: getSafeErrorMessage(
+          error,
+          "Respon interview belum bisa dikirim. Periksa koneksi Anda, lalu coba lagi.",
+        ),
+      });
     } finally {
       setResponding(false);
     }
@@ -371,9 +413,6 @@ export default function JobseekerInterviewDetailPage() {
                 <div className="flex flex-wrap gap-2 mt-2">
                   <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
                     {interview.job.type}
-                  </span>
-                  <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
-                    {interview.job.level}
                   </span>
                   <span className="flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
                     <MapPin className="w-3 h-3" />

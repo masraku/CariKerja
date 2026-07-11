@@ -79,9 +79,21 @@ export async function POST(request, context) {
     }
 
     // Check if job is published and still active
-    if (job.status !== 'ACTIVE' || !job.isActive || !job.publishedAt) {
+    if (
+      job.status !== 'ACTIVE' ||
+      !job.isActive ||
+      !job.publishedAt ||
+      (job.applicationDeadline && new Date(job.applicationDeadline) < new Date())
+    ) {
       return NextResponse.json(
         { error: 'Lowongan sudah ditutup' },
+        { status: 400 }
+      )
+    }
+
+    if (!user.jobseekers.cvUrl) {
+      return NextResponse.json(
+        { error: 'Silakan unggah CV PDF di profil sebelum melamar lowongan' },
         { status: 400 }
       )
     }
@@ -124,7 +136,8 @@ export async function POST(request, context) {
           { status: 400 }
         )
       }
-      // If REJECTED or WITHDRAWN, they can apply again (allow re-apply)
+      // If REJECTED or WITHDRAWN, re-activate the existing row to satisfy
+      // the database unique constraint on jobId + jobseekerId.
     }
 
     // Validate request body
@@ -132,36 +145,68 @@ export async function POST(request, context) {
     if (!validation.success) {
       return validation.response
     }
-    const { coverLetter, expectedSalary, availableDate, notes } = validation.data
+    const { coverLetter } = validation.data
     const resumeUrl = user.jobseekers.cvUrl
     const portfolioUrl = user.jobseekers.portfolioUrl
+    const isReapply = existingApplication && ['REJECTED', 'WITHDRAWN'].includes(existingApplication.status)
+
+    const applicationData = {
+      coverLetter,
+      resumeUrl,
+      portfolioUrl,
+      status: 'PENDING',
+      reviewedAt: null,
+      interviewDate: null,
+      respondedAt: null,
+      recruiterNotes: null,
+      rejectionReason: null,
+      confirmedByJobseeker: false,
+      withdrawReason: null,
+      withdrawnAt: null,
+      updatedAt: new Date()
+    }
 
     // Create application
-    const application = await prisma.applications.create({
-      data: {
-        id: `app_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        jobId: job.id,
-        jobseekerId: user.jobseekers.id,
-        coverLetter,
-        resumeUrl: resumeUrl || user.jobseekers.cvUrl,
-        portfolioUrl,
-        status: 'PENDING',
-        updatedAt: new Date()
-      },
-      include: {
-        jobs: {
-          include: {
-            companies: true
+    const application = isReapply
+      ? await prisma.applications.update({
+        where: { id: existingApplication.id },
+        data: applicationData,
+        include: {
+          jobs: {
+            include: {
+              companies: true
+            }
+          },
+          jobseekers: {
+            include: {
+              users: true
+            }
           }
         }
-      }
-    })
+      })
+      : await prisma.applications.create({
+        data: {
+          id: `app_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          jobId: job.id,
+          jobseekerId: user.jobseekers.id,
+          ...applicationData
+        },
+        include: {
+          jobs: {
+            include: {
+              companies: true
+            }
+          }
+        }
+      })
 
-    // Increment application count
-    await prisma.jobs.update({
-      where: { id: job.id },
-      data: { applicationCount: { increment: 1 } }
-    })
+    if (!isReapply) {
+      // Increment application count only for a new unique application row.
+      await prisma.jobs.update({
+        where: { id: job.id },
+        data: { applicationCount: { increment: 1 } }
+      })
+    }
 
     return NextResponse.json({
       success: true,

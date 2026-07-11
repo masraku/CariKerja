@@ -74,7 +74,6 @@ export async function POST(request) {
       
       // Job Details
       jobType,
-      level,
       category,
       
       // Location
@@ -151,7 +150,6 @@ export async function POST(request) {
         responsibilities: responsibilities || '',
         
         jobType,
-        level: level || 'MID_LEVEL',
         category: category || 'Other',
         
         location: location || '',

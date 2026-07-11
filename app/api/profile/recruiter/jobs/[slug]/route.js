@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/authHelper'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
 
 export async function GET(request, { params }) {
   try {
@@ -113,6 +114,10 @@ export async function GET(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
+    if (!validateCSRFToken(request)) {
+      return csrfErrorResponse()
+    }
+
     const { slug } = await params
 
     // Authenticate user

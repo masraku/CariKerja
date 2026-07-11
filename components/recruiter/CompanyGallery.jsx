@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
 import api from "@/lib/api";
+import Swal from "sweetalert2";
+import { getSafeErrorMessage, getUploadErrorMessage } from "@/lib/swalError";
 
 export default function CompanyGallery({
   gallery = [],
@@ -19,12 +21,20 @@ export default function CompanyGallery({
 
     // Validate
     if (!file.type.startsWith("image/")) {
-      alert("Silakan pilih file gambar");
+      Swal.fire({
+        icon: "error",
+        title: "Format Foto Tidak Sesuai",
+        text: "Foto galeri harus berupa gambar dengan format JPG, PNG, GIF, atau WebP.",
+      });
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("Ukuran file maksimal 5MB");
+      Swal.fire({
+        icon: "error",
+        title: "Ukuran Foto Terlalu Besar",
+        text: "Ukuran foto melebihi batas. Maksimal ukuran file adalah 5MB.",
+      });
       return;
     }
 
@@ -47,9 +57,15 @@ export default function CompanyGallery({
         throw new Error(data.error || "Gagal mengunggah");
       }
     } catch (error) {
-      alert(
-        error.response?.data?.error || error.message || "Gagal mengunggah foto"
-      );
+      Swal.fire({
+        icon: "error",
+        title: "Upload Foto Gagal",
+        text: getUploadErrorMessage(error, {
+          kind: "foto galeri",
+          maxSize: "5MB",
+          formats: "JPG, PNG, GIF, atau WebP",
+        }),
+      });
     } finally {
       setUploading(false);
       // Reset input
@@ -76,9 +92,14 @@ export default function CompanyGallery({
         throw new Error(data.error || "Gagal menghapus");
       }
     } catch (error) {
-      alert(
-        error.response?.data?.error || error.message || "Gagal menghapus foto"
-      );
+      Swal.fire({
+        icon: "error",
+        title: "Gagal Menghapus Foto",
+        text: getSafeErrorMessage(
+          error,
+          "Foto belum bisa dihapus. Muat ulang halaman, lalu coba lagi.",
+        ),
+      });
     } finally {
       setDeleting(null);
     }

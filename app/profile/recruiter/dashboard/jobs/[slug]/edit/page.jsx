@@ -21,6 +21,7 @@ import {
   getKelurahanByKecamatan,
   getAllKecamatan,
 } from "@/lib/cirebonData";
+import { getSafeErrorMessage, getUploadErrorMessage } from "@/lib/swalError";
 
 export default function EditJobPage() {
   const router = useRouter();
@@ -175,8 +176,11 @@ export default function EditJobPage() {
     } catch (error) {
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: "Failed to load job data",
+        title: "Gagal Memuat Lowongan",
+        text: getSafeErrorMessage(
+          error,
+          "Data lowongan belum bisa dimuat. Muat ulang halaman atau kembali ke daftar lowongan.",
+        ),
       });
       router.push("/profile/recruiter/dashboard/jobs");
     } finally {
@@ -270,8 +274,8 @@ export default function EditJobPage() {
     if (formData.gallery.length >= 5) {
       Swal.fire({
         icon: "warning",
-        title: "Limit Reached",
-        text: "Maksimal 5 foto galeri",
+        title: "Batas Foto Tercapai",
+        text: "Maksimal 5 foto galeri untuk setiap lowongan. Hapus salah satu foto jika ingin menambahkan yang baru.",
       });
       return;
     }
@@ -280,6 +284,24 @@ export default function EditJobPage() {
   };
 
   const uploadFile = async (file, type) => {
+    if (!file.type.startsWith("image/")) {
+      Swal.fire({
+        icon: "error",
+        title: "Format Foto Tidak Sesuai",
+        text: "Foto lowongan harus berupa gambar dengan format JPG, PNG, GIF, atau WebP.",
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      Swal.fire({
+        icon: "error",
+        title: "Ukuran Foto Terlalu Besar",
+        text: "Ukuran foto melebihi batas. Maksimal ukuran file adalah 5MB.",
+      });
+      return;
+    }
+
     Swal.fire({
       title: "Mengunggah...",
       text: "Sedang mengupload foto",
@@ -316,7 +338,11 @@ export default function EditJobPage() {
       Swal.fire({
         icon: "error",
         title: "Upload Gagal",
-        text: "Gagal mengupload foto",
+        text: getUploadErrorMessage(error, {
+          kind: "foto lowongan",
+          maxSize: "5MB",
+          formats: "JPG, PNG, GIF, atau WebP",
+        }),
       });
     }
   };
@@ -415,8 +441,11 @@ export default function EditJobPage() {
     } catch (error) {
       Swal.fire({
         icon: "error",
-        title: "Gagal Update",
-        text: "Gagal memperbarui lowongan",
+        title: "Gagal Memperbarui Lowongan",
+        text: getSafeErrorMessage(
+          error,
+          "Lowongan belum bisa diperbarui. Periksa kembali data yang wajib diisi, lalu coba lagi.",
+        ),
       });
     } finally {
       setSubmitting(false);

@@ -16,6 +16,7 @@ import {
     ExternalLink
 } from 'lucide-react'
 import { useQueryInterviewRoom } from '@/hooks/jobseeker/useJobseeker'
+import { getSafeErrorMessage } from '@/lib/swalError'
 
 export default function InterviewRoomPage() {
     const params = useParams()
@@ -37,8 +38,11 @@ export default function InterviewRoomPage() {
         if (isError) {
             Swal.fire({
                 icon: 'error',
-                title: 'Gagal',
-                text: error?.message || 'Gagal memuat interview room'
+                title: 'Gagal Memuat Room Interview',
+                text: getSafeErrorMessage(
+                    error,
+                    'Room interview belum bisa dimuat. Pastikan jadwal interview masih tersedia dan Anda memiliki akses.'
+                )
             }).then(() => {
                 router.push('/profile/jobseeker/interviews')
             })

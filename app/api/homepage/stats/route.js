@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { publicLimiter, getIP, rateLimitResponse } from "@/lib/rateLimit";
+import { publicActiveJobWhere } from "@/lib/jobs/publicFilters";
 
 export async function GET(request) {
   try {
@@ -16,11 +17,7 @@ export async function GET(request) {
       await Promise.all([
         // Count active jobs
         prisma.jobs.count({
-          where: {
-            status: {
-              in: ["ACTIVE", "CLOSED"],
-            },
-          },
+          where: publicActiveJobWhere(new Date()),
         }),
 
         // Count verified companies (diverifikasi oleh admin)

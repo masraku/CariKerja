@@ -60,8 +60,8 @@ export default function JobDetailPage() {
     if (isError) {
       Swal.fire({
         icon: "error",
-        title: "Job Not Found",
-        text: "Lowongan tidak ditemukan",
+        title: "Lowongan Tidak Ditemukan",
+        text: "Lowongan yang Anda buka tidak tersedia, sudah ditutup, atau tautannya tidak valid.",
         confirmButtonColor: BRAND_COLOR,
       }).then(() => {
         router.push("/jobs");
@@ -84,7 +84,7 @@ export default function JobDetailPage() {
     if (!isAuthenticated) {
       Swal.fire({
         icon: "info",
-        title: "Login Required",
+        title: "Login Diperlukan",
         text: "Silakan login terlebih dahulu untuk menyimpan lowongan",
         showCancelButton: true,
         confirmButtonText: "Login",
@@ -129,7 +129,7 @@ export default function JobDetailPage() {
     if (!isAuthenticated) {
       Swal.fire({
         icon: "info",
-        title: "Login Required",
+        title: "Login Diperlukan",
         text: "Silakan login terlebih dahulu untuk melamar pekerjaan",
         showCancelButton: true,
         confirmButtonText: "Login",

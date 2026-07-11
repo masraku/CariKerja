@@ -4,10 +4,15 @@ import { createErrorResponse } from '@/lib/errorHandler'
 import { requireJobseeker } from '@/lib/authHelper'
 import { validateBody } from '@/lib/validations'
 import { interviewRespondSchema } from '@/lib/validations/profile'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
 
 // PATCH - Respond to interview (Accept/Decline/Request Reschedule)
 export async function PATCH(request, context) {
     try {
+        if (!validateCSRFToken(request)) {
+            return csrfErrorResponse()
+        }
+
         // Authenticate
         const auth = await requireJobseeker(request)
         if (auth.error) {

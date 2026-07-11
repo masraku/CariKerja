@@ -15,6 +15,7 @@ import {
   Send,
 } from "lucide-react";
 import Swal from "sweetalert2";
+import { getSafeErrorMessage } from "@/lib/swalError";
 
 function ScheduleInterviewContent() {
   const router = useRouter();
@@ -46,8 +47,8 @@ function ScheduleInterviewContent() {
     } else {
       Swal.fire({
         icon: "error",
-        title: "Invalid Request",
-        text: "Missing required parameters",
+        title: "Data Interview Tidak Lengkap",
+        text: "Halaman ini membutuhkan data lowongan dan kandidat. Silakan kembali ke daftar pelamar lalu jadwalkan interview ulang.",
         confirmButtonColor: "#2563EB",
       }).then(() => {
         router.push("/recruiter/dashboard");
@@ -85,8 +86,11 @@ function ScheduleInterviewContent() {
     } catch (error) {
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: "Failed to load data",
+        title: "Gagal Memuat Data",
+        text: getSafeErrorMessage(
+          error,
+          "Data lowongan atau kandidat belum bisa dimuat. Muat ulang halaman atau coba lagi dari daftar pelamar.",
+        ),
         confirmButtonColor: "#2563EB",
       });
     } finally {
@@ -139,7 +143,7 @@ function ScheduleInterviewContent() {
     if (!job?.id) {
       Swal.fire({
         icon: "error",
-        title: "Error",
+        title: "Data Lowongan Belum Siap",
         text: "Data lowongan belum dimuat. Silakan refresh halaman.",
         confirmButtonColor: "#2563EB",
       });
@@ -149,7 +153,7 @@ function ScheduleInterviewContent() {
     if (!applicants || applicants.length === 0) {
       Swal.fire({
         icon: "error",
-        title: "Error",
+        title: "Data Kandidat Belum Siap",
         text: "Data kandidat belum dimuat. Silakan refresh halaman.",
         confirmButtonColor: "#2563EB",
       });
@@ -257,8 +261,11 @@ Terima kasih dan sampai jumpa!`,
     } catch (error) {
       Swal.fire({
         icon: "error",
-        title: "Gagal",
-        text: "Gagal menjadwalkan interview",
+        title: "Gagal Menjadwalkan Interview",
+        text: getSafeErrorMessage(
+          error,
+          "Interview belum bisa dijadwalkan. Pastikan tanggal, waktu, kandidat, dan link/lokasi interview sudah lengkap.",
+        ),
         confirmButtonColor: "#2563EB",
       });
     } finally {
@@ -272,8 +279,8 @@ Terima kasih dan sampai jumpa!`,
     if (applicants.length === 1) {
       Swal.fire({
         icon: "warning",
-        title: "No Applicants",
-        text: "You need at least one applicant to schedule an interview",
+        title: "Kandidat Tidak Tersedia",
+        text: "Minimal harus ada satu kandidat untuk menjadwalkan interview.",
         confirmButtonColor: "#2563EB",
       }).then(() => {
         router.back();

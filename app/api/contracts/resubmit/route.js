@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { createErrorResponse } from '@/lib/errorHandler'
 import { requireRecruiter } from '@/lib/authHelper'
 import { validateBody } from '@/lib/validations'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
 import { z } from 'zod'
 
 // Validation schema
@@ -13,6 +14,10 @@ const resubmitSchema = z.object({
 // POST /api/contracts/resubmit - Resubmit a rejected contract
 export async function POST(request) {
   try {
+    if (!validateCSRFToken(request)) {
+      return csrfErrorResponse()
+    }
+
     const auth = await requireRecruiter(request)
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status })

@@ -60,7 +60,7 @@ async function handleCVUpload(request, user) {
         if (!cvFile || !jobId || !jobseekerId) {
             return NextResponse.json({
                 success: false,
-                error: 'Missing required fields: cv, job_id, jobseeker_id'
+                error: 'CV, lowongan, dan data pencari kerja wajib dilengkapi'
             }, { status: 400 })
         }
 
@@ -68,7 +68,7 @@ async function handleCVUpload(request, user) {
         if (!cvFile.type.includes('pdf')) {
             return NextResponse.json({
                 success: false,
-                error: 'Only PDF files are allowed'
+                error: 'CV harus berformat PDF'
             }, { status: 400 })
         }
 
@@ -76,7 +76,7 @@ async function handleCVUpload(request, user) {
         if (cvFile.size > 5 * 1024 * 1024) {
             return NextResponse.json({
                 success: false,
-                error: 'File size must be less than 5MB'
+                error: 'Ukuran CV terlalu besar. Maksimal 5MB.'
             }, { status: 400 })
         }
 
@@ -144,7 +144,7 @@ async function handleCVUpload(request, user) {
         if (uploadError) {
             return NextResponse.json({
                 success: false,
-                error: 'Failed to upload CV: ' + uploadError.message
+                error: 'Gagal mengunggah CV. Pastikan file PDF valid dan ukurannya maksimal 5MB.'
             }, { status: 500 })
         }
 
@@ -279,7 +279,7 @@ async function handleCVUpload(request, user) {
         console.error('CV upload error:', error)
         return NextResponse.json({
             success: false,
-            error: 'Failed to process CV upload'
+            error: 'Gagal memproses CV. Silakan coba lagi beberapa saat.'
         }, { status: 500 })
     }
 }

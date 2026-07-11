@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createErrorResponse } from '@/lib/errorHandler'
 import { requireJobseeker } from '@/lib/authHelper'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
 
 // GET - Get interview room details
 export async function GET(request, context) {
@@ -130,6 +131,10 @@ export async function GET(request, context) {
 
 // PATCH - Jobseeker cannot complete interviews; recruiter controls interview outcomes.
 export async function PATCH(request) {
+    if (!validateCSRFToken(request)) {
+        return csrfErrorResponse()
+    }
+
     const auth = await requireJobseeker(request)
     if (auth.error) {
         return NextResponse.json({ error: auth.error }, { status: auth.status })

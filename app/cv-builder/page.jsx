@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Swal from "sweetalert2";
+import api from "@/lib/api";
+import { getSafeErrorMessage } from "@/lib/swalError";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -24,6 +26,7 @@ import {
   Settings,
   Eye,
   Edit3,
+  AlertCircle,
 } from "lucide-react";
 
 // Initial state data structures
@@ -127,16 +130,145 @@ const colorOptions = [
   { name: "Forest Green", value: "#064e3b" },
 ];
 
+const formatMonthYear = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return date.toLocaleDateString("id-ID", {
+    month: "short",
+    year: "numeric",
+  });
+};
+
+const joinClean = (parts, separator = ", ") =>
+  parts.filter(Boolean).map((part) => String(part).trim()).filter(Boolean).join(separator);
+
+const profileToCvData = (profile) => {
+  const educations = profile.educations?.length
+    ? profile.educations.map((edu) => ({
+        id: edu.id,
+        institution: edu.institution || "",
+        degree: edu.degree || edu.level || "",
+        fieldOfStudy: edu.fieldOfStudy || "",
+        location: "",
+        startDate: formatMonthYear(edu.startDate),
+        endDate: edu.isCurrent ? "Sekarang" : formatMonthYear(edu.endDate),
+        current: edu.isCurrent || false,
+        description: joinClean([
+          edu.gpa ? `IPK ${edu.gpa}` : "",
+          edu.diplomaUrl ? "Ijazah/dokumen pendidikan tersedia" : "",
+        ], ". "),
+      }))
+    : profile.lastEducationInstitution
+      ? [
+          {
+            institution: profile.lastEducationInstitution,
+            degree: profile.lastEducationLevel || "",
+            fieldOfStudy: profile.lastEducationMajor || "",
+            location: "",
+            startDate: "",
+            endDate: profile.graduationYear ? String(profile.graduationYear) : "",
+            current: false,
+            description: "",
+          },
+        ]
+      : [];
+
+  return {
+    personal: {
+      fullName: joinClean([profile.firstName, profile.lastName], " "),
+      jobTitle: profile.currentTitle || profile.desiredJobTitle || "",
+      email: profile.email || "",
+      phone: profile.phone || "",
+      location: joinClean([profile.city, profile.province]) || joinClean([profile.kecamatan, profile.kelurahan]),
+      linkedin: profile.linkedinUrl || "",
+      website: profile.portfolioUrl || profile.githubUrl || profile.websiteUrl || "",
+    },
+    summary: profile.summary || "",
+    experiences: (profile.work_experiences || []).map((exp) => ({
+      id: exp.id,
+      company: exp.company || "",
+      position: exp.position || "",
+      location: exp.location || "",
+      startDate: formatMonthYear(exp.startDate),
+      endDate: exp.isCurrent ? "Sekarang" : formatMonthYear(exp.endDate),
+      current: exp.isCurrent || false,
+      description: joinClean([
+        exp.description || "",
+        ...(exp.achievements || []),
+      ], "\n"),
+    })),
+    educations,
+    skills: (profile.skills || []).map((skill) => skill.name).filter(Boolean),
+    projects: (profile.certifications || []).map((cert) => ({
+      id: cert.id,
+      title: cert.name || "",
+      issuerOrOrg: cert.issuingOrganization || "",
+      date: formatMonthYear(cert.issueDate),
+      description: joinClean([
+        cert.credentialId ? `Credential ID: ${cert.credentialId}` : "",
+        cert.credentialUrl || "",
+      ], "\n"),
+    })),
+  };
+};
+
+const getAtsAudit = (data) => {
+  const summaryLength = data.summary.trim().length;
+  const hasMetric = [...data.experiences, ...data.projects].some((item) =>
+    /(\d+|%|persen|meningkat|mengurangi|mengelola|membangun|mengembangkan|memimpin)/i.test(item.description || "")
+  );
+
+  const checks = [
+    {
+      label: "Kontak utama lengkap",
+      passed: Boolean(data.personal.fullName && data.personal.email && data.personal.phone && data.personal.location),
+      hint: "Lengkapi nama, email, nomor aktif, dan lokasi.",
+    },
+    {
+      label: "Ringkasan profesional padat",
+      passed: summaryLength >= 80 && summaryLength <= 600,
+      hint: "Tulis 2-4 kalimat berisi target posisi, pengalaman, dan kekuatan utama.",
+    },
+    {
+      label: "Pengalaman memakai dampak terukur",
+      passed: data.experiences.length > 0 && hasMetric,
+      hint: "Tambahkan angka, target, volume kerja, atau hasil yang dicapai.",
+    },
+    {
+      label: "Keahlian mudah dipindai ATS",
+      passed: data.skills.length >= 5,
+      hint: "Masukkan minimal 5 skill teknis/nonteknis sesuai lowongan.",
+    },
+    {
+      label: "Pendidikan tersedia",
+      passed: data.educations.length > 0,
+      hint: "Tambahkan pendidikan terakhir agar profil lebih lengkap.",
+    },
+  ];
+
+  const passedCount = checks.filter((check) => check.passed).length;
+
+  return {
+    checks,
+    score: Math.round((passedCount / checks.length) * 100),
+    nextHint: checks.find((check) => !check.passed)?.hint || "CV sudah siap diekspor. Sesuaikan kata kunci dengan lowongan tujuan.",
+  };
+};
+
 export default function CVBuilderPage() {
   const [activeTab, setActiveTab] = useState("personal");
   const [viewMode, setViewMode] = useState("edit"); // edit / preview (useful for mobile)
   const [cvData, setCvData] = useState(emptyData);
+  const [isImportingProfile, setIsImportingProfile] = useState(false);
   
   // Customization states
   const [selectedFont, setSelectedFont] = useState("var(--font-arial, Arial, sans-serif)");
   const [selectedMargin, setSelectedMargin] = useState("19mm");
   const [selectedColor, setSelectedColor] = useState("#000000");
   const [selectedTemplate, setSelectedTemplate] = useState("classic"); // classic, minimal, modern
+  const atsAudit = useMemo(() => getAtsAudit(cvData), [cvData]);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -242,6 +374,45 @@ export default function CVBuilderPage() {
     saveToLocalStorage(sampleData);
   };
 
+  const handleImportProfileData = async () => {
+    setIsImportingProfile(true);
+
+    try {
+      const { data } = await api.get("/api/profile/jobseeker");
+
+      if (!data.success || !data.profile) {
+        throw new Error(data.error || "Profil tidak ditemukan");
+      }
+
+      const importedData = profileToCvData(data.profile);
+      setCvData(importedData);
+      saveToLocalStorage(importedData);
+
+      Swal.fire({
+        title: "Data Profil Diimpor",
+        text: "Data profil pencari kerja berhasil dimasukkan ke pembuat CV ATS.",
+        icon: "success",
+        timer: 1600,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      const status = error.response?.status;
+      Swal.fire({
+        title: status === 401 ? "Login Diperlukan" : "Gagal Mengimpor Profil",
+        text:
+          status === 401
+            ? "Silakan login sebagai pencari kerja untuk mengambil data profil."
+            : getSafeErrorMessage(
+                error,
+                "Data profil belum bisa diambil. Pastikan Anda login sebagai pencari kerja, lalu coba lagi.",
+              ),
+        icon: "error",
+      });
+    } finally {
+      setIsImportingProfile(false);
+    }
+  };
+
   const handleResetData = () => {
     Swal.fire({
       title: "Hapus Semua Data?",
@@ -275,6 +446,11 @@ export default function CVBuilderPage() {
     <div className="bg-slate-100 min-h-screen pt-24 pb-12">
       {/* Dynamic Style Block for PDF printing and layout overrides */}
       <style dangerouslySetInnerHTML={{ __html: `
+        @page {
+          size: A4;
+          margin: 0;
+        }
+
         @media print {
           /* Hide everything except print area */
           header, footer, nav, aside, button, .no-print, #mobile-view-tabs {
@@ -329,6 +505,7 @@ export default function CVBuilderPage() {
             font-family: ${selectedFont} !important;
             width: 100% !important;
             max-width: 100% !important;
+            min-height: auto !important;
             margin: 0 !important;
             box-shadow: none !important;
             border: none !important;
@@ -362,6 +539,16 @@ export default function CVBuilderPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2.5 w-full md:w-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleImportProfileData}
+              disabled={isImportingProfile}
+              className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 text-slate-700"
+            >
+              <User className={`w-4 h-4 text-primary ${isImportingProfile ? "animate-pulse" : ""}`} />
+              {isImportingProfile ? "Mengambil..." : "Ambil dari Profil"}
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -447,6 +634,53 @@ export default function CVBuilderPage() {
                   </button>
                 );
               })}
+            </div>
+
+            <div className="px-6 py-4 border-b border-slate-100 bg-white">
+              <div className="flex items-start gap-4">
+                <div className="shrink-0 w-16 h-16 rounded-full border-4 border-slate-100 flex items-center justify-center bg-slate-50">
+                  <span className="text-lg font-extrabold text-slate-900">{atsAudit.score}</span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <p className="text-sm font-bold text-slate-900">Kesiapan ATS</p>
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${
+                      atsAudit.score >= 80
+                        ? "bg-emerald-50 text-emerald-700"
+                        : atsAudit.score >= 60
+                          ? "bg-amber-50 text-amber-700"
+                          : "bg-red-50 text-red-700"
+                    }`}>
+                      {atsAudit.score >= 80 ? "Siap" : atsAudit.score >= 60 ? "Perlu Rapih" : "Lengkapi"}
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-slate-100 overflow-hidden mb-3">
+                    <div
+                      className={`h-full rounded-full ${
+                        atsAudit.score >= 80
+                          ? "bg-emerald-500"
+                          : atsAudit.score >= 60
+                            ? "bg-amber-500"
+                            : "bg-red-500"
+                      }`}
+                      style={{ width: `${atsAudit.score}%` }}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    {atsAudit.checks.map((check) => (
+                      <div key={check.label} className="flex items-center gap-2 text-xs text-slate-600">
+                        {check.passed ? (
+                          <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        ) : (
+                          <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        )}
+                        <span className={check.passed ? "text-slate-700" : "text-slate-500"}>{check.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-3 leading-relaxed">{atsAudit.nextHint}</p>
+                </div>
+              </div>
             </div>
 
             {/* Form Panel Content */}
@@ -1220,7 +1454,7 @@ export default function CVBuilderPage() {
 
             {/* Print Help Notice */}
             <div className="mt-4 p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs flex gap-2 max-w-[210mm] no-print">
-              <span>⚠️</span>
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <div>
                 <p className="font-bold">Panduan Unduh PDF:</p>
                 <p className="mt-1">

@@ -32,6 +32,7 @@ import {
   useMutationUpdateNews,
   useMutationDeleteNews,
 } from "@/hooks/admin/useAdmin";
+import { getSafeErrorMessage, getUploadErrorMessage } from "@/lib/swalError";
 
 export default function AdminNewsPage() {
   const [search, setSearch] = useState("");
@@ -163,8 +164,8 @@ export default function AdminNewsPage() {
     if (!validTypes.includes(file.type)) {
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: "Format gambar tidak valid. Gunakan JPG, PNG, GIF, atau WebP",
+        title: "Format Gambar Tidak Sesuai",
+        text: "Gambar cover harus berformat JPG, PNG, GIF, atau WebP.",
       });
       return;
     }
@@ -173,8 +174,8 @@ export default function AdminNewsPage() {
     if (file.size > 5 * 1024 * 1024) {
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: "Ukuran gambar maksimal 5MB",
+        title: "Ukuran Gambar Terlalu Besar",
+        text: "Ukuran gambar melebihi batas. Maksimal ukuran file adalah 5MB. Silakan kompres gambar atau pilih file lain.",
       });
       return;
     }
@@ -207,8 +208,12 @@ export default function AdminNewsPage() {
       console.error("Error uploading image:", error);
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: "Gagal mengupload gambar",
+        title: "Upload Gambar Gagal",
+        text: getUploadErrorMessage(error, {
+          kind: "gambar cover",
+          maxSize: "5MB",
+          formats: "JPG, PNG, GIF, atau WebP",
+        }),
       });
     } finally {
       setUploading(false);
@@ -229,8 +234,8 @@ export default function AdminNewsPage() {
     ) {
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: "Judul, konten, kategori, dan penulis wajib diisi",
+        title: "Data Belum Lengkap",
+        text: "Judul, konten, kategori, dan penulis wajib diisi sebelum berita disimpan.",
       });
       return;
     }
@@ -259,8 +264,11 @@ export default function AdminNewsPage() {
       console.error("Error saving news:", error);
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: "Terjadi kesalahan saat menyimpan berita",
+        title: "Gagal Menyimpan Berita",
+        text: getSafeErrorMessage(
+          error,
+          "Berita belum bisa disimpan. Periksa kembali data yang diisi, lalu coba lagi.",
+        ),
       });
     }
   };
@@ -289,8 +297,11 @@ export default function AdminNewsPage() {
         console.error("Error deleting news:", error);
         Swal.fire({
           icon: "error",
-          title: "Error",
-          text: "Terjadi kesalahan saat menghapus berita",
+          title: "Gagal Menghapus Berita",
+          text: getSafeErrorMessage(
+            error,
+            "Berita belum bisa dihapus. Muat ulang halaman, lalu coba lagi.",
+          ),
         });
       }
     }
@@ -312,8 +323,11 @@ export default function AdminNewsPage() {
       console.error("Error updating status:", error);
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: "Gagal mengubah status berita",
+        title: "Gagal Mengubah Status",
+        text: getSafeErrorMessage(
+          error,
+          "Status berita belum bisa diubah. Muat ulang halaman, lalu coba lagi.",
+        ),
       });
     }
   };

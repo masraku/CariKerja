@@ -114,7 +114,6 @@ export async function GET(request, { params }) {
           title: interview.jobs.title,
           slug: interview.jobs.slug,
           type: interview.jobs.jobType,
-          level: interview.jobs.level,
           location: interview.jobs.location
         } : null,
         company: interview.jobs?.companies || null,

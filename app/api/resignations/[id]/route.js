@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { createErrorResponse } from '@/lib/errorHandler'
 import { getTokenFromRequest, verifyToken } from '@/lib/auth'
 import { validateBody } from '@/lib/validations'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
 import { z } from 'zod'
 
 // Validation schema
@@ -17,6 +18,10 @@ const processResignationSchema = z.object({
 // Recruiter approves or rejects a resignation
 export async function PATCH(request, { params }) {
   try {
+    if (!validateCSRFToken(request)) {
+      return csrfErrorResponse()
+    }
+
     const token = getTokenFromRequest(request)
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

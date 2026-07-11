@@ -30,6 +30,7 @@ import {
   Award,
 } from "lucide-react";
 import Swal from "sweetalert2";
+import { getSafeErrorMessage } from "@/lib/swalError";
 
 export default function JobDetailPage() {
   const router = useRouter();
@@ -182,8 +183,11 @@ export default function JobDetailPage() {
     } catch (error) {
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: "Gagal memuat data lamaran. Silakan coba lagi.",
+        title: "Gagal Memuat Lamaran",
+        text: getSafeErrorMessage(
+          error,
+          "Data lamaran belum bisa dimuat. Muat ulang halaman atau coba lagi beberapa saat.",
+        ),
       });
     } finally {
       setLoading(false);
@@ -669,7 +673,7 @@ export default function JobDetailPage() {
     if (!job?.id) {
       Swal.fire({
         icon: "error",
-        title: "Error",
+        title: "Data Lowongan Belum Siap",
         text: "Data lowongan belum dimuat. Silakan refresh halaman.",
       });
       return;
@@ -798,7 +802,7 @@ export default function JobDetailPage() {
     if (!job?.id) {
       Swal.fire({
         icon: "error",
-        title: "Error",
+        title: "Data Lowongan Belum Siap",
         text: "Data lowongan belum dimuat. Silakan refresh halaman.",
       });
       return;

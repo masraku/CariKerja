@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { createErrorResponse } from '@/lib/errorHandler'
 import { cookies } from 'next/headers'
 import { verifyToken } from '@/lib/auth'
+import { publicActiveJobWhere } from '@/lib/jobs/publicFilters'
 
 export async function GET(request, context) {
   try {
@@ -43,16 +44,10 @@ export async function GET(request, context) {
       where: isRecruiter
         ? { OR: [{ slug }, { id: slug }] } // Recruiter can see any job by slug/id
         : {
-            OR: [{ slug }, { id: slug }],
-            status: 'ACTIVE',
-            isActive: true,
-            publishedAt: { not: null },
-            companies: {
-              is: {
-                verified: true,
-                status: 'VERIFIED'
-              }
-            }
+            AND: [
+              { OR: [{ slug }, { id: slug }] },
+              publicActiveJobWhere(new Date())
+            ]
           },
       include: {
         companies: {
@@ -148,7 +143,6 @@ export async function GET(request, context) {
       responsibilities: job.responsibilities,
       category: job.category,
       jobType: job.jobType,
-      level: job.level,
       location: job.location,
       city: job.city,
       province: job.province,

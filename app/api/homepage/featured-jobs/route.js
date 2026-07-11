@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { publicLimiter, getIP, rateLimitResponse } from '@/lib/rateLimit'
+import { publicActiveJobWhere } from '@/lib/jobs/publicFilters'
 
 export async function GET(request) {
     try {
@@ -13,23 +14,14 @@ export async function GET(request) {
 
         const { searchParams } = new URL(request.url)
         const limit = parseInt(searchParams.get('limit') || '6')
+        const now = new Date()
 
         // OPTIMIZED: use select instead of include
         const jobs = await prisma.jobs.findMany({
-            where: {
-                status: 'ACTIVE',
-                isActive: true,
-                publishedAt: { not: null },
-                companies: {
-                    is: {
-                        verified: true,
-                        status: 'VERIFIED'
-                    }
-                }
-            },
+            where: publicActiveJobWhere(now),
             take: limit,
             orderBy: {
-                createdAt: 'desc'
+                publishedAt: 'desc'
             },
             select: {
                 id: true,
@@ -41,6 +33,7 @@ export async function GET(request) {
                 salaryMax: true,
                 category: true,
                 createdAt: true,
+                applicationDeadline: true,
                 companies: {
                     select: {
                         name: true,
@@ -74,11 +67,12 @@ export async function GET(request) {
             salaryMax: job.salaryMax,
             salaryCurrency: 'IDR',
             postedAt: job.createdAt,
+            applicationDeadline: job.applicationDeadline,
             applicationCount: job._count.applications,
+            applicants: job._count.applications,
             category: job.category
         }))
 
-        // Add cache headers for better performance
         return NextResponse.json({
             success: true,
             data: {
@@ -86,7 +80,7 @@ export async function GET(request) {
             }
         }, {
             headers: {
-                'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120'
+                'Cache-Control': 'no-store, max-age=0'
             }
         })
 

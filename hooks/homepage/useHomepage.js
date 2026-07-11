@@ -33,7 +33,8 @@ export function useQueryFeaturedJobs(limit = 6) {
 
             return data.data.jobs;
         },
-        staleTime: 1000 * 60 * 2, // 2 minutes
+        staleTime: 0,
+        refetchOnMount: "always",
     });
 }
 

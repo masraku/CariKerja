@@ -142,7 +142,6 @@ export async function GET(request) {
                 email: job.recruiters?.users?.email
             },
             jobType: job.jobType,
-            level: job.level,
             city: job.city,
             province: job.province,
             isRemote: job.isRemote,

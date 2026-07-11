@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createErrorResponse } from '@/lib/errorHandler'
 import { requireRecruiter } from '@/lib/authHelper'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
 
 // GET - Fetch interview details for recruiter
 export async function GET(request, context) {
@@ -154,6 +155,10 @@ export async function GET(request, context) {
 // DELETE - Delete interview and auto-reject applications
 export async function DELETE(request, context) {
   try {
+    if (!validateCSRFToken(request)) {
+      return csrfErrorResponse()
+    }
+
     const params = await context.params
     const { id } = params
     

@@ -47,10 +47,10 @@ export default function RecruiterDashboard() {
 
   const getStatusBadge = (status) => {
     const config = {
-      PENDING: { label: "Pending", color: "bg-yellow-100 text-yellow-800" },
-      REVIEWING: { label: "Reviewing", color: "bg-blue-100 text-blue-800" },
+      PENDING: { label: "Lamaran Masuk", color: "bg-yellow-100 text-yellow-800" },
+      REVIEWING: { label: "Sedang Ditinjau", color: "bg-blue-100 text-blue-800" },
       SHORTLISTED: {
-        label: "Shortlisted",
+        label: "Lolos Seleksi",
         color: "bg-purple-100 text-purple-800",
       },
       INTERVIEW_SCHEDULED: {
@@ -58,12 +58,13 @@ export default function RecruiterDashboard() {
         color: "bg-indigo-100 text-indigo-800",
       },
       INTERVIEW_COMPLETED: {
-        label: "Interview Done",
+        label: "Interview Selesai",
         color: "bg-cyan-100 text-cyan-800",
       },
-      ACCEPTED: { label: "Accepted", color: "bg-green-100 text-green-800" },
-      REJECTED: { label: "Rejected", color: "bg-red-100 text-red-800" },
-      WITHDRAWN: { label: "Withdrawn", color: "bg-gray-100 text-gray-800" },
+      ACCEPTED: { label: "Diterima", color: "bg-green-100 text-green-800" },
+      REJECTED: { label: "Ditolak", color: "bg-red-100 text-red-800" },
+      WITHDRAWN: { label: "Ditarik", color: "bg-gray-100 text-gray-800" },
+      RESIGNED: { label: "Mengundurkan Diri", color: "bg-gray-100 text-gray-800" },
     };
     return config[status] || config.PENDING;
   };

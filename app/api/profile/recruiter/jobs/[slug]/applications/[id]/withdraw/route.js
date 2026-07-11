@@ -2,11 +2,16 @@
 import { NextResponse } from 'next/server'
 import { requireJobseeker } from '@/lib/authHelper'
 import { prisma } from '@/lib/prisma'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
 
 
 // PATCH - Withdraw application
 export async function PATCH(request, { params }) {
   try {
+    if (!validateCSRFToken(request)) {
+      return csrfErrorResponse()
+    }
+
     // Authenticate user
     const auth = await requireJobseeker(request)
     

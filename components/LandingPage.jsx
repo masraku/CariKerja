@@ -13,6 +13,7 @@ import {
   CheckCircle,
   TrendingUp,
   Banknote,
+  Calendar,
   Clock,
   Star,
 } from "lucide-react";
@@ -77,6 +78,15 @@ export default function LandingPage() {
     interval = seconds / 60;
     if (interval > 1) return Math.floor(interval) + " menit lalu";
     return "Baru saja";
+  };
+
+  const formatDeadline = (date) => {
+    if (!date) return "Tanpa deadline";
+    return new Date(date).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
   };
 
   return (
@@ -248,10 +258,20 @@ export default function LandingPage() {
                     <span className="truncate">{job.location || job.city}</span>
                   </div>
 
-                  <div className="pt-4 border-t border-gray-50 flex items-center justify-between mt-auto">
-                    <div className="text-gray-400 text-xs font-medium flex items-center">
-                      <Clock className="w-3.5 h-3.5 mr-1.5" />
-                      {getTimeAgo(job.postedAt)}
+                  <div className="pt-4 border-t border-gray-50 mt-auto space-y-3">
+                    <div className="flex flex-wrap gap-3 text-gray-400 text-xs font-medium">
+                      <span className="inline-flex items-center">
+                        <Clock className="w-3.5 h-3.5 mr-1.5" />
+                        {getTimeAgo(job.postedAt)}
+                      </span>
+                      <span className="inline-flex items-center">
+                        <Calendar className="w-3.5 h-3.5 mr-1.5" />
+                        Tutup {formatDeadline(job.applicationDeadline)}
+                      </span>
+                      <span className="inline-flex items-center">
+                        <Users className="w-3.5 h-3.5 mr-1.5" />
+                        {job.applicationCount || job.applicants || 0} pelamar
+                      </span>
                     </div>
                     {(job.salaryMin || job.salaryMax) && (
                       <div className="font-bold text-primary text-sm">
