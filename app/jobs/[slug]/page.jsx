@@ -327,6 +327,14 @@ export default function JobDetailPage() {
                     <Briefcase className="w-4 h-4" />
                     {formatJobType(job.jobType)}
                   </span>
+                  {job.numberOfPositions && (
+                    <span className="px-4 py-2 bg-purple-50 text-purple-700 rounded-xl text-sm font-medium flex items-center gap-2 border border-purple-100">
+                      <Users className="w-4 h-4 text-purple-500" />
+                      {job.numberOfPositions} Posisi
+                      {(job.malePositions > 0 || job.femalePositions > 0) &&
+                        ` (${job.malePositions || 0} Pria, ${job.femalePositions || 0} Wanita)`}
+                    </span>
+                  )}
                   {job.salary && (
                     <span className="px-4 py-2 bg-green-50 text-green-700 rounded-xl text-sm font-medium flex items-center gap-2 border border-green-100">
                       <DollarSign className="w-4 h-4" />
@@ -632,6 +640,16 @@ export default function JobDetailPage() {
                     {job.applicationCount || 0} orang
                   </span>
                 </div>
+                {job.numberOfPositions && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500">Posisi Dibutuhkan</span>
+                    <span className="font-semibold text-slate-900">
+                      {job.numberOfPositions} orang
+                      {(job.malePositions > 0 || job.femalePositions > 0) &&
+                        ` (${job.malePositions || 0} Pria, ${job.femalePositions || 0} Wanita)`}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 

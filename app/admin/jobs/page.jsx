@@ -424,6 +424,9 @@ export default function AdminJobsPage() {
                             <Users className="w-4 h-4 flex-shrink-0" />
                             <span>
                               {job.numberOfPositions} Posisi{" "}
+                              {(job.malePositions > 0 || job.femalePositions > 0) && (
+                                <>({job.malePositions || 0}P/{job.femalePositions || 0}W) </>
+                              )}
                               {job.isDisabilityFriendly && "• Disabilitas"}
                             </span>
                           </div>

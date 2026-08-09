@@ -105,6 +105,8 @@ export async function POST(request) {
       // Additional
       benefits,
       numberOfPositions,
+      malePositions,
+      femalePositions,
       applicationDeadline,
       
       // Photo
@@ -164,6 +166,8 @@ export async function POST(request) {
         
         benefits: allBenefits,
         numberOfPositions: numberOfPositions ? parseInt(numberOfPositions) : 1,
+        malePositions: malePositions ? parseInt(malePositions) : 0,
+        femalePositions: femalePositions ? parseInt(femalePositions) : 0,
         
         minExperience: minExperience ? parseInt(minExperience) : null,
         maxExperience: maxExperience ? parseInt(maxExperience) : null,

@@ -547,7 +547,14 @@ export default function PostJobPage() {
                       type="number"
                       name="malePositions"
                       value={formData.malePositions}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData((prev) => ({
+                          ...prev,
+                          malePositions: val,
+                          numberOfPositions: (parseInt(val || 0) + parseInt(prev.femalePositions || 0))
+                        }));
+                      }}
                       min="0"
                       className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="0"
@@ -561,7 +568,14 @@ export default function PostJobPage() {
                       type="number"
                       name="femalePositions"
                       value={formData.femalePositions}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData((prev) => ({
+                          ...prev,
+                          femalePositions: val,
+                          numberOfPositions: (parseInt(prev.malePositions || 0) + parseInt(val || 0))
+                        }));
+                      }}
                       min="0"
                       className="w-full text-gray-900 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="0"

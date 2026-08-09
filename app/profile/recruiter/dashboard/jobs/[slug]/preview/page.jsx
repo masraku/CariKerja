@@ -220,6 +220,9 @@ export default function JobPreviewPage() {
                   <span className="flex items-center gap-1.5">
                     <Users className="w-4 h-4 text-slate-400" />
                     {job.numberOfPositions} posisi
+                    {(job.malePositions > 0 || job.femalePositions > 0) &&
+                      ` (${job.malePositions || 0}P/${job.femalePositions || 0}W)`
+                    }
                   </span>
                   {job.educationLevel && (
                     <span className="flex items-center gap-1.5">

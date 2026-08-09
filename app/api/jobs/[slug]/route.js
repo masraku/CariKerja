@@ -153,6 +153,8 @@ export async function GET(request, context) {
       salaryType: job.salaryType,
       benefits: job.benefits,
       numberOfPositions: job.numberOfPositions,
+      malePositions: job.malePositions,
+      femalePositions: job.femalePositions,
       minExperience: job.minExperience,
       maxExperience: job.maxExperience,
       educationLevel: job.educationLevel,

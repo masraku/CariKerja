@@ -49,6 +49,8 @@ export default function EditJobPage() {
     jobType: "",
     educationLevel: "",
     numberOfPositions: "1",
+    malePositions: "0",
+    femalePositions: "0",
     applicationDeadline: "",
     skills: [],
     isActive: true,
@@ -158,6 +160,8 @@ export default function EditJobPage() {
         jobType: job.jobType || "",
         educationLevel: job.educationLevel || "",
         numberOfPositions: job.numberOfPositions?.toString() || "1",
+        malePositions: job.malePositions?.toString() || "0",
+        femalePositions: job.femalePositions?.toString() || "0",
         applicationDeadline:
           isActivateMode && formattedDeadline < today
             ? ""
@@ -572,16 +576,48 @@ export default function EditJobPage() {
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Jumlah Posisi
+                    Jumlah Posisi Pria
                   </label>
                   <input
                     type="number"
-                    name="numberOfPositions"
-                    value={formData.numberOfPositions}
-                    onChange={handleInputChange}
-                    min="1"
+                    name="malePositions"
+                    value={formData.malePositions}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData(prev => ({
+                        ...prev,
+                        malePositions: val,
+                        numberOfPositions: (parseInt(val || 0) + parseInt(prev.femalePositions || 0)).toString()
+                      }));
+                    }}
+                    min="0"
                     className="w-full bg-gray-50 text-gray-900 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Jumlah Posisi Wanita
+                  </label>
+                  <input
+                    type="number"
+                    name="femalePositions"
+                    value={formData.femalePositions}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData(prev => ({
+                        ...prev,
+                        femalePositions: val,
+                        numberOfPositions: (parseInt(prev.malePositions || 0) + parseInt(val || 0)).toString()
+                      }));
+                    }}
+                    min="0"
+                    className="w-full bg-gray-50 text-gray-900 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <p className="text-sm text-blue-700">
+                    Total posisi: {(parseInt(formData.malePositions || 0) + parseInt(formData.femalePositions || 0))} orang
+                  </p>
                 </div>
 
                 <div>

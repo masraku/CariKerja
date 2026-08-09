@@ -154,6 +154,8 @@ export async function GET(request) {
             applicationCount: job._count.applications,
             viewCount: job.viewCount,
             numberOfPositions: job.numberOfPositions,
+            malePositions: job.malePositions,
+            femalePositions: job.femalePositions,
             applicationDeadline: job.applicationDeadline,
             createdAt: job.createdAt,
             updatedAt: job.updatedAt,

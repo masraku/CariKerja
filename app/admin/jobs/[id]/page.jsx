@@ -525,6 +525,11 @@ export default function AdminJobDetailPage() {
                     </p>
                     <p className="font-semibold text-gray-900">
                       {job.numberOfPositions} Orang
+                      {(job.malePositions > 0 || job.femalePositions > 0) && (
+                        <span className="text-sm font-normal text-gray-500 ml-1">
+                          ({job.malePositions || 0} Pria, {job.femalePositions || 0} Wanita)
+                        </span>
+                      )}
                     </p>
                   </div>
                 </div>

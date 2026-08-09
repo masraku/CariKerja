@@ -247,6 +247,14 @@ const JobsPage = () => {
               <Users className="w-3 h-3" />
               {job.applicants || 0} pelamar
             </span>
+            {job.numberOfPositions && (
+              <span className="flex items-center gap-1 bg-purple-50 text-purple-700 px-2 py-0.5 rounded-md font-medium border border-purple-100">
+                <Users className="w-3 h-3" />
+                {job.numberOfPositions} posisi
+                {(job.malePositions > 0 || job.femalePositions > 0) &&
+                  ` (${job.malePositions || 0}P/${job.femalePositions || 0}W)`}
+              </span>
+            )}
             {job.hasApplied && (
               <span className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-0.5 rounded-md font-medium border border-green-100">
                 <CheckCircle className="w-3 h-3" />
@@ -387,6 +395,14 @@ const JobsPage = () => {
             <Users className="w-4 h-4" />
             {job.applicants || 0} pelamar
           </span>
+          {job.numberOfPositions && (
+            <span className="flex items-center gap-2 text-purple-700 font-medium">
+              <Users className="w-4 h-4 text-purple-600" />
+              {job.numberOfPositions} posisi dibutuhkan
+              {(job.malePositions > 0 || job.femalePositions > 0) &&
+                ` (${job.malePositions || 0} Pria, ${job.femalePositions || 0} Wanita)`}
+            </span>
+          )}
           <span className="flex items-center gap-2">
             <CalendarDays className="w-4 h-4" />
             Ditutup {formatDeadline(job.applicationDeadline)}

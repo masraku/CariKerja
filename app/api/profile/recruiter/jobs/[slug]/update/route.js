@@ -61,6 +61,8 @@ export async function PUT(request, { params }) {
       jobType,
       educationLevel,
       numberOfPositions,
+      malePositions,
+      femalePositions,
       applicationDeadline,
       isActive,
       skills,
@@ -134,6 +136,8 @@ export async function PUT(request, { params }) {
         jobType,
         educationLevel: educationLevel || null,
         numberOfPositions: numberOfPositions ? parseInt(numberOfPositions) : 1,
+        malePositions: malePositions ? parseInt(malePositions) : 0,
+        femalePositions: femalePositions ? parseInt(femalePositions) : 0,
         applicationDeadline: applicationDeadline ? new Date(applicationDeadline) : null,
         isActive: false, // Set inactive until admin approves
         

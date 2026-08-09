@@ -237,6 +237,8 @@ model jobs {
   showSalary            Boolean         @default(true)
   benefits              String[]
   numberOfPositions     Int             @default(1)
+  malePositions         Int             @default(0)
+  femalePositions       Int             @default(0)
   minExperience         Int?
   maxExperience         Int?
   educationLevel        EducationLevel?

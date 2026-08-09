@@ -243,7 +243,10 @@ export async function GET(request) {
         holidays: job.holidays,
         isShift: job.isShift,
         shiftCount: job.shiftCount,
-        isDisabilityFriendly: job.isDisabilityFriendly
+        isDisabilityFriendly: job.isDisabilityFriendly,
+        numberOfPositions: job.numberOfPositions,
+        malePositions: job.malePositions,
+        femalePositions: job.femalePositions
       }
     }))
 
