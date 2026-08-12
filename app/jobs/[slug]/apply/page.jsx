@@ -26,7 +26,7 @@ export default function ApplyJobPage() {
   const params = useParams();
   const router = useRouter();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
-  const slug = params.slug;
+  const slug = params?.slug;
 
   const [job, setJob] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -48,11 +48,19 @@ export default function ApplyJobPage() {
     if (!isAuthenticated) {
       Swal.fire({
         icon: "info",
-        title: "Login Dibutuhkan",
-        text: "Silahkan login terlebih dahulu untuk melamar",
+        title: "Login Diperlukan",
+        text: "Silakan login terlebih dahulu untuk melamar pekerjaan",
+        showCancelButton: true,
+        confirmButtonText: "Login",
+        cancelButtonText: "Batal",
         confirmButtonColor: "#03587f",
-      }).then(() => {
-        router.push(`/login?redirect=/jobs/${slug}/apply`);
+        cancelButtonColor: "#6e7881",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          router.push(`/login?redirect=/jobs/${slug}/apply`);
+        } else {
+          router.push(`/jobs/${slug}`);
+        }
       });
       return;
     }
