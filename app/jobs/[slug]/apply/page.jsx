@@ -25,7 +25,7 @@ import { getSafeErrorMessage } from "@/lib/swalError";
 export default function ApplyJobPage() {
   const params = useParams();
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const slug = params.slug;
 
   const [job, setJob] = useState(null);
@@ -42,6 +42,9 @@ export default function ApplyJobPage() {
     `/api/profile/jobseeker/document?type=${type}`;
 
   useEffect(() => {
+    // Wait until auth check is complete before deciding
+    if (authLoading) return;
+
     if (!isAuthenticated) {
       Swal.fire({
         icon: "info",
@@ -67,7 +70,7 @@ export default function ApplyJobPage() {
     }
 
     fetchJobAndProfile();
-  }, [slug, isAuthenticated, user]);
+  }, [slug, isAuthenticated, user, authLoading]);
 
   const fetchJobAndProfile = async () => {
     try {
