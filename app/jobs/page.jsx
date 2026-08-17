@@ -32,13 +32,16 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryJobs } from "@/hooks/jobs/useJobs";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { getAllKecamatan } from "@/lib/cirebonData";
 
 const JobsPage = () => {
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(
     searchParams.get("search") || ""
   );
-  const [location, setLocation] = useState("");
+  const [location, setLocation] = useState(
+    searchParams.get("location") || ""
+  );
   const [showFilters, setShowFilters] = useState(false);
   const [savedJobs, setSavedJobs] = useState([]);
   const [sortBy, setSortBy] = useState("latest");
@@ -53,6 +56,8 @@ const JobsPage = () => {
     salary: "",
     category: [],
   });
+
+  const kecamatanList = useMemo(() => getAllKecamatan(), []);
 
   const jobTypes = ["FULL_TIME", "PART_TIME"];
   const experienceLevels = ["0-1 tahun", "1-3 tahun", "3-5 tahun", "5+ tahun"];
@@ -642,6 +647,37 @@ const JobsPage = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-white shadow-sm"
                   />
+                </div>
+                <div className="relative w-44 sm:w-52">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <select
+                    aria-label="Filter lokasi kecamatan"
+                    value={location}
+                    onChange={(e) => {
+                      setLocation(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full pl-9 pr-8 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-white shadow-sm text-sm appearance-none cursor-pointer text-slate-700"
+                  >
+                    <option value="">Semua Lokasi</option>
+                    {kecamatanList.map((kec) => (
+                      <option key={kec} value={kec}>
+                        Kec. {kec}
+                      </option>
+                    ))}
+                  </select>
+                  {location && (
+                    <button
+                      onClick={() => {
+                        setLocation("");
+                        setCurrentPage(1);
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                      aria-label="Hapus filter lokasi"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
                 <button
                   onClick={() => setShowFilters(!showFilters)}

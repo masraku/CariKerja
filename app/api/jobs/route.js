@@ -106,7 +106,8 @@ export async function GET(request) {
         OR: [
           { city: { contains: location, mode: 'insensitive' } },
           { location: { contains: location, mode: 'insensitive' } },
-          { province: { contains: location, mode: 'insensitive' } }
+          { province: { contains: location, mode: 'insensitive' } },
+          { kecamatan: { contains: location, mode: 'insensitive' } }
         ]
       })
     }
@@ -215,8 +216,8 @@ export async function GET(request) {
       company: job.companies.name,
       companyId: job.companies.id,
       logo: job.companies.logo || '🏢',
-        location: job.city,
-        fullLocation: `${job.city}, ${job.province}`,
+        location: job.kecamatan ? `Kec. ${job.kecamatan}, ${job.city}` : job.city,
+        fullLocation: job.kecamatan ? `Kec. ${job.kecamatan}, ${job.city}, ${job.province}` : `${job.city}, ${job.province}`,
         type: job.jobType,
         salary: job.showSalary && job.salaryMin && job.salaryMax
           ? `Rp ${job.salaryMin.toLocaleString('id-ID')} - ${job.salaryMax.toLocaleString('id-ID')}`
