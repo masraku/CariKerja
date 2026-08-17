@@ -172,12 +172,12 @@ export default function NewsDetailPage() {
       </div>
 
       {/* Featured Image */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
-        <div className="relative min-h-[260px] rounded-2xl overflow-hidden shadow-2xl shadow-slate-200/50 md:min-h-[420px]">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
+        <div className="relative aspect-video max-h-[480px] rounded-2xl overflow-hidden shadow-2xl shadow-slate-200/50">
           <NewsCoverImage
             src={news.image}
             alt={news.title}
-            sizes="(min-width: 1024px) 960px, 100vw"
+            sizes="(min-width: 1024px) 896px, 100vw"
             className="object-cover"
             priority
           />
