@@ -10,8 +10,10 @@ export default function ApiDocsPage() {
   useEffect(() => {
     // Create a script element for Redoc
     const script = document.createElement("script");
+    // Pin versi: bundle "latest" di CDN sekarang memakai import.meta
+    // sehingga gagal dimuat sebagai <script> biasa (window.Redoc undefined).
     script.src =
-      "https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js";
+      "https://cdn.redoc.ly/redoc/v2.5.2/bundles/redoc.standalone.js";
     script.async = true;
 
     script.onload = () => {
@@ -49,6 +51,8 @@ export default function ApiDocsPage() {
               container,
             );
             setIsLoaded(true);
+          } else {
+            setError("Redoc gagal diinisialisasi (window.Redoc tidak ditemukan)");
           }
         }, 100);
       } catch (err) {
