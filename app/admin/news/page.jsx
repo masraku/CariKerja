@@ -556,7 +556,7 @@ export default function AdminNewsPage() {
                         <div className="flex gap-4">
                           <div className="flex-shrink-0 w-24 h-16 rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
                             {item.image ? (
-                              <img
+                              <img loading="lazy" decoding="async"
                                 src={item.image}
                                 alt=""
                                 className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
@@ -665,7 +665,7 @@ export default function AdminNewsPage() {
               >
                 <div className="relative aspect-video bg-gray-100 overflow-hidden">
                   {item.image ? (
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={item.image}
                       alt={item.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -765,7 +765,7 @@ export default function AdminNewsPage() {
                 <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 hover:border-[#03587f]/50 transition-colors bg-gray-50/50">
                   {formData.image ? (
                     <div className="relative group">
-                      <img
+                      <img loading="lazy" decoding="async"
                         src={formData.image}
                         alt="Preview"
                         className="w-full h-48 sm:h-64 object-cover rounded-lg shadow-sm"

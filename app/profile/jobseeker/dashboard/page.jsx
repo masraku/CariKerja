@@ -188,7 +188,7 @@ const JobseekerDashboard = () => {
               <div className="relative group">
                 <div className="w-20 h-20 md:w-24 md:h-24 bg-white p-1 rounded-full shadow-lg">
                   {profile?.photo ? (
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={profile.photo}
                       alt={profile.firstName}
                       className="w-full h-full object-cover rounded-full"
@@ -333,7 +333,7 @@ const JobseekerDashboard = () => {
                     <div className="flex items-start gap-4">
                       <div className="w-14 h-14 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden shrink-0">
                         {app.jobs.companies.logo ? (
-                          <img
+                          <img loading="lazy" decoding="async"
                             src={app.jobs.companies.logo}
                             alt={app.jobs.companies.name}
                             className="w-full h-full object-cover"

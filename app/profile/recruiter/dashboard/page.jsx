@@ -129,7 +129,7 @@ export default function RecruiterDashboard() {
             <div className="flex gap-6">
               <div className="w-24 h-24 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-2xl flex items-center justify-center text-white text-4xl overflow-hidden shadow-lg shadow-blue-500/20">
                 {company.logo ? (
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={company.logo}
                     alt={company.name}
                     className="w-full h-full object-cover"
@@ -375,7 +375,7 @@ export default function RecruiterDashboard() {
 
               <button
                 onClick={() =>
-                  router.push("/profile/recruiter/dashboard/resignations")
+                  router.push("/profile/recruiter/dashboard/hired")
                 }
                 className="p-4 bg-white border border-gray-200 rounded-2xl hover:border-orange-400 hover:shadow-md transition-all group text-left relative overflow-hidden"
               >
@@ -385,9 +385,9 @@ export default function RecruiterDashboard() {
                 <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 mb-3 group-hover:scale-110 transition-transform">
                   <LogOut className="w-5 h-5" />
                 </div>
-                <h3 className="font-bold text-gray-900">Pengajuan Resign</h3>
+                <h3 className="font-bold text-gray-900">Kontrak Pekerja</h3>
                 <p className="text-sm text-gray-500 mt-1">
-                  Kelola pengunduran diri
+                  Kelola kontrak &amp; pemberhentian
                 </p>
               </button>
             </div>
@@ -485,8 +485,9 @@ export default function RecruiterDashboard() {
                       <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
                           {app.jobseekers.photo ? (
-                            <img
+                            <img loading="lazy" decoding="async"
                               src={app.jobseekers.photo}
+                              alt=""
                               className="w-full h-full object-cover"
                             />
                           ) : (

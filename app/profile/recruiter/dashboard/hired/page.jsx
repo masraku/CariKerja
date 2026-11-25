@@ -524,7 +524,7 @@ export default function ContractRegistrationPage() {
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white font-bold overflow-hidden flex-shrink-0">
                           {applicant.jobseekers?.photo ? (
-                            <img
+                            <img loading="lazy" decoding="async"
                               src={applicant.jobseekers.photo}
                               alt={applicant.jobseekers?.firstName}
                               className="w-full h-full object-cover"
@@ -697,7 +697,7 @@ export default function ContractRegistrationPage() {
                           >
                             <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500 overflow-hidden">
                               {worker.jobseekers?.photo ? (
-                                <img
+                                <img loading="lazy" decoding="async"
                                   src={worker.jobseekers.photo}
                                   className="w-full h-full object-cover"
                                   alt=""
@@ -863,8 +863,9 @@ export default function ContractRegistrationPage() {
                           >
                             <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500 overflow-hidden">
                               {worker.jobseekers?.photo ? (
-                                <img
+                                <img loading="lazy" decoding="async"
                                   src={worker.jobseekers.photo}
+                                  alt=""
                                   className="w-full h-full object-cover"
                                 />
                               ) : (
@@ -1083,7 +1084,7 @@ export default function ContractRegistrationPage() {
                     <div className="bg-white rounded-xl shadow-sm p-8 text-center mt-4">
                       <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                       <p className="text-gray-600">
-                        Tidak ada hasil untuk "{searchQuery}"
+                        Tidak ada hasil untuk &quot;{searchQuery}&quot;
                       </p>
                     </div>
                   )}
@@ -1427,7 +1428,7 @@ export default function ContractRegistrationPage() {
                 />
               ) : (
                 <div className="flex items-center justify-center">
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={previewDocUrl}
                     alt="Preview Dokumen"
                     className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"
@@ -1476,7 +1477,7 @@ export default function ContractRegistrationPage() {
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-xl font-bold text-gray-600 overflow-hidden">
                   {selectedWorkerDetail.worker.jobseekers?.photo ? (
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={selectedWorkerDetail.worker.jobseekers.photo}
                       className="w-full h-full object-cover"
                       alt=""
@@ -1813,7 +1814,7 @@ export default function ContractRegistrationPage() {
                           <div className="flex items-center gap-3 flex-1">
                             <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-sm font-bold text-gray-600 overflow-hidden flex-shrink-0">
                               {worker.jobseekers?.photo ? (
-                                <img
+                                <img loading="lazy" decoding="async"
                                   src={worker.jobseekers.photo}
                                   className="w-full h-full object-cover"
                                   alt=""

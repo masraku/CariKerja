@@ -31,7 +31,8 @@ const Header = () => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
-    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -146,7 +147,7 @@ const Header = () => {
                 >
                   <div className="w-full h-full rounded-full bg-gradient-to-br from-primary to-primary-hover flex items-center justify-center text-primary-foreground font-bold shadow-sm overflow-hidden">
                     {profileImage ? (
-                      <img
+                      <img loading="lazy" decoding="async"
                         src={profileImage}
                         alt={profileName || "Profil pengguna"}
                         className="w-full h-full object-cover"
@@ -214,14 +215,16 @@ const Header = () => {
                         </Link>
                       )}
 
-                      <Link
-                        href="/settings"
-                        className="flex items-center gap-3 px-3 py-2.5 text-sm text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-colors"
-                        onClick={() => setIsProfileOpen(false)}
-                      >
-                        <Settings className="w-4 h-4" />
-                        Pengaturan
-                      </Link>
+                      {user.role === "ADMIN" && (
+                        <Link
+                          href="/admin/settings"
+                          className="flex items-center gap-3 px-3 py-2.5 text-sm text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-colors"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          <Settings className="w-4 h-4" />
+                          Pengaturan
+                        </Link>
+                      )}
                     </div>
 
                     <div className="p-2 border-t border-slate-50">
@@ -309,7 +312,7 @@ const Header = () => {
                 <div className="px-4 py-2 flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden">
                     {profileImage ? (
-                      <img
+                      <img loading="lazy" decoding="async"
                         src={profileImage}
                         alt={profileName || "Profil pengguna"}
                         className="w-full h-full object-cover"

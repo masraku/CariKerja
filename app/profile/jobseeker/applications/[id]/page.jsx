@@ -54,6 +54,8 @@ export default function ApplicationDetailPage() {
     if (params.id) {
       loadApplicationDetail();
     }
+    // Sengaja: hanya dimuat ulang saat nilai di deps berubah.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id]);
 
   const loadApplicationDetail = async () => {
@@ -130,6 +132,8 @@ export default function ApplicationDetailPage() {
       window.removeEventListener("pageshow", refreshApplication);
       window.removeEventListener("focus", refreshApplication);
     };
+    // Sengaja: hanya dimuat ulang saat nilai di deps berubah.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id]);
 
   const handleRequestReschedule = async () => {
@@ -579,7 +583,7 @@ export default function ApplicationDetailPage() {
                 {/* Company Logo */}
                 <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                   {application.jobs?.companies?.logo ? (
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={application.jobs.companies.logo}
                       alt={application.jobs.companies.name}
                       className="w-full h-full object-cover"
@@ -669,8 +673,8 @@ export default function ApplicationDetailPage() {
                             🎉 Selamat! Anda Diterima Bekerja
                           </p>
                           <p className="text-sm text-green-600">
-                            Status Anda telah otomatis diperbarui menjadi "Sudah
-                            Bekerja"
+                            Status Anda telah otomatis diperbarui menjadi &quot;Sudah
+                            Bekerja&quot;
                           </p>
                           {application.respondedAt && (
                             <p className="text-xs text-green-500 mt-1">

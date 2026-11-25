@@ -4,9 +4,10 @@ import axios from "axios";
 // ============ HOMEPAGE STATS ============
 const queryKeyHomepageStats = ["homepageStats"];
 
-export function useQueryHomepageStats() {
+export function useQueryHomepageStats(initialData) {
     return useQuery({
         queryKey: queryKeyHomepageStats,
+        initialData,
         queryFn: async () => {
             const { data } = await axios.get("/api/homepage/stats");
 
@@ -21,9 +22,10 @@ export function useQueryHomepageStats() {
 // ============ FEATURED JOBS ============
 const queryKeyFeaturedJobs = ["featuredJobs"];
 
-export function useQueryFeaturedJobs(limit = 6) {
+export function useQueryFeaturedJobs(limit = 6, initialData) {
     return useQuery({
         queryKey: [...queryKeyFeaturedJobs, limit],
+        initialData,
         queryFn: async () => {
             const { data } = await axios.get("/api/homepage/featured-jobs", {
                 params: { limit },
@@ -41,9 +43,10 @@ export function useQueryFeaturedJobs(limit = 6) {
 // ============ TOP COMPANIES ============
 const queryKeyTopCompanies = ["topCompanies"];
 
-export function useQueryTopCompanies(limit = 6) {
+export function useQueryTopCompanies(limit = 6, initialData) {
     return useQuery({
         queryKey: [...queryKeyTopCompanies, limit],
+        initialData,
         queryFn: async () => {
             const { data } = await axios.get("/api/homepage/top-companies", {
                 params: { limit },
@@ -58,10 +61,12 @@ export function useQueryTopCompanies(limit = 6) {
 }
 
 // ============ COMBINED HOOK FOR LANDING PAGE ============
-export function useHomepageData() {
-    const statsQuery = useQueryHomepageStats();
-    const featuredJobsQuery = useQueryFeaturedJobs(6);
-    const topCompaniesQuery = useQueryTopCompanies(6);
+// initialData berasal dari server (app/page.jsx) agar konten tampil tanpa
+// menunggu request API; React Query tetap memperbarui data di background.
+export function useHomepageData(initialData = {}) {
+    const statsQuery = useQueryHomepageStats(initialData.stats);
+    const featuredJobsQuery = useQueryFeaturedJobs(6, initialData.featuredJobs);
+    const topCompaniesQuery = useQueryTopCompanies(6, initialData.topCompanies);
 
     const isLoading = statsQuery.isPending || featuredJobsQuery.isPending || topCompaniesQuery.isPending;
     const isError = statsQuery.isError || featuredJobsQuery.isError || topCompaniesQuery.isError;

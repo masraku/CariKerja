@@ -38,6 +38,8 @@ export default function CompanyDetailPage() {
     if (params.id) {
       loadCompanyDetail();
     }
+    // Sengaja: hanya dimuat ulang saat nilai di deps berubah.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id]);
 
   const loadCompanyDetail = async () => {
@@ -193,7 +195,7 @@ export default function CompanyDetailPage() {
             {/* Logo */}
             <div className="w-20 h-20 rounded-2xl bg-white shadow-lg flex items-center justify-center overflow-hidden flex-shrink-0">
               {company.logo ? (
-                <img
+                <img loading="lazy" decoding="async"
                   src={company.logo}
                   alt={company.name}
                   className="w-full h-full object-cover"
@@ -374,7 +376,7 @@ export default function CompanyDetailPage() {
                     rel="noopener noreferrer"
                     className="aspect-square rounded-xl overflow-hidden bg-slate-100 hover:opacity-90 transition group"
                   >
-                    <img
+                    <img decoding="async"
                       src={photo}
                       alt={`Gallery ${idx + 1}`}
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-300"

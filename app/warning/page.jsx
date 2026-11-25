@@ -671,11 +671,11 @@ const WarningPage = () => {
               Hubungi Support
             </Link>
             <Link
-              href="/help"
+              href="/about"
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
             >
               <Info className="h-5 w-5" />
-              Pusat Bantuan
+              Tentang Disnaker
             </Link>
           </div>
         </section>

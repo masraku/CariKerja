@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useHomepageData } from "@/hooks/homepage/useHomepage";
 
-export default function LandingPage() {
+export default function LandingPage({ initialData }) {
   const router = useRouter();
   const [searchKeyword, setSearchKeyword] = useState("");
 
@@ -32,7 +32,7 @@ export default function LandingPage() {
     isLoadingStats,
     isLoadingJobs,
     isLoadingCompanies,
-  } = useHomepageData();
+  } = useHomepageData(initialData);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -229,7 +229,7 @@ export default function LandingPage() {
                   <div className="flex items-start justify-between mb-6">
                     <div className="w-14 h-14 rounded-xl bg-white border border-gray-100 flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform shadow-sm">
                       {job.companies?.logo ? (
-                        <img
+                        <img loading="lazy" decoding="async"
                           src={job.companies.logo}
                           alt=""
                           className="w-full h-full object-cover"
@@ -326,7 +326,7 @@ export default function LandingPage() {
                   >
                     <div className="flex max-w-full flex-col items-center justify-center text-center">
                       {company.logo ? (
-                        <img
+                        <img loading="lazy" decoding="async"
                           src={company.logo}
                           alt={company.name}
                           className="max-h-12 sm:max-h-14 lg:max-h-16 w-auto max-w-[150px] sm:max-w-[180px] object-contain transition-transform duration-300 group-hover:scale-105"

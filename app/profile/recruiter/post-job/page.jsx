@@ -936,7 +936,7 @@ export default function PostJobPage() {
                       key={index}
                       className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group"
                     >
-                      <img
+                      <img loading="lazy" decoding="async"
                         src={photo}
                         alt={`Job Photo ${index + 1}`}
                         className="w-full h-full object-cover"
@@ -1081,7 +1081,7 @@ export default function PostJobPage() {
                       </div>
                       <div className="text-sm text-gray-600">
                         Jika tidak dicentang, gaji akan ditampilkan sebagai
-                        "Negotiable"
+                        &quot;Negotiable&quot;
                       </div>
                     </div>
                   </label>
@@ -1434,7 +1434,7 @@ export default function PostJobPage() {
                 {/* Job Photo Preview */}
                 {formData.jobPhoto && (
                   <div className="w-full h-48 bg-gray-100">
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={formData.jobPhoto}
                       alt="Job Photo"
                       className="w-full h-full object-cover"
@@ -1446,7 +1446,7 @@ export default function PostJobPage() {
                   <div className="flex items-start gap-4 mb-4">
                     <div className="w-16 h-16 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-xl flex items-center justify-center text-2xl overflow-hidden">
                       {companyProfile?.logo ? (
-                        <img
+                        <img loading="lazy" decoding="async"
                           src={companyProfile.logo}
                           alt="Logo"
                           className="w-full h-full object-cover"

@@ -87,6 +87,8 @@ export default function EditJobPage() {
   useEffect(() => {
     loadJob();
     loadCompanyProfile();
+    // Sengaja: hanya dimuat ulang saat nilai di deps berubah.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.slug]);
 
   const loadCompanyProfile = async () => {
@@ -687,7 +689,7 @@ export default function EditJobPage() {
                 <div className="border-2 border-dashed border-gray-200 rounded-2xl p-4 transition-all hover:border-blue-400 hover:bg-blue-50/10 group">
                   {formData.jobPhoto ? (
                     <div className="relative aspect-video w-full max-w-md mx-auto rounded-xl overflow-hidden shadow-sm">
-                      <img
+                      <img loading="lazy" decoding="async"
                         src={formData.jobPhoto}
                         alt="Job Thumbnail"
                         className="w-full h-full object-cover"
@@ -739,7 +741,7 @@ export default function EditJobPage() {
                       key={index}
                       className="relative aspect-square rounded-xl overflow-hidden group shadow-sm bg-gray-100"
                     >
-                      <img
+                      <img loading="lazy" decoding="async"
                         src={photo}
                         alt={`Gallery ${index}`}
                         className="w-full h-full object-cover"

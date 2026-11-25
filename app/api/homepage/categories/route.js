@@ -37,18 +37,17 @@ export async function GET(request) {
         }
 
         // Get all currently open public jobs grouped by category
-        const jobs = await prisma.jobs.findMany({
+        const grouped = await prisma.jobs.groupBy({
+            by: ['category'],
             where: publicActiveJobWhere(new Date()),
-            select: {
-                category: true
-            }
+            _count: { _all: true }
         })
 
         // Count jobs per category
         const categoryCounts = {}
-        jobs.forEach(job => {
-            const category = job.category || 'Other'
-            categoryCounts[category] = (categoryCounts[category] || 0) + 1
+        grouped.forEach(row => {
+            const category = row.category || 'Other'
+            categoryCounts[category] = (categoryCounts[category] || 0) + row._count._all
         })
 
         // Transform to array and sort by count

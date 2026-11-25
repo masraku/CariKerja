@@ -463,7 +463,7 @@ export default function JobseekerInterviewsPage() {
                     <div className="flex-shrink-0">
                       <div className="w-16 h-16 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-xl flex items-center justify-center text-3xl overflow-hidden">
                         {interview.jobs?.company?.logo ? (
-                          <img
+                          <img loading="lazy" decoding="async"
                             src={interview.jobs.company.logo}
                             alt={interview.jobs.company.name}
                             className="w-full h-full object-cover"
@@ -582,7 +582,7 @@ export default function JobseekerInterviewsPage() {
                       <div className="flex-shrink-0">
                         <div className="w-16 h-16 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-xl flex items-center justify-center text-3xl overflow-hidden">
                           {interview.jobs?.company?.logo ? (
-                            <img
+                            <img loading="lazy" decoding="async"
                               src={interview.jobs.company.logo}
                               alt={interview.jobs.company.name}
                               className="w-full h-full object-cover"
@@ -654,7 +654,7 @@ export default function JobseekerInterviewsPage() {
                       <div className="flex-shrink-0">
                         <div className="w-16 h-16 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-xl flex items-center justify-center text-3xl overflow-hidden">
                           {interview.jobs?.company?.logo ? (
-                            <img
+                            <img loading="lazy" decoding="async"
                               src={interview.jobs.company.logo}
                               alt={interview.jobs.company.name}
                               className="w-full h-full object-cover"
@@ -758,7 +758,7 @@ export default function JobseekerInterviewsPage() {
                       <div className="flex-shrink-0">
                         <div className="w-16 h-16 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-xl flex items-center justify-center text-3xl overflow-hidden">
                           {interview.jobs?.company?.logo ? (
-                            <img
+                            <img loading="lazy" decoding="async"
                               src={interview.jobs.company.logo}
                               alt={interview.jobs.company.name}
                               className="w-full h-full object-cover"
@@ -843,7 +843,7 @@ export default function JobseekerInterviewsPage() {
                         <div className="flex-shrink-0">
                           <div className="w-16 h-16 bg-gray-300 rounded-xl flex items-center justify-center text-3xl overflow-hidden grayscale">
                             {interview.jobs?.company?.logo ? (
-                              <img
+                              <img loading="lazy" decoding="async"
                                 src={interview.jobs.company.logo}
                                 alt={interview.jobs.company.name}
                                 className="w-full h-full object-cover"

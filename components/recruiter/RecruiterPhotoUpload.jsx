@@ -102,7 +102,7 @@ export default function RecruiterPhotoUpload({
       <div className="relative">
         {preview ? (
           <div className="relative group">
-            <img
+            <img loading="lazy" decoding="async"
               src={preview}
               alt="Profile"
               className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"

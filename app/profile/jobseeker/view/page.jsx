@@ -245,7 +245,7 @@ const ViewProfilePage = () => {
                 <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2">
                   <div className="w-24 h-24 rounded-2xl border-4 border-white bg-white shadow-lg overflow-hidden">
                     {profile.photo ? (
-                      <img
+                      <img loading="lazy" decoding="async"
                         src={profile.photo}
                         alt="Profile"
                         className="w-full h-full object-cover"
@@ -546,7 +546,7 @@ const ViewProfilePage = () => {
                   )}
                 </div>
               ) : previewModal.fileType === "image" ? (
-                <img
+                <img loading="lazy" decoding="async"
                   src={previewModal.url}
                   alt={previewModal.fileName}
                   className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"

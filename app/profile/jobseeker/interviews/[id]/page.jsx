@@ -30,6 +30,8 @@ export default function JobseekerInterviewDetailPage() {
 
   useEffect(() => {
     loadInterviewDetails();
+    // Sengaja: hanya dimuat ulang saat nilai di deps berubah.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id]);
 
   useEffect(() => {
@@ -424,7 +426,7 @@ export default function JobseekerInterviewDetailPage() {
               <div className="border-t border-gray-200 pt-4">
                 <div className="flex items-start gap-3">
                   {interview.company.logo ? (
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={interview.company.logo}
                       alt={interview.company.name}
                       className="w-16 h-16 object-cover rounded"

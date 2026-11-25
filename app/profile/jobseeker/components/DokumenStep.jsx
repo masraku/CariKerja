@@ -285,7 +285,7 @@ export default function DokumenStep({
             {/* Modal Content */}
             <div className="p-4 overflow-auto max-h-[calc(90vh-80px)] flex items-center justify-center bg-gray-100">
               {previewModal.fileType === "image" ? (
-                <img
+                <img loading="lazy" decoding="async"
                   src={previewModal.url}
                   alt={previewModal.fileName}
                   className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"

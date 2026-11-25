@@ -11,20 +11,20 @@ import {
   CheckCircle,
   TrendingUp,
 } from "lucide-react";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-} from "recharts";
+import dynamic from "next/dynamic";
 import { useQueryAdminStats, useQueryAdminChartStats } from "@/hooks/admin/useAdmin";
+
+const ChartSkeleton = () => (
+  <div className="h-full w-full rounded-xl bg-slate-100 animate-pulse" />
+);
+const MonthlyJobsChart = dynamic(
+  () => import("@/components/admin/DashboardCharts").then((m) => m.MonthlyJobsChart),
+  { ssr: false, loading: ChartSkeleton },
+);
+const EmploymentPieChart = dynamic(
+  () => import("@/components/admin/DashboardCharts").then((m) => m.EmploymentPieChart),
+  { ssr: false, loading: ChartSkeleton },
+);
 
 export default function AdminDashboard() {
   // Menggunakan Custom Hooks untuk ambil data nya
@@ -203,39 +203,7 @@ export default function AdminDashboard() {
                 </div>
               ) : (
                 chartData?.monthlyJobs && (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={chartData.monthlyJobs}
-                      margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                      <XAxis
-                        dataKey="month"
-                        tick={{ fontSize: 12, fill: "#64748b" }}
-                        axisLine={{ stroke: "#e2e8f0" }}
-                      />
-                      <YAxis
-                        tick={{ fontSize: 12, fill: "#64748b" }}
-                        axisLine={{ stroke: "#e2e8f0" }}
-                        allowDecimals={false}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "#1e293b",
-                          border: "none",
-                          borderRadius: "8px",
-                          color: "#fff",
-                        }}
-                        formatter={(value) => [`${value} lowongan`, "Jumlah"]}
-                      />
-                      <Bar
-                        dataKey="count"
-                        fill="#3b82f6"
-                        radius={[6, 6, 0, 0]}
-                        name="Lowongan"
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  <MonthlyJobsChart chartData={chartData} />
                 )
               )}
             </div>
@@ -256,39 +224,10 @@ export default function AdminDashboard() {
                 </div>
               ) : (
                 chartData?.employment && (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={employmentPieData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={90}
-                        paddingAngle={5}
-                        dataKey="value"
-                        label={({ name, percent }) =>
-                          `${(percent * 100).toFixed(0)}%`
-                        }
-                        labelLine={false}
-                      >
-                        {employmentPieData.map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={COLORS[index % COLORS.length]}
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "#1e293b",
-                          border: "none",
-                          borderRadius: "8px",
-                          color: "#fff",
-                        }}
-                        formatter={(value) => [`${value} orang`, ""]}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+                  <EmploymentPieChart
+                    employmentPieData={employmentPieData}
+                    COLORS={COLORS}
+                  />
                 )
               )}
             </div>

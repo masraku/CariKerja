@@ -59,6 +59,8 @@ export default function AuditLogsPage() {
 
   useEffect(() => {
     fetchLogs();
+    // Sengaja: hanya dimuat ulang saat nilai di deps berubah.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleFilter = () => {

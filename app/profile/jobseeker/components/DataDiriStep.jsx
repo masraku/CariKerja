@@ -57,7 +57,7 @@ export default function DataDiriStep({
         <div className="relative group">
           <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center overflow-hidden border-4 border-white shadow-xl">
             {formData.photoPreview || formData.photo ? (
-              <img
+              <img loading="lazy" decoding="async"
                 src={formData.photoPreview || formData.photo}
                 alt="Profile"
                 className="w-full h-full object-cover"

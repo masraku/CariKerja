@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import api from "@/lib/api";
@@ -32,6 +32,23 @@ import {
 import Swal from "sweetalert2";
 import { getSafeErrorMessage } from "@/lib/swalError";
 
+// Batasi jumlah request AI yang berjalan bersamaan agar layanan matching
+// tidak dibanjiri saat lowongan punya banyak pelamar.
+const AI_MATCH_CONCURRENCY = 4;
+
+async function runWithConcurrency(items, limit, worker) {
+  let index = 0;
+  const next = async () => {
+    while (index < items.length) {
+      const item = items[index++];
+      await worker(item);
+    }
+  };
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, next),
+  );
+}
+
 export default function JobDetailPage() {
   const router = useRouter();
   const params = useParams();
@@ -60,21 +77,27 @@ export default function JobDetailPage() {
     title: "",
   });
   const [aiRecommendations, setAiRecommendations] = useState({});
-  const [loadingAI, setLoadingAI] = useState({});
   const [applicantModal, setApplicantModal] = useState({
     isOpen: false,
     application: null,
   });
   const itemsPerPage = 10;
+  // ID lamaran yang sudah/sedang dinilai AI, supaya reload daftar lamaran
+  // (mis. setelah ubah status) tidak memicu ulang semua request AI.
+  const aiRequestedRef = useRef(new Set());
 
 
 
   useEffect(() => {
     loadApplications();
+    // Sengaja: hanya dimuat ulang saat nilai di deps berubah.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     filterApplications();
+    // Sengaja: hanya dimuat ulang saat nilai di deps berubah.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applications, searchQuery, statusFilter, aiRecommendations]);
 
   useEffect(() => {
@@ -113,22 +136,21 @@ export default function JobDetailPage() {
 
   // Fetch AI recommendations for applications
   useEffect(() => {
-    if (applications.length > 0 && job) {
-      // Clear old recommendations to force refetch with latest job skills
-      setAiRecommendations({});
+    if (!job || applications.length === 0) return;
 
-      applications.forEach((app) => {
-        if (app.jobseekers?.cvUrl && !loadingAI[app.id]) {
-          fetchAIRecommendation(app);
-        }
-      });
-    }
+    const pending = applications.filter(
+      (app) => app.jobseekers?.cvUrl && !aiRequestedRef.current.has(app.id),
+    );
+    if (pending.length === 0) return;
+
+    pending.forEach((app) => aiRequestedRef.current.add(app.id));
+    runWithConcurrency(pending, AI_MATCH_CONCURRENCY, fetchAIRecommendation);
+    // fetchAIRecommendation hanya membaca `job`, yang sudah ada di deps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applications, job]);
 
   const fetchAIRecommendation = async (application) => {
     try {
-      setLoadingAI((prev) => ({ ...prev, [application.id]: true }));
-
       // Use internal API route to avoid CORS issues
       const response = await api.post(
         "/api/profile/recruiter/jobs/ai-match",
@@ -161,8 +183,8 @@ export default function JobDetailPage() {
         },
       }));
     } catch (error) {
-    } finally {
-      setLoadingAI((prev) => ({ ...prev, [application.id]: false }));
+      // Gagal dinilai: izinkan dicoba lagi saat daftar lamaran dimuat ulang.
+      aiRequestedRef.current.delete(application.id);
     }
   };
 
@@ -1129,7 +1151,7 @@ export default function JobDetailPage() {
             <div className="relative">
               <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#03587f] to-[#024666] flex items-center justify-center text-white text-lg font-semibold overflow-hidden">
                 {application.jobseekers?.photo ? (
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={application.jobseekers.photo}
                     alt={application.jobseekers.firstName}
                     className="w-full h-full object-cover"
@@ -1344,7 +1366,7 @@ export default function JobDetailPage() {
                 Alasan Reschedule:
               </p>
               <p className="text-xs text-amber-700 italic">
-                "{application.rescheduleReason}"
+                &quot;{application.rescheduleReason}&quot;
               </p>
             </div>
           )}
@@ -1975,7 +1997,7 @@ export default function JobDetailPage() {
             <div className="mt-4 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
               <p className="text-sm text-indigo-700">
                 <span className="font-semibold">Mode Pilih Aktif</span> - Klik
-                checkbox pada kandidat berstatus "Reviewing" untuk memilih
+                checkbox pada kandidat berstatus &quot;Reviewing&quot; untuk memilih
                 beberapa kandidat sekaligus untuk interview bersama.
                 {selectedApplications.length > 0 && (
                   <span className="ml-2 font-bold">
@@ -2314,7 +2336,7 @@ export default function JobDetailPage() {
               {documentModal.url && (
                 <>
                   {documentModal.url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={documentModal.url}
                       alt={documentModal.title}
                       className="max-w-full h-auto mx-auto rounded-lg"
@@ -2374,7 +2396,7 @@ export default function JobDetailPage() {
               <div className="flex items-start gap-4 mb-6">
                 <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-[#03587f] to-[#024666] flex items-center justify-center text-white text-2xl font-bold overflow-hidden flex-shrink-0">
                   {applicantModal.application.jobseekers?.photo ? (
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={applicantModal.application.jobseekers.photo}
                       alt=""
                       className="w-full h-full object-cover"

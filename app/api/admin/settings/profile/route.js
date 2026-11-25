@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf';
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/authHelper";
 import { adminLimiter, getIP, rateLimitResponse } from "@/lib/rateLimit";
@@ -6,6 +7,8 @@ import { adminLimiter, getIP, rateLimitResponse } from "@/lib/rateLimit";
 // PUT - Update admin profile
 export async function PUT(request) {
   try {
+    if (!validateCSRFToken(request)) return csrfErrorResponse();
+
     // Rate limiting
     const ip = getIP(request);
     const { success } = await adminLimiter.limit(ip);
