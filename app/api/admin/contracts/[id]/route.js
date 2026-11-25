@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
 import { prisma } from '@/lib/prisma'
 import { createErrorResponse } from '@/lib/errorHandler'
 import { requireAdmin } from '@/lib/authHelper'
@@ -94,6 +95,8 @@ export async function GET(request, { params }) {
 // PATCH /api/admin/contracts/[id] - Approve or reject contract registration
 export async function PATCH(request, { params }) {
   try {
+    if (!validateCSRFToken(request)) return csrfErrorResponse()
+
     const auth = await requireAdmin(request)
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status })

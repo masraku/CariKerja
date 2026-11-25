@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf';
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/authHelper";
 import { authLimiter, getIP, rateLimitResponse } from "@/lib/rateLimit";
@@ -8,6 +9,8 @@ import { changePasswordSchema } from "@/lib/validations/auth";
 // PUT - Change admin password
 export async function PUT(request) {
   try {
+    if (!validateCSRFToken(request)) return csrfErrorResponse();
+
     // Use auth limiter (more restrictive for password changes)
     const ip = getIP(request);
     const { success } = await authLimiter.limit(ip);

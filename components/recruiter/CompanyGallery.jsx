@@ -125,7 +125,7 @@ export default function CompanyGallery({
         {/* Existing Photos */}
         {gallery.map((photoUrl) => (
           <div key={photoUrl} className="relative group aspect-square">
-            <img
+            <img loading="lazy" decoding="async"
               src={photoUrl}
               alt="Gallery"
               className="w-full h-full object-cover rounded-lg border border-gray-200"

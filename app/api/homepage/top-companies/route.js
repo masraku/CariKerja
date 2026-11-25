@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { publicLimiter, getIP, rateLimitResponse } from '@/lib/rateLimit'
-import { openApplicationDeadlineWhere } from '@/lib/jobs/publicFilters'
+import { getTopCompanies, clampLimit } from '@/lib/homepage'
 
 export async function GET(request) {
     try {
@@ -13,64 +12,8 @@ export async function GET(request) {
         }
 
         const { searchParams } = new URL(request.url)
-        const limit = parseInt(searchParams.get('limit') || '8')
-
-        const openDeadlineWhere = openApplicationDeadlineWhere(new Date())
-
-        // Get verified companies, sorted by job count
-        const companies = await prisma.companies.findMany({
-            where: {
-                verified: true,
-                status: 'VERIFIED'
-            },
-            take: limit,
-            include: {
-                jobs: {
-                    where: {
-                        status: 'ACTIVE',
-                        isActive: true,
-                        publishedAt: { not: null },
-                        ...openDeadlineWhere
-                    },
-                    take: 3,
-                    orderBy: {
-                        createdAt: 'desc'
-                    },
-                    select: {
-                        id: true,
-                        title: true,
-                        slug: true,
-                        location: true,
-                        jobType: true,
-                        applicationDeadline: true,
-                        _count: {
-                            select: {
-                                applications: true
-                            }
-                        }
-                    }
-                },
-            },
-            orderBy: {
-                jobs: {
-                    _count: 'desc'
-                }
-            }
-        })
-
-        // Transform data
-        const topCompanies = companies.map(company => ({
-            id: company.id,
-            name: company.name,
-            slug: company.slug,
-            logo: company.logo,
-            description: company.description,
-            city: company.city,
-            province: company.province,
-            industry: company.industry,
-            totalJobsCount: company.jobs.length,
-            latestJobs: company.jobs
-        }))
+        const limit = clampLimit(searchParams.get('limit'), 8)
+        const topCompanies = await getTopCompanies(limit)
 
         return NextResponse.json({
             success: true,

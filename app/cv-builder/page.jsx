@@ -1046,7 +1046,7 @@ export default function CVBuilderPage() {
                     <Button type="submit">Tambah</Button>
                   </form>
                   <p className="text-slate-400 text-[10px] italic">
-                    Ketik keahlian Anda satu per satu lalu klik tombol "Tambah" atau tekan Enter.
+                    Ketik keahlian Anda satu per satu lalu klik tombol &quot;Tambah&quot; atau tekan Enter.
                   </p>
                   
                   <div className="flex flex-wrap gap-2 mt-4">

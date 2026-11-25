@@ -21,12 +21,17 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   useQueryJobseekerApplications,
   useMutationWithdrawApplication,
 } from "@/hooks/jobseeker/useJobseeker";
 
+// Referensi stabil agar useMemo/useEffect tidak terpicu ulang tiap render
+const EMPTY_APPLICATIONS = [];
+
 export default function JobseekerApplicationsPage() {
+  const router = useRouter();
   const [selectedStatus, setSelectedStatus] = useState("ALL");
   const [searchTerm, setSearchTerm] = useState("");
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -41,7 +46,7 @@ export default function JobseekerApplicationsPage() {
 
   const { mutate: withdrawApplication } = useMutationWithdrawApplication();
 
-  const applications = applicationsData?.applications || [];
+  const applications = applicationsData?.applications ?? EMPTY_APPLICATIONS;
   const stats = applicationsData?.stats || {};
 
   useEffect(() => {
@@ -100,7 +105,7 @@ export default function JobseekerApplicationsPage() {
 
   // View details
   const viewDetails = async (applicationId) => {
-    window.location.href = `/profile/jobseeker/applications/${applicationId}`;
+    router.push(`/profile/jobseeker/applications/${applicationId}`);
   };
 
   // Filter applications
@@ -353,13 +358,13 @@ export default function JobseekerApplicationsPage() {
             <p className="text-gray-600 mb-6">
               Anda belum melamar pekerjaan apapun
             </p>
-            <a
+            <Link
               href="/jobs"
               className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
             >
               <Search className="w-5 h-5 mr-2" />
               Cari Lowongan
-            </a>
+            </Link>
           </div>
         ) : (
           <div className="space-y-4">
@@ -388,7 +393,7 @@ export default function JobseekerApplicationsPage() {
                       {/* Company Logo */}
                       <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-lg flex items-center justify-center text-white text-lg sm:text-2xl flex-shrink-0">
                         {application.jobs.companies.logo ? (
-                          <img
+                          <img loading="lazy" decoding="async"
                             src={application.jobs.companies.logo}
                             alt={application.jobs.companies.name}
                             className="w-full h-full object-cover rounded-lg"
@@ -518,7 +523,7 @@ export default function JobseekerApplicationsPage() {
                   <div className="flex gap-4 mb-4">
                     <div className="w-20 h-20 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-lg flex items-center justify-center text-white text-3xl">
                       {selectedApplication.jobs.companies.logo ? (
-                        <img
+                        <img loading="lazy" decoding="async"
                           src={selectedApplication.jobs.companies.logo}
                           alt={selectedApplication.jobs.companies.name}
                           className="w-full h-full object-cover rounded-lg"

@@ -176,7 +176,7 @@ export default function CompanyProfilePage() {
           <div className="grid gap-8 p-6 lg:grid-cols-[180px_1fr_auto] lg:p-8">
             <div className="mx-auto flex h-36 w-36 items-center justify-center rounded-[1.75rem] border border-slate-100 bg-white p-4 shadow-xl shadow-slate-200/70 lg:mx-0 lg:h-44 lg:w-44">
               {company.logo ? (
-                <img
+                <img loading="lazy" decoding="async"
                   src={company.logo}
                   alt={company.name}
                   className="h-full w-full object-contain"
@@ -358,7 +358,7 @@ export default function CompanyProfilePage() {
                             key={image || index}
                             className="group aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-sm"
                           >
-                            <img
+                            <img loading="lazy" decoding="async"
                               src={image}
                               alt={`Galeri ${company.name} ${index + 1}`}
                               className="h-full w-full object-cover transition duration-500 group-hover:scale-105"

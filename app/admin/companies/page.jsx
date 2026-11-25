@@ -8,6 +8,9 @@ import {
 } from 'lucide-react'
 import { useQueryAdminCompanies } from '@/hooks/admin/useAdmin'
 
+// Referensi stabil agar useMemo/useEffect tidak terpicu ulang tiap render
+const EMPTY_COMPANIES = [];
+
 export default function AdminCompaniesPage() {
     const router = useRouter()
     const searchParams = useSearchParams()
@@ -24,7 +27,7 @@ export default function AdminCompaniesPage() {
         status: filter,
     });
 
-    const companies = data?.companies || [];
+    const companies = data?.companies ?? EMPTY_COMPANIES;
 
     const filteredCompanies = useMemo(() => 
         companies.filter(company =>
@@ -193,7 +196,7 @@ export default function AdminCompaniesPage() {
                                 <div className="flex items-start gap-4 mb-4">
                                     <div className="w-14 h-14 rounded-xl bg-slate-100 flex items-center justify-center overflow-hidden flex-shrink-0">
                                         {company.logo ? (
-                                            <img src={company.logo} alt={company.name} className="w-full h-full object-cover" />
+                                            <img loading="lazy" decoding="async" src={company.logo} alt={company.name} className="w-full h-full object-cover" />
                                         ) : (
                                             <Building2 className="w-7 h-7 text-slate-400" />
                                         )}

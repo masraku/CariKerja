@@ -77,7 +77,7 @@ const JobsPage = () => {
     limit: 20,
   });
 
-  const jobs = jobsData?.jobs || [];
+  const jobs = jobsData?.jobs ?? EMPTY_JOBS;
   const pagination = jobsData?.pagination || {
     page: 1,
     limit: 10,
@@ -207,7 +207,7 @@ const JobsPage = () => {
       <div className="flex gap-4">
         <div className="w-14 h-14 rounded-xl bg-slate-50 flex items-center justify-center overflow-hidden flex-shrink-0 border border-slate-100 relative">
           {job.logo?.startsWith("http") ? (
-            <img
+            <img loading="lazy" decoding="async"
               src={job.logo}
               alt={job.company}
               className="w-full h-full object-cover"
@@ -304,7 +304,7 @@ const JobsPage = () => {
         <div className="flex items-start gap-6">
           <div className="w-20 h-20 rounded-2xl bg-white shadow-sm border border-slate-100 flex items-center justify-center overflow-hidden flex-shrink-0 p-2">
             {job.logo?.startsWith("http") ? (
-              <img
+              <img loading="lazy" decoding="async"
                 src={job.logo}
                 alt={job.company}
                 className="w-full h-full object-contain"
@@ -473,7 +473,7 @@ const JobsPage = () => {
                   className="aspect-video rounded-2xl overflow-hidden bg-slate-50 mb-4 border border-slate-100 cursor-pointer hover:opacity-95 transition"
                   onClick={() => setSelectedImage(job.photo)}
                 >
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={job.photo}
                     alt="Main Job Photo"
                     className="w-full h-full object-cover"
@@ -491,7 +491,7 @@ const JobsPage = () => {
                       onClick={() => setSelectedImage(img)}
                       aria-label={`Lihat gambar galeri lowongan ${idx + 1}`}
                     >
-                      <img
+                      <img loading="lazy" decoding="async"
                         src={img}
                         alt={`Gallery ${idx}`}
                         className="w-full h-full object-cover"
@@ -613,7 +613,7 @@ const JobsPage = () => {
             >
               <XCircle className="w-8 h-8" />
             </button>
-            <img
+            <img loading="lazy" decoding="async"
               src={selectedImage}
               alt="Full View"
               className="max-w-full max-h-[85vh] rounded-lg shadow-2xl object-contain"
@@ -846,6 +846,9 @@ const JobsPageLoading = () => (
 );
 
 // Export with Suspense wrapper
+// Referensi stabil agar useMemo/useEffect tidak terpicu ulang tiap render
+const EMPTY_JOBS = [];
+
 export default function JobsPageWrapper() {
   return (
     <Suspense fallback={<JobsPageLoading />}>

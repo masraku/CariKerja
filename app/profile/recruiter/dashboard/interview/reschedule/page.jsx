@@ -75,6 +75,8 @@ function RescheduleContent() {
         router.push("/profile/recruiter/dashboard/interviews");
       });
     }
+    // Sengaja: hanya dimuat ulang saat nilai di deps berubah.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async (interviewId, participantId) => {
@@ -260,7 +262,7 @@ function RescheduleContent() {
                 Permintaan Reschedule dari {participant.candidate?.firstName}
               </h3>
               <p className="text-amber-700 text-sm italic">
-                "{participant.responseMessage || "Tidak ada alasan spesifik"}"
+                &quot;{participant.responseMessage || "Tidak ada alasan spesifik"}&quot;
               </p>
             </div>
           </div>

@@ -29,6 +29,9 @@ const companySizes = [
   "1000+",
 ];
 
+// Referensi stabil agar useMemo/useEffect tidak terpicu ulang tiap render
+const EMPTY_COMPANIES = [];
+
 const CompaniesPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -50,7 +53,7 @@ const CompaniesPage = () => {
     size: selectedSize,
   });
 
-  const companies = companiesData?.companies || [];
+  const companies = companiesData?.companies ?? EMPTY_COMPANIES;
   const industries = companiesData?.industries || ["all"];
 
   useEffect(() => {

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { publicLimiter, getIP, rateLimitResponse } from "@/lib/rateLimit";
-import { publicActiveJobWhere } from "@/lib/jobs/publicFilters";
+import { getHomepageStats } from "@/lib/homepage";
 
 export async function GET(request) {
   try {
@@ -12,42 +11,11 @@ export async function GET(request) {
       return rateLimitResponse(reset);
     }
 
-    // Run all queries in parallel for better performance
-    const [totalJobs, totalVerifiedCompanies, totalApplications, totalHires] =
-      await Promise.all([
-        // Count active jobs
-        prisma.jobs.count({
-          where: publicActiveJobWhere(new Date()),
-        }),
+    const stats = await getHomepageStats();
 
-        // Count verified companies (diverifikasi oleh admin)
-        prisma.companies.count({
-          where: {
-            verified: true,
-            status: "VERIFIED",
-          },
-        }),
-
-        // Count total applications
-        prisma.applications.count(),
-
-        // Count accepted applications (hired candidates)
-        prisma.applications.count({
-          where: {
-            status: "ACCEPTED",
-          },
-        }),
-      ]);
-
-    // Add cache headers for better performance
     return NextResponse.json({
       success: true,
-      data: {
-        totalJobs,
-        totalCompanies: totalVerifiedCompanies,
-        totalApplications,
-        totalHires,
-      },
+      data: stats,
     }, {
       headers: {
         'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300'

@@ -44,6 +44,8 @@ export default function AdminJobseekerDetail() {
     if (params.id) {
       loadProfile();
     }
+    // Sengaja: hanya dimuat ulang saat nilai di deps berubah.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id]);
 
   const loadProfile = async () => {
@@ -170,7 +172,7 @@ export default function AdminJobseekerDetail() {
             {/* Profile Photo */}
             <div className="w-28 h-28 rounded-2xl bg-white/10 flex items-center justify-center overflow-hidden border-4 border-white/20 flex-shrink-0">
               {profile.photo ? (
-                <img
+                <img loading="lazy" decoding="async"
                   src={profile.photo}
                   alt={profile.firstName}
                   className="w-full h-full object-cover"
@@ -574,7 +576,7 @@ export default function AdminJobseekerDetail() {
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center p-4">
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={documentModal.url}
                     alt={documentModal.title}
                     className="max-w-full max-h-full object-contain rounded-lg shadow-lg"

@@ -24,7 +24,7 @@ export default function PrivacyPolicyPage() {
                 1. Pendahuluan
               </h2>
               <p className="text-slate-600 leading-relaxed">
-                Dinas Ketenagakerjaan Kabupaten Cirebon ("kami") berkomitmen
+                Dinas Ketenagakerjaan Kabupaten Cirebon (&quot;kami&quot;) berkomitmen
                 untuk melindungi privasi dan data pribadi Anda. Kebijakan ini
                 menjelaskan bagaimana kami mengumpulkan, menggunakan, menyimpan,
                 dan melindungi informasi Anda sesuai dengan Undang-Undang

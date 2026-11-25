@@ -29,6 +29,8 @@ export default function JobPreviewPage() {
     if (params.slug) {
       fetchJobDetail();
     }
+    // Sengaja: hanya dimuat ulang saat nilai di deps berubah.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.slug]);
 
   const fetchJobDetail = async () => {
@@ -168,7 +170,7 @@ export default function JobPreviewPage() {
               {/* Company Logo */}
               <div className="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm">
                 {job.company?.logo ? (
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={job.company.logo}
                     alt={job.company.name}
                     className="w-full h-full object-cover"
@@ -282,7 +284,7 @@ export default function JobPreviewPage() {
                   </p>
                 </div>
                 <div className="aspect-square bg-slate-100">
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={job.photo}
                     alt={job.title}
                     className="w-full h-full object-cover"
@@ -292,7 +294,7 @@ export default function JobPreviewPage() {
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
                       {job.company?.logo ? (
-                        <img
+                        <img loading="lazy" decoding="async"
                           src={job.company.logo}
                           alt=""
                           className="w-full h-full object-cover"
@@ -424,7 +426,7 @@ export default function JobPreviewPage() {
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center overflow-hidden">
                   {job.company?.logo ? (
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={job.company.logo}
                       alt={job.company.name}
                       className="w-full h-full object-cover"

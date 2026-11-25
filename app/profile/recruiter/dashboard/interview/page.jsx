@@ -51,9 +51,11 @@ function ScheduleInterviewContent() {
         text: "Halaman ini membutuhkan data lowongan dan kandidat. Silakan kembali ke daftar pelamar lalu jadwalkan interview ulang.",
         confirmButtonColor: "#2563EB",
       }).then(() => {
-        router.push("/recruiter/dashboard");
+        router.push("/profile/recruiter/dashboard");
       });
     }
+    // Sengaja: hanya dimuat ulang saat nilai di deps berubah.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async (jobId, applicantIds) => {
@@ -568,7 +570,7 @@ Terima kasih dan sampai jumpa!`,
                       <div className="flex items-center gap-3 flex-1">
                         <div className="w-10 h-10 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-full flex items-center justify-center text-white font-bold overflow-hidden flex-shrink-0">
                           {application.jobseeker?.photo ? (
-                            <img
+                            <img loading="lazy" decoding="async"
                               src={application.jobseeker.photo}
                               alt={application.jobseeker.firstName}
                               className="w-full h-full object-cover"

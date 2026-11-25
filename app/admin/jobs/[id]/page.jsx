@@ -36,6 +36,8 @@ export default function AdminJobDetailPage() {
     if (params.id) {
       fetchJobDetail();
     }
+    // Sengaja: hanya dimuat ulang saat nilai di deps berubah.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id]);
 
   const fetchJobDetail = async () => {
@@ -246,7 +248,7 @@ export default function AdminJobDetailPage() {
           <div className="relative z-10 flex flex-col md:flex-row gap-8">
             <div className="w-24 h-24 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-center p-2 flex-shrink-0">
               {job.company?.logo ? (
-                <img
+                <img loading="lazy" decoding="async"
                   src={job.company.logo}
                   alt={job.company.name}
                   className="w-full h-full object-contain rounded-xl"
@@ -336,7 +338,7 @@ export default function AdminJobDetailPage() {
                       className="aspect-video rounded-2xl overflow-hidden bg-gray-100 mb-4 border border-gray-100 cursor-pointer hover:opacity-95 transition"
                       onClick={() => setSelectedImage(job.photo)}
                     >
-                      <img
+                      <img loading="lazy" decoding="async"
                         src={job.photo}
                         alt="Main Job Photo"
                         className="w-full h-full object-cover"
@@ -352,7 +354,7 @@ export default function AdminJobDetailPage() {
                           className="aspect-square rounded-xl overflow-hidden bg-gray-100 border border-gray-100 hover:shadow-md transition-shadow cursor-pointer hover:opacity-95"
                           onClick={() => setSelectedImage(img)}
                         >
-                          <img
+                          <img loading="lazy" decoding="async"
                             src={img}
                             alt={`Gallery ${idx}`}
                             className="w-full h-full object-cover"
@@ -378,7 +380,7 @@ export default function AdminJobDetailPage() {
                   >
                     <XCircle className="w-8 h-8" />
                   </button>
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={selectedImage}
                     alt="Full View"
                     className="max-w-full max-h-[85vh] rounded-lg shadow-2xl object-contain"

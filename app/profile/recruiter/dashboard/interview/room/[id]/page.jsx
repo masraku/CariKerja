@@ -31,6 +31,8 @@ function InterviewRoomContent() {
     if (id) {
       loadData(id);
     }
+    // Sengaja: hanya dimuat ulang saat nilai di deps berubah.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const loadData = async (interviewId) => {
@@ -287,7 +289,7 @@ function InterviewRoomContent() {
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
                           {p.candidate.photo ? (
-                            <img
+                            <img loading="lazy" decoding="async"
                               src={p.candidate.photo}
                               alt={p.candidate.name}
                               className="w-full h-full object-cover"
@@ -369,7 +371,7 @@ function InterviewRoomContent() {
                   </button>
 
                   <p className="text-xs text-gray-500 text-center px-4">
-                    Klik "Selesaikan Interview" setelah sesi berakhir untuk
+                    Klik &quot;Selesaikan Interview&quot; setelah sesi berakhir untuk
                     mengupdate status kandidat dan melanjutkan ke tahap
                     berikutnya.
                   </p>

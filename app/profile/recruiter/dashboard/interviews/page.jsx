@@ -474,7 +474,7 @@ export default function RecruiterInterviewsPage() {
                                 {participant.jobseeker?.lastName}
                               </p>
                               <p className="text-orange-600 text-xs mt-1">
-                                "{participant.responseMessage}"
+                                &quot;{participant.responseMessage}&quot;
                               </p>
                             </div>
                             <div className="flex gap-2">
@@ -570,8 +570,9 @@ export default function RecruiterInterviewsPage() {
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
                                 {participant.jobseeker?.photo ? (
-                                  <img
+                                  <img loading="lazy" decoding="async"
                                     src={participant.jobseeker.photo}
+                                    alt=""
                                     className="w-full h-full object-cover"
                                   />
                                 ) : (

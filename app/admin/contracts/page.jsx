@@ -430,7 +430,7 @@ export default function AdminContractsPage() {
                     {/* Company Logo */}
                     <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white text-xl font-bold overflow-hidden flex-shrink-0">
                       {item.companies?.logo ? (
-                        <img
+                        <img loading="lazy" decoding="async"
                           src={item.companies.logo}
                           alt={item.companies?.name}
                           className="w-full h-full object-cover"
@@ -598,7 +598,7 @@ export default function AdminContractsPage() {
                 <div className="flex items-start gap-4">
                   <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold overflow-hidden flex-shrink-0">
                     {selectedContract.recruiters?.photoUrl ? (
-                      <img
+                      <img loading="lazy" decoding="async"
                         src={selectedContract.recruiters.photoUrl}
                         alt={selectedContract.recruiters?.firstName}
                         className="w-full h-full object-cover"
@@ -706,7 +706,7 @@ export default function AdminContractsPage() {
                             }`}
                           >
                             {worker.jobseekers?.photo ? (
-                              <img
+                              <img loading="lazy" decoding="async"
                                 src={worker.jobseekers.photo}
                                 alt={worker.jobseekers?.firstName}
                                 className="w-full h-full object-cover"
@@ -970,7 +970,7 @@ export default function AdminContractsPage() {
                 />
               ) : (
                 <div className="flex items-center justify-center">
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={previewDocUrl}
                     alt="Dokumen Pengantar"
                     className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"

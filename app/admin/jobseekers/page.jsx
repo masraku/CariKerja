@@ -334,7 +334,7 @@ export default function AdminJobseekersPage() {
                   {/* Photo & Info */}
                   <div className="flex items-center gap-4 flex-1">
                     {js.photo ? (
-                      <img
+                      <img loading="lazy" decoding="async"
                         src={js.photo}
                         alt={js.firstName}
                         className="w-14 h-14 rounded-xl object-cover"

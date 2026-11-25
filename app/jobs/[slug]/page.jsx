@@ -255,7 +255,7 @@ export default function JobDetailPage() {
               {/* Logo & Disability Badge */}
               <div className="w-24 h-24 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center p-2 flex-shrink-0 relative">
                 {job.company.logo ? (
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={job.company.logo}
                     alt={job.company.name}
                     className="w-full h-full object-contain"
@@ -416,7 +416,7 @@ export default function JobDetailPage() {
                       onClick={() => setSelectedImage(job.photo)}
                       aria-label="Lihat foto utama lowongan"
                     >
-                      <img
+                      <img loading="lazy" decoding="async"
                         src={job.photo}
                         alt="Main Job Photo"
                         className="w-full h-full object-cover"
@@ -434,7 +434,7 @@ export default function JobDetailPage() {
                           onClick={() => setSelectedImage(img)}
                           aria-label={`Lihat gambar galeri lowongan ${idx + 1}`}
                         >
-                          <img
+                          <img loading="lazy" decoding="async"
                             src={img}
                             alt={`Gallery ${idx}`}
                             className="w-full h-full object-cover"
@@ -724,7 +724,7 @@ export default function JobDetailPage() {
             >
               <XCircle className="w-8 h-8" />
             </button>
-            <img
+            <img loading="lazy" decoding="async"
               src={selectedImage}
               alt="Full View"
               className="max-w-full max-h-[85vh] rounded-lg shadow-2xl object-contain"

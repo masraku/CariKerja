@@ -142,7 +142,7 @@ export default function AllApplicationsPage() {
           <div className="flex-shrink-0">
             <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-[#03587f] to-[#024666] flex items-center justify-center text-white text-xl font-bold overflow-hidden">
               {application.jobseekers.photo ? (
-                <img
+                <img loading="lazy" decoding="async"
                   src={application.jobseekers.photo}
                   alt={application.jobseekers.firstName}
                   className="w-full h-full object-cover"

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { validateCSRFToken, csrfErrorResponse } from '@/lib/csrf'
 import { prisma } from '@/lib/prisma'
 import { getTokenFromRequest, verifyToken } from '@/lib/auth'
 import { validateBody } from '@/lib/validations'
@@ -52,6 +53,8 @@ export async function GET(request, { params }) {
 // PUT - Update news
 export async function PUT(request, { params }) {
     try {
+        if (!validateCSRFToken(request)) return csrfErrorResponse()
+
         const token = getTokenFromRequest(request)
         if (!token) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -131,6 +134,8 @@ export async function PUT(request, { params }) {
 // DELETE - Delete news
 export async function DELETE(request, { params }) {
     try {
+        if (!validateCSRFToken(request)) return csrfErrorResponse()
+
         const token = getTokenFromRequest(request)
         if (!token) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

@@ -75,7 +75,7 @@ export default function RecruiterSidebar() {
         >
           <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-lg overflow-hidden text-primary-foreground">
             {user?.company?.logo ? (
-              <img
+              <img loading="lazy" decoding="async"
                 src={user.company.logo}
                 alt="Company Logo"
                 className="w-full h-full object-cover"
@@ -115,12 +115,6 @@ export default function RecruiterSidebar() {
                   "/profile/recruiter/dashboard/interviews",
                 ) ||
                 pathname.startsWith("/profile/recruiter/dashboard/interview?");
-            } else if (
-              item.href === "/profile/recruiter/dashboard/resignations"
-            ) {
-              isActive = pathname.startsWith(
-                "/profile/recruiter/dashboard/resignations",
-              );
             } else {
               isActive = pathname === item.href;
             }

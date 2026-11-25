@@ -379,7 +379,7 @@ export default function AdminJobsPage() {
                       {/* Logo */}
                       <div className="w-16 h-16 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden flex-shrink-0">
                         {job.company?.logo ? (
-                          <img
+                          <img loading="lazy" decoding="async"
                             src={job.company.logo}
                             alt={job.company.name}
                             className="w-full h-full object-cover"

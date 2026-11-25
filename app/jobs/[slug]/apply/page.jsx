@@ -78,6 +78,8 @@ export default function ApplyJobPage() {
     }
 
     fetchJobAndProfile();
+    // Sengaja: hanya dimuat ulang saat nilai di deps berubah.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, isAuthenticated, user, authLoading]);
 
   const fetchJobAndProfile = async () => {
@@ -281,7 +283,7 @@ export default function ApplyJobPage() {
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 bg-gradient-to-br from-[#03587f] to-[#024666] rounded-xl flex items-center justify-center text-2xl overflow-hidden flex-shrink-0">
                 {job.company.logo ? (
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={job.company.logo}
                     alt={job.company.name}
                     className="w-full h-full object-cover"
@@ -547,7 +549,7 @@ export default function ApplyJobPage() {
               {documentModal.url && (
                 <>
                   {documentModal.url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={documentModal.url}
                       alt={documentModal.title}
                       className="max-w-full h-auto mx-auto rounded-lg"

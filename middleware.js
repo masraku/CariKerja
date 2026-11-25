@@ -4,86 +4,21 @@ import { Redis } from '@upstash/redis'
 const redis = Redis.fromEnv()
 
 const JWT_SECRET = process.env.JWT_SECRET
-const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
-const API_RATE_LIMITS = {
-  auth: { limit: 20, windowSeconds: 15 * 60 },
-  admin: { limit: 180, windowSeconds: 60 },
-  mutation: { limit: 60, windowSeconds: 60 },
-  read: { limit: 120, windowSeconds: 60 },
-}
 
-function getClientIP(request) {
-  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    request.headers.get('x-real-ip') ||
-    'anonymous'
-}
+// Cache status maintenance di memori agar tidak ada round-trip Redis
+// di setiap navigasi/prefetch halaman. Perubahan status maksimal
+// terlambat MAINTENANCE_CACHE_MS.
+const MAINTENANCE_CACHE_MS = 15 * 1000
+let maintenanceCache = { value: false, expiresAt: 0 }
 
-function getRateLimitScope(pathname, method) {
-  if (pathname.startsWith('/api/auth/')) return 'auth'
-  if (pathname.startsWith('/api/admin/')) return 'admin'
-  if (MUTATING_METHODS.has(method)) return 'mutation'
-  return 'read'
-}
+async function isMaintenanceMode() {
+  const now = Date.now()
+  if (now < maintenanceCache.expiresAt) return maintenanceCache.value
 
-async function enforceApiRateLimit(request, pathname, decodedToken) {
-  if (pathname.startsWith('/api/cron/')) return null
-
-  const scope = getRateLimitScope(pathname, request.method)
-  const { limit, windowSeconds } = API_RATE_LIMITS[scope]
-  const identity = decodedToken?.userId || getClientIP(request)
-  const windowId = Math.floor(Date.now() / (windowSeconds * 1000))
-  const key = `ratelimit:${scope}:${identity}:${windowId}`
-
-  try {
-    const count = await redis.incr(key)
-    if (count === 1) {
-      await redis.expire(key, windowSeconds + 5)
-    }
-
-    if (count > limit) {
-      return NextResponse.json(
-        { error: 'Terlalu banyak permintaan. Silakan coba lagi nanti.' },
-        {
-          status: 429,
-          headers: { 'Retry-After': String(windowSeconds) },
-        }
-      )
-    }
-  } catch (error) {
-    // Fail open so Redis issues do not take the entire application down.
-    return null
-  }
-
-  return null
-}
-
-function isCsrfExempt(pathname) {
-  return pathname === '/api/auth/login' ||
-    pathname.startsWith('/api/auth/register/') ||
-    pathname.startsWith('/api/cron/') ||
-    pathname === '/api/health'
-}
-
-function hasValidCsrfToken(request) {
-  const cookieToken = request.cookies.get('csrf_token')?.value
-  const headerToken = request.headers.get('x-csrf-token')
-
-  if (!cookieToken || !headerToken || cookieToken.length !== headerToken.length) {
-    return false
-  }
-
-  // Timing-safe comparison to prevent timing attacks
-  const encoder = new TextEncoder()
-  const a = encoder.encode(cookieToken)
-  const b = encoder.encode(headerToken)
-
-  if (a.byteLength !== b.byteLength) return false
-
-  let result = 0
-  for (let i = 0; i < a.byteLength; i++) {
-    result |= a[i] ^ b[i]
-  }
-  return result === 0
+  const raw = await redis.get('system:maintenance')
+  const value = raw === 'true' || raw === true || raw === 1
+  maintenanceCache = { value, expiresAt: now + MAINTENANCE_CACHE_MS }
+  return value
 }
 
 function base64UrlToBytes(value) {
@@ -156,17 +91,17 @@ export async function middleware(request) {
   ]
 
   // --- MAINTENANCE MODE CHECK ---
-  if (!pathname.startsWith('/api') && 
-      !pathname.startsWith('/_next') && 
+  // Catatan: matcher di bawah mengecualikan /api, jadi rate limit & CSRF
+  // untuk API ditangani di masing-masing route (lib/rateLimit, lib/csrf).
+  if (!pathname.startsWith('/_next') &&
       !pathname.includes('favicon.ico') &&
       pathname !== '/maintenance') {
       
     try {
-      const isMaintenance = await redis.get('system:maintenance');      
-      if (isMaintenance === 'true' || isMaintenance === true || isMaintenance === 1) { // Menangani berbagai kemungkinan tipe data
+      if (await isMaintenanceMode()) {
 
         // Allow Login page for admins to access
-        if (pathname === '/login' || pathname === '/api/auth/login') {
+        if (pathname === '/login') {
             // Continue to normal flow (will allow login page)
         } else {
             // Check if user is admin based on token
@@ -189,26 +124,6 @@ export async function middleware(request) {
   const isPublicRoute = publicRoutes.some(route => 
     pathname === route || pathname.startsWith(`${route}/`)
   )
-
-  // API routes are always accessible (they handle their own auth)
-  if (pathname.startsWith('/api')) {
-    const rateLimitedResponse = await enforceApiRateLimit(request, pathname, decodedToken)
-    if (rateLimitedResponse) return rateLimitedResponse
-
-    if (
-      MUTATING_METHODS.has(request.method) &&
-      token &&
-      !isCsrfExempt(pathname) &&
-      !hasValidCsrfToken(request)
-    ) {
-      return NextResponse.json(
-        { error: 'Invalid CSRF token. Please refresh the page and try again.' },
-        { status: 403 }
-      )
-    }
-
-    return NextResponse.next()
-  }
 
   // If public route, allow access
   if (isPublicRoute) {
@@ -274,6 +189,6 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      */
-    '/((?!api|_next/static|_next/image|assets|favicon.ico).*)',
+    '/((?!api|_next/static|_next/image|assets|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|txt|xml|webmanifest)$).*)',
   ],
 }
